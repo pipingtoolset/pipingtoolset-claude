@@ -1,0 +1,54 @@
+{
+  "module": "piping.leak-test-pressure",
+  "cases": [
+    {
+      "input": {
+        "P": 300,
+        "ST": 20000,
+        "S": 17500,
+        "hydroFactor": 1.5,
+        "pneumaticFactor": 1.1
+      },
+      "expect": {
+        "stressRatio": 1.14286,
+        "hydroTest": 514.286,
+        "pneumaticTest": 330
+      },
+      "status": "na",
+      "tol": 0.001
+    },
+    {
+      "input": {
+        "P": 300,
+        "ST": 20000,
+        "S": 2500,
+        "hydroFactor": 1.5,
+        "pneumaticFactor": 1.1
+      },
+      "expect": {
+        "stressRatio": 8,
+        "hydroTest": 3600,
+        "pneumaticTest": 330
+      },
+      "status": "na",
+      "tol": 0.001
+    },
+    {
+      "input": {
+        "P": 300,
+        "ST": 20000,
+        "S": 2500,
+        "hydroFactor": 1.5,
+        "stressRatioCap": 6.5,
+        "pneumaticFactor": 1.1
+      },
+      "expect": {
+        "stressRatio": 6.5,
+        "hydroTest": 2925,
+        "pneumaticTest": 330
+      },
+      "status": "na",
+      "tol": 0.001
+    }
+  ]
+}

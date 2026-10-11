@@ -1,0 +1,23 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      matrix:
+        python: ["3.9", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Unit + golden tests (stdlib only)
+        run: python -m unittest discover -s tests -v
+      - name: Manifests parse
+        run: |
+          python -c "import json; json.load(open('.claude-plugin/marketplace.json')); json.load(open('plugins/piping-toolset/.claude-plugin/plugin.json'))"

@@ -1,0 +1,119 @@
+{
+  "code": "B31.3",
+  "edition": "2022",
+  "thermal_states": [
+    {
+      "key": "op",
+      "name": "OPERATING CASE CONDITION",
+      "T": "T1",
+      "P": "P1",
+      "D": "D1",
+      "role": "operating"
+    },
+    {
+      "key": "des",
+      "name": "DESIGN CASE CONDITION",
+      "T": "T2",
+      "P": "P2",
+      "D": "D2",
+      "role": "design"
+    }
+  ],
+  "frictions": [
+    [
+      "w/ Friction",
+      1.0
+    ],
+    [
+      "w/o Friction",
+      0.0
+    ]
+  ],
+  "hangers": true,
+  "hydrotest": true,
+  "inter_state_expansion_ranges": false,
+  "occasionals": [
+    {
+      "key": "psv_op",
+      "name": "PSV Pop Off",
+      "vector": "F1",
+      "base": "op",
+      "kind": "psv"
+    },
+    {
+      "key": "psv_des",
+      "name": "Design PSV Pop Off",
+      "vector": "F2",
+      "base": "des",
+      "kind": "psv"
+    },
+    {
+      "key": "seis_px",
+      "name": "Seismic +X",
+      "vector": "U1",
+      "sign": "+",
+      "base": "op",
+      "kind": "seismic"
+    },
+    {
+      "key": "seis_mx",
+      "name": "Seismic -X",
+      "vector": "U1",
+      "sign": "-",
+      "base": "op",
+      "kind": "seismic"
+    },
+    {
+      "key": "seis_pz",
+      "name": "Seismic +Z",
+      "vector": "U3",
+      "sign": "+",
+      "base": "op",
+      "kind": "seismic"
+    },
+    {
+      "key": "seis_mz",
+      "name": "Seismic -Z",
+      "vector": "U3",
+      "sign": "-",
+      "base": "op",
+      "kind": "seismic"
+    },
+    {
+      "key": "snow",
+      "name": "Snow -Y",
+      "vector": "U2",
+      "sign": "-",
+      "base": "op",
+      "kind": "snow"
+    },
+    {
+      "key": "win_px",
+      "name": "Wind +X",
+      "vector": "WIN1",
+      "base": "op",
+      "kind": "wind"
+    },
+    {
+      "key": "win_mx",
+      "name": "Wind -X",
+      "vector": "WIN2",
+      "base": "op",
+      "kind": "wind"
+    },
+    {
+      "key": "win_pz",
+      "name": "Wind +Z",
+      "vector": "WIN3",
+      "base": "op",
+      "kind": "wind"
+    },
+    {
+      "key": "win_mz",
+      "name": "Wind -Z",
+      "vector": "WIN4",
+      "base": "op",
+      "kind": "wind"
+    }
+  ]
+}

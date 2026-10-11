@@ -1,0 +1,18 @@
+{
+  "name": "pipingtoolset",
+  "owner": {
+    "name": "Flexible Piping Solutions LLC",
+    "url": "https://pipingtoolset.com"
+  },
+  "metadata": {
+    "description": "Piping engineering skills for Claude from Piping Toolset."
+  },
+  "plugins": [
+    {
+      "name": "piping-toolset",
+      "source": "./plugins/piping-toolset",
+      "description": "ASME B31 load case sets for CAESAR II and AutoPIPE; pressure-design and stress-screening skills to follow.",
+      "version": "0.1.0"
+    }
+  ]
+}

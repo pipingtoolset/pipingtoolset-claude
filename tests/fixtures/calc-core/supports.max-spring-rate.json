@@ -1,0 +1,18 @@
+{
+  "module": "supports.max-spring-rate",
+  "cases": [
+    {
+      "input": {
+        "hotLoad": 3200,
+        "travel": 2,
+        "variabilityLimit": 0.25
+      },
+      "expect": {
+        "maxRate": 400,
+        "loadChange": 800
+      },
+      "status": "na",
+      "tol": 1e-06
+    }
+  ]
+}

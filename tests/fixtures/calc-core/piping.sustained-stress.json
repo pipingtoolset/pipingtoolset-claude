@@ -1,0 +1,46 @@
+{
+  "module": "piping.sustained-stress",
+  "cases": [
+    {
+      "input": {
+        "method": "additive",
+        "P": 400,
+        "D": 8.625,
+        "t": 0.322,
+        "Sb": 0,
+        "St": 0,
+        "Socc": 0,
+        "Sh": 16000,
+        "k": 1.15
+      },
+      "expect": {
+        "Slp": 2678.571,
+        "SL": 2678.571,
+        "occAllowable": 18400
+      },
+      "status": "pass",
+      "tol": 0.001
+    },
+    {
+      "input": {
+        "method": "sqrt",
+        "P": 400,
+        "D": 8.625,
+        "t": 0.322,
+        "Sb": 2000,
+        "St": 500,
+        "Socc": 3000,
+        "Sh": 16000,
+        "k": 1.15
+      },
+      "expect": {
+        "SL": 4784.248,
+        "SLocc": 7743.414,
+        "sustainedRatio": 0.299,
+        "occasionalRatio": 0.4208
+      },
+      "status": "pass",
+      "tol": 0.01
+    }
+  ]
+}

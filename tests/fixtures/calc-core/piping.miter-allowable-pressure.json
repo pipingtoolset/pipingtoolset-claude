@@ -1,0 +1,44 @@
+{
+  "module": "piping.miter-allowable-pressure",
+  "cases": [
+    {
+      "input": {
+        "S": 20000,
+        "E": 1,
+        "Tc": 0.25,
+        "r2": 4.1515,
+        "R1": 12,
+        "thetaDeg": 15,
+        "miters": 3
+      },
+      "expect": {
+        "Pm1": 707.589,
+        "Pm2": 952.476,
+        "allowablePressure": 707.589,
+        "governing": "Eq. 4a"
+      },
+      "status": "na",
+      "tol": 0.001
+    },
+    {
+      "input": {
+        "S": 20000,
+        "E": 1,
+        "W": 0.85,
+        "Tc": 0.25,
+        "r2": 4.1515,
+        "R1": 12,
+        "thetaDeg": 15,
+        "miters": 3
+      },
+      "expect": {
+        "Pm1": 601.451,
+        "Pm2": 809.604,
+        "allowablePressure": 601.451,
+        "governing": "Eq. 4a"
+      },
+      "status": "na",
+      "tol": 0.001
+    }
+  ]
+}

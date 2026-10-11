@@ -1,0 +1,138 @@
+{
+  "module": "screen.flexibility-exemption",
+  "basis": "Fictitious round inputs, US units: D in, y in, L and U ft, S_A and E_a psi (S_A, E_a user-supplied; E_a = 1.0e7 is a deliberately non-physical placeholder). Test: D*y/(L-U)^2 <= K1 = 30*S_A/E_a. The exemption is only concluded when the three disqualifier inputs (fixation_points, intermediate_restraints, uniform_size) are all supplied; otherwise status is na and exempt is null.",
+  "cases": [
+    {
+      "input": {
+        "D": 4.5,
+        "y": 1.2,
+        "L": 100,
+        "U": 60,
+        "SA": 30000,
+        "Ea": 10000000.0,
+        "fixation_points": 2,
+        "intermediate_restraints": false,
+        "uniform_size": true
+      },
+      "expect": {
+        "lhs": 0.003375,
+        "K1": 0.09,
+        "ratio": 0.0375,
+        "exempt": true
+      },
+      "status": "pass",
+      "tol": 1e-06,
+      "derivation": "D*y = 4.5*1.2 = 5.4 in^2. (L-U)^2 = (100-60)^2 = 1600 ft^2. Left side = 5.4/1600 = 0.003375. K1 = 30*30000/1.0e7 = 900,000/10,000,000 = 0.09. Ratio = 0.003375/0.09 = 0.0375 <= 1. Two fixation points, no intermediate restraint, uniform size, all confirmed: exemption available (PASS)."
+    },
+    {
+      "input": {
+        "D": 12.75,
+        "y": 3.0,
+        "L": 80,
+        "U": 60,
+        "SA": 30000,
+        "Ea": 10000000.0,
+        "fixation_points": 2,
+        "intermediate_restraints": false,
+        "uniform_size": true
+      },
+      "expect": {
+        "lhs": 0.095625,
+        "K1": 0.09,
+        "ratio": 1.0625,
+        "exempt": false
+      },
+      "status": "fail",
+      "tol": 1e-06,
+      "derivation": "D*y = 12.75*3.0 = 38.25. (L-U)^2 = 20^2 = 400. Left side = 38.25/400 = 0.095625. K1 = 0.09 (same S_A, E_a). Ratio = 0.095625/0.09 = 1.0625 > 1: formal analysis required (FAIL)."
+    },
+    {
+      "input": {
+        "D": 4.5,
+        "y": 1.2,
+        "L": 100,
+        "U": 60,
+        "SA": 30000,
+        "Ea": 10000000.0,
+        "fixation_points": 3,
+        "intermediate_restraints": false,
+        "uniform_size": true
+      },
+      "expect": {
+        "lhs": 0.003375,
+        "K1": 0.09,
+        "ratio": 0.0375,
+        "exempt": false
+      },
+      "status": "fail",
+      "tol": 1e-06,
+      "derivation": "Identical numbers to the first case (ratio 0.0375 <= 1), but three points of fixation disqualify the equation outright, so the exemption is NOT available (FAIL) even though the arithmetic passes."
+    },
+    {
+      "input": {
+        "D": 3.5,
+        "dx": 0.6,
+        "dy": 0.8,
+        "dz": 0.0,
+        "L": 60,
+        "U": 40,
+        "SA": 24000,
+        "Ea": 10000000.0,
+        "fixation_points": 2,
+        "intermediate_restraints": false,
+        "uniform_size": true
+      },
+      "expect": {
+        "lhs": 0.00875,
+        "K1": 0.072,
+        "ratio": 0.1215,
+        "exempt": true
+      },
+      "status": "pass",
+      "tol": 1e-06,
+      "derivation": "y = sqrt(0.6^2 + 0.8^2 + 0) = sqrt(1.00) = 1.0 in. D*y = 3.5. (L-U)^2 = 20^2 = 400. Left side = 3.5/400 = 0.00875. K1 = 30*24000/1.0e7 = 720,000/10,000,000 = 0.072. Ratio = 0.00875/0.072 = 0.12153 -> 0.1215 <= 1, all disqualifier inputs confirmed (PASS)."
+    },
+    {
+      "input": {
+        "D": 4.5,
+        "y": 1.2,
+        "L": 100,
+        "U": 60,
+        "SA": 30000,
+        "Ea": 10000000.0,
+        "intermediate_restraints": false,
+        "uniform_size": true
+      },
+      "expect": {
+        "lhs": 0.003375,
+        "K1": 0.09,
+        "ratio": 0.0375,
+        "exempt": null
+      },
+      "status": "na",
+      "tol": 1e-06,
+      "derivation": "Same numbers as the first case (ratio 0.0375 <= 1) but fixation_points is omitted, so a disqualifier cannot be ruled out: the tool must not conclude exempt. Status na, exempt null."
+    },
+    {
+      "input": {
+        "D": 12.75,
+        "y": 3.0,
+        "L": 80,
+        "U": 60,
+        "SA": 30000,
+        "Ea": 10000000.0,
+        "fixation_points": 2,
+        "intermediate_restraints": false
+      },
+      "expect": {
+        "lhs": 0.095625,
+        "K1": 0.09,
+        "ratio": 1.0625,
+        "exempt": false
+      },
+      "status": "fail",
+      "tol": 1e-06,
+      "derivation": "Same numbers as the second case (ratio 1.0625 > 1) with uniform_size omitted. The arithmetic alone defeats the exemption, so the unconfirmed input does not matter: FAIL, exempt false."
+    }
+  ]
+}

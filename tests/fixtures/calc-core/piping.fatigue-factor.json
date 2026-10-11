@@ -1,0 +1,103 @@
+{
+  "module": "piping.fatigue-factor",
+  "cases": [
+    {
+      "input": {
+        "N": 22500,
+        "fmax": 1
+      },
+      "expect": {
+        "NE": 22500,
+        "f": 0.80856,
+        "equation": "f = 6\u00b7N^(\u22120.2) \u2264 fmax, NE = \u03a3 Ni\u00b7ri\u2075 (B31.3-2020 and earlier; B31.1 \u00b6102.3.2(b))"
+      },
+      "status": "na",
+      "tol": 1e-05
+    },
+    {
+      "input": {
+        "N": 1,
+        "sets": [
+          {
+            "N": 1000,
+            "r": 1
+          },
+          {
+            "N": 8000,
+            "r": 0.5
+          }
+        ],
+        "fmax": 1
+      },
+      "expect": {
+        "NE": 1250,
+        "f": 1
+      },
+      "status": "na",
+      "tol": 1e-05
+    },
+    {
+      "input": {
+        "N": 22500,
+        "fmax": 1,
+        "equation": "legacy"
+      },
+      "expect": {
+        "NE": 22500,
+        "f": 0.80856
+      },
+      "status": "na",
+      "tol": 1e-05
+    },
+    {
+      "input": {
+        "N": 22500,
+        "fmax": 1.2,
+        "equation": "b313-2022"
+      },
+      "expect": {
+        "NE": 22500,
+        "f": 0.71081,
+        "equation": "f = 20\u00b7N^(\u22120.333) \u2264 fm, NE = \u03a3 Ni\u00b7ri\u00b3 (B31.3-2022 and later, \u00b6302.3.5(d) eqs. (1c)/(1d))"
+      },
+      "status": "na",
+      "tol": 1e-05
+    },
+    {
+      "input": {
+        "N": 1,
+        "sets": [
+          {
+            "N": 1000,
+            "r": 1
+          },
+          {
+            "N": 8000,
+            "r": 0.5
+          }
+        ],
+        "fmax": 1.2,
+        "equation": "b313-2022"
+      },
+      "expect": {
+        "NE": 2000,
+        "f": 1.2
+      },
+      "status": "na",
+      "tol": 1e-05
+    },
+    {
+      "input": {
+        "N": 7000,
+        "fmax": 1,
+        "equation": "b313-2022"
+      },
+      "expect": {
+        "NE": 7000,
+        "f": 1
+      },
+      "status": "na",
+      "tol": 1e-05
+    }
+  ]
+}

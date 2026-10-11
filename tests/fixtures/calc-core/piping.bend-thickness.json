@@ -1,0 +1,46 @@
+{
+  "module": "piping.bend-thickness",
+  "cases": [
+    {
+      "input": {
+        "P": 1000,
+        "D": 8.625,
+        "R": 12,
+        "S": 20000,
+        "E": 1,
+        "y": 0.4,
+        "A": 0.065
+      },
+      "expect": {
+        "Iintrados": 1.28049,
+        "Iextrados": 0.86782,
+        "tmIntrados": 0.33421,
+        "tmExtrados": 0.24893,
+        "tmCenterline": 0.2764
+      },
+      "status": "na",
+      "tol": 0.0001
+    },
+    {
+      "input": {
+        "P": 1000,
+        "D": 8.625,
+        "R": 12,
+        "S": 20000,
+        "E": 1,
+        "W": 0.8,
+        "y": 0.4,
+        "A": 0.065
+      },
+      "expect": {
+        "Iintrados": 1.28049,
+        "Iextrados": 0.86782,
+        "tmIntrados": 0.39943,
+        "tmExtrados": 0.29394,
+        "tmCenterline": 0.32796
+      },
+      "status": "na",
+      "tol": 0.0001
+    }
+  ]
+}

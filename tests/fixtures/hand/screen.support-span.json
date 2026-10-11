@@ -1,0 +1,144 @@
+{
+  "module": "screen.support-span",
+  "basis": "Fictitious round inputs: Z = 10 in^3, I = 40 in^4, w = 24 lb/ft = 2 lb/in, E = 1.0e7 psi (a deliberately non-physical placeholder, user-supplied), S_allow = 3000 psi, delta_allow = 0.25 in. Beam theory only; no code table value. Bending L = sqrt(C1 Z S / w_in); deflection L = (delta E I / (C2 w_in))^(1/4); L_ft = L_in / 12.",
+  "cases": [
+    {
+      "input": {
+        "w": 24,
+        "E": 10000000.0,
+        "S_allow": 3000,
+        "delta_allow": 0.25,
+        "Z": 10.0,
+        "I": 40.0,
+        "end_condition": "simple"
+      },
+      "expect": {
+        "C1": 8,
+        "C2": 0.0130208,
+        "L_bending_ft": 28.868,
+        "L_deflection_ft": 20.744,
+        "L_max_ft": 20.744,
+        "governing": "deflection"
+      },
+      "status": "na",
+      "tol": 0.001,
+      "derivation": "Simple span: C1 = 8, C2 = 5/384 = 0.0130208. Bending: L^2 = 8*10*3000/2 = 120,000 in^2 -> L = 346.41 in = 28.868 ft. Deflection: L^4 = 0.25*1.0e7*40/((5/384)*2) = 1.0e8/0.0260417 = 3.84e9 in^4 -> L = 248.93 in = 20.744 ft. Deflection is smaller, so it governs: 20.744 ft."
+    },
+    {
+      "input": {
+        "w": 24,
+        "E": 10000000.0,
+        "S_allow": 3000,
+        "delta_allow": 0.25,
+        "Z": 10.0,
+        "I": 40.0,
+        "end_condition": "continuous",
+        "L_actual_ft": 22
+      },
+      "expect": {
+        "C1": 8,
+        "C2": 0.0068842,
+        "L_bending_ft": 28.868,
+        "L_deflection_ft": 24.328,
+        "L_max_ft": 24.328,
+        "governing": "deflection",
+        "utilization": 0.9043,
+        "bending_stress_at_actual_psi": 1742.4,
+        "sag_at_actual_in": 0.1672
+      },
+      "status": "pass",
+      "tol": 0.001,
+      "derivation": "Continuous envelope: C1 = 8 (two-span support moment wL^2/8); C2 = 0.0068842 (three-span end span: root of 20x^3 - 24x^2 + 3 = 0 is x = 0.44604; d/(wL^4/EI) = 0.025*0.44604 - 0.4*0.44604^3/6 + 0.44604^4/24 = 0.011151 - 0.005916 + 0.001649 = 0.006884). Bending: L = 346.41 in = 28.868 ft. Deflection: L^4 = 1.0e8/(0.0068842*2) = 7.2630e9 in^4 -> L = 291.93 in = 24.328 ft. Deflection governs: 24.328 ft. Proposed 22 ft = 264 in: utilization 22/24.3275 = 0.9043; stress = w L^2/(C1 Z) = 2*264^2/(8*10) = 139,392/80 = 1742.4 psi (< 3000); sag = C2 w L^4/(E I) = 0.0068842*2*264^4/(1.0e7*40) = 0.0137684*4.8573e9/4.0e8 = 0.1672 in (< 0.25). PASS."
+    },
+    {
+      "input": {
+        "w": 24,
+        "E": 10000000.0,
+        "S_allow": 3000,
+        "delta_allow": 0.25,
+        "Z": 10.0,
+        "I": 40.0,
+        "end_condition": "continuous",
+        "L_actual_ft": 26
+      },
+      "expect": {
+        "L_max_ft": 24.328,
+        "governing": "deflection",
+        "utilization": 1.0687,
+        "bending_stress_at_actual_psi": 2433.6,
+        "sag_at_actual_in": 0.3262
+      },
+      "status": "fail",
+      "tol": 0.001,
+      "derivation": "Same continuous envelope as the previous case, L_max = 24.328 ft (deflection). Proposed 26 ft = 312 in: utilization 26/24.3275 = 1.0687; stress = 2*312^2/(8*10) = 194,688/80 = 2433.6 psi (< 3000, so bending alone would pass); sag = 0.0137684*312^4/4.0e8 = 0.0137684*9.4759e9/4.0e8 = 0.3262 in (> 0.25). FAIL on deflection."
+    },
+    {
+      "input": {
+        "w": 24,
+        "E": 10000000.0,
+        "S_allow": 3000,
+        "delta_allow": 0.25,
+        "Z": 10.0,
+        "I": 40.0,
+        "end_condition": "fixed",
+        "S_pressure": 1000
+      },
+      "expect": {
+        "C1": 12,
+        "C2": 0.0026042,
+        "S_available": 2000,
+        "L_bending_ft": 28.868,
+        "L_deflection_ft": 31.02,
+        "L_max_ft": 28.868,
+        "governing": "bending"
+      },
+      "status": "na",
+      "tol": 0.001,
+      "derivation": "Fixed-fixed: C1 = 12 (end moment wL^2/12), C2 = 1/384 = 0.0026042. Pressure stress 1000 psi leaves S = 3000 - 1000 = 2000 psi. Bending: L^2 = 12*10*2000/2 = 120,000 in^2 -> 346.41 in = 28.868 ft. Deflection: L^4 = 1.0e8/((1/384)*2) = 1.0e8*192 = 1.92e10 in^4 -> L = 372.24 in = 31.020 ft. Bending governs: 28.868 ft."
+    },
+    {
+      "input": {
+        "w": 24,
+        "E": 10000000.0,
+        "S_allow": 3000,
+        "delta_allow": 0.25,
+        "Z": 10.0,
+        "I": 40.0,
+        "end_condition": "two_span"
+      },
+      "expect": {
+        "C1": 8,
+        "C2": 0.0054161,
+        "L_bending_ft": 28.868,
+        "L_deflection_ft": 25.831,
+        "L_max_ft": 25.831,
+        "governing": "deflection"
+      },
+      "status": "na",
+      "tol": 0.001,
+      "derivation": "Two equal spans: C1 = 8; C2 from x = (1 + sqrt(33))/16 = 0.42154: x/48 - x^3/16 + x^4/24 = 0.0087820 - 0.0046817 + 0.0013158 = 0.0054161 (about 1/184.6). Deflection: L^4 = 1.0e8/(0.0054161*2) = 9.2317e9 in^4 -> L = 309.97 in = 25.831 ft. Bending 28.868 ft. Deflection is smaller, so it governs: 25.831 ft."
+    },
+    {
+      "input": {
+        "w": 24,
+        "E": 10000000.0,
+        "S_allow": 3000,
+        "delta_allow": 0.25,
+        "OD": 6.625,
+        "t": 0.28,
+        "end_condition": "simple"
+      },
+      "expect": {
+        "Z": 8.49575,
+        "I": 28.14218,
+        "L_bending_ft": 26.608,
+        "L_deflection_ft": 18.999,
+        "L_max_ft": 18.999,
+        "governing": "deflection"
+      },
+      "status": "na",
+      "tol": 0.001,
+      "derivation": "Section from OD 6.625 in and t 0.280 in: ID = 6.065; I = pi/64*(6.625^4 - 6.065^4) = 28.14218 in^4; Z = I/3.3125 = 8.49575 in^3. Simple span, w = 2 lb/in. Bending: L^2 = 8*8.49575*3000/2 = 101,949 in^2 -> 319.30 in = 26.608 ft. Deflection: L^4 = 0.25*1.0e7*28.14218/((5/384)*2) = 7.03555e7/0.0260417 = 2.7016e9 in^4 -> L = 227.99 in = 18.999 ft. Deflection governs."
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "module": "noncode.pipe-section",
+  "cases": [
+    {
+      "input": {
+        "OD": 6.625,
+        "t": 0.28
+      },
+      "expect": {
+        "ID": 6.065,
+        "A": 5.58135,
+        "I": 28.14218,
+        "Z": 8.49575,
+        "rGyration": 2.24548
+      },
+      "status": "na",
+      "tol": 0.0001
+    }
+  ]
+}

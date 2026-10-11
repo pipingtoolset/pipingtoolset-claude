@@ -1,0 +1,42 @@
+{
+  "module": "piping.b31-allowable-pressure",
+  "cases": [
+    {
+      "input": {
+        "D": 8.625,
+        "t": 0.322,
+        "millTolerance": 0.125,
+        "A": 0.065,
+        "S": 17500,
+        "E": 1,
+        "y": 0.4,
+        "Mf": 1
+      },
+      "expect": {
+        "tp": 0.21675,
+        "allowablePressure": 897.611
+      },
+      "status": "na",
+      "tol": 0.001
+    },
+    {
+      "input": {
+        "D": 10,
+        "t": 0.5,
+        "millTolerance": 0.1,
+        "A": 0.05,
+        "S": 20000,
+        "E": 1,
+        "W": 0.8,
+        "y": 0.4,
+        "Mf": 1
+      },
+      "expect": {
+        "tp": 0.4,
+        "allowablePressure": 1322.314
+      },
+      "status": "na",
+      "tol": 0.001
+    }
+  ]
+}

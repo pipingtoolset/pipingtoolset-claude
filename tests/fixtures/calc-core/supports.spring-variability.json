@@ -1,0 +1,35 @@
+{
+  "module": "supports.spring-variability",
+  "cases": [
+    {
+      "input": {
+        "hotLoad": 1000,
+        "springRate": 50,
+        "travel": 2,
+        "limit": 25
+      },
+      "expect": {
+        "coldLoad": 1100,
+        "loadChange": 100,
+        "variabilityPct": 10
+      },
+      "status": "pass",
+      "tol": 1e-06
+    },
+    {
+      "input": {
+        "hotLoad": 1000,
+        "springRate": 50,
+        "travel": 6,
+        "limit": 6
+      },
+      "expect": {
+        "coldLoad": 1300,
+        "loadChange": 300,
+        "variabilityPct": 30
+      },
+      "status": "fail",
+      "tol": 1e-06
+    }
+  ]
+}
