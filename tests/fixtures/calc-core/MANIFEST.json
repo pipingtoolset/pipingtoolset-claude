@@ -1,11 +1,11 @@
 {
   "source": "pipecalcpro packages/calc-core/fixtures",
-  "calc_core_commit": "e0c39da6342e7b54a0b7159d8f96984fbc72a5e0",
+  "calc_core_commit": "fe2c1a5862009ec3503c18482920abdd27173f63",
   "modules": {
     "noncode.pipe-section": {
       "skill": "stress-screening",
       "source_file": "pipe-section.json",
-      "source_sha256": "eeb50bbd436e3e210d4d1271c1c5c7578b9b5871533b7cf24b4e97cec709af09",
+      "source_sha256": "33a6f80cd13f634717f956ffcd6e1ab4612196079b6da2f483e3f6754a0946c3",
       "cases": 1
     },
     "piping.b31-allowable-pressure": {
@@ -23,7 +23,7 @@
     "piping.b313-wall-thickness": {
       "skill": "pressure-design",
       "source_file": "b313-wall-thickness.json",
-      "source_sha256": "60a238e083c60eea8629c96a2e91e89344e1e9b4965f130d2f1957ca2f42c843",
+      "source_sha256": "bfd6747b3f55f359e98cde9491f3bbe646fa3efa2db66c70de98ed9e26cf9442",
       "cases": 3
     },
     "piping.bend-thickness": {
@@ -35,7 +35,7 @@
     "piping.branch-reinforcement": {
       "skill": "pressure-design",
       "source_file": "branch-reinforcement.json",
-      "source_sha256": "2c5aabf0dc132c7fcfefa091672a8c5583ce389a384225e6cb4af0efbff9a71a",
+      "source_sha256": "2e6c7f4ab2f739eb97f5576c90d23d31d88942b0045707d0d0b56cd46afd1738",
       "cases": 2
     },
     "piping.displacement-stress": {
@@ -65,19 +65,19 @@
     "piping.sustained-stress": {
       "skill": "stress-screening",
       "source_file": "sustained-stress.json",
-      "source_sha256": "8e0b012290612d237d90efaa746a7588a340ab1662fe582626b1c2227b86aa6c",
+      "source_sha256": "569a8719b835d9c8be1dbe5ca8cde59a4b4a4edfb7e37a13a1a1067804b3dfb4",
       "cases": 2
     },
     "supports.max-spring-rate": {
       "skill": "stress-screening",
       "source_file": "max-spring-rate.json",
-      "source_sha256": "2fba6f14f72ae1cdb1f2f6e1d2d2bd36281bca559c643a4dcc6de40fe6651932",
+      "source_sha256": "a049fbe7a8932b83fb32c7c4c2dc32595ea34bacc9e18d338dc46ad9795cc056",
       "cases": 1
     },
     "supports.spring-variability": {
       "skill": "stress-screening",
       "source_file": "spring-variability.json",
-      "source_sha256": "5644f732c1f5f88b9698945332962831e53c9909db050b4e1a47bcb05b861d42",
+      "source_sha256": "cec1b618baf86a99b0fe3f5de5a31bea0fe0264f9bad54e5f9ce7a31260970ce",
       "cases": 2
     }
   }
