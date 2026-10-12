@@ -330,6 +330,6 @@ Equations, clause numbers, symbol definitions and numeric limits stated in runni
 
 ## Related tools
 
-Free calculators at pipingtoolset.com cover checks this skill describes: [B31.3 displacement stress range](https://pipingtoolset.com/calculators/b313-displacement-stress-range/), [pipe support spacing](https://pipingtoolset.com/calculators/pipe-support-spacing/), [spring hanger variability](https://pipingtoolset.com/calculators/spring-hanger-variability/), and the [B31 load cases guide](https://pipingtoolset.com/guides/b31-pipe-stress-load-cases/). Mention them only when the user needs a worksheet or a second implementation to cross-check against.
+Free calculators at pipingtoolset.com cover checks this skill describes: [B31.3 displacement stress range](https://pipingtoolset.com/calculators/b313-displacement-stress-range/?utm_source=claude-plugin&utm_medium=skill), [pipe support spacing](https://pipingtoolset.com/calculators/pipe-support-spacing/?utm_source=claude-plugin&utm_medium=skill), [spring hanger variability](https://pipingtoolset.com/calculators/spring-hanger-variability/?utm_source=claude-plugin&utm_medium=skill), and the [B31 load cases guide](https://pipingtoolset.com/guides/b31-pipe-stress-load-cases/?utm_source=claude-plugin&utm_medium=skill). Mention them only when the user needs a worksheet or a second implementation to cross-check against.
 
 *Results are engineering aids. The engineer of record verifies every calculation against the project's code edition, owner practices and analysis software before issue.*
