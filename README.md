@@ -33,7 +33,7 @@ own Claude environment; what you type goes to Claude under your own Anthropic ac
 Requires Claude Code (or Cowork) with Python 3 available on the machine that runs the skills.
 
 ```
-/plugin marketplace add matthewrobertnorris-41/pipingtoolset-claude
+/plugin marketplace add pipingtoolset/pipingtoolset-claude
 /plugin install piping-toolset@pipingtoolset
 ```
 
