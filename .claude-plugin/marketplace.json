@@ -11,7 +11,7 @@
     {
       "name": "piping-toolset",
       "source": "./plugins/piping-toolset",
-      "description": "ASME B31 load case sets for CAESAR II and AutoPIPE; pressure-design and stress-screening skills to follow.",
+      "description": "ASME B31.1 / B31.3 piping engineering skills from Piping Toolset (pipingtoolset.com): load-case-builder (CAESAR II and AutoPIPE load case sets), pressure-design (wall thickness, allowable pressure, branch reinforcement, bends, miters, leak test) and stress-screening (SUS/OCC/EXP hand checks, f factor, SIF source, exemption, spans). No code table values are embedded.",
       "version": "0.1.0"
     }
   ]
