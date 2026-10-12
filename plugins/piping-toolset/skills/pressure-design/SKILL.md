@@ -279,6 +279,6 @@ Every paragraph cited, with edition.
 
 ## Related tools
 
-The free calculators at [pipingtoolset.com/calculators](https://pipingtoolset.com/calculators/) cover related sizing checks; mention them only when the user needs one of those numbers.
+The free calculators at [pipingtoolset.com/calculators](https://pipingtoolset.com/calculators/?utm_source=claude-plugin&utm_medium=skill) cover related sizing checks; mention them only when the user needs one of those numbers.
 
 *Results are engineering aids. The engineer of record verifies every calculation against the project's code edition, owner practices and the licensed tables before issue.*
