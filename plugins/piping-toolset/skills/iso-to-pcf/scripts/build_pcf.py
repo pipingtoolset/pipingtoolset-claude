@@ -27,14 +27,17 @@ from typing import Dict, List, Optional
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from pcf_lib import (DIRS, PCF, PCFError, Point, Profile, add, along, angle_deg,  # noqa: E402
-                     fmt_in, ftin, length, off_ray, sub, tangent, unit)
+from pcf_lib import (DIRS, PCF, SAFE_MAP, PCFError, Point, Profile, add, along,  # noqa: E402
+                     angle_deg, fmt_in, ftin, length, off_ray, sub, tangent, unit)
 
 INLINE_TYPES = {"flange": "FLANGE", "blind": "FLANGE-BLIND", "gasket": "GASKET",
                 "valve": "VALVE", "cap": "CAP", "misc": "MISC-COMPONENT",
                 "coupling": "COUPLING"}
-DEFAULT_SKEY = {"FLANGE": "FLWN", "FLANGE-BLIND": "FLBL", "VALVE": None, "GASKET": None,
-                "CAP": None, "MISC-COMPONENT": None, "COUPLING": None}
+# Defaults: VVFL/RCBW/BEBW/TEBW and the support SKEYs are seen in import-proven PCFs;
+# FLWN/FLBL/WTBW are common Isogen keys. Override per item with "skey".
+DEFAULT_SKEY = {"FLANGE": "FLWN", "FLANGE-BLIND": "FLBL", "VALVE": "VVFL", "GASKET": None,
+                "CAP": None, "MISC-COMPONENT": "VVFL", "COUPLING": None}
+SUPPORT_SKEYS = {"ANCH": None, "SKID": "UP", "GUID": None, "SPRG": "UP"}   # skey: default direction
 LINE_TOL = 1 / 64   # in: perpendicular offset beyond which a point is off the run
 
 
@@ -43,7 +46,8 @@ class Builder:
         self.spec = spec
         self.pcf = PCF(axes=spec.get("axes", "Z-up"), coords=spec.get("units", "MM"),
                        safe=not spec.get("full_vocabulary", False),
-                       weight_units=spec.get("weight_units", "KGS"))
+                       weight_units=spec.get("weight_units", "LBS"),
+                       annotate=bool(spec.get("annotate", False)))
         self.profiles: Dict[str, Profile] = {}
         for name, p in spec.get("profiles", {}).items():
             self.profiles[name] = Profile(p["along"], [(ftin(s), ftin(z)) for s, z in p["points"]])
@@ -56,6 +60,7 @@ class Builder:
         self.pipe_len: Dict[str, F] = {}
         self.assumed: List[str] = list(spec.get("assumed", []))
         self.substitutions: List[str] = []
+        self.deferred: List[tuple] = []     # branch walks, written after the main run
 
     # ------------------------------------------------------------------ inputs
     def direction(self, d) -> Point:
@@ -112,8 +117,7 @@ class Builder:
         self._on_line(p2, label)
         own = it.get("type") == "pipe"
         self.pcf.inline("PIPE", self.cursor, p2, self.bore,
-                        desc=it.get("desc") if own else it.get("pipe_desc"),
-                        code=it.get("item_code") if own else it.get("pipe_code"))
+                        desc=it.get("desc") if own else it.get("pipe_desc"))
         k = f"{float(self.bore):g}"
         self.pipe_len[k] = self.pipe_len.get(k, F(0)) + F(round(length(sub(p2, self.cursor)) * 10000), 10000)
         self.cursor = p2
@@ -159,12 +163,11 @@ class Builder:
         self._on_line(p2, logical)
         skey = it.get("skey", DEFAULT_SKEY.get(logical))
         self.pcf.inline(logical, self.cursor, p2, self.bore, bore2=bore2, desc=it.get("desc"),
-                        code=it.get("item_code"), skey=skey,
-                        weight=F(str(it["weight"])) if "weight" in it else None, extra=extra)
-        if self.pcf.safe and logical in ("FLANGE-BLIND", "CAP", "MISC-COMPONENT", "COUPLING"):
-            self.substitutions.append(f"{logical} written as a "
-                                      f"{ {'FLANGE-BLIND': 'FLANGE', 'MISC-COMPONENT': 'VALVE'}.get(logical, 'PIPE') } "
-                                      f"record ({it.get('desc', logical)}); identity kept in the description")
+                        skey=skey, weight=F(str(it["weight"])) if "weight" in it else None,
+                        extra=extra)
+        if self.pcf.safe and logical in SAFE_MAP:
+            self.substitutions.append(f"{logical} written as a {SAFE_MAP[logical]} record "
+                                      f"({it.get('desc', logical)}, SKEY {skey or 'none'})")
         self.cursor = self.anchor = p2
 
     def __getattr__(self, name):
@@ -177,7 +180,7 @@ class Builder:
         new = F(str(it["bore"]))
         ecc = bool(it.get("eccentric"))
         logical = "REDUCER-ECCENTRIC" if ecc else "REDUCER-CONCENTRIC"
-        extra = [f"FLAT-DIRECTION  {it.get('flat', 'DOWN')}"] if ecc else []
+        extra = [f"FLAT-DIRECTION {it.get('flat', 'DOWN')}"] if ecc else []
         if "skey" not in it:
             it = dict(it, skey="RECC" if ecc else "RCBW")
         if ecc and "to" not in it:
@@ -188,7 +191,7 @@ class Builder:
         if ecc:
             p2 = self.point(it["to"], base=self.cursor)
             self.pcf.inline(logical, self.cursor, p2, self.bore, bore2=new, desc=it.get("desc"),
-                            code=it.get("item_code"), skey=it["skey"], extra=extra)
+                            skey=it["skey"], extra=extra)
             self.cursor = self.anchor = p2
         else:
             self._inline(it, logical, bore2=new)
@@ -211,9 +214,8 @@ class Builder:
                                f"radius or corner is wrong")
         self._pipe_to(t1, it, "bend")
         t2 = along(corner, out, T)
-        skey = it.get("skey", None if bend else "ELBW")
-        self.pcf.elbow(t1, t2, corner, self.bore, ang, R, desc=it.get("desc"),
-                       code=it.get("item_code"), skey=skey, bend=bend)
+        self.pcf.bend(t1, t2, corner, self.bore, ang, R, desc=it.get("desc"),
+                      skey=it.get("skey", "BEBW"), logical="BEND" if bend else "ELBOW")
         self.cursor, self.anchor, self.dir = t2, corner, out
 
     def do_elbow(self, it):
@@ -223,10 +225,10 @@ class Builder:
         self._bend(it, bend=True)
 
     def _branch(self, it, centre: Point, bp: Point, bdir: Point, bbore: F):
-        saved = (self.cursor, self.anchor, self.dir, self.bore)
-        self.cursor, self.anchor, self.dir, self.bore = bp, centre, bdir, bbore
-        self.walk(it.get("branch", []))
-        self.cursor, self.anchor, self.dir, self.bore = saved
+        # Isogen writes the main run first and each branch leg after it; the import-proven
+        # files follow that order, so branch walks are queued, not walked in place.
+        if it.get("branch"):
+            self.deferred.append(((bp, centre, bdir, bbore), it["branch"]))
 
     def do_tee(self, it):
         centre = self.point(it["centre"])
@@ -239,7 +241,7 @@ class Builder:
         p1, p2 = along(centre, self.dir, -C), along(centre, self.dir, C)
         self._pipe_to(p1, it, "tee")
         bp = along(centre, bdir, M)
-        self.pcf.tee(p1, p2, self.bore, bp, bbore, desc=it.get("desc"), code=it.get("item_code"),
+        self.pcf.tee(p1, p2, centre, self.bore, bp, bbore, desc=it.get("desc"),
                      skey=it.get("skey", "TEBW"))
         self.cursor, self.anchor = p2, centre
         self._branch(it, centre, bp, bdir, bbore)
@@ -251,17 +253,22 @@ class Builder:
         bdir = self.direction(it["branch_dir"])
         bbore = F(str(it["branch_bore"]))
         bp = along(centre, bdir, ftin(it["height"]))
-        self.pcf.olet(centre, bp, bbore, desc=it.get("desc"), code=it.get("item_code"),
-                      skey=it.get("skey", "WTBW"))
+        self.pcf.olet(centre, bp, bbore, desc=it.get("desc"), skey=it.get("skey", "WTBW"))
         self.anchor = centre
         self._branch(it, centre, bp, bdir, bbore)
         self.anchor = centre
 
     def do_support(self, it):
-        at = self.point(it["at"])
-        self.pcf.support(at, self.bore, it["name"], skey=it.get("skey", "01HG"),
-                         direction=it.get("direction", "UP"), desc=it.get("desc"),
-                         code=it.get("item_code"))
+        """A support must sit ON a node: the pipe is split at the support point (the
+        import-proven files never place a restraint mid-element)."""
+        at = self.point(it["at"]) if "at" in it else self.cursor
+        if at != self.cursor:
+            self._pipe_to(at, it, "support")          # raises if behind or off the run
+        skey = it.get("skey", "SKID")
+        dirs = it.get("direction", SUPPORT_SKEYS.get(skey, "UP"))
+        for d in (dirs if isinstance(dirs, list) else [dirs]):
+            self.pcf.support(at, self.bore, skey=skey, direction=d, name=it.get("name"),
+                             desc=it.get("desc"))
         self.anchor = at
 
     def do_check(self, it):
@@ -278,6 +285,9 @@ class Builder:
         attrs = [(a[0], a[1]) for a in pl.get("attributes", [])]
         self.pcf.set_header(pl.get("reference", "LINE"), attrs)
         self.walk(self.spec["items"])
+        while self.deferred:                          # branches of branches queue behind
+            (self.cursor, self.anchor, self.dir, self.bore), items = self.deferred.pop(0)
+            self.walk(items)
         return self
 
     def bom_check(self) -> List[dict]:
@@ -303,6 +313,7 @@ def report(b: Builder, bom: List[dict]) -> dict:
         "axes": b.spec.get("axes", "Z-up"),
         "coords": b.pcf.coords,
         "vocabulary": "CAESAR II safe set" if b.pcf.safe else "full PCF vocabulary",
+        "annotated": b.pcf.annotate,
         "census": dict(sorted(b.pcf.census.items())),
         "pipe_centreline_in": {k: float(v) for k, v in sorted(b.pipe_len.items())},
         "closure_checks": b.checks,

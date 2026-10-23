@@ -77,7 +77,8 @@ output before relying on it:**
 | `FLWN` | Weld-neck flange |
 | `FLSW` | Socket-weld flange |
 | `FLBL` | Blind flange |
-| `ELBW` | Butt-weld elbow |
+| `BEBW` | Butt-weld elbow / bend (written as a `BEND` record) |
+| `ELBW` | Butt-weld elbow (`ELBOW` record; not import-proven) |
 | `TEBW` | Butt-weld tee |
 | `WTBW` | Weldolet |
 | `RECC` | Eccentric reducer |
@@ -87,11 +88,14 @@ output before relying on it:**
 | `WS` | Field weld |
 | `PB5D` | Mitred bend |
 | `VBSW` / `VBFL` | Ball valve, socket-weld / flanged |
-| `01HG` `01GU` `01SK` | Example support SKEYs (rod hanger, guide, skid). Support vocabularies are site-specific |
+| `VVFL` / `AVBW` | Valve flanged / angle valve (import-proven) |
+| `FLSO` | Slip-on flange (import-proven) |
+| `FPFA` | Fixed pipe (`PIPE-FIXED`, import-proven) |
+| `ANCH` `SKID` `GUID` `SPRG` | Support: anchor, resting, guide, spring (import-proven) |
 
-These were all seen in one site's Isogen output. **Not** seen there, so unconfirmed until you find
-them in the user's own PCFs: `RCBW` (concentric reducer, the builder's default; override it),
-`BEBW`/`BELW` (bends), `OLBW`/`OLTH` (olets), `VABW`/`VAFL` (valves).
+The rows marked import-proven appear in PCFs that import cleanly into CAESAR II. The rest were
+seen in one site's Isogen output. Treat `BELW`, `OLBW`/`OLTH` and `VABW`/`VAFL` as unconfirmed
+until you find them in the user's own PCFs.
 
 ### Why tee and olet SKEYs matter most
 

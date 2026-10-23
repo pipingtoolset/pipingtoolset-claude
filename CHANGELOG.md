@@ -17,6 +17,17 @@ label and are the recall channel.
   and writes only the CAESAR II safe record set by default; `validate_pcf.py` checks
   any PCF for floating or zero-length elements, off-line olets and supports, unsafe
   record types and bore changes. Synthetic worked example and golden output.
+- `iso-to-pcf` output format corrected to match PCFs that import cleanly into
+  CAESAR II (the first build's PCF failed to import): `UNITS-BORE MM` with bore
+  = NPS x 25.4 (was `INCH` with raw NPS under mm coordinates); bare header (no
+  free-text `ATTRIBUTE1`); elbows as `BEND` + `BEBW` + `ANGLE 9000` +
+  `BEND-RADIUS`; `TEE` with `CENTRE-POINT`; supports as `CO-ORDS`/`SKEY`
+  (`ANCH`/`SKID`/`GUID`/`SPRG`)/`SUPPORT-DIRECTION` on a node (pipe split at the
+  support); no `ITEM-CODE`/`ITEM-DESCRIPTION`/`WEIGHT`/`NAME` unless
+  `"annotate": true`; branch legs written after the main run; `UNITS-WEIGHT LBS`.
+  The validator now errors on bore/coordinate unit mismatch, inch bores under
+  `UNITS-BORE MM`, `ELBOW` records and supports off a node. New
+  `examples/minimal-proven.json`.
 - Plugin display name is now **PipingToolset** (`displayName`); the id and the
   `/piping-toolset:<skill>` command prefix are unchanged.
 - Plugin icon (`assets/icon.png`, gray line-art grid-elbow mark) for the plugin

@@ -4,10 +4,11 @@
     python validate_pcf.py line.pcf [--skeys FLWN,ELBW,...] [--full-vocabulary] [--json]
 
 Errors (exit 1): floating components (start attaches to no existing node), zero-length
-elements, olets or supports off the modelled centreline, record types outside the
-CAESAR II safe set, missing UNITS-CO-ORDS. Warnings (exit 0): asymmetric elbow
-tangents, bore changes outside reducers/tees/olets, SKEYs outside the --skeys list,
-LF line endings.
+elements, olets off the centreline, supports not on a node, record types outside the
+CAESAR II safe set, missing or mismatched UNITS-BORE / UNITS-CO-ORDS, bores that look
+like inches under UNITS-BORE MM. Warnings (exit 0): asymmetric bend tangents, bore
+changes without a reducer, SKEYs outside the --skeys list, record types that are
+accepted but not import-proven (GASKET, OLET), LF line endings.
 
 It does NOT check that the SKEYs are what your site's Isogen emits, continuation
 coordinates against adjoining sheets, or the axis declaration - do those by hand.
@@ -23,12 +24,18 @@ import math
 import sys
 from typing import Dict, List, Optional, Tuple
 
-INLINE = {"PIPE", "ELBOW", "BEND", "FLANGE", "FLANGE-BLIND", "GASKET", "VALVE",
-          "REDUCER-ECCENTRIC", "REDUCER-CONCENTRIC", "CAP", "MISC-COMPONENT", "TEE",
-          "INSTRUMENT", "COUPLING", "UNION", "FILTER", "TRAP"}
+INLINE = {"PIPE", "PIPE-FIXED", "ELBOW", "BEND", "FLANGE", "FLANGE-BLIND", "GASKET",
+          "VALVE", "VALVE-ANGLE", "REDUCER-ECCENTRIC", "REDUCER-CONCENTRIC", "CAP",
+          "MISC-COMPONENT", "TEE", "INSTRUMENT", "COUPLING", "UNION", "FILTER", "TRAP"}
 POINT_ONLY = {"OLET", "SUPPORT", "WELD"}
-SAFE = {"PIPE", "ELBOW", "BEND", "TEE", "OLET", "FLANGE", "GASKET", "VALVE",
-        "REDUCER-CONCENTRIC", "SUPPORT", "WELD"}
+# Seen in PCFs that import cleanly into CAESAR II, and reported-accepted but unproven.
+PROVEN = {"PIPE", "PIPE-FIXED", "BEND", "TEE", "FLANGE", "VALVE", "VALVE-ANGLE",
+          "REDUCER-CONCENTRIC", "SUPPORT"}
+ACCEPTED = {"GASKET", "OLET"}
+SAFE = PROVEN | ACCEPTED
+# Nominal sizes written in inches. Under UNITS-BORE MM a real bore is size x 25.4
+# (1/8 -> 3.175, 1/4 -> 6.35), so an exact inch value here is a unit error.
+NPS_INCH = {0.125, 0.25, 0.375, 0.5, 0.75, 1, 1.25, 1.5, 2, 2.5, 3, 3.5, 4, 5, 6, 8}
 HEADER = ("ISOGEN-FILES", "UNITS-", "PIPELINE-REFERENCE", "PROJECT-IDENTIFIER", "AREA",
           "MATERIALS", "SPOOL", "DATE", "REVISION", "PIPING-SPEC", "MESSAGE")
 
@@ -96,14 +103,31 @@ def validate(text: str, skeys: Optional[set] = None, safe: bool = True,
     errs: List[str] = []
     warns: List[str] = []
     unit = header.get("UNITS-CO-ORDS", "").upper()
+    bunit = header.get("UNITS-BORE", "").upper()
     if not unit:
         errs.append("no UNITS-CO-ORDS header - the importer cannot scale the file")
+    if not bunit:
+        errs.append("no UNITS-BORE header")
+    elif unit and bunit != unit:
+        errs.append(f"UNITS-BORE {bunit} differs from UNITS-CO-ORDS {unit} - import-proven "
+                    f"files use MM for both (bore = nominal size x 25.4)")
+    if unit == "INCH":
+        warns.append("INCH coordinates are not import-proven; MM is")
     tol = tol if tol is not None else (0.05 if unit != "INCH" else 0.002)   # 0.05 mm
     if "\r\n" not in text:
         warns.append("LF line endings - write CRLF for the Windows importer")
 
     def tag(c):
         return f"#{c['line']} {c['kind']} [{c['desc'][:45]}]"
+
+    # 0. bore unit sanity: under UNITS-BORE MM a bore below 6 is an inch value written
+    # into a mm field (the failure mode of writing NPS as the bore).
+    if bunit == "MM":
+        small = sorted({p[3] for c in comps for p in c["ends"] + [c["branch"], c["co"]]
+                        if p and p[3] is not None and p[3] in NPS_INCH})
+        if small:
+            errs.append(f"bore value(s) {', '.join(f'{b:g}' for b in small[:5])} under UNITS-BORE MM "
+                        f"look like inches - write nominal size x 25.4 (NPS 4 -> 101.6)")
 
     # 1. vocabulary
     for c in comps:
@@ -112,6 +136,8 @@ def validate(text: str, skeys: Optional[set] = None, safe: bool = True,
         elif safe and c["kind"] not in SAFE:
             errs.append(f"record type outside the CAESAR II safe set {tag(c)} - map it "
                         f"(see references/caesar-import.md) or pass --full-vocabulary")
+        elif safe and c["kind"] in ACCEPTED:
+            warns.append(f"{c['kind']} is accepted but not yet seen in an import-proven file {tag(c)}")
         if skeys is not None and c["skey"] and c["skey"] not in skeys:
             warns.append(f"SKEY {c['skey']} not in the confirmed list {tag(c)}")
 
@@ -177,12 +203,15 @@ def validate(text: str, skeys: Optional[set] = None, safe: bool = True,
         if c["kind"] == "TEE" and c["branch"]:
             mid = c["centre"] or tuple((a[i] + b[i]) / 2 for i in range(3))
             segs.append((mid, c["branch"]))
+    nodes = [p for c in comps if c["kind"] in INLINE for p in c["ends"] + [c["branch"]] if p]
     for c in comps:
         p = c["centre"] if c["kind"] == "OLET" else c["co"] if c["kind"] == "SUPPORT" else None
         if p and segs:
             off = min(seg_dist(p, a, b) for a, b in segs)
             if off > tol:
                 errs.append(f"{c['kind']} OFF-LINE by {off:.2f} {unit.lower() or 'units'} {tag(c)}")
+            elif c["kind"] == "SUPPORT" and not any(d3(p, q) <= tol for q in nodes):
+                errs.append(f"SUPPORT not on a node {tag(c)} - split the element at the support")
 
     # 5. elbow tangent symmetry
     for c in comps:
