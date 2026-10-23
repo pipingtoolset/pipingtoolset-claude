@@ -41,6 +41,10 @@ MODULES = {
     "supports.spring-variability": "stress-screening",
     "supports.max-spring-rate": "stress-screening",
     "noncode.pipe-section": "stress-screening",
+    "structural.aisc-member": "pipe-support",
+    "structural.fillet-weld": "pipe-support",
+    "structural.baseplate-anchorage": "pipe-support",
+    "structural.pier-soil": "pipe-support",
 }
 
 

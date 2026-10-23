@@ -1,0 +1,115 @@
+{
+  "module": "structural.fillet-weld",
+  "cases": [
+    {
+      "input": {
+        "method": "LRFD",
+        "size": 0.25,
+        "FEXX": 70,
+        "pattern": "single",
+        "depth": 10,
+        "Vparallel": 10
+      },
+      "expect": {
+        "length": 10,
+        "throat": 0.1768,
+        "Awe": 1.7675,
+        "Sw": 16.6667,
+        "stress": 5.6577,
+        "theta": 0,
+        "directionalFactor": 1,
+        "designPerInch": 5.5676,
+        "demandPerInch": 1,
+        "ratio": 0.1796,
+        "minSize": 0
+      },
+      "status": "pass",
+      "tol": 0.0001
+    },
+    {
+      "input": {
+        "method": "LRFD",
+        "size": 0.25,
+        "FEXX": 70,
+        "pattern": "single",
+        "depth": 10,
+        "Vtransverse": 10
+      },
+      "expect": {
+        "length": 10,
+        "throat": 0.1768,
+        "Awe": 1.7675,
+        "Sw": 16.6667,
+        "stress": 5.6577,
+        "theta": 90,
+        "directionalFactor": 1.5,
+        "designPerInch": 8.3514,
+        "demandPerInch": 1,
+        "ratio": 0.1197,
+        "minSize": 0
+      },
+      "status": "pass",
+      "tol": 0.0001
+    },
+    {
+      "input": {
+        "method": "LRFD",
+        "size": 0.25,
+        "FEXX": 70,
+        "pattern": "all-round",
+        "depth": 5.99,
+        "width": 5.99,
+        "Vtransverse": 1.5,
+        "M": 96,
+        "basePartThickness": 0.75,
+        "baseFy": 36,
+        "baseFu": 58
+      },
+      "expect": {
+        "length": 23.96,
+        "throat": 0.1768,
+        "Awe": 4.2349,
+        "Sw": 47.8401,
+        "stress": 11.3588,
+        "theta": 90,
+        "directionalFactor": 1.5,
+        "designPerInch": 8.3514,
+        "demandPerInch": 2.0077,
+        "ratio": 0.2404,
+        "minSize": 0.25,
+        "maxSize": 0.6875,
+        "baseMetalPerInch": 19.575
+      },
+      "status": "pass",
+      "tol": 0.0001
+    },
+    {
+      "input": {
+        "method": "ASD",
+        "size": 0.3125,
+        "FEXX": 70,
+        "pattern": "two-parallel",
+        "depth": 5.99,
+        "Vtransverse": 2.7,
+        "M": 36.6,
+        "basePartThickness": 0.23
+      },
+      "expect": {
+        "length": 11.98,
+        "throat": 0.2209,
+        "Awe": 2.6468,
+        "Sw": 11.96,
+        "stress": 13.8885,
+        "theta": 90,
+        "directionalFactor": 1.5,
+        "designPerInch": 6.9595,
+        "demandPerInch": 3.0685,
+        "ratio": 0.4409,
+        "minSize": 0.125,
+        "maxSize": 0.23
+      },
+      "status": "pass",
+      "tol": 0.0001
+    }
+  ]
+}

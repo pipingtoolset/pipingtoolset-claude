@@ -1,0 +1,66 @@
+{
+  "tag": "PS-101",
+  "project": "PS-101 verification (factored loads as entered)",
+  "design": {
+    "method": "LRFD",
+    "type": "t-post",
+    "tag": "PS-101",
+    "columnShape": "W6X15",
+    "columnHeight": 96,
+    "weldSize": 0.25,
+    "weldFEXX": 70,
+    "material": {
+      "Fy": 36,
+      "Fu": 58
+    },
+    "arms": [
+      {
+        "shape": "W6X15",
+        "elevation": 96,
+        "projection": 24,
+        "pipes": [
+          {
+            "tag": "6-P-1201",
+            "offset": 8,
+            "vertical": 1.2,
+            "transverse": 0.2,
+            "longitudinal": 0
+          },
+          {
+            "tag": "6-P-1202",
+            "offset": 18,
+            "vertical": 1.5,
+            "transverse": 0.25,
+            "longitudinal": 0
+          }
+        ]
+      }
+    ],
+    "baseplate": {
+      "plateLength": 12,
+      "plateWidth": 12,
+      "plateThickness": 1.25,
+      "plateFy": 36,
+      "fc": 4000,
+      "pierLength": 24,
+      "pierWidth": 24,
+      "anchorType": "post-installed-adhesive",
+      "anchorCount": 4,
+      "anchorDiameter": 0.75,
+      "anchorEmbedment": 8,
+      "anchorFuta": 58,
+      "anchorSpacingLength": 15,
+      "anchorSpacingWidth": 15,
+      "anchorEdgeDistance": 4.5,
+      "bondStrength": 800
+    },
+    "pier": {
+      "pierLength": 24,
+      "pierWidth": 24,
+      "pierHeight": 24,
+      "fc": 4000,
+      "allowableBearing": 3,
+      "restraint": "anchored"
+    }
+  }
+}

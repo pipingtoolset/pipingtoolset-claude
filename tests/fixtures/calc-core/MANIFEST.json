@@ -1,6 +1,6 @@
 {
   "source": "pipecalcpro packages/calc-core/fixtures",
-  "calc_core_commit": "fe2c1a5862009ec3503c18482920abdd27173f63",
+  "calc_core_commit": "1117de410d1bfae83247039779504818adfbe2ac",
   "modules": {
     "noncode.pipe-section": {
       "skill": "stress-screening",
@@ -67,6 +67,30 @@
       "source_file": "sustained-stress.json",
       "source_sha256": "569a8719b835d9c8be1dbe5ca8cde59a4b4a4edfb7e37a13a1a1067804b3dfb4",
       "cases": 2
+    },
+    "structural.aisc-member": {
+      "skill": "pipe-support",
+      "source_file": "piperstr-member.json",
+      "source_sha256": "78984da998c1c604d26811624fa740bbdb8869cbf64d4f7ad1bc0cf2bbc2c540",
+      "cases": 14
+    },
+    "structural.baseplate-anchorage": {
+      "skill": "pipe-support",
+      "source_file": "piperstr-baseplate.json",
+      "source_sha256": "c8a85ecb6eed38cda0ae2636ffbb6bab2512f24b85bcf4dbd11a1254054b2bfb",
+      "cases": 4
+    },
+    "structural.fillet-weld": {
+      "skill": "pipe-support",
+      "source_file": "piperstr-weld.json",
+      "source_sha256": "15435dd0457e8d7b7b08e47b6f35df1f92262420b679aaffd032d96bd66630f1",
+      "cases": 4
+    },
+    "structural.pier-soil": {
+      "skill": "pipe-support",
+      "source_file": "piperstr-pier.json",
+      "source_sha256": "3e3f888b6ee3c0d43e6775b14078e07ff63e2839ec2520a171e89e22613cc79f",
+      "cases": 3
     },
     "supports.max-spring-rate": {
       "skill": "stress-screening",

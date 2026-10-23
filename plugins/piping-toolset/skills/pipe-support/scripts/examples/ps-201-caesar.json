@@ -1,0 +1,104 @@
+{
+  "tag": "PS-201",
+  "project": "Example - CAESAR II restraint loads",
+  "T_factor": 1.0,
+  "preset": "csa-type-1",
+  "design": {
+    "method": "LRFD",
+    "tag": "PS-201",
+    "material": {
+      "Fy": 36,
+      "Fu": 58
+    },
+    "arms": [
+      {
+        "shape": "W6X15",
+        "elevation": 96,
+        "projection": 24,
+        "pipes": []
+      }
+    ]
+  },
+  "fabrication": {
+    "armToColumn": "shop-weld"
+  },
+  "pipes": [
+    {
+      "tag": "6-P-1201",
+      "arm": 0,
+      "offset": 8,
+      "loads": {
+        "units": "lb-ft",
+        "vertical_axis": "Y",
+        "pipe_axis": "X",
+        "SDS": 0.5,
+        "cases": {
+          "SUS": [
+            0,
+            -850,
+            0
+          ],
+          "OPE": [
+            180,
+            -920,
+            -140
+          ],
+          "WIN": [
+            0,
+            0,
+            210
+          ],
+          "EQ": [
+            0,
+            0,
+            260
+          ]
+        }
+      }
+    },
+    {
+      "tag": "6-P-1202",
+      "arm": 0,
+      "offset": 18,
+      "loads": {
+        "units": "lb-ft",
+        "vertical_axis": "Y",
+        "pipe_axis": "X",
+        "SDS": 0.5,
+        "cases": {
+          "SUS": [
+            0,
+            -1100,
+            0
+          ],
+          "OPE": [
+            240,
+            -1180,
+            -190
+          ],
+          "WIN": [
+            0,
+            0,
+            260
+          ],
+          "EQ": [
+            0,
+            0,
+            320
+          ]
+        }
+      }
+    }
+  ],
+  "optimize": {
+    "objectives": {
+      "weight": 1,
+      "field": 1,
+      "standard": 1
+    },
+    "top": 5
+  },
+  "assumed": [
+    "Loads from the CAESAR II restraint summary at node 1040; Y vertical."
+  ]
+}

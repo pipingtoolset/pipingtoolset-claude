@@ -1,0 +1,691 @@
+{
+  "module": "structural.aisc-member",
+  "cases": [
+    {
+      "input": {
+        "section": {
+          "label": "W12X40",
+          "kind": "I",
+          "A": 11.7,
+          "d": 11.9,
+          "bf": 8.01,
+          "tw": 0.295,
+          "tf": 0.515,
+          "kdes": 1.02,
+          "bf2tf": 7.77,
+          "htw": 33.6,
+          "Ix": 307,
+          "Zx": 57,
+          "Sx": 51.5,
+          "rx": 5.13,
+          "Iy": 44.1,
+          "Zy": 16.8,
+          "Sy": 11,
+          "ry": 1.94,
+          "J": 0.906,
+          "Cw": 1440,
+          "rts": 2.21,
+          "ho": 11.4
+        },
+        "material": {
+          "Fy": 50,
+          "Fu": 65
+        },
+        "method": "LRFD",
+        "Lx": 72,
+        "Ly": 72,
+        "Lb": 1,
+        "demand": {
+          "P": 100,
+          "Mx": 1500,
+          "Vx": 20
+        }
+      },
+      "expect": {
+        "label": "W12X40",
+        "method": "LRFD",
+        "interaction": 0.7299,
+        "interactionEquation": "H1-1a",
+        "governingRatio": 0.7299,
+        "governingCheck": "Combined axial + flexure"
+      },
+      "status": "pass",
+      "tol": 0.0001
+    },
+    {
+      "input": {
+        "section": {
+          "label": "W12X40",
+          "kind": "I",
+          "A": 11.7,
+          "d": 11.9,
+          "bf": 8.01,
+          "tw": 0.295,
+          "tf": 0.515,
+          "kdes": 1.02,
+          "bf2tf": 7.77,
+          "htw": 33.6,
+          "Ix": 307,
+          "Zx": 57,
+          "Sx": 51.5,
+          "rx": 5.13,
+          "Iy": 44.1,
+          "Zy": 16.8,
+          "Sy": 11,
+          "ry": 1.94,
+          "J": 0.906,
+          "Cw": 1440,
+          "rts": 2.21,
+          "ho": 11.4
+        },
+        "material": {
+          "Fy": 50,
+          "Fu": 65
+        },
+        "method": "ASD",
+        "Lx": 72,
+        "Ly": 72,
+        "Lb": 1,
+        "demand": {
+          "P": 67,
+          "Mx": 1000,
+          "Vx": 13
+        }
+      },
+      "expect": {
+        "label": "W12X40",
+        "method": "ASD",
+        "interaction": 0.7324,
+        "interactionEquation": "H1-1a",
+        "governingRatio": 0.7324,
+        "governingCheck": "Combined axial + flexure"
+      },
+      "status": "pass",
+      "tol": 0.0001
+    },
+    {
+      "input": {
+        "section": {
+          "label": "W12X40",
+          "kind": "I",
+          "A": 11.7,
+          "d": 11.9,
+          "bf": 8.01,
+          "tw": 0.295,
+          "tf": 0.515,
+          "kdes": 1.02,
+          "bf2tf": 7.77,
+          "htw": 33.6,
+          "Ix": 307,
+          "Zx": 57,
+          "Sx": 51.5,
+          "rx": 5.13,
+          "Iy": 44.1,
+          "Zy": 16.8,
+          "Sy": 11,
+          "ry": 1.94,
+          "J": 0.906,
+          "Cw": 1440,
+          "rts": 2.21,
+          "ho": 11.4
+        },
+        "material": {
+          "Fy": 50,
+          "Fu": 65
+        },
+        "method": "LRFD",
+        "Lx": 144,
+        "Lb": 144,
+        "demand": {
+          "Mx": 1500
+        }
+      },
+      "expect": {
+        "label": "W12X40",
+        "method": "LRFD",
+        "interaction": 0.6742,
+        "interactionEquation": "H1-1b",
+        "governingRatio": 0.6742,
+        "governingCheck": "Flexure, major axis"
+      },
+      "status": "pass",
+      "tol": 0.0001
+    },
+    {
+      "input": {
+        "section": {
+          "label": "W12X40",
+          "kind": "I",
+          "A": 11.7,
+          "d": 11.9,
+          "bf": 8.01,
+          "tw": 0.295,
+          "tf": 0.515,
+          "kdes": 1.02,
+          "bf2tf": 7.77,
+          "htw": 33.6,
+          "Ix": 307,
+          "Zx": 57,
+          "Sx": 51.5,
+          "rx": 5.13,
+          "Iy": 44.1,
+          "Zy": 16.8,
+          "Sy": 11,
+          "ry": 1.94,
+          "J": 0.906,
+          "Cw": 1440,
+          "rts": 2.21,
+          "ho": 11.4
+        },
+        "material": {
+          "Fy": 50,
+          "Fu": 65
+        },
+        "method": "LRFD",
+        "Lx": 360,
+        "Lb": 360,
+        "demand": {
+          "Mx": 800
+        }
+      },
+      "expect": {
+        "label": "W12X40",
+        "method": "LRFD",
+        "interaction": 0.7814,
+        "interactionEquation": "H1-1b",
+        "governingRatio": 0.7814,
+        "governingCheck": "Flexure, major axis"
+      },
+      "status": "pass",
+      "tol": 0.0001
+    },
+    {
+      "input": {
+        "section": {
+          "label": "W6X15",
+          "kind": "I",
+          "A": 4.43,
+          "d": 5.99,
+          "bf": 5.99,
+          "tw": 0.23,
+          "tf": 0.26,
+          "kdes": 0.51,
+          "bf2tf": 11.5,
+          "htw": 21.6,
+          "Ix": 29.1,
+          "Zx": 10.8,
+          "Sx": 9.72,
+          "rx": 2.56,
+          "Iy": 9.32,
+          "Zy": 4.75,
+          "Sy": 3.11,
+          "ry": 1.45,
+          "J": 0.101,
+          "Cw": 76.5,
+          "rts": 1.66,
+          "ho": 5.73
+        },
+        "material": {
+          "Fy": 50,
+          "Fu": 65
+        },
+        "method": "LRFD",
+        "Lx": 96,
+        "Lb": 1,
+        "demand": {
+          "Mx": 400
+        }
+      },
+      "expect": {
+        "label": "W6X15",
+        "method": "LRFD",
+        "interaction": 0.8739,
+        "interactionEquation": "H1-1b",
+        "governingRatio": 0.8739,
+        "governingCheck": "Flexure, major axis"
+      },
+      "status": "pass",
+      "tol": 0.0001
+    },
+    {
+      "input": {
+        "section": {
+          "label": "W6X15",
+          "kind": "I",
+          "A": 4.43,
+          "d": 5.99,
+          "bf": 5.99,
+          "tw": 0.23,
+          "tf": 0.26,
+          "kdes": 0.51,
+          "bf2tf": 11.5,
+          "htw": 21.6,
+          "Ix": 29.1,
+          "Zx": 10.8,
+          "Sx": 9.72,
+          "rx": 2.56,
+          "Iy": 9.32,
+          "Zy": 4.75,
+          "Sy": 3.11,
+          "ry": 1.45,
+          "J": 0.101,
+          "Cw": 76.5,
+          "rts": 1.66,
+          "ho": 5.73
+        },
+        "material": {
+          "Fy": 36,
+          "Fu": 58
+        },
+        "method": "LRFD",
+        "Lx": 96,
+        "Ly": 96,
+        "Lb": 96,
+        "Kx": 2.1,
+        "Ky": 2.1,
+        "demand": {
+          "P": 3,
+          "Mx": 75,
+          "My": 12,
+          "Vx": 1
+        }
+      },
+      "expect": {
+        "label": "W6X15",
+        "method": "LRFD",
+        "interaction": 0.3337,
+        "interactionEquation": "H1-1b",
+        "governingRatio": 0.3337,
+        "governingCheck": "Combined axial + flexure"
+      },
+      "status": "pass",
+      "tol": 0.0001
+    },
+    {
+      "input": {
+        "section": {
+          "label": "W12X40",
+          "kind": "I",
+          "A": 11.7,
+          "d": 11.9,
+          "bf": 8.01,
+          "tw": 0.295,
+          "tf": 0.515,
+          "kdes": 1.02,
+          "bf2tf": 7.77,
+          "htw": 33.6,
+          "Ix": 307,
+          "Zx": 57,
+          "Sx": 51.5,
+          "rx": 5.13,
+          "Iy": 44.1,
+          "Zy": 16.8,
+          "Sy": 11,
+          "ry": 1.94,
+          "J": 0.906,
+          "Cw": 1440,
+          "rts": 2.21,
+          "ho": 11.4
+        },
+        "material": {
+          "Fy": 50,
+          "Fu": 65
+        },
+        "method": "LRFD",
+        "Lx": 240,
+        "demand": {
+          "P": 400,
+          "axialTension": true
+        }
+      },
+      "expect": {
+        "label": "W12X40",
+        "method": "LRFD",
+        "interaction": 0.7597,
+        "interactionEquation": "H1-1a",
+        "governingRatio": 0.7597,
+        "governingCheck": "Axial tension"
+      },
+      "status": "pass",
+      "tol": 0.0001
+    },
+    {
+      "input": {
+        "section": {
+          "label": "L4X3X3/8",
+          "kind": "L",
+          "A": 2.48438,
+          "d": 4,
+          "bf": 3,
+          "tw": 0.375,
+          "tf": 0.375,
+          "htw": 10.6667,
+          "Ix": 3.96403,
+          "Zx": 2.63818,
+          "Sx": 1.45835,
+          "rx": 1.26317,
+          "Iy": 1.92009,
+          "Zy": 1.55663,
+          "Sy": 0.865622,
+          "ry": 0.879128,
+          "J": 0.116455,
+          "Cw": 0.133301,
+          "ro": 1.97971,
+          "Iz": 1.03014,
+          "Iw": 4.85398,
+          "Sz": 0.684261,
+          "Sw": 1.75989,
+          "rz": 0.643932,
+          "rw": 1.39779
+        },
+        "material": {
+          "Fy": 36,
+          "Fu": 58
+        },
+        "method": "ASD",
+        "Lx": 48,
+        "Lb": 48,
+        "demand": {
+          "P": 0.5,
+          "Mx": 40,
+          "Vx": 0.5
+        }
+      },
+      "expect": {
+        "label": "L4X3X3/8",
+        "method": "ASD",
+        "interaction": 0.8545,
+        "interactionEquation": "H1-1b",
+        "governingRatio": 0.8545,
+        "governingCheck": "Combined axial + flexure"
+      },
+      "status": "pass",
+      "tol": 0.0001
+    },
+    {
+      "input": {
+        "section": {
+          "label": "HSS6X6X3/8",
+          "kind": "HSS-RECT",
+          "A": 7.57028,
+          "d": 6,
+          "bf": 6,
+          "tw": 0.34875,
+          "tf": 0.34875,
+          "bf2tf": 14.2043,
+          "htw": 14.2043,
+          "Ix": 40.0776,
+          "Zx": 15.9499,
+          "Sx": 13.3592,
+          "rx": 2.30088,
+          "Iy": 40.0776,
+          "Zy": 15.9499,
+          "Sy": 13.3592,
+          "ry": 2.30088,
+          "J": 62.943,
+          "C": 22.1119
+        },
+        "material": {
+          "Fy": 46,
+          "Fu": 58
+        },
+        "method": "LRFD",
+        "Lx": 96,
+        "Lb": 96,
+        "demand": {
+          "P": 40,
+          "Mx": 500,
+          "Vx": 8
+        }
+      },
+      "expect": {
+        "label": "HSS6X6X3/8",
+        "method": "LRFD",
+        "interaction": 0.8289,
+        "interactionEquation": "H1-1b",
+        "governingRatio": 0.8289,
+        "governingCheck": "Combined axial + flexure"
+      },
+      "status": "pass",
+      "tol": 0.0001
+    },
+    {
+      "input": {
+        "section": {
+          "label": "HSS12X12X3/16",
+          "kind": "HSS-RECT",
+          "A": 8.17007,
+          "d": 12,
+          "bf": 12,
+          "tw": 0.174375,
+          "tf": 0.174375,
+          "bf2tf": 65.8172,
+          "htw": 65.8172,
+          "Ix": 189.703,
+          "Zx": 36.1313,
+          "Sx": 31.6171,
+          "rx": 4.81863,
+          "Iy": 189.703,
+          "Zy": 36.1313,
+          "Sy": 31.6171,
+          "ry": 4.81863,
+          "J": 288.374,
+          "C": 48.7506
+        },
+        "material": {
+          "Fy": 46,
+          "Fu": 58
+        },
+        "method": "LRFD",
+        "Lx": 144,
+        "Lb": 144,
+        "demand": {
+          "P": 60
+        }
+      },
+      "expect": {
+        "label": "HSS12X12X3/16",
+        "method": "LRFD",
+        "interaction": 0.2281,
+        "interactionEquation": "H1-1a",
+        "governingRatio": 0.2281,
+        "governingCheck": "Axial compression"
+      },
+      "status": "pass",
+      "tol": 0.0001
+    },
+    {
+      "input": {
+        "section": {
+          "label": "PIPE4STD",
+          "kind": "HSS-ROUND",
+          "A": 2.96335,
+          "d": 4.5,
+          "tw": 0.22041,
+          "htw": 20.4165,
+          "Ix": 6.80218,
+          "Zx": 4.04035,
+          "Sx": 3.02319,
+          "rx": 1.51507,
+          "Iy": 6.80218,
+          "Zy": 4.04035,
+          "Sy": 3.02319,
+          "ry": 1.51507,
+          "J": 13.6044,
+          "C": 6.04638
+        },
+        "material": {
+          "Fy": 35,
+          "Fu": 60
+        },
+        "method": "LRFD",
+        "Lx": 72,
+        "Lb": 72,
+        "demand": {
+          "P": 15,
+          "Mx": 80
+        }
+      },
+      "expect": {
+        "label": "PIPE4STD",
+        "method": "LRFD",
+        "interaction": 0.7188,
+        "interactionEquation": "H1-1b",
+        "governingRatio": 0.7188,
+        "governingCheck": "Combined axial + flexure"
+      },
+      "status": "pass",
+      "tol": 0.0001
+    },
+    {
+      "input": {
+        "section": {
+          "label": "C7X9.8",
+          "kind": "C",
+          "A": 2.87,
+          "d": 7,
+          "bf": 2.09,
+          "tw": 0.21,
+          "tf": 0.366,
+          "kdes": 0.875,
+          "bf2tf": 5.71,
+          "htw": 26.9,
+          "Ix": 21.2,
+          "Zx": 7.19,
+          "Sx": 6.07,
+          "rx": 2.72,
+          "Iy": 0.957,
+          "Zy": 1.26,
+          "Sy": 0.617,
+          "ry": 0.578,
+          "J": 0.0996,
+          "Cw": 9.15,
+          "rts": 0.698,
+          "ho": 6.63,
+          "ro": 3.02,
+          "H": 0.845
+        },
+        "material": {
+          "Fy": 36,
+          "Fu": 58
+        },
+        "method": "ASD",
+        "Lx": 60,
+        "Lb": 60,
+        "demand": {
+          "Mx": 90,
+          "Vx": 3
+        }
+      },
+      "expect": {
+        "label": "C7X9.8",
+        "method": "ASD",
+        "interaction": 0.6718,
+        "interactionEquation": "H1-1b",
+        "governingRatio": 0.6718,
+        "governingCheck": "Flexure, major axis"
+      },
+      "status": "pass",
+      "tol": 0.0001
+    },
+    {
+      "input": {
+        "section": {
+          "label": "WT6X15",
+          "kind": "T",
+          "A": 4.4,
+          "d": 6.17,
+          "bf": 6.52,
+          "tw": 0.26,
+          "tf": 0.44,
+          "kdes": 0.74,
+          "bf2tf": 7.41,
+          "Ix": 13.5,
+          "Zx": 4.83,
+          "Sx": 2.75,
+          "rx": 1.75,
+          "Iy": 10.2,
+          "Zy": 4.78,
+          "Sy": 3.12,
+          "ry": 1.52,
+          "J": 0.228,
+          "Cw": 0.267,
+          "ro": 2.54,
+          "H": 0.83
+        },
+        "material": {
+          "Fy": 50,
+          "Fu": 65
+        },
+        "method": "LRFD",
+        "Lx": 72,
+        "Lb": 72,
+        "demand": {
+          "P": 20,
+          "Mx": 100
+        }
+      },
+      "expect": {
+        "label": "WT6X15",
+        "method": "LRFD",
+        "interaction": 0.5722,
+        "interactionEquation": "H1-1b",
+        "governingRatio": 0.5722,
+        "governingCheck": "Combined axial + flexure"
+      },
+      "status": "pass",
+      "tol": 0.0001
+    },
+    {
+      "input": {
+        "section": {
+          "label": "W16X26",
+          "kind": "I",
+          "A": 7.68,
+          "d": 15.7,
+          "bf": 5.5,
+          "tw": 0.25,
+          "tf": 0.345,
+          "kdes": 0.747,
+          "bf2tf": 7.97,
+          "htw": 56.8,
+          "Ix": 301,
+          "Zx": 44.2,
+          "Sx": 38.4,
+          "rx": 6.26,
+          "Iy": 9.59,
+          "Zy": 5.48,
+          "Sy": 3.49,
+          "ry": 1.12,
+          "J": 0.262,
+          "Cw": 565,
+          "rts": 1.38,
+          "ho": 15.4
+        },
+        "material": {
+          "Fy": 50,
+          "Fu": 65
+        },
+        "method": "LRFD",
+        "Lx": 288,
+        "Lb": 288,
+        "demand": {
+          "Mx": 250,
+          "deflection": 1.4
+        },
+        "span": 288,
+        "deflectionLimit": 240
+      },
+      "expect": {
+        "label": "W16X26",
+        "method": "LRFD",
+        "interaction": 0.6955,
+        "interactionEquation": "H1-1b",
+        "governingRatio": 1.1667,
+        "governingCheck": "Deflection (L/240)"
+      },
+      "status": "fail",
+      "tol": 0.0001
+    }
+  ]
+}

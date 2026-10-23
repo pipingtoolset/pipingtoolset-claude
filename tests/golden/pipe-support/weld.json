@@ -1,0 +1,1127 @@
+{
+  "module": "structural.fillet-weld",
+  "cases": [
+    {
+      "input": {
+        "method": "LRFD",
+        "size": 0.25,
+        "FEXX": 70,
+        "pattern": "single",
+        "depth": 10,
+        "Vparallel": 10
+      },
+      "output": {
+        "length": 10,
+        "throat": 0.1768,
+        "Awe": 1.7675,
+        "Sw": 16.6667,
+        "stress": 5.6577,
+        "theta": 0,
+        "directionalFactor": 1,
+        "designPerInch": 5.5676,
+        "demandPerInch": 1,
+        "ratio": 0.1796,
+        "minSize": 0,
+        "maxSize": "Infinity",
+        "baseMetalPerInch": null
+      },
+      "status": "pass",
+      "warnings": []
+    },
+    {
+      "input": {
+        "method": "LRFD",
+        "size": 0.25,
+        "FEXX": 70,
+        "pattern": "single",
+        "depth": 10,
+        "Vtransverse": 10
+      },
+      "output": {
+        "length": 10,
+        "throat": 0.1768,
+        "Awe": 1.7675,
+        "Sw": 16.6667,
+        "stress": 5.6577,
+        "theta": 90,
+        "directionalFactor": 1.5,
+        "designPerInch": 8.3514,
+        "demandPerInch": 1,
+        "ratio": 0.1197,
+        "minSize": 0,
+        "maxSize": "Infinity",
+        "baseMetalPerInch": null
+      },
+      "status": "pass",
+      "warnings": []
+    },
+    {
+      "input": {
+        "method": "LRFD",
+        "size": 0.25,
+        "FEXX": 70,
+        "pattern": "single",
+        "depth": 10,
+        "Vtransverse": 10,
+        "Vparallel": 10
+      },
+      "output": {
+        "length": 10,
+        "throat": 0.1768,
+        "Awe": 1.7675,
+        "Sw": 16.6667,
+        "stress": 8.0012,
+        "theta": 45,
+        "directionalFactor": 1.2973,
+        "designPerInch": 7.2229,
+        "demandPerInch": 1.4142,
+        "ratio": 0.1958,
+        "minSize": 0,
+        "maxSize": "Infinity",
+        "baseMetalPerInch": null
+      },
+      "status": "pass",
+      "warnings": []
+    },
+    {
+      "input": {
+        "method": "LRFD",
+        "size": 0.25,
+        "FEXX": 70,
+        "pattern": "single",
+        "depth": 10,
+        "Vtransverse": 3,
+        "Vparallel": 8,
+        "Pnormal": 2
+      },
+      "output": {
+        "length": 10,
+        "throat": 0.1768,
+        "Awe": 1.7675,
+        "Sw": 16.6667,
+        "stress": 4.9646,
+        "theta": 24.2608,
+        "directionalFactor": 1.1317,
+        "designPerInch": 6.3008,
+        "demandPerInch": 0.8775,
+        "ratio": 0.1393,
+        "minSize": 0,
+        "maxSize": "Infinity",
+        "baseMetalPerInch": null
+      },
+      "status": "pass",
+      "warnings": []
+    },
+    {
+      "input": {
+        "method": "LRFD",
+        "size": 0.25,
+        "FEXX": 70,
+        "pattern": "single",
+        "depth": 10,
+        "Pnormal": 15
+      },
+      "output": {
+        "length": 10,
+        "throat": 0.1768,
+        "Awe": 1.7675,
+        "Sw": 16.6667,
+        "stress": 8.4866,
+        "theta": 90,
+        "directionalFactor": 1.5,
+        "designPerInch": 8.3514,
+        "demandPerInch": 1.5,
+        "ratio": 0.1796,
+        "minSize": 0,
+        "maxSize": "Infinity",
+        "baseMetalPerInch": null
+      },
+      "status": "pass",
+      "warnings": []
+    },
+    {
+      "input": {
+        "method": "LRFD",
+        "size": 0.25,
+        "FEXX": 70,
+        "pattern": "single",
+        "depth": 10
+      },
+      "output": {
+        "length": 10,
+        "throat": 0.1768,
+        "Awe": 1.7675,
+        "Sw": 16.6667,
+        "stress": 0,
+        "theta": 0,
+        "directionalFactor": 1,
+        "designPerInch": 5.5676,
+        "demandPerInch": 0,
+        "ratio": 0,
+        "minSize": 0,
+        "maxSize": "Infinity",
+        "baseMetalPerInch": null
+      },
+      "status": "pass",
+      "warnings": []
+    },
+    {
+      "input": {
+        "method": "LRFD",
+        "size": 0.25,
+        "FEXX": 70,
+        "pattern": "single",
+        "depth": 10,
+        "M": 40,
+        "Vtransverse": 2
+      },
+      "output": {
+        "length": 10,
+        "throat": 0.1768,
+        "Awe": 1.7675,
+        "Sw": 16.6667,
+        "stress": 13.6256,
+        "theta": 90,
+        "directionalFactor": 1.5,
+        "designPerInch": 8.3514,
+        "demandPerInch": 2.4083,
+        "ratio": 0.2884,
+        "minSize": 0,
+        "maxSize": "Infinity",
+        "baseMetalPerInch": null
+      },
+      "status": "pass",
+      "warnings": [
+        "A single fillet carrying moment is eccentric and not self-balancing — confirm the joint detail can develop it."
+      ]
+    },
+    {
+      "input": {
+        "method": "ASD",
+        "size": 0.25,
+        "FEXX": 70,
+        "pattern": "single",
+        "depth": 10,
+        "Vtransverse": 10
+      },
+      "output": {
+        "length": 10,
+        "throat": 0.1768,
+        "Awe": 1.7675,
+        "Sw": 16.6667,
+        "stress": 5.6577,
+        "theta": 90,
+        "directionalFactor": 1.5,
+        "designPerInch": 5.5676,
+        "demandPerInch": 1,
+        "ratio": 0.1796,
+        "minSize": 0,
+        "maxSize": "Infinity",
+        "baseMetalPerInch": null
+      },
+      "status": "pass",
+      "warnings": []
+    },
+    {
+      "input": {
+        "method": "ASD",
+        "size": 0.25,
+        "FEXX": 70,
+        "pattern": "single",
+        "depth": 10,
+        "Vparallel": 10
+      },
+      "output": {
+        "length": 10,
+        "throat": 0.1768,
+        "Awe": 1.7675,
+        "Sw": 16.6667,
+        "stress": 5.6577,
+        "theta": 0,
+        "directionalFactor": 1,
+        "designPerInch": 3.7118,
+        "demandPerInch": 1,
+        "ratio": 0.2694,
+        "minSize": 0,
+        "maxSize": "Infinity",
+        "baseMetalPerInch": null
+      },
+      "status": "pass",
+      "warnings": []
+    },
+    {
+      "input": {
+        "method": "LRFD",
+        "size": 0.25,
+        "FEXX": 70,
+        "pattern": "single",
+        "depth": 0.75,
+        "Vtransverse": 2
+      },
+      "output": {
+        "length": 0.75,
+        "throat": 0.1768,
+        "Awe": 0.1326,
+        "Sw": 0.0938,
+        "stress": 15.0872,
+        "theta": 90,
+        "directionalFactor": 1.5,
+        "designPerInch": 8.3514,
+        "demandPerInch": 2.6667,
+        "ratio": 0.3193,
+        "minSize": 0,
+        "maxSize": "Infinity",
+        "baseMetalPerInch": null
+      },
+      "status": "pass",
+      "warnings": [
+        "Weld length is less than 4x the leg size — J2.2b requires the effective length be taken as 1/4 of the actual length in that case."
+      ]
+    },
+    {
+      "input": {
+        "method": "LRFD",
+        "size": 0.25,
+        "FEXX": 70,
+        "pattern": "single",
+        "depth": 0.75,
+        "length": 0.75,
+        "Vtransverse": 2
+      },
+      "output": {
+        "length": 0.75,
+        "throat": 0.1768,
+        "Awe": 0.1326,
+        "Sw": 0.0938,
+        "stress": 15.0872,
+        "theta": 90,
+        "directionalFactor": 1.5,
+        "designPerInch": 8.3514,
+        "demandPerInch": 2.6667,
+        "ratio": 0.3193,
+        "minSize": 0,
+        "maxSize": "Infinity",
+        "baseMetalPerInch": null
+      },
+      "status": "pass",
+      "warnings": []
+    },
+    {
+      "input": {
+        "method": "LRFD",
+        "size": 0.25,
+        "FEXX": 70,
+        "pattern": "single",
+        "depth": 10,
+        "length": 6,
+        "M": 12,
+        "Vtransverse": 3
+      },
+      "output": {
+        "length": 6,
+        "throat": 0.1768,
+        "Awe": 1.0605,
+        "Sw": 10,
+        "stress": 7.355,
+        "theta": 90,
+        "directionalFactor": 1.5,
+        "designPerInch": 8.3514,
+        "demandPerInch": 1.3,
+        "ratio": 0.1557,
+        "minSize": 0,
+        "maxSize": "Infinity",
+        "baseMetalPerInch": null
+      },
+      "status": "pass",
+      "warnings": [
+        "A single fillet carrying moment is eccentric and not self-balancing — confirm the joint detail can develop it."
+      ]
+    },
+    {
+      "input": {
+        "method": "LRFD",
+        "size": 0.25,
+        "FEXX": 70,
+        "pattern": "two-parallel",
+        "depth": 6,
+        "Vtransverse": 3,
+        "M": 40
+      },
+      "output": {
+        "length": 12,
+        "throat": 0.1768,
+        "Awe": 2.121,
+        "Sw": 12,
+        "stress": 18.912,
+        "theta": 90,
+        "directionalFactor": 1.5,
+        "designPerInch": 8.3514,
+        "demandPerInch": 3.3427,
+        "ratio": 0.4003,
+        "minSize": 0,
+        "maxSize": "Infinity",
+        "baseMetalPerInch": null
+      },
+      "status": "pass",
+      "warnings": []
+    },
+    {
+      "input": {
+        "method": "LRFD",
+        "size": 0.25,
+        "FEXX": 70,
+        "pattern": "two-parallel",
+        "depth": 6,
+        "Vparallel": 8,
+        "M": 20,
+        "Pnormal": 4
+      },
+      "output": {
+        "length": 12,
+        "throat": 0.1768,
+        "Awe": 2.121,
+        "Sw": 12,
+        "stress": 11.9275,
+        "theta": 71.5651,
+        "directionalFactor": 1.462,
+        "designPerInch": 8.1399,
+        "demandPerInch": 2.1082,
+        "ratio": 0.259,
+        "minSize": 0,
+        "maxSize": "Infinity",
+        "baseMetalPerInch": null
+      },
+      "status": "pass",
+      "warnings": []
+    },
+    {
+      "input": {
+        "method": "ASD",
+        "size": 0.3125,
+        "FEXX": 70,
+        "pattern": "two-parallel",
+        "depth": 5.99,
+        "Vtransverse": 2.7,
+        "M": 36.6,
+        "basePartThickness": 0.23
+      },
+      "output": {
+        "length": 11.98,
+        "throat": 0.2209,
+        "Awe": 2.6468,
+        "Sw": 11.96,
+        "stress": 13.8885,
+        "theta": 90,
+        "directionalFactor": 1.5,
+        "designPerInch": 6.9595,
+        "demandPerInch": 3.0685,
+        "ratio": 0.4409,
+        "minSize": 0.125,
+        "maxSize": 0.23,
+        "baseMetalPerInch": null
+      },
+      "status": "pass",
+      "warnings": [
+        "Fillet size 0.3125 in exceeds the J2.2b maximum of 0.23 in along the edge of a 0.23 in part."
+      ]
+    },
+    {
+      "input": {
+        "method": "LRFD",
+        "size": 0.25,
+        "FEXX": 70,
+        "pattern": "two-parallel",
+        "depth": 8,
+        "length": 12,
+        "Vtransverse": 5
+      },
+      "output": {
+        "length": 12,
+        "throat": 0.1768,
+        "Awe": 2.121,
+        "Sw": 16,
+        "stress": 2.3574,
+        "theta": 90,
+        "directionalFactor": 1.5,
+        "designPerInch": 8.3514,
+        "demandPerInch": 0.4167,
+        "ratio": 0.0499,
+        "minSize": 0,
+        "maxSize": "Infinity",
+        "baseMetalPerInch": null
+      },
+      "status": "pass",
+      "warnings": []
+    },
+    {
+      "input": {
+        "method": "LRFD",
+        "size": 0.25,
+        "FEXX": 70,
+        "pattern": "all-round",
+        "depth": 5.99,
+        "width": 5.99,
+        "Vtransverse": 1.5,
+        "M": 96,
+        "basePartThickness": 0.75,
+        "baseFy": 36,
+        "baseFu": 58
+      },
+      "output": {
+        "length": 23.96,
+        "throat": 0.1768,
+        "Awe": 4.2349,
+        "Sw": 47.8401,
+        "stress": 11.3588,
+        "theta": 90,
+        "directionalFactor": 1.5,
+        "designPerInch": 8.3514,
+        "demandPerInch": 2.0077,
+        "ratio": 0.2404,
+        "minSize": 0.25,
+        "maxSize": 0.6875,
+        "baseMetalPerInch": 19.575
+      },
+      "status": "pass",
+      "warnings": []
+    },
+    {
+      "input": {
+        "method": "LRFD",
+        "size": 0.25,
+        "FEXX": 70,
+        "pattern": "all-round",
+        "depth": 8,
+        "width": 6,
+        "Vtransverse": 4,
+        "Vparallel": 2,
+        "M": 100,
+        "Pnormal": 10
+      },
+      "output": {
+        "length": 28,
+        "throat": 0.1768,
+        "Awe": 4.949,
+        "Sw": 69.3333,
+        "stress": 10.2208,
+        "theta": 87.734,
+        "directionalFactor": 1.4994,
+        "designPerInch": 8.3482,
+        "demandPerInch": 1.8065,
+        "ratio": 0.2164,
+        "minSize": 0,
+        "maxSize": "Infinity",
+        "baseMetalPerInch": null
+      },
+      "status": "pass",
+      "warnings": []
+    },
+    {
+      "input": {
+        "method": "ASD",
+        "size": 0.25,
+        "FEXX": 70,
+        "pattern": "all-round",
+        "depth": 8,
+        "width": 6,
+        "Vtransverse": 4,
+        "M": 100
+      },
+      "output": {
+        "length": 28,
+        "throat": 0.1768,
+        "Awe": 4.949,
+        "Sw": 69.3333,
+        "stress": 8.2001,
+        "theta": 90,
+        "directionalFactor": 1.5,
+        "designPerInch": 5.5676,
+        "demandPerInch": 1.4494,
+        "ratio": 0.2603,
+        "minSize": 0,
+        "maxSize": "Infinity",
+        "baseMetalPerInch": null
+      },
+      "status": "pass",
+      "warnings": []
+    },
+    {
+      "input": {
+        "method": "LRFD",
+        "size": 0.25,
+        "FEXX": 70,
+        "pattern": "all-round",
+        "depth": 8,
+        "width": 6,
+        "length": 20,
+        "Vtransverse": 4,
+        "M": 60
+      },
+      "output": {
+        "length": 20,
+        "throat": 0.1768,
+        "Awe": 3.535,
+        "Sw": 49.5238,
+        "stress": 6.9473,
+        "theta": 90,
+        "directionalFactor": 1.5,
+        "designPerInch": 8.3514,
+        "demandPerInch": 1.2279,
+        "ratio": 0.147,
+        "minSize": 0,
+        "maxSize": "Infinity",
+        "baseMetalPerInch": null
+      },
+      "status": "pass",
+      "warnings": []
+    },
+    {
+      "input": {
+        "method": "LRFD",
+        "size": 0.5,
+        "FEXX": 70,
+        "pattern": "all-round",
+        "depth": 4,
+        "width": 4,
+        "Vtransverse": 60,
+        "M": 400
+      },
+      "output": {
+        "length": 16,
+        "throat": 0.3535,
+        "Awe": 5.656,
+        "Sw": 21.3333,
+        "stress": 54.0914,
+        "theta": 90,
+        "directionalFactor": 1.5,
+        "designPerInch": 16.7029,
+        "demandPerInch": 19.1213,
+        "ratio": 1.1448,
+        "minSize": 0,
+        "maxSize": "Infinity",
+        "baseMetalPerInch": null
+      },
+      "status": "fail",
+      "warnings": []
+    },
+    {
+      "input": {
+        "method": "LRFD",
+        "size": 0.125,
+        "FEXX": 70,
+        "pattern": "single",
+        "depth": 10,
+        "basePartThickness": 0.25,
+        "Vparallel": 2
+      },
+      "output": {
+        "length": 10,
+        "throat": 0.0884,
+        "Awe": 0.8837,
+        "Sw": 16.6667,
+        "stress": 2.2631,
+        "theta": 0,
+        "directionalFactor": 1,
+        "designPerInch": 2.7838,
+        "demandPerInch": 0.2,
+        "ratio": 0.0718,
+        "minSize": 0.125,
+        "maxSize": 0.1875,
+        "baseMetalPerInch": null
+      },
+      "status": "pass",
+      "warnings": []
+    },
+    {
+      "input": {
+        "method": "LRFD",
+        "size": 0.125,
+        "FEXX": 70,
+        "pattern": "single",
+        "depth": 10,
+        "basePartThickness": 0.4,
+        "Vparallel": 2
+      },
+      "output": {
+        "length": 10,
+        "throat": 0.0884,
+        "Awe": 0.8837,
+        "Sw": 16.6667,
+        "stress": 2.2631,
+        "theta": 0,
+        "directionalFactor": 1,
+        "designPerInch": 2.7838,
+        "demandPerInch": 0.2,
+        "ratio": 0.0718,
+        "minSize": 0.1875,
+        "maxSize": 0.3375,
+        "baseMetalPerInch": null
+      },
+      "status": "pass",
+      "warnings": [
+        "Fillet size 0.125 in is below the Table J2.4 minimum of 0.1875 in for a 0.4 in part."
+      ]
+    },
+    {
+      "input": {
+        "method": "LRFD",
+        "size": 0.1875,
+        "FEXX": 70,
+        "pattern": "single",
+        "depth": 10,
+        "basePartThickness": 0.6,
+        "Vparallel": 2
+      },
+      "output": {
+        "length": 10,
+        "throat": 0.1326,
+        "Awe": 1.3256,
+        "Sw": 16.6667,
+        "stress": 1.5087,
+        "theta": 0,
+        "directionalFactor": 1,
+        "designPerInch": 4.1757,
+        "demandPerInch": 0.2,
+        "ratio": 0.0479,
+        "minSize": 0.25,
+        "maxSize": 0.5375,
+        "baseMetalPerInch": null
+      },
+      "status": "pass",
+      "warnings": [
+        "Fillet size 0.1875 in is below the Table J2.4 minimum of 0.25 in for a 0.6 in part."
+      ]
+    },
+    {
+      "input": {
+        "method": "LRFD",
+        "size": 0.25,
+        "FEXX": 70,
+        "pattern": "single",
+        "depth": 10,
+        "basePartThickness": 1,
+        "Vparallel": 2
+      },
+      "output": {
+        "length": 10,
+        "throat": 0.1768,
+        "Awe": 1.7675,
+        "Sw": 16.6667,
+        "stress": 1.1315,
+        "theta": 0,
+        "directionalFactor": 1,
+        "designPerInch": 5.5676,
+        "demandPerInch": 0.2,
+        "ratio": 0.0359,
+        "minSize": 0.3125,
+        "maxSize": 0.9375,
+        "baseMetalPerInch": null
+      },
+      "status": "pass",
+      "warnings": [
+        "Fillet size 0.25 in is below the Table J2.4 minimum of 0.3125 in for a 1 in part."
+      ]
+    },
+    {
+      "input": {
+        "method": "LRFD",
+        "size": 0.3125,
+        "FEXX": 70,
+        "pattern": "single",
+        "depth": 10,
+        "basePartThickness": 0.5,
+        "Vparallel": 2
+      },
+      "output": {
+        "length": 10,
+        "throat": 0.2209,
+        "Awe": 2.2094,
+        "Sw": 16.6667,
+        "stress": 0.9052,
+        "theta": 0,
+        "directionalFactor": 1,
+        "designPerInch": 6.9595,
+        "demandPerInch": 0.2,
+        "ratio": 0.0287,
+        "minSize": 0.1875,
+        "maxSize": 0.4375,
+        "baseMetalPerInch": null
+      },
+      "status": "pass",
+      "warnings": []
+    },
+    {
+      "input": {
+        "method": "LRFD",
+        "size": 0.375,
+        "FEXX": 70,
+        "pattern": "single",
+        "depth": 10,
+        "basePartThickness": 0.375,
+        "Vparallel": 2
+      },
+      "output": {
+        "length": 10,
+        "throat": 0.2651,
+        "Awe": 2.6513,
+        "Sw": 16.6667,
+        "stress": 0.7544,
+        "theta": 0,
+        "directionalFactor": 1,
+        "designPerInch": 8.3514,
+        "demandPerInch": 0.2,
+        "ratio": 0.0239,
+        "minSize": 0.1875,
+        "maxSize": 0.3125,
+        "baseMetalPerInch": null
+      },
+      "status": "pass",
+      "warnings": [
+        "Fillet size 0.375 in exceeds the J2.2b maximum of 0.3125 in along the edge of a 0.375 in part."
+      ]
+    },
+    {
+      "input": {
+        "method": "LRFD",
+        "size": 0.25,
+        "FEXX": 70,
+        "pattern": "single",
+        "depth": 10,
+        "basePartThickness": 0.1875,
+        "Vparallel": 1
+      },
+      "output": {
+        "length": 10,
+        "throat": 0.1768,
+        "Awe": 1.7675,
+        "Sw": 16.6667,
+        "stress": 0.5658,
+        "theta": 0,
+        "directionalFactor": 1,
+        "designPerInch": 5.5676,
+        "demandPerInch": 0.1,
+        "ratio": 0.018,
+        "minSize": 0.125,
+        "maxSize": 0.1875,
+        "baseMetalPerInch": null
+      },
+      "status": "pass",
+      "warnings": [
+        "Fillet size 0.25 in exceeds the J2.2b maximum of 0.1875 in along the edge of a 0.1875 in part."
+      ]
+    },
+    {
+      "input": {
+        "method": "LRFD",
+        "size": 0.125,
+        "FEXX": 70,
+        "pattern": "single",
+        "depth": 10,
+        "basePartThickness": 0.1875,
+        "Vparallel": 1
+      },
+      "output": {
+        "length": 10,
+        "throat": 0.0884,
+        "Awe": 0.8837,
+        "Sw": 16.6667,
+        "stress": 1.1315,
+        "theta": 0,
+        "directionalFactor": 1,
+        "designPerInch": 2.7838,
+        "demandPerInch": 0.1,
+        "ratio": 0.0359,
+        "minSize": 0.125,
+        "maxSize": 0.1875,
+        "baseMetalPerInch": null
+      },
+      "status": "pass",
+      "warnings": []
+    },
+    {
+      "input": {
+        "method": "LRFD",
+        "size": 0.3125,
+        "FEXX": 70,
+        "pattern": "single",
+        "depth": 10,
+        "basePartThickness": 0.23,
+        "Vparallel": 1
+      },
+      "output": {
+        "length": 10,
+        "throat": 0.2209,
+        "Awe": 2.2094,
+        "Sw": 16.6667,
+        "stress": 0.4526,
+        "theta": 0,
+        "directionalFactor": 1,
+        "designPerInch": 6.9595,
+        "demandPerInch": 0.1,
+        "ratio": 0.0144,
+        "minSize": 0.125,
+        "maxSize": 0.23,
+        "baseMetalPerInch": null
+      },
+      "status": "pass",
+      "warnings": [
+        "Fillet size 0.3125 in exceeds the J2.2b maximum of 0.23 in along the edge of a 0.23 in part."
+      ]
+    },
+    {
+      "input": {
+        "method": "LRFD",
+        "size": 0.25,
+        "FEXX": 70,
+        "pattern": "single",
+        "depth": 10,
+        "basePartThickness": 0,
+        "Vparallel": 2
+      },
+      "output": {
+        "length": 10,
+        "throat": 0.1768,
+        "Awe": 1.7675,
+        "Sw": 16.6667,
+        "stress": 1.1315,
+        "theta": 0,
+        "directionalFactor": 1,
+        "designPerInch": 5.5676,
+        "demandPerInch": 0.2,
+        "ratio": 0.0359,
+        "minSize": 0,
+        "maxSize": "Infinity",
+        "baseMetalPerInch": null
+      },
+      "status": "pass",
+      "warnings": []
+    },
+    {
+      "input": {
+        "method": "LRFD",
+        "size": 0.5,
+        "FEXX": 70,
+        "pattern": "single",
+        "depth": 10,
+        "basePartThickness": 0.25,
+        "baseFu": 58,
+        "Vparallel": 10
+      },
+      "output": {
+        "length": 10,
+        "throat": 0.3535,
+        "Awe": 3.535,
+        "Sw": 16.6667,
+        "stress": 2.8289,
+        "theta": 0,
+        "directionalFactor": 1,
+        "designPerInch": 11.1353,
+        "demandPerInch": 1,
+        "ratio": 0.0898,
+        "minSize": 0.125,
+        "maxSize": 0.1875,
+        "baseMetalPerInch": 6.525
+      },
+      "status": "pass",
+      "warnings": [
+        "Fillet size 0.5 in exceeds the J2.2b maximum of 0.1875 in along the edge of a 0.25 in part.",
+        "Base-metal shear rupture governs over the weld metal — the connected part, not the fillet, sets this joint's strength."
+      ]
+    },
+    {
+      "input": {
+        "method": "LRFD",
+        "size": 0.25,
+        "FEXX": 70,
+        "pattern": "single",
+        "depth": 10,
+        "basePartThickness": 0.75,
+        "baseFu": 58,
+        "Vparallel": 10
+      },
+      "output": {
+        "length": 10,
+        "throat": 0.1768,
+        "Awe": 1.7675,
+        "Sw": 16.6667,
+        "stress": 5.6577,
+        "theta": 0,
+        "directionalFactor": 1,
+        "designPerInch": 5.5676,
+        "demandPerInch": 1,
+        "ratio": 0.1796,
+        "minSize": 0.25,
+        "maxSize": 0.6875,
+        "baseMetalPerInch": 19.575
+      },
+      "status": "pass",
+      "warnings": []
+    },
+    {
+      "input": {
+        "method": "ASD",
+        "size": 0.5,
+        "FEXX": 70,
+        "pattern": "single",
+        "depth": 10,
+        "basePartThickness": 0.25,
+        "baseFu": 58,
+        "Vparallel": 10
+      },
+      "output": {
+        "length": 10,
+        "throat": 0.3535,
+        "Awe": 3.535,
+        "Sw": 16.6667,
+        "stress": 2.8289,
+        "theta": 0,
+        "directionalFactor": 1,
+        "designPerInch": 7.4235,
+        "demandPerInch": 1,
+        "ratio": 0.1347,
+        "minSize": 0.125,
+        "maxSize": 0.1875,
+        "baseMetalPerInch": 4.35
+      },
+      "status": "pass",
+      "warnings": [
+        "Fillet size 0.5 in exceeds the J2.2b maximum of 0.1875 in along the edge of a 0.25 in part.",
+        "Base-metal shear rupture governs over the weld metal — the connected part, not the fillet, sets this joint's strength."
+      ]
+    },
+    {
+      "input": {
+        "method": "LRFD",
+        "size": 0.25,
+        "FEXX": 70,
+        "pattern": "single",
+        "depth": 10,
+        "baseFu": 58,
+        "Vparallel": 10
+      },
+      "output": {
+        "length": 10,
+        "throat": 0.1768,
+        "Awe": 1.7675,
+        "Sw": 16.6667,
+        "stress": 5.6577,
+        "theta": 0,
+        "directionalFactor": 1,
+        "designPerInch": 5.5676,
+        "demandPerInch": 1,
+        "ratio": 0.1796,
+        "minSize": 0,
+        "maxSize": "Infinity",
+        "baseMetalPerInch": null
+      },
+      "status": "pass",
+      "warnings": []
+    },
+    {
+      "input": {
+        "method": "LRFD",
+        "size": 0.25,
+        "FEXX": 60,
+        "pattern": "single",
+        "depth": 10,
+        "Vtransverse": 5
+      },
+      "output": {
+        "length": 10,
+        "throat": 0.1768,
+        "Awe": 1.7675,
+        "Sw": 16.6667,
+        "stress": 2.8289,
+        "theta": 90,
+        "directionalFactor": 1.5,
+        "designPerInch": 7.1584,
+        "demandPerInch": 0.5,
+        "ratio": 0.0698,
+        "minSize": 0,
+        "maxSize": "Infinity",
+        "baseMetalPerInch": null
+      },
+      "status": "pass",
+      "warnings": []
+    },
+    {
+      "input": {
+        "method": "LRFD",
+        "size": 0.375,
+        "FEXX": 80,
+        "pattern": "single",
+        "depth": 10,
+        "Vtransverse": 5,
+        "Vparallel": 5
+      },
+      "output": {
+        "length": 10,
+        "throat": 0.2651,
+        "Awe": 2.6513,
+        "Sw": 16.6667,
+        "stress": 2.6671,
+        "theta": 45,
+        "directionalFactor": 1.2973,
+        "designPerInch": 12.3821,
+        "demandPerInch": 0.7071,
+        "ratio": 0.0571,
+        "minSize": 0,
+        "maxSize": "Infinity",
+        "baseMetalPerInch": null
+      },
+      "status": "pass",
+      "warnings": []
+    },
+    {
+      "input": {
+        "method": "LRFD",
+        "size": 0,
+        "FEXX": 70,
+        "pattern": "single",
+        "depth": 10
+      },
+      "error": "weld size must be positive"
+    },
+    {
+      "input": {
+        "method": "LRFD",
+        "size": 0.25,
+        "FEXX": 0,
+        "pattern": "single",
+        "depth": 10
+      },
+      "error": "FEXX must be positive"
+    },
+    {
+      "input": {
+        "method": "LRFD",
+        "size": 0.25,
+        "FEXX": 70,
+        "pattern": "single",
+        "depth": 0
+      },
+      "error": "weld depth must be positive"
+    },
+    {
+      "input": {
+        "method": "LRFD",
+        "size": 0.25,
+        "FEXX": 70,
+        "pattern": "all-round",
+        "depth": 10
+      },
+      "error": "'all-round' pattern needs a width"
+    },
+    {
+      "input": {
+        "method": "LRFD",
+        "size": 0.25,
+        "FEXX": 70,
+        "pattern": "single",
+        "depth": 10,
+        "length": 0
+      },
+      "error": "weld length must be positive"
+    }
+  ]
+}
