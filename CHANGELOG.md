@@ -8,6 +8,22 @@ keep a defect until the plugin is updated, so each such entry names the skill, t
 affected inputs and the release that fixed it. GitHub Releases carry the same
 label and are the recall channel.
 
+## [0.2.0] — unreleased
+
+- New skill `iso-to-pcf`: PDF stress isometrics to a CAESAR II-ready PCF. Claude
+  transcribes the drawing into a JSON walk spec; `build_pcf.py` builds it in exact
+  fraction arithmetic with a single cursor (bend tangents from corners, tee and olet
+  branches, elevation profiles for sloped runs, closure checks, BOM reconciliation)
+  and writes only the CAESAR II safe record set by default; `validate_pcf.py` checks
+  any PCF for floating or zero-length elements, off-line olets and supports, unsafe
+  record types and bore changes. Synthetic worked example and golden output.
+- Plugin display name is now **PipingToolset** (`displayName`); the id and the
+  `/piping-toolset:<skill>` command prefix are unchanged.
+- Plugin icon (`assets/icon.png`, gray line-art grid-elbow mark) for the plugin
+  directory listing.
+- Skill descriptions shortened to under 300 characters for a cleaner slash-command
+  popup; tests cap them at 400.
+
 ## [0.1.0] — unreleased
 
 First public release candidate.
