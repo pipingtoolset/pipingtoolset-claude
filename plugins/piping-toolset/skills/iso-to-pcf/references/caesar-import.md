@@ -19,7 +19,7 @@ UNITS-BOLT-LENGTH MM
 PIPELINE-REFERENCE <line>
     PROJECT-IDENTIFIER
     AREA
-PIPE                          END-POINT x2, no ITEM-CODE / ITEM-DESCRIPTION
+PIPE                          END-POINT x2 (+ ITEM-DESCRIPTION when annotated; never ITEM-CODE)
 BEND                          END-POINT x2, CENTRE-POINT (corner), SKEY BEBW, ANGLE 9000, BEND-RADIUS <mm>
 TEE                           END-POINT x2, CENTRE-POINT, BRANCH1-POINT, SKEY TEBW
 FLANGE / VALVE / REDUCER-CONCENTRIC   END-POINT x2, SKEY
@@ -27,6 +27,11 @@ SUPPORT                       CO-ORDS (on a node), SKEY ANCH|SKID|GUID|SPRG, SUP
 ```
 
 Main run first, then each branch leg. CRLF line endings.
+
+**Live-import confirmed (2026-10-23):** four builder files imported cleanly into CAESAR II.
+Together they covered the proven records above, `ITEM-DESCRIPTION` / `WEIGHT` / support `NAME`
+annotations, `GASKET` and `OLET` records, and a 1 % sloped run on an elevation profile. `INCH`
+coordinates have not been import-tested.
 
 **The first release failed to import** because it wrote `UNITS-BORE INCH` with bores like `6.0000`
 under mm coordinates, free text in `ATTRIBUTE1`, `ELBOW` records without `BEND-RADIUS`, a `TEE`
@@ -47,9 +52,8 @@ releases.
 
 Consequences for the spec:
 
-- Give each support a proven SKEY and direction. If the site relies on `PCF_RES_MAP.TXT`
-  `NAME` matching instead, set `annotate` and name supports `TYPE_TAG` (for example
-  `PG-2A_PS-0235`), then test the import.
+- Give each support a proven SKEY and direction. If the site also relies on `PCF_RES_MAP.TXT`
+  `NAME` matching, name supports `TYPE_TAG` (for example `PG-2A_PS-0235`) and test the import.
 - Because restraints use `VERT`/`NS`/`EW`, the importer resolves the vertical axis itself. Still
   **check the orientation in the CAESAR II graphics after import**, and rebuild with the other
   `axes` value if it is wrong.
@@ -72,20 +76,18 @@ the event log.
 
 So by default `build_pcf.py` writes only the **import-proven** records
 
-`PIPE, PIPE-FIXED, BEND, TEE, FLANGE, VALVE, VALVE-ANGLE, REDUCER-CONCENTRIC, SUPPORT`
+`PIPE, PIPE-FIXED, BEND, TEE, FLANGE, VALVE, VALVE-ANGLE, REDUCER-CONCENTRIC, SUPPORT, GASKET, OLET`
 
-plus two **accepted but not yet proven** ones, `GASKET` and `OLET`, which the validator warns
-about until an import confirms them. Everything else is mapped onto that set, with no geometric
-loss:
+Everything else is mapped onto that set, with no geometric loss:
 
 | Native record | Written as | Identity kept in |
 |---|---|---|
-| `FLANGE-BLIND` | `FLANGE` | SKEY `FLBL` + build report |
-| `CAP` | `PIPE` | build report |
+| `FLANGE-BLIND` | `FLANGE` | SKEY `FLBL` + description |
+| `CAP` | `PIPE` | description |
 | `ELBOW` | `BEND` (SKEY `BEBW`, with `BEND-RADIUS`) | SKEY |
-| `MISC-COMPONENT` (instruments, specials) | `VALVE` (rigid) | build report |
-| `COUPLING` | `PIPE` | build report |
-| `REDUCER-ECCENTRIC` + `FLAT-DIRECTION` | `REDUCER-CONCENTRIC` | the offset end points + build report (state the flat side in `desc`) |
+| `MISC-COMPONENT` (instruments, specials) | `VALVE` (rigid, keeps `WEIGHT`) | description |
+| `COUPLING` | `PIPE` | description |
+| `REDUCER-ECCENTRIC` + `FLAT-DIRECTION` | `REDUCER-CONCENTRIC` | the offset end points + description (state the flat side in `desc`) |
 
 Every mapping is listed in the build report under *Record substitutions*. Set
 `"full_vocabulary": true` only for a reader known to accept the native records.

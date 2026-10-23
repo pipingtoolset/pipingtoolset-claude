@@ -80,8 +80,9 @@ Standard-library Python 3.9+. Nothing leaves the user's machine.
 - **Off-line is an error.** A point that is not ahead of the cursor along the current direction
   stops the build. That catches transcription slips at the item that caused them.
 - **Import-proven format by default.** The header, record types, attribute order and units
-  mirror PCFs that import cleanly into CAESAR II. No `ITEM-CODE`/`ITEM-DESCRIPTION`/`WEIGHT`/`NAME`
-  unless the spec sets `"annotate": true`. Branch legs are written after the main run, as Isogen does.
+  mirror PCFs that import cleanly into CAESAR II. `ITEM-DESCRIPTION`, `WEIGHT` and support `NAME`
+  are written by default (import-proven); `"annotate": false` gives the bare form. `ITEM-CODE` is
+  never written. Branch legs are written after the main run, as Isogen does.
 - **Supports sit on nodes.** A support part-way along a run splits the pipe there, so the
   restraint lands on a node. A support behind the cursor is an error. Blinds, caps, instruments and eccentric reducers are mapped onto that set with
   no loss of geometry, and every substitution is listed in the report
@@ -112,16 +113,16 @@ Standard-library Python 3.9+. Nothing leaves the user's machine.
   invented SKEY imports as an unrecognised item. Use SKEYs harvested from the user's own Isogen
   PCFs. If a component type has none, use the nearest confirmed SKEY in the same family, keep
   the true identity in the description, and **tell the user**.
-- **Weights on rigids.** Valves, flanges, blinds and instruments take `weight` (lb by default).
-  It is written only with `"annotate": true`, which is not yet import-proven. Until it is, the
-  analyst sets rigid weights in CAESAR II, and the handover note must list them.
+- **Weights on rigids.** Valves, flanges, blinds and instruments take `weight` in the PCF's
+  weight unit (lb by default). Without one, CAESAR II estimates, and hand-corrected rigid weights
+  are a common review finding. Spot-check one rigid's weight in CAESAR II after the first import.
 - **Supports.** The restraint type is carried by the support SKEY and direction, as in the
   import-proven files: `ANCH` (anchor, no direction), `SKID` (resting, `UP`), `GUID` (guide; give
   `["EAST", "WEST"]` or `["NORTH", "SOUTH"]` for both sides, written as two records), `SPRG`
   (spring, `UP`). Every support goes on the modelled centreline. An iso note like "support offline at
   E… N… EL…" is dimensioned to the steel, not the pipe. Model it at the pipe station and keep the
-  note in the description. The support tag (`name`) is written only with `annotate`; list tags
-  against node positions in the handover note.
+  note in the description. Give each support its drawing tag as `name`, so the analyst can tie
+  the restraint back to the support drawing.
 
 ## Handover
 

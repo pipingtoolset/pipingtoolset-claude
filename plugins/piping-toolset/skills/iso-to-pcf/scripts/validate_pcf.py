@@ -7,8 +7,7 @@ Errors (exit 1): floating components (start attaches to no existing node), zero-
 elements, olets off the centreline, supports not on a node, record types outside the
 CAESAR II safe set, missing or mismatched UNITS-BORE / UNITS-CO-ORDS, bores that look
 like inches under UNITS-BORE MM. Warnings (exit 0): asymmetric bend tangents, bore
-changes without a reducer, SKEYs outside the --skeys list, record types that are
-accepted but not import-proven (GASKET, OLET), LF line endings.
+changes without a reducer, SKEYs outside the --skeys list, LF line endings.
 
 It does NOT check that the SKEYs are what your site's Isogen emits, continuation
 coordinates against adjoining sheets, or the axis declaration - do those by hand.
@@ -28,11 +27,10 @@ INLINE = {"PIPE", "PIPE-FIXED", "ELBOW", "BEND", "FLANGE", "FLANGE-BLIND", "GASK
           "VALVE", "VALVE-ANGLE", "REDUCER-ECCENTRIC", "REDUCER-CONCENTRIC", "CAP",
           "MISC-COMPONENT", "TEE", "INSTRUMENT", "COUPLING", "UNION", "FILTER", "TRAP"}
 POINT_ONLY = {"OLET", "SUPPORT", "WELD"}
-# Seen in PCFs that import cleanly into CAESAR II, and reported-accepted but unproven.
+# Proven to import cleanly into CAESAR II (sample Isogen exports + live builder imports).
 PROVEN = {"PIPE", "PIPE-FIXED", "BEND", "TEE", "FLANGE", "VALVE", "VALVE-ANGLE",
-          "REDUCER-CONCENTRIC", "SUPPORT"}
-ACCEPTED = {"GASKET", "OLET"}
-SAFE = PROVEN | ACCEPTED
+          "REDUCER-CONCENTRIC", "SUPPORT", "GASKET", "OLET"}
+SAFE = PROVEN
 # Nominal sizes written in inches. Under UNITS-BORE MM a real bore is size x 25.4
 # (1/8 -> 3.175, 1/4 -> 6.35), so an exact inch value here is a unit error.
 NPS_INCH = {0.125, 0.25, 0.375, 0.5, 0.75, 1, 1.25, 1.5, 2, 2.5, 3, 3.5, 4, 5, 6, 8}
@@ -136,8 +134,6 @@ def validate(text: str, skeys: Optional[set] = None, safe: bool = True,
         elif safe and c["kind"] not in SAFE:
             errs.append(f"record type outside the CAESAR II safe set {tag(c)} - map it "
                         f"(see references/caesar-import.md) or pass --full-vocabulary")
-        elif safe and c["kind"] in ACCEPTED:
-            warns.append(f"{c['kind']} is accepted but not yet seen in an import-proven file {tag(c)}")
         if skeys is not None and c["skey"] and c["skey"] not in skeys:
             warns.append(f"SKEY {c['skey']} not in the confirmed list {tag(c)}")
 

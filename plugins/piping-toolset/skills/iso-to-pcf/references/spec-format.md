@@ -17,7 +17,7 @@ printed: `"13.7/8"` (13⅞ in), `"2635'0.7/16"`, `"5'4"`, `"7/16"`. A true decim
 | `axes` | | `"Z-up"` (default: X=E, Y=N, Z=EL) or `"Y-up"` (X=E, Y=EL, Z=−N) |
 | `units` | | `"MM"` (default, import-proven) or `"INCH"` (unproven). Coordinates **and** bore use it: `start.bore` and reducer/branch bores are entered as NPS and written ×25.4 |
 | `weight_units` | | `"LBS"` (default, as in import-proven files) or `"KGS"` |
-| `annotate` | | `true` adds `ITEM-DESCRIPTION`, `WEIGHT` and support `NAME`. Not yet import-proven; off by default |
+| `annotate` | | Default `true` (import-proven): writes `ITEM-DESCRIPTION` from `desc`, `WEIGHT` from `weight` and support `NAME`. `false` gives the bare form |
 | `profiles` | | Elevation profiles for sloped runs (below) |
 | `assumed` | | Strings: everything not readable on the drawing. Copied into the report |
 | `bom` | | Counts to reconcile (see *BOM keys* below): `{"ELBOW": 4, "FLANGE": 2, "PIPE-LENGTH:6": "145'0", ...}` |
@@ -42,9 +42,9 @@ support, component end, or the end of a `pipe`).
 
 ## Items
 
-Common optional keys on any component: `desc`, `skey`, `weight` (rigids). `desc` and `weight`
-are written only with `annotate`; they always appear in the build report. Inline fittings can
-also take `pipe_desc` for the pipe the builder inserts in front of them.
+Common optional keys on any component: `desc` (written upper-case as `ITEM-DESCRIPTION`),
+`skey`, `weight` (rigids). Inline fittings can also take `pipe_desc` for the pipe the builder
+inserts in front of them.
 
 | `type` | Keys | Behaviour |
 |---|---|---|

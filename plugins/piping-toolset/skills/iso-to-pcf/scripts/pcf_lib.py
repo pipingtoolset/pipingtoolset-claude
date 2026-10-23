@@ -25,14 +25,12 @@ Point = Tuple[F, F, F]
 MM_PER_IN = F(254, 10)
 SNAP = 10000  # denominator for snapped trig results (1/10000 in)
 
-# Record types seen in PCFs that import cleanly into CAESAR II (Isogen SISO exports).
-# With `safe` on (the default) the emitters write only these, plus the two marked
-# "accepted" (reported to import, not yet seen in a proven file); see
-# references/caesar-import.md.
+# Record types proven to import cleanly into CAESAR II: seen in Isogen SISO exports that
+# import, or confirmed by a live import of this builder's output (GASKET, OLET). With
+# `safe` on (the default) the emitters write only these; see references/caesar-import.md.
 PROVEN_RECORDS = ("PIPE", "PIPE-FIXED", "BEND", "TEE", "FLANGE", "VALVE", "VALVE-ANGLE",
-                  "REDUCER-CONCENTRIC", "SUPPORT")
-ACCEPTED_RECORDS = ("GASKET", "OLET")
-SAFE_RECORDS = PROVEN_RECORDS + ACCEPTED_RECORDS
+                  "REDUCER-CONCENTRIC", "SUPPORT", "GASKET", "OLET")
+SAFE_RECORDS = PROVEN_RECORDS
 SAFE_MAP = {"FLANGE-BLIND": "FLANGE", "CAP": "PIPE", "MISC-COMPONENT": "VALVE",
             "COUPLING": "PIPE", "REDUCER-ECCENTRIC": "REDUCER-CONCENTRIC"}
 SUPPORT_DIRECTIONS = ("UP", "DOWN", "NORTH", "SOUTH", "EAST", "WEST")
@@ -209,11 +207,12 @@ class PCF:
     The format mirrors PCFs that import cleanly into CAESAR II (Isogen "SISO" exports):
     mm coordinates AND mm bore (nominal size x 25.4), a bare header, elbows as BEND records
     with ANGLE and BEND-RADIUS, TEE with CENTRE-POINT, SUPPORT as CO-ORDS / SKEY /
-    SUPPORT-DIRECTION on a node, and no ITEM-CODE or ITEM-DESCRIPTION unless `annotate`.
+    SUPPORT-DIRECTION on a node. `annotate` (default on, import-proven) adds
+    ITEM-DESCRIPTION, WEIGHT and support NAME; ITEM-CODE is never written.
     """
 
     def __init__(self, axes: str = "Z-up", coords: str = "MM", safe: bool = True,
-                 weight_units: str = "LBS", annotate: bool = False):
+                 weight_units: str = "LBS", annotate: bool = True):
         if axes not in AXES:
             raise PCFError(f"axes must be one of {sorted(AXES)}")
         if coords not in ("MM", "INCH"):

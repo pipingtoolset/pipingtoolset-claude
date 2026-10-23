@@ -47,7 +47,7 @@ class Builder:
         self.pcf = PCF(axes=spec.get("axes", "Z-up"), coords=spec.get("units", "MM"),
                        safe=not spec.get("full_vocabulary", False),
                        weight_units=spec.get("weight_units", "LBS"),
-                       annotate=bool(spec.get("annotate", False)))
+                       annotate=bool(spec.get("annotate", True)))
         self.profiles: Dict[str, Profile] = {}
         for name, p in spec.get("profiles", {}).items():
             self.profiles[name] = Profile(p["along"], [(ftin(s), ftin(z)) for s, z in p["points"]])

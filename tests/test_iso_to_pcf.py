@@ -31,7 +31,6 @@ import pcf_lib as L  # noqa: E402
 import validate_pcf as V  # noqa: E402
 
 SITE_SKEYS = {"FLWN", "FLBL", "BEBW", "TEBW", "WTBW", "VBSW", "RCBW", "ANCH", "SKID", "GUID"}
-PROVEN_DIR_NOTE = "accepted but not yet seen"
 
 
 def demo() -> dict:
@@ -113,7 +112,6 @@ class DemoBuild(unittest.TestCase):
             self.assertIn(line + "\r\n", self.text)
         self.assertNotIn("ATTRIBUTE", self.text)
         self.assertNotIn("ITEM-CODE", self.text)
-        self.assertNotIn("ITEM-DESCRIPTION", self.text)
 
     def test_report_clean(self):
         self.assertTrue(self.r["ok"])
@@ -123,8 +121,7 @@ class DemoBuild(unittest.TestCase):
     def test_validator_passes_demo(self):
         v = V.validate(self.text, skeys=SITE_SKEYS)
         self.assertEqual(v["errors"], [])
-        # only GASKET/OLET (accepted, not yet import-proven) may warn
-        self.assertEqual([w for w in v["warnings"] if PROVEN_DIR_NOTE not in w], [])
+        self.assertEqual(v["warnings"], [])
 
     def test_hand_computed_coordinates(self):
         recs = records(self.text)
@@ -159,7 +156,7 @@ class DemoBuild(unittest.TestCase):
         self.assertEqual([a["SKEY"][0][0] for a in sups], ["ANCH", "SKID", "GUID", "GUID"])
         self.assertNotIn("SUPPORT-DIRECTION", sups[0])
         self.assertEqual([a["SUPPORT-DIRECTION"][0][0] for a in sups[2:]], ["EAST", "WEST"])
-        body = self.text.split("SUPPORT\r\n")[2].split("\r\n")[:3]
+        body = self.text.split("SUPPORT\r\n")[2].split("\r\n")[:3]   # proven order first
         self.assertEqual([s.split()[0] for s in body], ["CO-ORDS", "SKEY", "SUPPORT-DIRECTION"])
         # every support sits on a node: the hanger at N 208'0 splits the pipe there
         ends = {tuple(e[:3]) for k, a in recs if k != "SUPPORT" for e in a.get("END-POINT", [])}
@@ -305,14 +302,18 @@ class Variants(unittest.TestCase):
         with self.assertRaises(L.PCFError):
             build(s)
 
-    def test_annotate_adds_descriptions_and_weights(self):
-        s = demo()
-        s["annotate"] = True
-        text = build(s).pcf.text()
+    def test_annotations_on_by_default_and_switchable(self):
+        # Import-proven (live CAESAR II import of the T2 ladder file), so on by default.
+        text = build(demo()).pcf.text()
         self.assertIn("ITEM-DESCRIPTION FLANGE WN CL150 RF 6IN STD", text)
         self.assertIn("WEIGHT 19.00", text)
         self.assertIn("NAME PS-01_HG", text)
         self.assertEqual(V.validate(text)["errors"], [])
+        s = demo()
+        s["annotate"] = False
+        bare = build(s).pcf.text()
+        for k in ("ITEM-DESCRIPTION ", "WEIGHT ", "NAME "):
+            self.assertNotIn("\r\n    " + k, bare)
 
     def test_cli_exit_codes(self):
         with tempfile.TemporaryDirectory() as d:
