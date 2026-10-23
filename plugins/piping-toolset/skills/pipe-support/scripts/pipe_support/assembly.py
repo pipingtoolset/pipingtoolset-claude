@@ -37,7 +37,7 @@ from .baseplate import base_plate_anchorage
 from .common import InputError, result, round_half_up
 from .jsmath import div, js_num, nn
 from .pier import pier_soil
-from .weld import fillet_weld
+from .weld import _design, fillet_weld
 
 MODULE = "structural.support-assembly"
 NAN = math.nan
@@ -104,6 +104,49 @@ def _num(d: Dict[str, Any], key: str, default: Any = 0) -> Any:
     return nn(d, key, default)
 
 
+# J10.1 flange local bending: phi = 0.90 / omega = 1.67.
+_PHI_FLB = 0.90
+_OMEGA_FLB = 1.67
+
+
+def _thinnest_element(sec: Dict[str, Any]) -> Optional[float]:
+    """Thickness of the thinnest plate element of a section, in (min(tf, tw); HSS/Pipe carry the wall in tw)."""
+    t = [v for v in (sec.get("tw"), sec.get("tf")) if v is not None and v > 0]
+    return min(t) if t else None
+
+
+def _is_open(sec: Dict[str, Any]) -> bool:
+    """Open shapes: the two arm-weld lines straddle ONE web or leg, one per face."""
+    return sec.get("kind") in ("I", "C", "T", "L")
+
+
+def _weld_checks(res: Dict[str, Any], t_note: str) -> List[Dict[str, Any]]:
+    """A weld stage's checks: the fillet itself (J2-4) and, when the base metal is defined, its J4
+    limit states split by direction (port of weldChecks)."""
+    o = res["output"]
+    checks: List[Dict[str, Any]] = [{
+        "label": "Fillet weld stress", "demand": o["demandPerInch"],
+        "capacity": o["designPerInch"], "ratio": o["ratio"],
+        "clause": "AISC J2-4 with the J2.4(b) directional increase",
+        "status": "pass" if o["ratio"] <= 1.0 else "fail",
+    }]
+
+    def row(label: str, demand: float, capacity: Any, clause: str) -> None:
+        if capacity is None:
+            return
+        ratio = round_half_up(demand / capacity, 4) if capacity > 0 else math.inf
+        checks.append({"label": label, "demand": demand, "capacity": capacity, "ratio": ratio,
+                       "clause": f"{clause}, {t_note}", "status": "pass" if ratio <= 1.0 else "fail"})
+
+    row("Base-metal tension yielding", o["normalPerInch"], o["baseTensionYieldPerInch"],
+        "AISC J4-1 (0.9·Fy·t, normal component)")
+    row("Base-metal tension rupture", o["normalPerInch"], o["baseTensionRupturePerInch"],
+        "AISC J4-2 (0.75·Fu·t, normal component)")
+    row("Base-metal shear rupture", o["shearPerInch"], o["baseMetalPerInch"],
+        "AISC J4-4 (0.75·0.6·Fu·t, direct shear)")
+    return checks
+
+
 def analyze_assembly(inp: Dict[str, Any],
                      resolve_shape: Optional[Callable[[str], Dict[str, Any]]] = None) -> Dict[str, Any]:
     """Analyse a complete support assembly (port of analyzeAssembly).
@@ -152,6 +195,14 @@ def analyze_assembly(inp: Dict[str, Any],
     weld_FEXX = inp.get("weldFEXX")
     default_weld = inp.get("weldSize")
 
+    # The column is resolved up front: its flange is the other part joined at every arm-to-column weld.
+    if typ != "cantilever" and not inp.get("columnShape"):
+        raise InputError("columnShape is required for this assembly type")
+    col = resolve(inp["columnShape"]) if typ != "cantilever" else None
+    col_flange = None
+    if col is not None:
+        col_flange = col.get("tf") if col.get("tf") is not None else col.get("tw")
+
     # ======================================================================
     # 1-2. Arms and their welds
     # ======================================================================
@@ -192,23 +243,65 @@ def analyze_assembly(inp: Dict[str, Any],
         })
         stages.append(_stage_from(arm_label, "arm", arm_res, arm_res["output"]["checks"]))
 
-        # Arm-to-column weld: two parallel fillets down the arm depth.
-        wSize = _num(arm, "weldSize", default_weld)
-        thickness_pair = [_num(sec, "tw", wSize), _num(sec, "tf", wSize)]
+        # Arm-to-column weld: two parallel fillets down the arm depth. The two horizontal components ride
+        # as one parallel shear resultant - that forgoes any J2.4(b) directional increase on them, which is
+        # the conservative side. Base part = the thinner of the arm's welded element (web, leg or wall) and
+        # the column flange it lands on. A T-joint, so the J2.2b along-an-edge maximum does not apply.
+        # J4 thickness per weld line: open shape -> t/2 (both lines on one web/leg); HSS/Pipe -> full wall;
+        # each line lands on the column flange face, capped at tf.
+        wSize = arm.get("weldSize") if arm.get("weldSize") is not None else default_weld
+        arm_elem = sec.get("tw") if sec.get("tw") is not None else _thinnest_element(sec)
+        arm_t = [v for v in (arm_elem, col_flange) if v is not None]
+        arm_weld_t = min(arm_t) if arm_t else None
+        arm_per_line = (arm_elem / 2 if _is_open(sec) else arm_elem) if arm_elem is not None else None
+        line_t = [v for v in (arm_per_line, col_flange) if v is not None]
+        arm_j4_t = min(line_t) if line_t else None
         weld_in = {
             "method": method, "size": wSize, "FEXX": weld_FEXX,
             "pattern": "two-parallel", "depth": sec["d"],
             "Vtransverse": V, "Vparallel": _hypot(Talong, Lacross), "M": M,
-            "basePartThickness": min(thickness_pair),
+            "basePartThickness": arm_weld_t, "baseMetalThickness": arm_j4_t, "alongEdge": False,
+            # The arm's axial force pulls normal to the column face: base-metal tension.
+            "baseForces": {"normal": Talong, "shear": _hypot(V, Lacross)},
             "baseFy": material.get("Fy"), "baseFu": material.get("Fu"),
         }
         weld_res = fillet_weld({k: v for k, v in weld_in.items() if v is not None})
-        wo = weld_res["output"]
-        stages.append(_stage_from(f'Arm {i + 1} to column weld — {js_num(wSize)}" fillet', "weld", weld_res, [{
-            "label": "Fillet weld stress", "demand": wo["demandPerInch"],
-            "capacity": wo["designPerInch"], "ratio": wo["ratio"],
-            "clause": "AISC J2-4 with the J2.4(b) directional increase", "status": weld_res["status"],
-        }]))
+        if arm_j4_t is None:
+            arm_note = "t not defined"
+        elif arm_per_line is not None and arm_j4_t == arm_per_line and _is_open(sec):
+            arm_note = f"t = {js_num(arm_elem)}/2 = {js_num(round_half_up(arm_j4_t, 4))} in per line (both faces of the arm element)"
+        else:
+            arm_note = f"t = {js_num(round_half_up(arm_j4_t, 4))} in per line"
+        arm_checks = _weld_checks(weld_res, arm_note)
+
+        # J10.1 column-flange local bending under the tension the weld group puts into the flange face:
+        # T = 1.5*M/d (elastic resultant of the tension half, lever 2d/3) + P/2. Not required when the
+        # loaded width across the flange is under 0.15*bf; Rn halves within 10*tf of the column top.
+        if col is not None and col_flange is not None and col.get("kind") in ("I", "C") and col.get("bf"):
+            if _is_open(sec):
+                loaded_width = (arm_elem if arm_elem is not None else 0) + 2 * wSize
+            elif sec.get("kind") == "HSS-RECT":
+                loaded_width = sec["bf"] if sec.get("bf") is not None else sec["d"]
+            else:
+                loaded_width = sec["d"]
+            if loaded_width < 0.15 * col["bf"]:
+                weld_res["warnings"].append(
+                    f"Arm {i + 1}: J10.1 column-flange local bending not required — the loaded width across the flange "
+                    f"({js_num(round_half_up(loaded_width, 3))} in) is under 0.15·bf = {js_num(round_half_up(0.15 * col['bf'], 3))} in.")
+            else:
+                T = (1.5 * M) / sec["d"] + Talong / 2
+                near_end = column_height - elevation < 10 * col_flange
+                Rn = 6.25 * material["Fy"] * col_flange * col_flange * (0.5 if near_end else 1)
+                cap = _design(Rn, method, _PHI_FLB, _OMEGA_FLB)
+                ratio = round_half_up(T / cap, 4) if cap > 0 else math.inf
+                arm_checks.append({
+                    "label": "Column flange local bending", "demand": round_half_up(T, 4), "capacity": round_half_up(cap, 4),
+                    "ratio": ratio,
+                    "clause": f"AISC J10-1 (6.25·Fy·tf², tf = {js_num(col_flange)} in"
+                              f"{'; ×0.5 within 10·tf of the column top' if near_end else ''})",
+                    "status": "pass" if ratio <= 1.0 else "fail",
+                })
+        stages.append(_stage_from(f'Arm {i + 1} to column weld — {js_num(wSize)}" fillet', "weld", weld_res, arm_checks))
         if Macross > 0:
             warnings.append(
                 f"Arm {i + 1}: the weak-axis moment from its longitudinal pipe loads "
@@ -256,11 +349,8 @@ def analyze_assembly(inp: Dict[str, Any],
     # ======================================================================
     baseplate = inp.get("baseplate")
     pier = inp.get("pier")
-    if typ != "cantilever":
+    if col is not None:
         col_label = inp.get("columnShape")
-        if not col_label:
-            raise InputError("columnShape is required for this assembly type")
-        col = resolve(col_label)
         K = _num(inp, "columnK", 2.1)
         col_res = aisc_member_design({
             "section": col, "material": material, "method": method,
@@ -276,26 +366,29 @@ def analyze_assembly(inp: Dict[str, Any],
                 "Column K = 2.1 assumed (fixed base, free top — AISC Table C-A-7.1 case f). If the support is "
                 "braced or framed at the top, supply the lower K that applies.")
 
-        # Column-to-base-plate weld, all round the column footprint.
+        # Column-to-base-plate weld, all round the column footprint. The base part is the column's thinnest
+        # element, never the base plate (the plate is the THICKER part joined). A T-joint, so the J2.2b
+        # along-an-edge maximum does not apply.
         col_d = col["d"]
         col_bf = nn(col, "bf", col_d)
-        base_t = nn(baseplate or {}, "plateThickness", None)
-        if base_t is None:
-            base_t = col.get("tf")
+        plate_t = nn(baseplate or {}, "plateThickness", None)
+        col_t = _thinnest_element(col)
+        if col_t is not None and plate_t is not None:
+            base_weld_t = min(col_t, plate_t)
+        else:
+            base_weld_t = col_t if col_t is not None else plate_t
         bw_in = {
             "method": method, "size": default_weld, "FEXX": weld_FEXX,
             "pattern": "all-round", "depth": col_d, "width": col_bf,
             "Vtransverse": colShear, "M": biaxial_equivalent(col_d, col_bf), "Pnormal": 0,
-            "basePartThickness": base_t,
+            "basePartThickness": base_weld_t, "alongEdge": False,
             "baseFy": material.get("Fy"), "baseFu": material.get("Fu"),
         }
         base_weld = fillet_weld({k: v for k, v in bw_in.items() if v is not None})
-        bwo = base_weld["output"]
-        stages.append(_stage_from(f'Column to base plate weld — {js_num(default_weld)}" fillet', "weld", base_weld, [{
-            "label": "Fillet weld stress", "demand": bwo["demandPerInch"],
-            "capacity": bwo["designPerInch"], "ratio": bwo["ratio"],
-            "clause": "AISC J2-4 with the J2.4(b) directional increase", "status": base_weld["status"],
-        }]))
+        # The perimeter model puts ONE line on each face of the footprint: full element thickness (no t/2).
+        stages.append(_stage_from(f'Column to base plate weld — {js_num(default_weld)}" fillet', "weld", base_weld,
+                                  _weld_checks(base_weld, "t not defined" if base_weld_t is None
+                                               else f"t = {js_num(base_weld_t)} in per line")))
 
         # ==================================================================
         # 4-5. Base plate and anchorage

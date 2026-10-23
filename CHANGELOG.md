@@ -8,6 +8,29 @@ keep a defect until the plugin is updated, so each such entry names the skill, t
 affected inputs and the release that fixed it. GitHub Releases carry the same
 label and are the recall channel.
 
+## [0.3.1] — 2026-10-23
+
+- **UNCONSERVATIVE-FIX** `pipe-support`: in 0.3.0 the column-to-base-plate fillet
+  weld's base metal was checked on the base plate, which is the thicker part.
+  - **Affected:** every assembly with a base plate. The weld stage could report a
+    ratio lower than the J4 limit on the column element allows. For example, PS-101
+    published 0.200 where the true value is higher.
+  - **0.3.0 mitigation:** it carried a `[cross-check]` row that recomputed J4-4 on the
+    column side. Supports reported by 0.3.0 with that row are not affected; the row
+    showed the governing value.
+  - **Fix:** follows the pipingtoolset.com engine fix (2026-10-23):
+    - the base part is the thinner element;
+    - J4 is split by direction (J4-1 / J4-2 on the normal component, J4-4 on the
+      direct shear);
+    - each line gets t/2 where both faces of one web or leg are welded;
+    - J10.1 column-flange local bending is checked at the arm-to-column joint;
+    - the J2.2b along-edge maximum is no longer applied to T-joint fillets.
+  - **Cleanup:** the plugin's `[cross-check]` row is retired.
+  - **Affected inputs:** any `pipe-support` run with a base plate, and any arm-to-column
+    weld. Upgrade and re-run.
+- Parity goldens regenerated from the fixed engine. The PS-101 verification is
+  re-baselined to the corrected engine.
+
 ## [0.3.0] — unreleased
 
 - New skill `pipe-support`: structural check of a pipe support assembly at one

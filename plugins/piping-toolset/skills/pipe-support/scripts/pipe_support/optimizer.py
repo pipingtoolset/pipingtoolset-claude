@@ -112,7 +112,6 @@ def envelope(design: dict, sets: Sequence[dict], spec: dict,
         res = analyze_assembly(apply(design, s["demands"], spec))
         runs.append((s["id"], res))
         warnings += res["warnings"]
-        _column_side_weld(design, res)
         for st in res["output"]["stages"]:
             if service_sets is not None and st["component"] == "pier":
                 continue
@@ -179,41 +178,6 @@ def _weld_ok(env: dict, limit: float = 1.0) -> bool:
     if any("exceeds the J2.2b maximum" in w for w in env.get("warnings", [])):
         return False                       # an alternative must satisfy J2.2b, not just strength
     return all(s["status"] != "fail" and _key(s["ratio"]) <= limit for s in rows)
-
-
-def _column_side_weld(design: dict, res: dict) -> None:
-    """Add the base-metal check on the COLUMN side of the column-to-base-plate fillet.
-
-    The web engine checks that joint's base metal on the base plate (the thicker part).
-    AISC 360-22 J4.2(b) (J4-4) on the thinner connected element - the column wall/flange -
-    is added here as its own limit-state row so it counts in the verdict. Rows are tagged
-    [cross-check]; the engine's own rows are untouched.
-    """
-    col = design.get("columnShape")
-    if not col or not design.get("baseplate"):
-        return
-    row = find_shape(col) or {}
-    ts = [t for t in (row.get("tf"), row.get("tw")) if t]
-    if not ts:
-        return
-    t = min(ts)
-    Fu = float(design["material"]["Fu"])
-    cap = 0.6 * Fu * t * (0.75 if design["method"] == "LRFD" else 1 / 2.00)
-    for st in res["output"]["stages"]:
-        if st["component"] != "weld" or "base" not in st["stage"].lower():
-            continue
-        weld = next((c for c in st["checks"] if "weld" in c["label"].lower()), None)
-        if not weld or isinstance(weld["demand"], str):
-            continue
-        ratio = round_half_up(weld["demand"] / cap, 4)
-        st["checks"].append({"label": "Base metal, column side [cross-check]",
-                             "demand": weld["demand"], "capacity": round_half_up(cap, 4), "ratio": ratio,
-                             "clause": f"AISC 360-22 J4.2(b) (J4-4), column element t = {t} in",
-                             "status": "pass" if ratio <= 1.0 else "fail"})
-        if _gt(ratio, st["ratio"]):
-            st["ratio"], st["governing"] = ratio, "Base metal, column side [cross-check]"
-        if ratio > 1.0:
-            st["status"] = "fail"
 
 
 def lightest(design: dict, sets, spec, family: str, set_shape: Callable[[dict, str], None],

@@ -40,13 +40,13 @@ These were found while porting. The skill reproduces the web engine exactly, so 
 match pipingtoolset.com. The reviewer adds a finding wherever one of these could change a
 verdict.
 
-1. **Column-to-base-plate weld: the base part is the plate.** The engine passes the base plate
-   thickness as the "base part". The Table J2.4 minimum and the J4-4 base-metal rupture are then
-   computed on the plate, not the thinner column element. The minimum-size warning is
-   therefore over-conservative, and the base-metal capacity can be **unconservative**.
-   The skill adds a `Base metal, column side [cross-check]` row (J4-4 on min(tf, tw)) to that
-   weld stage. It counts in the verdict, the envelope, the optimizer and the compliance matrix,
-   and `review.py` explains it as a **major** finding. Engine stage rows are never altered.
+1. **Weld base metal - FIXED in the engine (pipingtoolset.com engine fix, 2026-10-23; plugin 0.3.1).**
+   Releases up to 0.3.0 checked the column-to-base-plate weld's base metal on the base plate
+   (the thicker part). That gave a false Table J2.4 warning and could overstate the J4-4
+   capacity (UNCONSERVATIVE). The engine now uses the thinner element. It splits J4 by
+   direction (J4-1/J4-2 on the normal component, J4-4 on the direct shear), gives each weld
+   line t/2 where two lines share the faces of one web or leg, and checks J10.1
+   column-flange local bending at the arm. 0.3.0's `[cross-check]` row is retired.
 2. **Base plate: "Concrete breakout (tension)" compares the total group tension** with the group
    capacity Ncbg. This is consistent; the steel, pullout and bond rows are per anchor.
 3. **Base plate: the post-installed splitting factor ψcp,N** evaluates to 1.0 in every case (an
@@ -75,4 +75,4 @@ verdict.
   needed for some anchorage designs. Map a case scaled by Ω0 as `Eh` and re-run.
 - **Torsion** (H3) of the column under longitudinal pipe loads: reported, not checked.
 
-Report items 1, 6 and 10 to the user whenever the design is close to a limit in that element.
+Report items 6 and 10 to the user whenever the design is close to a limit in that element.
