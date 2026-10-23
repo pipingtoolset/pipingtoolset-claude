@@ -1,0 +1,102 @@
+{
+  "module": "structural.pier-soil",
+  "cases": [
+    {
+      "input": {
+        "method": "ASD",
+        "pierLength": 16,
+        "pierWidth": 16,
+        "pierHeight": 24,
+        "fc": 4000,
+        "footingLength": 48,
+        "footingWidth": 48,
+        "footingThickness": 12,
+        "allowableBearing": 3,
+        "frictionCoefficient": 0.35,
+        "plateLength": 12,
+        "plateWidth": 12,
+        "P": 15,
+        "M": 96,
+        "V": 0
+      },
+      "expect": {
+        "selfWeight": 2.9333,
+        "totalVertical": 17.9333,
+        "totalMoment": 96,
+        "eccentricity": 5.3532,
+        "kern": 8,
+        "soilPressureMax": 1.8708,
+        "soilPressureMin": 0.3708,
+        "overturningRatio": 0.3346,
+        "slidingRatio": 0,
+        "governingRatio": 0.6236,
+        "governingCheck": "Soil bearing pressure"
+      },
+      "status": "pass",
+      "tol": 0.0001
+    },
+    {
+      "input": {
+        "method": "ASD",
+        "pierLength": 16,
+        "pierWidth": 16,
+        "pierHeight": 24,
+        "fc": 4000,
+        "footingLength": 36,
+        "footingWidth": 36,
+        "footingThickness": 12,
+        "allowableBearing": 3,
+        "frictionCoefficient": 0.35,
+        "plateLength": 12,
+        "plateWidth": 12,
+        "P": 2.7,
+        "M": 75,
+        "V": 0.85
+      },
+      "expect": {
+        "selfWeight": 1.8833,
+        "totalVertical": 4.5833,
+        "totalMoment": 105.6,
+        "eccentricity": 23.04,
+        "kern": 6,
+        "soilPressureMin": 0,
+        "overturningRatio": 1.92,
+        "slidingRatio": 0.7948,
+        "governingCheck": "Soil bearing pressure"
+      },
+      "status": "fail",
+      "tol": 0.0001
+    },
+    {
+      "input": {
+        "method": "ASD",
+        "pierLength": 16,
+        "pierWidth": 16,
+        "pierHeight": 24,
+        "fc": 4000,
+        "allowableBearing": 3,
+        "restraint": "anchored",
+        "plateLength": 12,
+        "plateWidth": 12,
+        "P": 2.7,
+        "M": 75,
+        "V": 0.85
+      },
+      "expect": {
+        "selfWeight": 0.5333,
+        "totalVertical": 3.2333,
+        "totalMoment": 95.4,
+        "eccentricity": 29.5052,
+        "kern": 2.6667,
+        "soilPressureMax": 0,
+        "soilPressureMin": 0,
+        "overturningRatio": 0,
+        "slidingRatio": 0,
+        "governingRatio": 0.0072,
+        "governingCheck": "Pier concrete bearing"
+      },
+      "status": "pass",
+      "tol": 0.0001
+    }
+  ]
+}

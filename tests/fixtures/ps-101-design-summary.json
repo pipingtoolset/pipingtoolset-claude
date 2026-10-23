@@ -1,0 +1,93 @@
+{
+  "source": "PS-101 PiperSTR Design Summary Report (pipingtoolset.com, 2026-10-23), transcribed value by value. Report rounds to 3 decimals.",
+  "tol": 0.0005,
+  "input": {
+    "method": "LRFD",
+    "type": "t-post",
+    "tag": "PS-101",
+    "columnShape": "W6X15",
+    "columnHeight": 96,
+    "weldSize": 0.25,
+    "weldFEXX": 70,
+    "material": {"Fy": 36, "Fu": 58},
+    "arms": [{"shape": "W6X15", "elevation": 96, "projection": 24, "pipes": [
+      {"tag": "6-P-1201", "offset": 8, "vertical": 1.2, "transverse": 0.2, "longitudinal": 0},
+      {"tag": "6-P-1202", "offset": 18, "vertical": 1.5, "transverse": 0.25, "longitudinal": 0}
+    ]}],
+    "baseplate": {
+      "plateLength": 12, "plateWidth": 12, "plateThickness": 1.25, "plateFy": 36,
+      "fc": 4000, "pierLength": 24, "pierWidth": 24,
+      "anchorType": "post-installed-adhesive",
+      "anchorCount": 4, "anchorDiameter": 0.75, "anchorEmbedment": 8, "anchorFuta": 58,
+      "anchorSpacingLength": 15, "anchorSpacingWidth": 15, "anchorEdgeDistance": 4.5,
+      "bondStrength": 800
+    },
+    "pier": {"pierLength": 24, "pierWidth": 24, "pierHeight": 24, "fc": 4000,
+             "allowableBearing": 3, "restraint": "anchored"}
+  },
+  "expect": {
+    "status": "pass",
+    "governingRatio": 0.416,
+    "governingStageContains": "Base plate",
+    "governingCheck": "Base plate yield (bearing interface)",
+    "baseReactions": {"axial": 2.7, "moment": 79.8, "momentY": 0, "shear": 0.45, "torsion": 0, "uplift": 0},
+    "lateral": {"transverse": 0.45, "longitudinal": 0},
+    "stages": [
+      {"component": "arm", "ratio": 0.108, "checks": [
+        ["Axial compression", 0.45, 134.687, 0.003, "E3-4 (flexural buckling, y-y); E3-2 inelastic"],
+        ["Flexure, major axis", 36.6, 344.661, 0.106, "F3-1 (noncompact flange, FLB)"],
+        ["Flexure, minor axis", 0, 150.514, 0, "F6-2 (noncompact flange)"],
+        ["Shear, major axis", 2.7, 29.758, 0.091, "G2-1 (web shear) [G2.1(a)]"],
+        ["Shear, minor axis", 0, 60.552, 0, "G7 (flange shear, weak axis)"],
+        ["Combined axial + flexure", 0.108, 1, 0.108, "H1-1b (Pr/Pc = 0.003)"],
+        ["Slenderness KL/r (E2 advisory)", 34.759, 200, 0.174, "E2 recommended limit 200"],
+        ["Deflection (L/240)", 0.006, 0.1, 0.061, "Serviceability"]
+      ]},
+      {"component": "weld", "ratio": 0.367, "checks": [
+        ["Fillet weld stress", 3.069, 8.351, 0.367, "AISC J2-4 with the J2.4(b) directional increase"]
+      ]},
+      {"component": "column", "ratio": 0.266, "checks": [
+        ["Axial compression", 2.7, 51.772, 0.052, "E3-4 (flexural buckling, y-y); E3-3 elastic"],
+        ["Flexure, major axis", 79.8, 333.267, 0.239, "F2-2 (inelastic LTB)"],
+        ["Flexure, minor axis", 0, 150.514, 0, "F6-2 (noncompact flange)"],
+        ["Shear, major axis", 0.45, 29.758, 0.015, "G2-1 (web shear) [G2.1(a)]"],
+        ["Shear, minor axis", 0, 60.552, 0, "G7 (flange shear, weak axis)"],
+        ["Combined axial + flexure", 0.266, 1, 0.266, "H1-1b (Pr/Pc = 0.052)"],
+        ["Slenderness KL/r (E2 advisory)", 139.035, 200, 0.695, "E2 recommended limit 200"]
+      ]},
+      {"component": "weld", "ratio": 0.2, "checks": [
+        ["Fillet weld stress", 1.668, 8.351, 0.2, "AISC J2-4 with the J2.4(b) directional increase"]
+      ]},
+      {"component": "baseplate", "ratio": 0.416, "checks": [
+        ["Concrete bearing", 2.7, 636.48, 0.004, "AISC J8-2 / ACI 318-19 14.5.6.2"],
+        ["Base plate yield (bearing interface)", 0.52, 1.25, 0.416, "AISC Design Guide 1"],
+        ["Base plate yield (tension interface)", 0.477, 1.25, 0.382, "AISC Design Guide 1"]
+      ]},
+      {"component": "anchorage", "ratio": 0.251, "checks": [
+        ["Anchor rod tensile (steel)", 2.375, 14.549, 0.163, "ACI 318-19 17.6.1.2"],
+        ["Anchor rod shear (steel)", 0.113, 7.566, 0.015, "ACI 318-19 17.7.1.2b"],
+        ["Concrete breakout (tension)", 4.75, 18.956, 0.251, "ACI 318-19 17.6.2.1b"],
+        ["Adhesive bond strength", 2.375, 9.802, 0.242, "ACI 318-19 17.6.5.2.2b"],
+        ["Concrete breakout (shear)", 0.45, 6.762, 0.067, "ACI 318-19 17.7.2.1b"],
+        ["Concrete pryout (shear)", 0.45, 37.913, 0.012, "ACI 318-19 17.7.3.1b"],
+        ["Tension-shear interaction", 0.251, 1, 0.251, "ACI 318-19 17.8.3"]
+      ]},
+      {"component": "pier", "ratio": 0.002, "checks": [
+        ["Pier concrete bearing", 2.7, 1272.96, 0.002, "ACI 318-19 14.5.6.2 / AISC J8"]
+      ]}
+    ],
+    "warningsContain": [
+      "Column K = 2.1 assumed",
+      "Cb = 1.0 assumed",
+      "exceeds the J2.2b maximum of 0.23 in along the edge of a 0.23 in part",
+      "Base-metal shear rupture governs over the weld metal",
+      "below the Table J2.4 minimum of 0.3125 in for a 1.25 in part",
+      "17.6.2.1.2 applies",
+      "kc = 17",
+      "Edge distance 4.5 in is less than 1.5",
+      "ANCHORED",
+      "No footing modelled",
+      "SERVICE level"
+    ]
+  }
+}

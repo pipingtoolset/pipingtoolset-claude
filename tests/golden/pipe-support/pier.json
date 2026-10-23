@@ -1,0 +1,3018 @@
+{
+  "module": "structural.pier-soil",
+  "cases": [
+    {
+      "input": {
+        "method": "ASD",
+        "pierLength": 16,
+        "pierWidth": 16,
+        "pierHeight": 24,
+        "fc": 4000,
+        "footingLength": 48,
+        "footingWidth": 48,
+        "footingThickness": 12,
+        "allowableBearing": 3,
+        "frictionCoefficient": 0.35,
+        "plateLength": 12,
+        "plateWidth": 12,
+        "P": 15,
+        "M": 96,
+        "V": 0
+      },
+      "output": {
+        "selfWeight": 2.9333,
+        "totalVertical": 17.9333,
+        "totalMoment": 96,
+        "eccentricity": 5.3532,
+        "kern": 8,
+        "soilPressureMax": 1.8708,
+        "soilPressureMin": 0.3708,
+        "partialBearing": false,
+        "overturningRatio": 0.3346,
+        "slidingRatio": 0,
+        "checks": [
+          {
+            "label": "Soil bearing pressure",
+            "demand": 1.8708,
+            "capacity": 3,
+            "ratio": 0.6236,
+            "clause": "Service-level bearing vs the geotechnical allowable",
+            "status": "pass"
+          },
+          {
+            "label": "Overturning (FS 1.5)",
+            "demand": 144,
+            "capacity": 430.4,
+            "ratio": 0.3346,
+            "clause": "Gravity stability — resisting moment = N·L/2 about the toe",
+            "status": "pass"
+          },
+          {
+            "label": "Sliding (FS 1.5)",
+            "demand": 0,
+            "capacity": 6.2767,
+            "ratio": 0,
+            "clause": "Resistance = mu·N + c·A (user-supplied soil properties)",
+            "status": "na"
+          },
+          {
+            "label": "Punching (two-way) shear",
+            "demand": 9.8032,
+            "capacity": 80.9543,
+            "ratio": 0.1211,
+            "clause": "ACI 318-19 22.6.5.2",
+            "status": "pass"
+          },
+          {
+            "label": "Pier concrete bearing",
+            "demand": 15,
+            "capacity": 376.7965,
+            "ratio": 0.0398,
+            "clause": "ACI 318-19 14.5.6.2 / AISC J8",
+            "status": "pass"
+          }
+        ],
+        "governingRatio": 0.6236,
+        "governingCheck": "Soil bearing pressure"
+      },
+      "status": "pass",
+      "warnings": []
+    },
+    {
+      "input": {
+        "method": "LRFD",
+        "pierLength": 16,
+        "pierWidth": 16,
+        "pierHeight": 24,
+        "fc": 4000,
+        "footingLength": 48,
+        "footingWidth": 48,
+        "footingThickness": 12,
+        "allowableBearing": 3,
+        "frictionCoefficient": 0.35,
+        "plateLength": 12,
+        "plateWidth": 12,
+        "P": 15,
+        "M": 96,
+        "V": 0
+      },
+      "output": {
+        "selfWeight": 2.9333,
+        "totalVertical": 17.9333,
+        "totalMoment": 96,
+        "eccentricity": 5.3532,
+        "kern": 8,
+        "soilPressureMax": 1.8708,
+        "soilPressureMin": 0.3708,
+        "partialBearing": false,
+        "overturningRatio": 0.3346,
+        "slidingRatio": 0,
+        "checks": [
+          {
+            "label": "Soil bearing pressure",
+            "demand": 1.8708,
+            "capacity": 3,
+            "ratio": 0.6236,
+            "clause": "Service-level bearing vs the geotechnical allowable",
+            "status": "pass"
+          },
+          {
+            "label": "Overturning (FS 1.5)",
+            "demand": 144,
+            "capacity": 430.4,
+            "ratio": 0.3346,
+            "clause": "Gravity stability — resisting moment = N·L/2 about the toe",
+            "status": "pass"
+          },
+          {
+            "label": "Sliding (FS 1.5)",
+            "demand": 0,
+            "capacity": 6.2767,
+            "ratio": 0,
+            "clause": "Resistance = mu·N + c·A (user-supplied soil properties)",
+            "status": "na"
+          },
+          {
+            "label": "Punching (two-way) shear",
+            "demand": 9.8032,
+            "capacity": 121.4315,
+            "ratio": 0.0807,
+            "clause": "ACI 318-19 22.6.5.2",
+            "status": "pass"
+          },
+          {
+            "label": "Pier concrete bearing",
+            "demand": 15,
+            "capacity": 565.76,
+            "ratio": 0.0265,
+            "clause": "ACI 318-19 14.5.6.2 / AISC J8",
+            "status": "pass"
+          }
+        ],
+        "governingRatio": 0.6236,
+        "governingCheck": "Soil bearing pressure"
+      },
+      "status": "pass",
+      "warnings": [
+        "Soil bearing, overturning and sliding are evaluated at SERVICE level against the allowable bearing and the stated factors of safety — pass service (unfactored) demands for those, not LRFD-factored loads."
+      ]
+    },
+    {
+      "input": {
+        "method": "ASD",
+        "pierLength": 16,
+        "pierWidth": 16,
+        "pierHeight": 24,
+        "fc": 4000,
+        "footingLength": 36,
+        "footingWidth": 36,
+        "footingThickness": 12,
+        "allowableBearing": 3,
+        "frictionCoefficient": 0.35,
+        "plateLength": 12,
+        "plateWidth": 12,
+        "P": 2.7,
+        "M": 75,
+        "V": 0.85
+      },
+      "output": {
+        "selfWeight": 1.8833,
+        "totalVertical": 4.5833,
+        "totalMoment": 105.6,
+        "eccentricity": 23.04,
+        "kern": 6,
+        "soilPressureMax": "Infinity",
+        "soilPressureMin": 0,
+        "partialBearing": true,
+        "overturningRatio": 1.92,
+        "slidingRatio": 0.7948,
+        "checks": [
+          {
+            "label": "Soil bearing pressure",
+            "demand": "Infinity",
+            "capacity": 3,
+            "ratio": "Infinity",
+            "clause": "Service-level bearing vs the geotechnical allowable",
+            "status": "fail"
+          },
+          {
+            "label": "Overturning (FS 1.5)",
+            "demand": 158.4,
+            "capacity": 82.5,
+            "ratio": 1.92,
+            "clause": "Gravity stability — resisting moment = N·L/2 about the toe",
+            "status": "fail"
+          },
+          {
+            "label": "Sliding (FS 1.5)",
+            "demand": 1.275,
+            "capacity": 1.6042,
+            "ratio": 0.7948,
+            "clause": "Resistance = mu·N + c·A (user-supplied soil properties)",
+            "status": "pass"
+          },
+          {
+            "label": "Punching (two-way) shear",
+            "demand": 0,
+            "capacity": 80.9543,
+            "ratio": 0,
+            "clause": "ACI 318-19 22.6.5.2",
+            "status": "na"
+          },
+          {
+            "label": "Pier concrete bearing",
+            "demand": 2.7,
+            "capacity": 376.7965,
+            "ratio": 0.0072,
+            "clause": "ACI 318-19 14.5.6.2 / AISC J8",
+            "status": "pass"
+          }
+        ],
+        "governingRatio": "Infinity",
+        "governingCheck": "Soil bearing pressure"
+      },
+      "status": "fail",
+      "warnings": [
+        "Resultant falls outside the footing — the base overturns. Enlarge the footing or reduce the eccentricity."
+      ]
+    },
+    {
+      "input": {
+        "method": "LRFD",
+        "pierLength": 16,
+        "pierWidth": 16,
+        "pierHeight": 24,
+        "fc": 4000,
+        "footingLength": 36,
+        "footingWidth": 36,
+        "footingThickness": 12,
+        "allowableBearing": 3,
+        "frictionCoefficient": 0.35,
+        "plateLength": 12,
+        "plateWidth": 12,
+        "P": 2.7,
+        "M": 75,
+        "V": 0.85
+      },
+      "output": {
+        "selfWeight": 1.8833,
+        "totalVertical": 4.5833,
+        "totalMoment": 105.6,
+        "eccentricity": 23.04,
+        "kern": 6,
+        "soilPressureMax": "Infinity",
+        "soilPressureMin": 0,
+        "partialBearing": true,
+        "overturningRatio": 1.92,
+        "slidingRatio": 0.7948,
+        "checks": [
+          {
+            "label": "Soil bearing pressure",
+            "demand": "Infinity",
+            "capacity": 3,
+            "ratio": "Infinity",
+            "clause": "Service-level bearing vs the geotechnical allowable",
+            "status": "fail"
+          },
+          {
+            "label": "Overturning (FS 1.5)",
+            "demand": 158.4,
+            "capacity": 82.5,
+            "ratio": 1.92,
+            "clause": "Gravity stability — resisting moment = N·L/2 about the toe",
+            "status": "fail"
+          },
+          {
+            "label": "Sliding (FS 1.5)",
+            "demand": 1.275,
+            "capacity": 1.6042,
+            "ratio": 0.7948,
+            "clause": "Resistance = mu·N + c·A (user-supplied soil properties)",
+            "status": "pass"
+          },
+          {
+            "label": "Punching (two-way) shear",
+            "demand": 0,
+            "capacity": 121.4315,
+            "ratio": 0,
+            "clause": "ACI 318-19 22.6.5.2",
+            "status": "na"
+          },
+          {
+            "label": "Pier concrete bearing",
+            "demand": 2.7,
+            "capacity": 565.76,
+            "ratio": 0.0048,
+            "clause": "ACI 318-19 14.5.6.2 / AISC J8",
+            "status": "pass"
+          }
+        ],
+        "governingRatio": "Infinity",
+        "governingCheck": "Soil bearing pressure"
+      },
+      "status": "fail",
+      "warnings": [
+        "Resultant falls outside the footing — the base overturns. Enlarge the footing or reduce the eccentricity.",
+        "Soil bearing, overturning and sliding are evaluated at SERVICE level against the allowable bearing and the stated factors of safety — pass service (unfactored) demands for those, not LRFD-factored loads."
+      ]
+    },
+    {
+      "input": {
+        "method": "ASD",
+        "pierLength": 16,
+        "pierWidth": 16,
+        "pierHeight": 24,
+        "fc": 4000,
+        "footingLength": 24,
+        "footingWidth": 24,
+        "footingThickness": 12,
+        "allowableBearing": 3,
+        "frictionCoefficient": 0.35,
+        "plateLength": 12,
+        "plateWidth": 12,
+        "P": 2,
+        "M": 400,
+        "V": 0
+      },
+      "output": {
+        "selfWeight": 1.1333,
+        "totalVertical": 3.1333,
+        "totalMoment": 400,
+        "eccentricity": 127.6596,
+        "kern": 4,
+        "soilPressureMax": "Infinity",
+        "soilPressureMin": 0,
+        "partialBearing": true,
+        "overturningRatio": 15.9574,
+        "slidingRatio": 0,
+        "checks": [
+          {
+            "label": "Soil bearing pressure",
+            "demand": "Infinity",
+            "capacity": 3,
+            "ratio": "Infinity",
+            "clause": "Service-level bearing vs the geotechnical allowable",
+            "status": "fail"
+          },
+          {
+            "label": "Overturning (FS 1.5)",
+            "demand": 600,
+            "capacity": 37.6,
+            "ratio": 15.9574,
+            "clause": "Gravity stability — resisting moment = N·L/2 about the toe",
+            "status": "fail"
+          },
+          {
+            "label": "Sliding (FS 1.5)",
+            "demand": 0,
+            "capacity": 1.0967,
+            "ratio": 0,
+            "clause": "Resistance = mu·N + c·A (user-supplied soil properties)",
+            "status": "na"
+          },
+          {
+            "label": "Punching (two-way) shear",
+            "demand": 0,
+            "capacity": 80.9543,
+            "ratio": 0,
+            "clause": "ACI 318-19 22.6.5.2",
+            "status": "na"
+          },
+          {
+            "label": "Pier concrete bearing",
+            "demand": 2,
+            "capacity": 376.7965,
+            "ratio": 0.0053,
+            "clause": "ACI 318-19 14.5.6.2 / AISC J8",
+            "status": "pass"
+          }
+        ],
+        "governingRatio": "Infinity",
+        "governingCheck": "Soil bearing pressure"
+      },
+      "status": "fail",
+      "warnings": [
+        "Resultant falls outside the footing — the base overturns. Enlarge the footing or reduce the eccentricity."
+      ]
+    },
+    {
+      "input": {
+        "method": "ASD",
+        "pierLength": 16,
+        "pierWidth": 16,
+        "pierHeight": 24,
+        "fc": 4000,
+        "footingLength": 48,
+        "footingWidth": 48,
+        "footingThickness": 12,
+        "allowableBearing": 3,
+        "frictionCoefficient": 0.35,
+        "plateLength": 12,
+        "plateWidth": 12,
+        "P": 0,
+        "M": 10,
+        "V": 0,
+        "uplift": 20
+      },
+      "output": {
+        "selfWeight": 2.9333,
+        "totalVertical": -17.0667,
+        "totalMoment": 10,
+        "eccentricity": -0.5859,
+        "kern": 8,
+        "soilPressureMax": "Infinity",
+        "soilPressureMin": 0,
+        "partialBearing": false,
+        "overturningRatio": 15000000000,
+        "slidingRatio": 0,
+        "checks": [
+          {
+            "label": "Soil bearing pressure",
+            "demand": "Infinity",
+            "capacity": 3,
+            "ratio": "Infinity",
+            "clause": "Service-level bearing vs the geotechnical allowable",
+            "status": "fail"
+          },
+          {
+            "label": "Overturning (FS 1.5)",
+            "demand": 15,
+            "capacity": 0,
+            "ratio": "Infinity",
+            "clause": "Gravity stability — resisting moment = N·L/2 about the toe",
+            "status": "fail"
+          },
+          {
+            "label": "Sliding (FS 1.5)",
+            "demand": 0,
+            "capacity": 0,
+            "ratio": 0,
+            "clause": "Resistance = mu·N + c·A (user-supplied soil properties)",
+            "status": "na"
+          },
+          {
+            "label": "Punching (two-way) shear",
+            "demand": 0,
+            "capacity": 80.9543,
+            "ratio": 0,
+            "clause": "ACI 318-19 22.6.5.2",
+            "status": "na"
+          },
+          {
+            "label": "Pier concrete bearing",
+            "demand": 0,
+            "capacity": 376.7965,
+            "ratio": 0,
+            "clause": "ACI 318-19 14.5.6.2 / AISC J8",
+            "status": "na"
+          }
+        ],
+        "governingRatio": "Infinity",
+        "governingCheck": "Soil bearing pressure"
+      },
+      "status": "fail",
+      "warnings": [
+        "Net vertical load at the soil interface is zero or uplift — the foundation is not stable under this load case without tie-down or added mass."
+      ]
+    },
+    {
+      "input": {
+        "method": "ASD",
+        "pierLength": 16,
+        "pierWidth": 16,
+        "pierHeight": 24,
+        "fc": 4000,
+        "footingLength": 48,
+        "footingWidth": 48,
+        "footingThickness": 12,
+        "allowableBearing": 3,
+        "frictionCoefficient": 0.35,
+        "plateLength": 12,
+        "plateWidth": 12,
+        "P": 0,
+        "M": 0,
+        "V": 0,
+        "uplift": 2.9333333333333336
+      },
+      "output": {
+        "selfWeight": 2.9333,
+        "totalVertical": 0,
+        "totalMoment": 0,
+        "eccentricity": "Infinity",
+        "kern": 8,
+        "soilPressureMax": "Infinity",
+        "soilPressureMin": 0,
+        "partialBearing": true,
+        "overturningRatio": 0,
+        "slidingRatio": 0,
+        "checks": [
+          {
+            "label": "Soil bearing pressure",
+            "demand": "Infinity",
+            "capacity": 3,
+            "ratio": "Infinity",
+            "clause": "Service-level bearing vs the geotechnical allowable",
+            "status": "fail"
+          },
+          {
+            "label": "Overturning (FS 1.5)",
+            "demand": 0,
+            "capacity": 0,
+            "ratio": 0,
+            "clause": "Gravity stability — resisting moment = N·L/2 about the toe",
+            "status": "na"
+          },
+          {
+            "label": "Sliding (FS 1.5)",
+            "demand": 0,
+            "capacity": 0,
+            "ratio": 0,
+            "clause": "Resistance = mu·N + c·A (user-supplied soil properties)",
+            "status": "na"
+          },
+          {
+            "label": "Punching (two-way) shear",
+            "demand": 0,
+            "capacity": 80.9543,
+            "ratio": 0,
+            "clause": "ACI 318-19 22.6.5.2",
+            "status": "na"
+          },
+          {
+            "label": "Pier concrete bearing",
+            "demand": 0,
+            "capacity": 376.7965,
+            "ratio": 0,
+            "clause": "ACI 318-19 14.5.6.2 / AISC J8",
+            "status": "na"
+          }
+        ],
+        "governingRatio": "Infinity",
+        "governingCheck": "Soil bearing pressure"
+      },
+      "status": "fail",
+      "warnings": [
+        "Net vertical load at the soil interface is zero or uplift — the foundation is not stable under this load case without tie-down or added mass."
+      ]
+    },
+    {
+      "input": {
+        "method": "ASD",
+        "pierLength": 16,
+        "pierWidth": 16,
+        "pierHeight": 24,
+        "fc": 4000,
+        "allowableBearing": 3,
+        "restraint": "anchored",
+        "plateLength": 12,
+        "plateWidth": 12,
+        "P": 2.7,
+        "M": 75,
+        "V": 0.85
+      },
+      "output": {
+        "selfWeight": 0.5333,
+        "totalVertical": 3.2333,
+        "totalMoment": 95.4,
+        "eccentricity": 29.5052,
+        "kern": 2.6667,
+        "soilPressureMax": 0,
+        "soilPressureMin": 0,
+        "partialBearing": true,
+        "overturningRatio": 0,
+        "slidingRatio": 0,
+        "checks": [
+          {
+            "label": "Pier concrete bearing",
+            "demand": 2.7,
+            "capacity": 376.7965,
+            "ratio": 0.0072,
+            "clause": "ACI 318-19 14.5.6.2 / AISC J8",
+            "status": "pass"
+          }
+        ],
+        "governingRatio": 0.0072,
+        "governingCheck": "Pier concrete bearing"
+      },
+      "status": "pass",
+      "warnings": [
+        "Base modelled as ANCHORED into existing concrete: overturning, sliding and soil bearing are not evaluated here. Overturning and sliding are resisted by the anchorage, which the anchor stage checks (tension, breakout, pullout, shear, pryout); load leaves through the pier-to-concrete bearing interface below. Confirm the EXISTING structure can accept the base reactions reported above.",
+        "No footing modelled — the pier is taken as bearing directly on soil. Add a footing thickness and plan size to include punching shear and spread-footing bearing."
+      ]
+    },
+    {
+      "input": {
+        "method": "ASD",
+        "pierLength": 16,
+        "pierWidth": 16,
+        "pierHeight": 24,
+        "fc": 4000,
+        "footingLength": 48,
+        "footingWidth": 48,
+        "footingThickness": 12,
+        "allowableBearing": 3,
+        "frictionCoefficient": 0.35,
+        "plateLength": 12,
+        "plateWidth": 12,
+        "P": 10,
+        "M": 400,
+        "V": 5,
+        "restraint": "anchored"
+      },
+      "output": {
+        "selfWeight": 2.9333,
+        "totalVertical": 12.9333,
+        "totalMoment": 580,
+        "eccentricity": 44.8454,
+        "kern": 8,
+        "soilPressureMax": 0,
+        "soilPressureMin": 0,
+        "partialBearing": true,
+        "overturningRatio": 0,
+        "slidingRatio": 0,
+        "checks": [
+          {
+            "label": "Punching (two-way) shear",
+            "demand": 10,
+            "capacity": 80.9543,
+            "ratio": 0.1235,
+            "clause": "ACI 318-19 22.6.5.2",
+            "status": "pass"
+          },
+          {
+            "label": "Pier concrete bearing",
+            "demand": 10,
+            "capacity": 376.7965,
+            "ratio": 0.0265,
+            "clause": "ACI 318-19 14.5.6.2 / AISC J8",
+            "status": "pass"
+          }
+        ],
+        "governingRatio": 0.1235,
+        "governingCheck": "Punching (two-way) shear"
+      },
+      "status": "pass",
+      "warnings": [
+        "Base modelled as ANCHORED into existing concrete: overturning, sliding and soil bearing are not evaluated here. Overturning and sliding are resisted by the anchorage, which the anchor stage checks (tension, breakout, pullout, shear, pryout); load leaves through the pier-to-concrete bearing interface below. Confirm the EXISTING structure can accept the base reactions reported above."
+      ]
+    },
+    {
+      "input": {
+        "method": "LRFD",
+        "pierLength": 16,
+        "pierWidth": 16,
+        "pierHeight": 24,
+        "fc": 4000,
+        "footingLength": 48,
+        "footingWidth": 48,
+        "footingThickness": 0,
+        "allowableBearing": 3,
+        "frictionCoefficient": 0.35,
+        "plateLength": 12,
+        "plateWidth": 12,
+        "P": 10,
+        "M": 200,
+        "V": 5,
+        "restraint": "anchored"
+      },
+      "output": {
+        "selfWeight": 0.5333,
+        "totalVertical": 10.5333,
+        "totalMoment": 320,
+        "eccentricity": 30.3797,
+        "kern": 8,
+        "soilPressureMax": 0,
+        "soilPressureMin": 0,
+        "partialBearing": true,
+        "overturningRatio": 0,
+        "slidingRatio": 0,
+        "checks": [
+          {
+            "label": "Pier concrete bearing",
+            "demand": 10,
+            "capacity": 565.76,
+            "ratio": 0.0177,
+            "clause": "ACI 318-19 14.5.6.2 / AISC J8",
+            "status": "pass"
+          }
+        ],
+        "governingRatio": 0.0177,
+        "governingCheck": "Pier concrete bearing"
+      },
+      "status": "pass",
+      "warnings": [
+        "Base modelled as ANCHORED into existing concrete: overturning, sliding and soil bearing are not evaluated here. Overturning and sliding are resisted by the anchorage, which the anchor stage checks (tension, breakout, pullout, shear, pryout); load leaves through the pier-to-concrete bearing interface below. Confirm the EXISTING structure can accept the base reactions reported above.",
+        "No footing modelled — the pier is taken as bearing directly on soil. Add a footing thickness and plan size to include punching shear and spread-footing bearing.",
+        "Soil bearing, overturning and sliding are evaluated at SERVICE level against the allowable bearing and the stated factors of safety — pass service (unfactored) demands for those, not LRFD-factored loads."
+      ]
+    },
+    {
+      "input": {
+        "method": "ASD",
+        "pierLength": 16,
+        "pierWidth": 16,
+        "pierHeight": 24,
+        "fc": 4000,
+        "footingLength": 48,
+        "footingWidth": 48,
+        "footingThickness": 12,
+        "allowableBearing": 3,
+        "frictionCoefficient": 0.35,
+        "plateLength": 12,
+        "plateWidth": 12,
+        "P": 15,
+        "M": 96,
+        "V": 3,
+        "restraint": "gravity"
+      },
+      "output": {
+        "selfWeight": 2.9333,
+        "totalVertical": 17.9333,
+        "totalMoment": 204,
+        "eccentricity": 11.3755,
+        "kern": 8,
+        "soilPressureMax": 2.841,
+        "soilPressureMin": 0,
+        "partialBearing": true,
+        "overturningRatio": 0.711,
+        "slidingRatio": 0.7169,
+        "checks": [
+          {
+            "label": "Soil bearing pressure",
+            "demand": 2.841,
+            "capacity": 3,
+            "ratio": 0.947,
+            "clause": "Service-level bearing vs the geotechnical allowable",
+            "status": "pass"
+          },
+          {
+            "label": "Overturning (FS 1.5)",
+            "demand": 306,
+            "capacity": 430.4,
+            "ratio": 0.711,
+            "clause": "Gravity stability — resisting moment = N·L/2 about the toe",
+            "status": "pass"
+          },
+          {
+            "label": "Sliding (FS 1.5)",
+            "demand": 4.5,
+            "capacity": 6.2767,
+            "ratio": 0.7169,
+            "clause": "Resistance = mu·N + c·A (user-supplied soil properties)",
+            "status": "pass"
+          },
+          {
+            "label": "Punching (two-way) shear",
+            "demand": 7.1083,
+            "capacity": 80.9543,
+            "ratio": 0.0878,
+            "clause": "ACI 318-19 22.6.5.2",
+            "status": "pass"
+          },
+          {
+            "label": "Pier concrete bearing",
+            "demand": 15,
+            "capacity": 376.7965,
+            "ratio": 0.0398,
+            "clause": "ACI 318-19 14.5.6.2 / AISC J8",
+            "status": "pass"
+          }
+        ],
+        "governingRatio": 0.947,
+        "governingCheck": "Soil bearing pressure"
+      },
+      "status": "pass",
+      "warnings": [
+        "Resultant is outside the kern (e = 11.38 in > L/6 = 8 in) — bearing over only 37.9 in of the 48 in footing."
+      ]
+    },
+    {
+      "input": {
+        "method": "ASD",
+        "pierLength": 16,
+        "pierWidth": 16,
+        "pierHeight": 24,
+        "fc": 4000,
+        "footingLength": 48,
+        "footingWidth": 48,
+        "footingThickness": 12,
+        "allowableBearing": 3,
+        "frictionCoefficient": 0,
+        "plateLength": 12,
+        "plateWidth": 12,
+        "P": 15,
+        "M": 96,
+        "V": 3,
+        "cohesion": 0
+      },
+      "output": {
+        "selfWeight": 2.9333,
+        "totalVertical": 17.9333,
+        "totalMoment": 204,
+        "eccentricity": 11.3755,
+        "kern": 8,
+        "soilPressureMax": 2.841,
+        "soilPressureMin": 0,
+        "partialBearing": true,
+        "overturningRatio": 0.711,
+        "slidingRatio": 4500000000,
+        "checks": [
+          {
+            "label": "Soil bearing pressure",
+            "demand": 2.841,
+            "capacity": 3,
+            "ratio": 0.947,
+            "clause": "Service-level bearing vs the geotechnical allowable",
+            "status": "pass"
+          },
+          {
+            "label": "Overturning (FS 1.5)",
+            "demand": 306,
+            "capacity": 430.4,
+            "ratio": 0.711,
+            "clause": "Gravity stability — resisting moment = N·L/2 about the toe",
+            "status": "pass"
+          },
+          {
+            "label": "Punching (two-way) shear",
+            "demand": 7.1083,
+            "capacity": 80.9543,
+            "ratio": 0.0878,
+            "clause": "ACI 318-19 22.6.5.2",
+            "status": "pass"
+          },
+          {
+            "label": "Pier concrete bearing",
+            "demand": 15,
+            "capacity": 376.7965,
+            "ratio": 0.0398,
+            "clause": "ACI 318-19 14.5.6.2 / AISC J8",
+            "status": "pass"
+          }
+        ],
+        "governingRatio": 0.947,
+        "governingCheck": "Soil bearing pressure"
+      },
+      "status": "pass",
+      "warnings": [
+        "Resultant is outside the kern (e = 11.38 in > L/6 = 8 in) — bearing over only 37.9 in of the 48 in footing.",
+        "Base shear is present but no friction coefficient or cohesion was supplied — the sliding check could not be evaluated. Both are geotechnical report values."
+      ]
+    },
+    {
+      "input": {
+        "method": "ASD",
+        "pierLength": 16,
+        "pierWidth": 16,
+        "pierHeight": 24,
+        "fc": 4000,
+        "footingLength": 48,
+        "footingWidth": 48,
+        "footingThickness": 12,
+        "allowableBearing": 3,
+        "frictionCoefficient": 0,
+        "plateLength": 12,
+        "plateWidth": 12,
+        "P": 15,
+        "M": 96,
+        "V": 3,
+        "cohesion": 0.2
+      },
+      "output": {
+        "selfWeight": 2.9333,
+        "totalVertical": 17.9333,
+        "totalMoment": 204,
+        "eccentricity": 11.3755,
+        "kern": 8,
+        "soilPressureMax": 2.841,
+        "soilPressureMin": 0,
+        "partialBearing": true,
+        "overturningRatio": 0.711,
+        "slidingRatio": 1.4063,
+        "checks": [
+          {
+            "label": "Soil bearing pressure",
+            "demand": 2.841,
+            "capacity": 3,
+            "ratio": 0.947,
+            "clause": "Service-level bearing vs the geotechnical allowable",
+            "status": "pass"
+          },
+          {
+            "label": "Overturning (FS 1.5)",
+            "demand": 306,
+            "capacity": 430.4,
+            "ratio": 0.711,
+            "clause": "Gravity stability — resisting moment = N·L/2 about the toe",
+            "status": "pass"
+          },
+          {
+            "label": "Sliding (FS 1.5)",
+            "demand": 4.5,
+            "capacity": 3.2,
+            "ratio": 1.4063,
+            "clause": "Resistance = mu·N + c·A (user-supplied soil properties)",
+            "status": "fail"
+          },
+          {
+            "label": "Punching (two-way) shear",
+            "demand": 7.1083,
+            "capacity": 80.9543,
+            "ratio": 0.0878,
+            "clause": "ACI 318-19 22.6.5.2",
+            "status": "pass"
+          },
+          {
+            "label": "Pier concrete bearing",
+            "demand": 15,
+            "capacity": 376.7965,
+            "ratio": 0.0398,
+            "clause": "ACI 318-19 14.5.6.2 / AISC J8",
+            "status": "pass"
+          }
+        ],
+        "governingRatio": 1.4063,
+        "governingCheck": "Sliding (FS 1.5)"
+      },
+      "status": "fail",
+      "warnings": [
+        "Resultant is outside the kern (e = 11.38 in > L/6 = 8 in) — bearing over only 37.9 in of the 48 in footing."
+      ]
+    },
+    {
+      "input": {
+        "method": "ASD",
+        "pierLength": 16,
+        "pierWidth": 16,
+        "pierHeight": 24,
+        "fc": 4000,
+        "footingLength": 48,
+        "footingWidth": 48,
+        "footingThickness": 12,
+        "allowableBearing": 3,
+        "frictionCoefficient": 0.3,
+        "plateLength": 12,
+        "plateWidth": 12,
+        "P": 15,
+        "M": 96,
+        "V": 3,
+        "cohesion": 0.1
+      },
+      "output": {
+        "selfWeight": 2.9333,
+        "totalVertical": 17.9333,
+        "totalMoment": 204,
+        "eccentricity": 11.3755,
+        "kern": 8,
+        "soilPressureMax": 2.841,
+        "soilPressureMin": 0,
+        "partialBearing": true,
+        "overturningRatio": 0.711,
+        "slidingRatio": 0.6447,
+        "checks": [
+          {
+            "label": "Soil bearing pressure",
+            "demand": 2.841,
+            "capacity": 3,
+            "ratio": 0.947,
+            "clause": "Service-level bearing vs the geotechnical allowable",
+            "status": "pass"
+          },
+          {
+            "label": "Overturning (FS 1.5)",
+            "demand": 306,
+            "capacity": 430.4,
+            "ratio": 0.711,
+            "clause": "Gravity stability — resisting moment = N·L/2 about the toe",
+            "status": "pass"
+          },
+          {
+            "label": "Sliding (FS 1.5)",
+            "demand": 4.5,
+            "capacity": 6.98,
+            "ratio": 0.6447,
+            "clause": "Resistance = mu·N + c·A (user-supplied soil properties)",
+            "status": "pass"
+          },
+          {
+            "label": "Punching (two-way) shear",
+            "demand": 7.1083,
+            "capacity": 80.9543,
+            "ratio": 0.0878,
+            "clause": "ACI 318-19 22.6.5.2",
+            "status": "pass"
+          },
+          {
+            "label": "Pier concrete bearing",
+            "demand": 15,
+            "capacity": 376.7965,
+            "ratio": 0.0398,
+            "clause": "ACI 318-19 14.5.6.2 / AISC J8",
+            "status": "pass"
+          }
+        ],
+        "governingRatio": 0.947,
+        "governingCheck": "Soil bearing pressure"
+      },
+      "status": "pass",
+      "warnings": [
+        "Resultant is outside the kern (e = 11.38 in > L/6 = 8 in) — bearing over only 37.9 in of the 48 in footing."
+      ]
+    },
+    {
+      "input": {
+        "method": "ASD",
+        "pierLength": 16,
+        "pierWidth": 16,
+        "pierHeight": 24,
+        "fc": 4000,
+        "footingLength": 48,
+        "footingWidth": 48,
+        "footingThickness": 12,
+        "allowableBearing": 3,
+        "frictionCoefficient": 0.25,
+        "plateLength": 12,
+        "plateWidth": 12,
+        "P": 15,
+        "M": 96,
+        "V": 12
+      },
+      "output": {
+        "selfWeight": 2.9333,
+        "totalVertical": 17.9333,
+        "totalMoment": 528,
+        "eccentricity": 29.4424,
+        "kern": 8,
+        "soilPressureMax": "Infinity",
+        "soilPressureMin": 0,
+        "partialBearing": true,
+        "overturningRatio": 1.8401,
+        "slidingRatio": 4.0149,
+        "checks": [
+          {
+            "label": "Soil bearing pressure",
+            "demand": "Infinity",
+            "capacity": 3,
+            "ratio": "Infinity",
+            "clause": "Service-level bearing vs the geotechnical allowable",
+            "status": "fail"
+          },
+          {
+            "label": "Overturning (FS 1.5)",
+            "demand": 792,
+            "capacity": 430.4,
+            "ratio": 1.8401,
+            "clause": "Gravity stability — resisting moment = N·L/2 about the toe",
+            "status": "fail"
+          },
+          {
+            "label": "Sliding (FS 1.5)",
+            "demand": 18,
+            "capacity": 4.4833,
+            "ratio": 4.0149,
+            "clause": "Resistance = mu·N + c·A (user-supplied soil properties)",
+            "status": "fail"
+          },
+          {
+            "label": "Punching (two-way) shear",
+            "demand": 6.6667,
+            "capacity": 80.9543,
+            "ratio": 0.0824,
+            "clause": "ACI 318-19 22.6.5.2",
+            "status": "pass"
+          },
+          {
+            "label": "Pier concrete bearing",
+            "demand": 15,
+            "capacity": 376.7965,
+            "ratio": 0.0398,
+            "clause": "ACI 318-19 14.5.6.2 / AISC J8",
+            "status": "pass"
+          }
+        ],
+        "governingRatio": "Infinity",
+        "governingCheck": "Soil bearing pressure"
+      },
+      "status": "fail",
+      "warnings": [
+        "Resultant falls outside the footing — the base overturns. Enlarge the footing or reduce the eccentricity."
+      ]
+    },
+    {
+      "input": {
+        "method": "ASD",
+        "pierLength": 16,
+        "pierWidth": 16,
+        "pierHeight": 24,
+        "fc": 4000,
+        "footingLength": 48,
+        "footingWidth": 48,
+        "footingThickness": 12,
+        "allowableBearing": 3,
+        "frictionCoefficient": 0.35,
+        "plateLength": 12,
+        "plateWidth": 12,
+        "P": 15,
+        "M": 96,
+        "V": 3,
+        "slidingFS": 2,
+        "overturningFS": 2
+      },
+      "output": {
+        "selfWeight": 2.9333,
+        "totalVertical": 17.9333,
+        "totalMoment": 204,
+        "eccentricity": 11.3755,
+        "kern": 8,
+        "soilPressureMax": 2.841,
+        "soilPressureMin": 0,
+        "partialBearing": true,
+        "overturningRatio": 0.948,
+        "slidingRatio": 0.9559,
+        "checks": [
+          {
+            "label": "Soil bearing pressure",
+            "demand": 2.841,
+            "capacity": 3,
+            "ratio": 0.947,
+            "clause": "Service-level bearing vs the geotechnical allowable",
+            "status": "pass"
+          },
+          {
+            "label": "Overturning (FS 2)",
+            "demand": 408,
+            "capacity": 430.4,
+            "ratio": 0.948,
+            "clause": "Gravity stability — resisting moment = N·L/2 about the toe",
+            "status": "pass"
+          },
+          {
+            "label": "Sliding (FS 2)",
+            "demand": 6,
+            "capacity": 6.2767,
+            "ratio": 0.9559,
+            "clause": "Resistance = mu·N + c·A (user-supplied soil properties)",
+            "status": "pass"
+          },
+          {
+            "label": "Punching (two-way) shear",
+            "demand": 7.1083,
+            "capacity": 80.9543,
+            "ratio": 0.0878,
+            "clause": "ACI 318-19 22.6.5.2",
+            "status": "pass"
+          },
+          {
+            "label": "Pier concrete bearing",
+            "demand": 15,
+            "capacity": 376.7965,
+            "ratio": 0.0398,
+            "clause": "ACI 318-19 14.5.6.2 / AISC J8",
+            "status": "pass"
+          }
+        ],
+        "governingRatio": 0.9559,
+        "governingCheck": "Sliding (FS 2)"
+      },
+      "status": "pass",
+      "warnings": [
+        "Resultant is outside the kern (e = 11.38 in > L/6 = 8 in) — bearing over only 37.9 in of the 48 in footing."
+      ]
+    },
+    {
+      "input": {
+        "method": "ASD",
+        "pierLength": 16,
+        "pierWidth": 16,
+        "pierHeight": 24,
+        "fc": 4000,
+        "footingLength": 48,
+        "footingWidth": 48,
+        "footingThickness": 12,
+        "allowableBearing": 3,
+        "frictionCoefficient": 0.35,
+        "plateLength": 12,
+        "plateWidth": 12,
+        "P": 15,
+        "M": 96,
+        "V": 3,
+        "slidingFS": 1.25,
+        "overturningFS": 1.1
+      },
+      "output": {
+        "selfWeight": 2.9333,
+        "totalVertical": 17.9333,
+        "totalMoment": 204,
+        "eccentricity": 11.3755,
+        "kern": 8,
+        "soilPressureMax": 2.841,
+        "soilPressureMin": 0,
+        "partialBearing": true,
+        "overturningRatio": 0.5214,
+        "slidingRatio": 0.5975,
+        "checks": [
+          {
+            "label": "Soil bearing pressure",
+            "demand": 2.841,
+            "capacity": 3,
+            "ratio": 0.947,
+            "clause": "Service-level bearing vs the geotechnical allowable",
+            "status": "pass"
+          },
+          {
+            "label": "Overturning (FS 1.1)",
+            "demand": 224.4,
+            "capacity": 430.4,
+            "ratio": 0.5214,
+            "clause": "Gravity stability — resisting moment = N·L/2 about the toe",
+            "status": "pass"
+          },
+          {
+            "label": "Sliding (FS 1.25)",
+            "demand": 3.75,
+            "capacity": 6.2767,
+            "ratio": 0.5975,
+            "clause": "Resistance = mu·N + c·A (user-supplied soil properties)",
+            "status": "pass"
+          },
+          {
+            "label": "Punching (two-way) shear",
+            "demand": 7.1083,
+            "capacity": 80.9543,
+            "ratio": 0.0878,
+            "clause": "ACI 318-19 22.6.5.2",
+            "status": "pass"
+          },
+          {
+            "label": "Pier concrete bearing",
+            "demand": 15,
+            "capacity": 376.7965,
+            "ratio": 0.0398,
+            "clause": "ACI 318-19 14.5.6.2 / AISC J8",
+            "status": "pass"
+          }
+        ],
+        "governingRatio": 0.947,
+        "governingCheck": "Soil bearing pressure"
+      },
+      "status": "pass",
+      "warnings": [
+        "Resultant is outside the kern (e = 11.38 in > L/6 = 8 in) — bearing over only 37.9 in of the 48 in footing."
+      ]
+    },
+    {
+      "input": {
+        "method": "ASD",
+        "pierLength": 16,
+        "pierWidth": 16,
+        "pierHeight": 24,
+        "fc": 4000,
+        "footingLength": 60,
+        "footingWidth": 60,
+        "footingThickness": 12,
+        "allowableBearing": 3,
+        "frictionCoefficient": 0.35,
+        "plateLength": 12,
+        "plateWidth": 12,
+        "P": 15,
+        "M": 96,
+        "V": 0,
+        "embedment": 24,
+        "soilUnitWeight": 110
+      },
+      "output": {
+        "selfWeight": 9.3922,
+        "totalVertical": 24.3922,
+        "totalMoment": 96,
+        "eccentricity": 3.9357,
+        "kern": 10,
+        "soilPressureMax": 1.3597,
+        "soilPressureMin": 0.5917,
+        "partialBearing": false,
+        "overturningRatio": 0.1968,
+        "slidingRatio": 0,
+        "checks": [
+          {
+            "label": "Soil bearing pressure",
+            "demand": 1.3597,
+            "capacity": 3,
+            "ratio": 0.4532,
+            "clause": "Service-level bearing vs the geotechnical allowable",
+            "status": "pass"
+          },
+          {
+            "label": "Overturning (FS 1.5)",
+            "demand": 144,
+            "capacity": 731.7667,
+            "ratio": 0.1968,
+            "clause": "Gravity stability — resisting moment = N·L/2 about the toe",
+            "status": "pass"
+          },
+          {
+            "label": "Sliding (FS 1.5)",
+            "demand": 0,
+            "capacity": 8.5373,
+            "ratio": 0,
+            "clause": "Resistance = mu·N + c·A (user-supplied soil properties)",
+            "status": "na"
+          },
+          {
+            "label": "Punching (two-way) shear",
+            "demand": 11.2231,
+            "capacity": 80.9543,
+            "ratio": 0.1386,
+            "clause": "ACI 318-19 22.6.5.2",
+            "status": "pass"
+          },
+          {
+            "label": "Pier concrete bearing",
+            "demand": 15,
+            "capacity": 376.7965,
+            "ratio": 0.0398,
+            "clause": "ACI 318-19 14.5.6.2 / AISC J8",
+            "status": "pass"
+          }
+        ],
+        "governingRatio": 0.4532,
+        "governingCheck": "Soil bearing pressure"
+      },
+      "status": "pass",
+      "warnings": []
+    },
+    {
+      "input": {
+        "method": "ASD",
+        "pierLength": 16,
+        "pierWidth": 16,
+        "pierHeight": 24,
+        "fc": 4000,
+        "footingLength": 60,
+        "footingWidth": 60,
+        "footingThickness": 12,
+        "allowableBearing": 3,
+        "frictionCoefficient": 0.35,
+        "plateLength": 12,
+        "plateWidth": 12,
+        "P": 15,
+        "M": 200,
+        "V": 4,
+        "embedment": 24,
+        "soilUnitWeight": 110
+      },
+      "output": {
+        "selfWeight": 9.3922,
+        "totalVertical": 24.3922,
+        "totalMoment": 344,
+        "eccentricity": 14.1029,
+        "kern": 10,
+        "soilPressureMax": 2.455,
+        "soilPressureMin": 0,
+        "partialBearing": true,
+        "overturningRatio": 0.7051,
+        "slidingRatio": 0.7028,
+        "checks": [
+          {
+            "label": "Soil bearing pressure",
+            "demand": 2.455,
+            "capacity": 3,
+            "ratio": 0.8183,
+            "clause": "Service-level bearing vs the geotechnical allowable",
+            "status": "pass"
+          },
+          {
+            "label": "Overturning (FS 1.5)",
+            "demand": 516,
+            "capacity": 731.7667,
+            "ratio": 0.7051,
+            "clause": "Gravity stability — resisting moment = N·L/2 about the toe",
+            "status": "pass"
+          },
+          {
+            "label": "Sliding (FS 1.5)",
+            "demand": 6,
+            "capacity": 8.5373,
+            "ratio": 0.7028,
+            "clause": "Resistance = mu·N + c·A (user-supplied soil properties)",
+            "status": "pass"
+          },
+          {
+            "label": "Punching (two-way) shear",
+            "demand": 8.1805,
+            "capacity": 80.9543,
+            "ratio": 0.1011,
+            "clause": "ACI 318-19 22.6.5.2",
+            "status": "pass"
+          },
+          {
+            "label": "Pier concrete bearing",
+            "demand": 15,
+            "capacity": 376.7965,
+            "ratio": 0.0398,
+            "clause": "ACI 318-19 14.5.6.2 / AISC J8",
+            "status": "pass"
+          }
+        ],
+        "governingRatio": 0.8183,
+        "governingCheck": "Soil bearing pressure"
+      },
+      "status": "pass",
+      "warnings": [
+        "Resultant is outside the kern (e = 14.1 in > L/6 = 10 in) — bearing over only 47.7 in of the 60 in footing."
+      ]
+    },
+    {
+      "input": {
+        "method": "ASD",
+        "pierLength": 16,
+        "pierWidth": 16,
+        "pierHeight": 24,
+        "fc": 4000,
+        "footingLength": 48,
+        "footingWidth": 48,
+        "footingThickness": 12,
+        "allowableBearing": 3,
+        "frictionCoefficient": 0.35,
+        "plateLength": 12,
+        "plateWidth": 12,
+        "P": 15,
+        "M": 96,
+        "V": 0,
+        "embedment": 24
+      },
+      "output": {
+        "selfWeight": 2.9333,
+        "totalVertical": 17.9333,
+        "totalMoment": 96,
+        "eccentricity": 5.3532,
+        "kern": 8,
+        "soilPressureMax": 1.8708,
+        "soilPressureMin": 0.3708,
+        "partialBearing": false,
+        "overturningRatio": 0.3346,
+        "slidingRatio": 0,
+        "checks": [
+          {
+            "label": "Soil bearing pressure",
+            "demand": 1.8708,
+            "capacity": 3,
+            "ratio": 0.6236,
+            "clause": "Service-level bearing vs the geotechnical allowable",
+            "status": "pass"
+          },
+          {
+            "label": "Overturning (FS 1.5)",
+            "demand": 144,
+            "capacity": 430.4,
+            "ratio": 0.3346,
+            "clause": "Gravity stability — resisting moment = N·L/2 about the toe",
+            "status": "pass"
+          },
+          {
+            "label": "Sliding (FS 1.5)",
+            "demand": 0,
+            "capacity": 6.2767,
+            "ratio": 0,
+            "clause": "Resistance = mu·N + c·A (user-supplied soil properties)",
+            "status": "na"
+          },
+          {
+            "label": "Punching (two-way) shear",
+            "demand": 9.8032,
+            "capacity": 80.9543,
+            "ratio": 0.1211,
+            "clause": "ACI 318-19 22.6.5.2",
+            "status": "pass"
+          },
+          {
+            "label": "Pier concrete bearing",
+            "demand": 15,
+            "capacity": 376.7965,
+            "ratio": 0.0398,
+            "clause": "ACI 318-19 14.5.6.2 / AISC J8",
+            "status": "pass"
+          }
+        ],
+        "governingRatio": 0.6236,
+        "governingCheck": "Soil bearing pressure"
+      },
+      "status": "pass",
+      "warnings": []
+    },
+    {
+      "input": {
+        "method": "ASD",
+        "pierLength": 16,
+        "pierWidth": 16,
+        "pierHeight": 24,
+        "fc": 4000,
+        "footingThickness": 0,
+        "allowableBearing": 3,
+        "frictionCoefficient": 0.35,
+        "plateLength": 12,
+        "plateWidth": 12,
+        "P": 6,
+        "M": 30,
+        "V": 0
+      },
+      "output": {
+        "selfWeight": 0.5333,
+        "totalVertical": 6.5333,
+        "totalMoment": 30,
+        "eccentricity": 4.5918,
+        "kern": 2.6667,
+        "soilPressureMax": 11.5018,
+        "soilPressureMin": 0,
+        "partialBearing": true,
+        "overturningRatio": 0.861,
+        "slidingRatio": 0,
+        "checks": [
+          {
+            "label": "Soil bearing pressure",
+            "demand": 11.5018,
+            "capacity": 3,
+            "ratio": 3.8339,
+            "clause": "Service-level bearing vs the geotechnical allowable",
+            "status": "fail"
+          },
+          {
+            "label": "Overturning (FS 1.5)",
+            "demand": 45,
+            "capacity": 52.2667,
+            "ratio": 0.861,
+            "clause": "Gravity stability — resisting moment = N·L/2 about the toe",
+            "status": "pass"
+          },
+          {
+            "label": "Sliding (FS 1.5)",
+            "demand": 0,
+            "capacity": 2.2867,
+            "ratio": 0,
+            "clause": "Resistance = mu·N + c·A (user-supplied soil properties)",
+            "status": "na"
+          },
+          {
+            "label": "Pier concrete bearing",
+            "demand": 6,
+            "capacity": 376.7965,
+            "ratio": 0.0159,
+            "clause": "ACI 318-19 14.5.6.2 / AISC J8",
+            "status": "pass"
+          }
+        ],
+        "governingRatio": 3.8339,
+        "governingCheck": "Soil bearing pressure"
+      },
+      "status": "fail",
+      "warnings": [
+        "Resultant is outside the kern (e = 4.59 in > L/6 = 2.67 in) — bearing over only 10.2 in of the 16 in footing.",
+        "No footing modelled — the pier is taken as bearing directly on soil. Add a footing thickness and plan size to include punching shear and spread-footing bearing."
+      ]
+    },
+    {
+      "input": {
+        "method": "LRFD",
+        "pierLength": 16,
+        "pierWidth": 16,
+        "pierHeight": 24,
+        "fc": 4000,
+        "footingThickness": 0,
+        "allowableBearing": 3,
+        "frictionCoefficient": 0.35,
+        "plateLength": 12,
+        "plateWidth": 12,
+        "P": 6,
+        "M": 30,
+        "V": 0
+      },
+      "output": {
+        "selfWeight": 0.5333,
+        "totalVertical": 6.5333,
+        "totalMoment": 30,
+        "eccentricity": 4.5918,
+        "kern": 2.6667,
+        "soilPressureMax": 11.5018,
+        "soilPressureMin": 0,
+        "partialBearing": true,
+        "overturningRatio": 0.861,
+        "slidingRatio": 0,
+        "checks": [
+          {
+            "label": "Soil bearing pressure",
+            "demand": 11.5018,
+            "capacity": 3,
+            "ratio": 3.8339,
+            "clause": "Service-level bearing vs the geotechnical allowable",
+            "status": "fail"
+          },
+          {
+            "label": "Overturning (FS 1.5)",
+            "demand": 45,
+            "capacity": 52.2667,
+            "ratio": 0.861,
+            "clause": "Gravity stability — resisting moment = N·L/2 about the toe",
+            "status": "pass"
+          },
+          {
+            "label": "Sliding (FS 1.5)",
+            "demand": 0,
+            "capacity": 2.2867,
+            "ratio": 0,
+            "clause": "Resistance = mu·N + c·A (user-supplied soil properties)",
+            "status": "na"
+          },
+          {
+            "label": "Pier concrete bearing",
+            "demand": 6,
+            "capacity": 565.76,
+            "ratio": 0.0106,
+            "clause": "ACI 318-19 14.5.6.2 / AISC J8",
+            "status": "pass"
+          }
+        ],
+        "governingRatio": 3.8339,
+        "governingCheck": "Soil bearing pressure"
+      },
+      "status": "fail",
+      "warnings": [
+        "Resultant is outside the kern (e = 4.59 in > L/6 = 2.67 in) — bearing over only 10.2 in of the 16 in footing.",
+        "No footing modelled — the pier is taken as bearing directly on soil. Add a footing thickness and plan size to include punching shear and spread-footing bearing.",
+        "Soil bearing, overturning and sliding are evaluated at SERVICE level against the allowable bearing and the stated factors of safety — pass service (unfactored) demands for those, not LRFD-factored loads."
+      ]
+    },
+    {
+      "input": {
+        "method": "ASD",
+        "pierLength": 16,
+        "pierWidth": 16,
+        "pierHeight": 24,
+        "fc": 4000,
+        "footingLength": 48,
+        "footingWidth": 48,
+        "footingThickness": 12,
+        "allowableBearing": 3,
+        "frictionCoefficient": 0.35,
+        "P": 15,
+        "M": 96,
+        "V": 0
+      },
+      "output": {
+        "selfWeight": 2.9333,
+        "totalVertical": 17.9333,
+        "totalMoment": 96,
+        "eccentricity": 5.3532,
+        "kern": 8,
+        "soilPressureMax": 1.8708,
+        "soilPressureMin": 0.3708,
+        "partialBearing": false,
+        "overturningRatio": 0.3346,
+        "slidingRatio": 0,
+        "checks": [
+          {
+            "label": "Soil bearing pressure",
+            "demand": 1.8708,
+            "capacity": 3,
+            "ratio": 0.6236,
+            "clause": "Service-level bearing vs the geotechnical allowable",
+            "status": "pass"
+          },
+          {
+            "label": "Overturning (FS 1.5)",
+            "demand": 144,
+            "capacity": 430.4,
+            "ratio": 0.3346,
+            "clause": "Gravity stability — resisting moment = N·L/2 about the toe",
+            "status": "pass"
+          },
+          {
+            "label": "Sliding (FS 1.5)",
+            "demand": 0,
+            "capacity": 6.2767,
+            "ratio": 0,
+            "clause": "Resistance = mu·N + c·A (user-supplied soil properties)",
+            "status": "na"
+          },
+          {
+            "label": "Pier concrete bearing",
+            "demand": 15,
+            "capacity": 376.7965,
+            "ratio": 0.0398,
+            "clause": "ACI 318-19 14.5.6.2 / AISC J8",
+            "status": "pass"
+          }
+        ],
+        "governingRatio": 0.6236,
+        "governingCheck": "Soil bearing pressure"
+      },
+      "status": "pass",
+      "warnings": [
+        "Footing thickness given without a base-plate footprint — the punching-shear check was skipped."
+      ]
+    },
+    {
+      "input": {
+        "method": "ASD",
+        "pierLength": 16,
+        "pierWidth": 16,
+        "pierHeight": 24,
+        "fc": 4000,
+        "footingLength": 48,
+        "footingWidth": 48,
+        "footingThickness": 12,
+        "allowableBearing": 3,
+        "frictionCoefficient": 0.35,
+        "plateLength": 0,
+        "plateWidth": 12,
+        "P": 15,
+        "M": 96,
+        "V": 0
+      },
+      "output": {
+        "selfWeight": 2.9333,
+        "totalVertical": 17.9333,
+        "totalMoment": 96,
+        "eccentricity": 5.3532,
+        "kern": 8,
+        "soilPressureMax": 1.8708,
+        "soilPressureMin": 0.3708,
+        "partialBearing": false,
+        "overturningRatio": 0.3346,
+        "slidingRatio": 0,
+        "checks": [
+          {
+            "label": "Soil bearing pressure",
+            "demand": 1.8708,
+            "capacity": 3,
+            "ratio": 0.6236,
+            "clause": "Service-level bearing vs the geotechnical allowable",
+            "status": "pass"
+          },
+          {
+            "label": "Overturning (FS 1.5)",
+            "demand": 144,
+            "capacity": 430.4,
+            "ratio": 0.3346,
+            "clause": "Gravity stability — resisting moment = N·L/2 about the toe",
+            "status": "pass"
+          },
+          {
+            "label": "Sliding (FS 1.5)",
+            "demand": 0,
+            "capacity": 6.2767,
+            "ratio": 0,
+            "clause": "Resistance = mu·N + c·A (user-supplied soil properties)",
+            "status": "na"
+          },
+          {
+            "label": "Pier concrete bearing",
+            "demand": 15,
+            "capacity": 376.7965,
+            "ratio": 0.0398,
+            "clause": "ACI 318-19 14.5.6.2 / AISC J8",
+            "status": "pass"
+          }
+        ],
+        "governingRatio": 0.6236,
+        "governingCheck": "Soil bearing pressure"
+      },
+      "status": "pass",
+      "warnings": [
+        "Footing thickness given without a base-plate footprint — the punching-shear check was skipped."
+      ]
+    },
+    {
+      "input": {
+        "method": "ASD",
+        "pierLength": 16,
+        "pierWidth": 16,
+        "pierHeight": 24,
+        "fc": 4000,
+        "footingLength": 48,
+        "footingWidth": 48,
+        "footingThickness": 5,
+        "allowableBearing": 3,
+        "frictionCoefficient": 0.35,
+        "plateLength": 12,
+        "plateWidth": 12,
+        "P": 80,
+        "M": 0,
+        "V": 0
+      },
+      "output": {
+        "selfWeight": 1.5333,
+        "totalVertical": 81.5333,
+        "totalMoment": 0,
+        "eccentricity": 0,
+        "kern": 8,
+        "soilPressureMax": 5.0958,
+        "soilPressureMin": 5.0958,
+        "partialBearing": false,
+        "overturningRatio": 0,
+        "slidingRatio": 0,
+        "checks": [
+          {
+            "label": "Soil bearing pressure",
+            "demand": 5.0958,
+            "capacity": 3,
+            "ratio": 1.6986,
+            "clause": "Service-level bearing vs the geotechnical allowable",
+            "status": "fail"
+          },
+          {
+            "label": "Overturning (FS 1.5)",
+            "demand": 0,
+            "capacity": 1956.8,
+            "ratio": 0,
+            "clause": "Gravity stability — resisting moment = N·L/2 about the toe",
+            "status": "na"
+          },
+          {
+            "label": "Sliding (FS 1.5)",
+            "demand": 0,
+            "capacity": 28.5367,
+            "ratio": 0,
+            "clause": "Resistance = mu·N + c·A (user-supplied soil properties)",
+            "status": "na"
+          },
+          {
+            "label": "Punching (two-way) shear",
+            "demand": 76.4792,
+            "capacity": 4.5537,
+            "ratio": 16.795,
+            "clause": "ACI 318-19 22.6.5.2",
+            "status": "fail"
+          },
+          {
+            "label": "Pier concrete bearing",
+            "demand": 80,
+            "capacity": 376.7965,
+            "ratio": 0.2123,
+            "clause": "ACI 318-19 14.5.6.2 / AISC J8",
+            "status": "pass"
+          }
+        ],
+        "governingRatio": 16.795,
+        "governingCheck": "Punching (two-way) shear"
+      },
+      "status": "fail",
+      "warnings": []
+    },
+    {
+      "input": {
+        "method": "ASD",
+        "pierLength": 16,
+        "pierWidth": 16,
+        "pierHeight": 24,
+        "fc": 4000,
+        "footingLength": 48,
+        "footingWidth": 48,
+        "footingThickness": 3,
+        "allowableBearing": 3,
+        "frictionCoefficient": 0.35,
+        "plateLength": 12,
+        "plateWidth": 12,
+        "P": 60,
+        "M": 0,
+        "V": 0
+      },
+      "output": {
+        "selfWeight": 1.1333,
+        "totalVertical": 61.1333,
+        "totalMoment": 0,
+        "eccentricity": 0,
+        "kern": 8,
+        "soilPressureMax": 3.8208,
+        "soilPressureMin": 3.8208,
+        "partialBearing": false,
+        "overturningRatio": 0,
+        "slidingRatio": 0,
+        "checks": [
+          {
+            "label": "Soil bearing pressure",
+            "demand": 3.8208,
+            "capacity": 3,
+            "ratio": 1.2736,
+            "clause": "Service-level bearing vs the geotechnical allowable",
+            "status": "fail"
+          },
+          {
+            "label": "Overturning (FS 1.5)",
+            "demand": 0,
+            "capacity": 1467.2,
+            "ratio": 0,
+            "clause": "Gravity stability — resisting moment = N·L/2 about the toe",
+            "status": "na"
+          },
+          {
+            "label": "Sliding (FS 1.5)",
+            "demand": 0,
+            "capacity": 21.3967,
+            "ratio": 0,
+            "clause": "Resistance = mu·N + c·A (user-supplied soil properties)",
+            "status": "na"
+          },
+          {
+            "label": "Punching (two-way) shear",
+            "demand": 56.4792,
+            "capacity": 4.5537,
+            "ratio": 12.403,
+            "clause": "ACI 318-19 22.6.5.2",
+            "status": "fail"
+          },
+          {
+            "label": "Pier concrete bearing",
+            "demand": 60,
+            "capacity": 376.7965,
+            "ratio": 0.1592,
+            "clause": "ACI 318-19 14.5.6.2 / AISC J8",
+            "status": "pass"
+          }
+        ],
+        "governingRatio": 12.403,
+        "governingCheck": "Punching (two-way) shear"
+      },
+      "status": "fail",
+      "warnings": []
+    },
+    {
+      "input": {
+        "method": "ASD",
+        "pierLength": 16,
+        "pierWidth": 16,
+        "pierHeight": 24,
+        "fc": 4000,
+        "footingLength": 60,
+        "footingWidth": 60,
+        "footingThickness": 18,
+        "allowableBearing": 3,
+        "frictionCoefficient": 0.35,
+        "plateLength": 12,
+        "plateWidth": 12,
+        "P": 120,
+        "M": 0,
+        "V": 0
+      },
+      "output": {
+        "selfWeight": 6.1583,
+        "totalVertical": 126.1583,
+        "totalMoment": 0,
+        "eccentricity": 0,
+        "kern": 10,
+        "soilPressureMax": 5.0463,
+        "soilPressureMin": 5.0463,
+        "partialBearing": false,
+        "overturningRatio": 0,
+        "slidingRatio": 0,
+        "checks": [
+          {
+            "label": "Soil bearing pressure",
+            "demand": 5.0463,
+            "capacity": 3,
+            "ratio": 1.6821,
+            "clause": "Service-level bearing vs the geotechnical allowable",
+            "status": "fail"
+          },
+          {
+            "label": "Overturning (FS 1.5)",
+            "demand": 0,
+            "capacity": 3784.75,
+            "ratio": 0,
+            "clause": "Gravity stability — resisting moment = N·L/2 about the toe",
+            "status": "na"
+          },
+          {
+            "label": "Sliding (FS 1.5)",
+            "demand": 0,
+            "capacity": 44.1554,
+            "ratio": 0,
+            "clause": "Resistance = mu·N + c·A (user-supplied soil properties)",
+            "status": "na"
+          },
+          {
+            "label": "Punching (two-way) shear",
+            "demand": 105.9167,
+            "capacity": 184.1711,
+            "ratio": 0.5751,
+            "clause": "ACI 318-19 22.6.5.2",
+            "status": "pass"
+          },
+          {
+            "label": "Pier concrete bearing",
+            "demand": 120,
+            "capacity": 376.7965,
+            "ratio": 0.3185,
+            "clause": "ACI 318-19 14.5.6.2 / AISC J8",
+            "status": "pass"
+          }
+        ],
+        "governingRatio": 1.6821,
+        "governingCheck": "Soil bearing pressure"
+      },
+      "status": "fail",
+      "warnings": []
+    },
+    {
+      "input": {
+        "method": "LRFD",
+        "pierLength": 16,
+        "pierWidth": 16,
+        "pierHeight": 24,
+        "fc": 4000,
+        "footingLength": 60,
+        "footingWidth": 60,
+        "footingThickness": 18,
+        "allowableBearing": 3,
+        "frictionCoefficient": 0.35,
+        "plateLength": 12,
+        "plateWidth": 12,
+        "P": 120,
+        "M": 0,
+        "V": 0
+      },
+      "output": {
+        "selfWeight": 6.1583,
+        "totalVertical": 126.1583,
+        "totalMoment": 0,
+        "eccentricity": 0,
+        "kern": 10,
+        "soilPressureMax": 5.0463,
+        "soilPressureMin": 5.0463,
+        "partialBearing": false,
+        "overturningRatio": 0,
+        "slidingRatio": 0,
+        "checks": [
+          {
+            "label": "Soil bearing pressure",
+            "demand": 5.0463,
+            "capacity": 3,
+            "ratio": 1.6821,
+            "clause": "Service-level bearing vs the geotechnical allowable",
+            "status": "fail"
+          },
+          {
+            "label": "Overturning (FS 1.5)",
+            "demand": 0,
+            "capacity": 3784.75,
+            "ratio": 0,
+            "clause": "Gravity stability — resisting moment = N·L/2 about the toe",
+            "status": "na"
+          },
+          {
+            "label": "Sliding (FS 1.5)",
+            "demand": 0,
+            "capacity": 44.1554,
+            "ratio": 0,
+            "clause": "Resistance = mu·N + c·A (user-supplied soil properties)",
+            "status": "na"
+          },
+          {
+            "label": "Punching (two-way) shear",
+            "demand": 105.9167,
+            "capacity": 276.2566,
+            "ratio": 0.3834,
+            "clause": "ACI 318-19 22.6.5.2",
+            "status": "pass"
+          },
+          {
+            "label": "Pier concrete bearing",
+            "demand": 120,
+            "capacity": 565.76,
+            "ratio": 0.2121,
+            "clause": "ACI 318-19 14.5.6.2 / AISC J8",
+            "status": "pass"
+          }
+        ],
+        "governingRatio": 1.6821,
+        "governingCheck": "Soil bearing pressure"
+      },
+      "status": "fail",
+      "warnings": [
+        "Soil bearing, overturning and sliding are evaluated at SERVICE level against the allowable bearing and the stated factors of safety — pass service (unfactored) demands for those, not LRFD-factored loads."
+      ]
+    },
+    {
+      "input": {
+        "method": "ASD",
+        "pierLength": 16,
+        "pierWidth": 16,
+        "pierHeight": 24,
+        "fc": 4000,
+        "footingLength": 48,
+        "footingWidth": 48,
+        "footingThickness": 12,
+        "allowableBearing": 3,
+        "frictionCoefficient": 0.35,
+        "plateLength": 20,
+        "plateWidth": 8,
+        "P": 40,
+        "M": 0,
+        "V": 0
+      },
+      "output": {
+        "selfWeight": 2.9333,
+        "totalVertical": 42.9333,
+        "totalMoment": 0,
+        "eccentricity": 0,
+        "kern": 8,
+        "soilPressureMax": 2.6833,
+        "soilPressureMin": 2.6833,
+        "partialBearing": false,
+        "overturningRatio": 0,
+        "slidingRatio": 0,
+        "checks": [
+          {
+            "label": "Soil bearing pressure",
+            "demand": 2.6833,
+            "capacity": 3,
+            "ratio": 0.8944,
+            "clause": "Service-level bearing vs the geotechnical allowable",
+            "status": "pass"
+          },
+          {
+            "label": "Overturning (FS 1.5)",
+            "demand": 0,
+            "capacity": 1030.4,
+            "ratio": 0,
+            "clause": "Gravity stability — resisting moment = N·L/2 about the toe",
+            "status": "na"
+          },
+          {
+            "label": "Sliding (FS 1.5)",
+            "demand": 0,
+            "capacity": 15.0267,
+            "ratio": 0,
+            "clause": "Resistance = mu·N + c·A (user-supplied soil properties)",
+            "status": "na"
+          },
+          {
+            "label": "Punching (two-way) shear",
+            "demand": 31.6519,
+            "capacity": 80.1448,
+            "ratio": 0.3949,
+            "clause": "ACI 318-19 22.6.5.2",
+            "status": "pass"
+          },
+          {
+            "label": "Pier concrete bearing",
+            "demand": 40,
+            "capacity": 376.7965,
+            "ratio": 0.1062,
+            "clause": "ACI 318-19 14.5.6.2 / AISC J8",
+            "status": "pass"
+          }
+        ],
+        "governingRatio": 0.8944,
+        "governingCheck": "Soil bearing pressure"
+      },
+      "status": "pass",
+      "warnings": []
+    },
+    {
+      "input": {
+        "method": "LRFD",
+        "pierLength": 16,
+        "pierWidth": 16,
+        "pierHeight": 24,
+        "fc": 4000,
+        "footingLength": 48,
+        "footingWidth": 48,
+        "footingThickness": 12,
+        "allowableBearing": 3,
+        "frictionCoefficient": 0.35,
+        "plateLength": 8,
+        "plateWidth": 20,
+        "P": 40,
+        "M": 0,
+        "V": 0
+      },
+      "output": {
+        "selfWeight": 2.9333,
+        "totalVertical": 42.9333,
+        "totalMoment": 0,
+        "eccentricity": 0,
+        "kern": 8,
+        "soilPressureMax": 2.6833,
+        "soilPressureMin": 2.6833,
+        "partialBearing": false,
+        "overturningRatio": 0,
+        "slidingRatio": 0,
+        "checks": [
+          {
+            "label": "Soil bearing pressure",
+            "demand": 2.6833,
+            "capacity": 3,
+            "ratio": 0.8944,
+            "clause": "Service-level bearing vs the geotechnical allowable",
+            "status": "pass"
+          },
+          {
+            "label": "Overturning (FS 1.5)",
+            "demand": 0,
+            "capacity": 1030.4,
+            "ratio": 0,
+            "clause": "Gravity stability — resisting moment = N·L/2 about the toe",
+            "status": "na"
+          },
+          {
+            "label": "Sliding (FS 1.5)",
+            "demand": 0,
+            "capacity": 15.0267,
+            "ratio": 0,
+            "clause": "Resistance = mu·N + c·A (user-supplied soil properties)",
+            "status": "na"
+          },
+          {
+            "label": "Punching (two-way) shear",
+            "demand": 31.6519,
+            "capacity": 120.2171,
+            "ratio": 0.2633,
+            "clause": "ACI 318-19 22.6.5.2",
+            "status": "pass"
+          },
+          {
+            "label": "Pier concrete bearing",
+            "demand": 40,
+            "capacity": 565.76,
+            "ratio": 0.0707,
+            "clause": "ACI 318-19 14.5.6.2 / AISC J8",
+            "status": "pass"
+          }
+        ],
+        "governingRatio": 0.8944,
+        "governingCheck": "Soil bearing pressure"
+      },
+      "status": "pass",
+      "warnings": [
+        "Soil bearing, overturning and sliding are evaluated at SERVICE level against the allowable bearing and the stated factors of safety — pass service (unfactored) demands for those, not LRFD-factored loads."
+      ]
+    },
+    {
+      "input": {
+        "method": "ASD",
+        "pierLength": 16,
+        "pierWidth": 16,
+        "pierHeight": 24,
+        "fc": 4000,
+        "footingLength": 48,
+        "footingWidth": 48,
+        "footingThickness": 12,
+        "allowableBearing": 3,
+        "frictionCoefficient": 0.35,
+        "plateLength": 12,
+        "plateWidth": 12,
+        "P": 400,
+        "M": 0,
+        "V": 0
+      },
+      "output": {
+        "selfWeight": 2.9333,
+        "totalVertical": 402.9333,
+        "totalMoment": 0,
+        "eccentricity": 0,
+        "kern": 8,
+        "soilPressureMax": 25.1833,
+        "soilPressureMin": 25.1833,
+        "partialBearing": false,
+        "overturningRatio": 0,
+        "slidingRatio": 0,
+        "checks": [
+          {
+            "label": "Soil bearing pressure",
+            "demand": 25.1833,
+            "capacity": 3,
+            "ratio": 8.3944,
+            "clause": "Service-level bearing vs the geotechnical allowable",
+            "status": "fail"
+          },
+          {
+            "label": "Overturning (FS 1.5)",
+            "demand": 0,
+            "capacity": 9670.4,
+            "ratio": 0,
+            "clause": "Gravity stability — resisting moment = N·L/2 about the toe",
+            "status": "na"
+          },
+          {
+            "label": "Sliding (FS 1.5)",
+            "demand": 0,
+            "capacity": 141.0267,
+            "ratio": 0,
+            "clause": "Resistance = mu·N + c·A (user-supplied soil properties)",
+            "status": "na"
+          },
+          {
+            "label": "Punching (two-way) shear",
+            "demand": 391.6667,
+            "capacity": 80.9543,
+            "ratio": 4.8381,
+            "clause": "ACI 318-19 22.6.5.2",
+            "status": "fail"
+          },
+          {
+            "label": "Pier concrete bearing",
+            "demand": 400,
+            "capacity": 376.7965,
+            "ratio": 1.0616,
+            "clause": "ACI 318-19 14.5.6.2 / AISC J8",
+            "status": "fail"
+          }
+        ],
+        "governingRatio": 8.3944,
+        "governingCheck": "Soil bearing pressure"
+      },
+      "status": "fail",
+      "warnings": []
+    },
+    {
+      "input": {
+        "method": "ASD",
+        "pierLength": 16,
+        "pierWidth": 16,
+        "pierHeight": 24,
+        "fc": 4000,
+        "footingLength": 48,
+        "footingWidth": 48,
+        "footingThickness": 12,
+        "allowableBearing": 100,
+        "frictionCoefficient": 0.35,
+        "plateLength": 12,
+        "plateWidth": 12,
+        "P": 2000,
+        "M": 0,
+        "V": 0
+      },
+      "output": {
+        "selfWeight": 2.9333,
+        "totalVertical": 2002.9333,
+        "totalMoment": 0,
+        "eccentricity": 0,
+        "kern": 8,
+        "soilPressureMax": 125.1833,
+        "soilPressureMin": 125.1833,
+        "partialBearing": false,
+        "overturningRatio": 0,
+        "slidingRatio": 0,
+        "checks": [
+          {
+            "label": "Soil bearing pressure",
+            "demand": 125.1833,
+            "capacity": 100,
+            "ratio": 1.2518,
+            "clause": "Service-level bearing vs the geotechnical allowable",
+            "status": "fail"
+          },
+          {
+            "label": "Overturning (FS 1.5)",
+            "demand": 0,
+            "capacity": 48070.4,
+            "ratio": 0,
+            "clause": "Gravity stability — resisting moment = N·L/2 about the toe",
+            "status": "na"
+          },
+          {
+            "label": "Sliding (FS 1.5)",
+            "demand": 0,
+            "capacity": 701.0267,
+            "ratio": 0,
+            "clause": "Resistance = mu·N + c·A (user-supplied soil properties)",
+            "status": "na"
+          },
+          {
+            "label": "Punching (two-way) shear",
+            "demand": 1722.2222,
+            "capacity": 80.9543,
+            "ratio": 21.274,
+            "clause": "ACI 318-19 22.6.5.2",
+            "status": "fail"
+          },
+          {
+            "label": "Pier concrete bearing",
+            "demand": 2000,
+            "capacity": 376.7965,
+            "ratio": 5.3079,
+            "clause": "ACI 318-19 14.5.6.2 / AISC J8",
+            "status": "fail"
+          }
+        ],
+        "governingRatio": 21.274,
+        "governingCheck": "Punching (two-way) shear"
+      },
+      "status": "fail",
+      "warnings": []
+    },
+    {
+      "input": {
+        "method": "ASD",
+        "pierLength": 16,
+        "pierWidth": 16,
+        "pierHeight": 24,
+        "fc": 4000,
+        "footingLength": 48,
+        "footingWidth": 48,
+        "footingThickness": 12,
+        "allowableBearing": 3,
+        "frictionCoefficient": 0.35,
+        "plateLength": 12,
+        "plateWidth": 12,
+        "P": 0,
+        "M": 0,
+        "V": 0
+      },
+      "output": {
+        "selfWeight": 2.9333,
+        "totalVertical": 2.9333,
+        "totalMoment": 0,
+        "eccentricity": 0,
+        "kern": 8,
+        "soilPressureMax": 0.1833,
+        "soilPressureMin": 0.1833,
+        "partialBearing": false,
+        "overturningRatio": 0,
+        "slidingRatio": 0,
+        "checks": [
+          {
+            "label": "Soil bearing pressure",
+            "demand": 0.1833,
+            "capacity": 3,
+            "ratio": 0.0611,
+            "clause": "Service-level bearing vs the geotechnical allowable",
+            "status": "pass"
+          },
+          {
+            "label": "Overturning (FS 1.5)",
+            "demand": 0,
+            "capacity": 70.4,
+            "ratio": 0,
+            "clause": "Gravity stability — resisting moment = N·L/2 about the toe",
+            "status": "na"
+          },
+          {
+            "label": "Sliding (FS 1.5)",
+            "demand": 0,
+            "capacity": 1.0267,
+            "ratio": 0,
+            "clause": "Resistance = mu·N + c·A (user-supplied soil properties)",
+            "status": "na"
+          },
+          {
+            "label": "Punching (two-way) shear",
+            "demand": 0,
+            "capacity": 80.9543,
+            "ratio": 0,
+            "clause": "ACI 318-19 22.6.5.2",
+            "status": "na"
+          },
+          {
+            "label": "Pier concrete bearing",
+            "demand": 0,
+            "capacity": 376.7965,
+            "ratio": 0,
+            "clause": "ACI 318-19 14.5.6.2 / AISC J8",
+            "status": "na"
+          }
+        ],
+        "governingRatio": 0.0611,
+        "governingCheck": "Soil bearing pressure"
+      },
+      "status": "pass",
+      "warnings": []
+    },
+    {
+      "input": {
+        "method": "ASD",
+        "pierLength": 16,
+        "pierWidth": 16,
+        "pierHeight": 24,
+        "fc": 4000,
+        "footingThickness": 0,
+        "allowableBearing": 3,
+        "frictionCoefficient": 0.35,
+        "plateLength": 12,
+        "plateWidth": 12,
+        "P": 0,
+        "M": 0,
+        "V": 0
+      },
+      "output": {
+        "selfWeight": 0.5333,
+        "totalVertical": 0.5333,
+        "totalMoment": 0,
+        "eccentricity": 0,
+        "kern": 2.6667,
+        "soilPressureMax": 0.3,
+        "soilPressureMin": 0.3,
+        "partialBearing": false,
+        "overturningRatio": 0,
+        "slidingRatio": 0,
+        "checks": [
+          {
+            "label": "Soil bearing pressure",
+            "demand": 0.3,
+            "capacity": 3,
+            "ratio": 0.1,
+            "clause": "Service-level bearing vs the geotechnical allowable",
+            "status": "pass"
+          },
+          {
+            "label": "Overturning (FS 1.5)",
+            "demand": 0,
+            "capacity": 4.2667,
+            "ratio": 0,
+            "clause": "Gravity stability — resisting moment = N·L/2 about the toe",
+            "status": "na"
+          },
+          {
+            "label": "Sliding (FS 1.5)",
+            "demand": 0,
+            "capacity": 0.1867,
+            "ratio": 0,
+            "clause": "Resistance = mu·N + c·A (user-supplied soil properties)",
+            "status": "na"
+          },
+          {
+            "label": "Pier concrete bearing",
+            "demand": 0,
+            "capacity": 376.7965,
+            "ratio": 0,
+            "clause": "ACI 318-19 14.5.6.2 / AISC J8",
+            "status": "na"
+          }
+        ],
+        "governingRatio": 0.1,
+        "governingCheck": "Soil bearing pressure"
+      },
+      "status": "pass",
+      "warnings": [
+        "No footing modelled — the pier is taken as bearing directly on soil. Add a footing thickness and plan size to include punching shear and spread-footing bearing."
+      ]
+    },
+    {
+      "input": {
+        "method": "ASD",
+        "pierLength": 16,
+        "pierWidth": 16,
+        "pierHeight": 24,
+        "fc": 4000,
+        "footingLength": 48,
+        "footingWidth": 48,
+        "footingThickness": 12,
+        "allowableBearing": 3,
+        "frictionCoefficient": 0.35,
+        "plateLength": 12,
+        "plateWidth": 12,
+        "P": 15,
+        "M": -96,
+        "V": 1
+      },
+      "output": {
+        "selfWeight": 2.9333,
+        "totalVertical": 17.9333,
+        "totalMoment": 132,
+        "eccentricity": 7.3606,
+        "kern": 8,
+        "soilPressureMax": 2.1521,
+        "soilPressureMin": 0.0896,
+        "partialBearing": false,
+        "overturningRatio": 0.46,
+        "slidingRatio": 0.239,
+        "checks": [
+          {
+            "label": "Soil bearing pressure",
+            "demand": 2.1521,
+            "capacity": 3,
+            "ratio": 0.7174,
+            "clause": "Service-level bearing vs the geotechnical allowable",
+            "status": "pass"
+          },
+          {
+            "label": "Overturning (FS 1.5)",
+            "demand": 198,
+            "capacity": 430.4,
+            "ratio": 0.46,
+            "clause": "Gravity stability — resisting moment = N·L/2 about the toe",
+            "status": "pass"
+          },
+          {
+            "label": "Sliding (FS 1.5)",
+            "demand": 1.5,
+            "capacity": 6.2767,
+            "ratio": 0.239,
+            "clause": "Resistance = mu·N + c·A (user-supplied soil properties)",
+            "status": "pass"
+          },
+          {
+            "label": "Punching (two-way) shear",
+            "demand": 9.022,
+            "capacity": 80.9543,
+            "ratio": 0.1114,
+            "clause": "ACI 318-19 22.6.5.2",
+            "status": "pass"
+          },
+          {
+            "label": "Pier concrete bearing",
+            "demand": 15,
+            "capacity": 376.7965,
+            "ratio": 0.0398,
+            "clause": "ACI 318-19 14.5.6.2 / AISC J8",
+            "status": "pass"
+          }
+        ],
+        "governingRatio": 0.7174,
+        "governingCheck": "Soil bearing pressure"
+      },
+      "status": "pass",
+      "warnings": []
+    },
+    {
+      "input": {
+        "method": "ASD",
+        "pierLength": 16,
+        "pierWidth": 16,
+        "pierHeight": 60,
+        "fc": 4000,
+        "footingLength": 30,
+        "footingWidth": 30,
+        "footingThickness": 12,
+        "allowableBearing": 3,
+        "frictionCoefficient": 0.35,
+        "plateLength": 12,
+        "plateWidth": 12,
+        "P": 15,
+        "M": 0,
+        "V": 6
+      },
+      "output": {
+        "selfWeight": 2.2708,
+        "totalVertical": 17.2708,
+        "totalMoment": 432,
+        "eccentricity": 25.0133,
+        "kern": 5,
+        "soilPressureMax": "Infinity",
+        "soilPressureMin": 0,
+        "partialBearing": true,
+        "overturningRatio": 2.5013,
+        "slidingRatio": 1.4889,
+        "checks": [
+          {
+            "label": "Soil bearing pressure",
+            "demand": "Infinity",
+            "capacity": 3,
+            "ratio": "Infinity",
+            "clause": "Service-level bearing vs the geotechnical allowable",
+            "status": "fail"
+          },
+          {
+            "label": "Overturning (FS 1.5)",
+            "demand": 648,
+            "capacity": 259.0625,
+            "ratio": 2.5013,
+            "clause": "Gravity stability — resisting moment = N·L/2 about the toe",
+            "status": "fail"
+          },
+          {
+            "label": "Sliding (FS 1.5)",
+            "demand": 9,
+            "capacity": 6.0448,
+            "ratio": 1.4889,
+            "clause": "Resistance = mu·N + c·A (user-supplied soil properties)",
+            "status": "fail"
+          },
+          {
+            "label": "Punching (two-way) shear",
+            "demand": 6.6667,
+            "capacity": 80.9543,
+            "ratio": 0.0824,
+            "clause": "ACI 318-19 22.6.5.2",
+            "status": "pass"
+          },
+          {
+            "label": "Pier concrete bearing",
+            "demand": 15,
+            "capacity": 376.7965,
+            "ratio": 0.0398,
+            "clause": "ACI 318-19 14.5.6.2 / AISC J8",
+            "status": "pass"
+          }
+        ],
+        "governingRatio": "Infinity",
+        "governingCheck": "Soil bearing pressure"
+      },
+      "status": "fail",
+      "warnings": [
+        "Resultant falls outside the footing — the base overturns. Enlarge the footing or reduce the eccentricity."
+      ]
+    },
+    {
+      "input": {
+        "method": "ASD",
+        "pierLength": 16,
+        "pierWidth": 16,
+        "pierHeight": 24,
+        "fc": 4000,
+        "footingLength": 12,
+        "footingWidth": 12,
+        "footingThickness": 12,
+        "allowableBearing": 3,
+        "frictionCoefficient": 0.35,
+        "plateLength": 12,
+        "plateWidth": 12,
+        "P": 15,
+        "M": 96,
+        "V": 0
+      },
+      "output": {
+        "selfWeight": 0.6833,
+        "totalVertical": 15.6833,
+        "totalMoment": 96,
+        "eccentricity": 6.1211,
+        "kern": 2,
+        "soilPressureMax": "Infinity",
+        "soilPressureMin": 0,
+        "partialBearing": true,
+        "overturningRatio": 1.5303,
+        "slidingRatio": 0,
+        "checks": [
+          {
+            "label": "Soil bearing pressure",
+            "demand": "Infinity",
+            "capacity": 3,
+            "ratio": "Infinity",
+            "clause": "Service-level bearing vs the geotechnical allowable",
+            "status": "fail"
+          },
+          {
+            "label": "Overturning (FS 1.5)",
+            "demand": 144,
+            "capacity": 94.1,
+            "ratio": 1.5303,
+            "clause": "Gravity stability — resisting moment = N·L/2 about the toe",
+            "status": "fail"
+          },
+          {
+            "label": "Sliding (FS 1.5)",
+            "demand": 0,
+            "capacity": 5.4892,
+            "ratio": 0,
+            "clause": "Resistance = mu·N + c·A (user-supplied soil properties)",
+            "status": "na"
+          },
+          {
+            "label": "Punching (two-way) shear",
+            "demand": 6.6667,
+            "capacity": 80.9543,
+            "ratio": 0.0824,
+            "clause": "ACI 318-19 22.6.5.2",
+            "status": "pass"
+          },
+          {
+            "label": "Pier concrete bearing",
+            "demand": 15,
+            "capacity": 376.7965,
+            "ratio": 0.0398,
+            "clause": "ACI 318-19 14.5.6.2 / AISC J8",
+            "status": "pass"
+          }
+        ],
+        "governingRatio": "Infinity",
+        "governingCheck": "Soil bearing pressure"
+      },
+      "status": "fail",
+      "warnings": [
+        "Resultant falls outside the footing — the base overturns. Enlarge the footing or reduce the eccentricity."
+      ]
+    },
+    {
+      "input": {
+        "method": "ASD",
+        "pierLength": 16,
+        "pierWidth": 16,
+        "pierHeight": 24,
+        "fc": 4000,
+        "footingLength": 72,
+        "footingWidth": 40,
+        "footingThickness": 12,
+        "allowableBearing": 3,
+        "frictionCoefficient": 0.35,
+        "plateLength": 12,
+        "plateWidth": 12,
+        "P": 25,
+        "M": 300,
+        "V": 0
+      },
+      "output": {
+        "selfWeight": 3.5333,
+        "totalVertical": 28.5333,
+        "totalMoment": 300,
+        "eccentricity": 10.514,
+        "kern": 12,
+        "soilPressureMax": 2.6767,
+        "soilPressureMin": 0.1767,
+        "partialBearing": false,
+        "overturningRatio": 0.4381,
+        "slidingRatio": 0,
+        "checks": [
+          {
+            "label": "Soil bearing pressure",
+            "demand": 2.6767,
+            "capacity": 3,
+            "ratio": 0.8922,
+            "clause": "Service-level bearing vs the geotechnical allowable",
+            "status": "pass"
+          },
+          {
+            "label": "Overturning (FS 1.5)",
+            "demand": 450,
+            "capacity": 1027.2,
+            "ratio": 0.4381,
+            "clause": "Gravity stability — resisting moment = N·L/2 about the toe",
+            "status": "pass"
+          },
+          {
+            "label": "Sliding (FS 1.5)",
+            "demand": 0,
+            "capacity": 9.9867,
+            "ratio": 0,
+            "clause": "Resistance = mu·N + c·A (user-supplied soil properties)",
+            "status": "na"
+          },
+          {
+            "label": "Punching (two-way) shear",
+            "demand": 17.5648,
+            "capacity": 80.9543,
+            "ratio": 0.217,
+            "clause": "ACI 318-19 22.6.5.2",
+            "status": "pass"
+          },
+          {
+            "label": "Pier concrete bearing",
+            "demand": 25,
+            "capacity": 376.7965,
+            "ratio": 0.0663,
+            "clause": "ACI 318-19 14.5.6.2 / AISC J8",
+            "status": "pass"
+          }
+        ],
+        "governingRatio": 0.8922,
+        "governingCheck": "Soil bearing pressure"
+      },
+      "status": "pass",
+      "warnings": []
+    },
+    {
+      "input": {
+        "method": "ASD",
+        "pierLength": 16,
+        "pierWidth": 16,
+        "pierHeight": 24,
+        "fc": 4000,
+        "footingLength": 48,
+        "footingWidth": 48,
+        "footingThickness": 12,
+        "allowableBearing": 0.5,
+        "frictionCoefficient": 0.35,
+        "plateLength": 12,
+        "plateWidth": 12,
+        "P": 15,
+        "M": 96,
+        "V": 0
+      },
+      "output": {
+        "selfWeight": 2.9333,
+        "totalVertical": 17.9333,
+        "totalMoment": 96,
+        "eccentricity": 5.3532,
+        "kern": 8,
+        "soilPressureMax": 1.8708,
+        "soilPressureMin": 0.3708,
+        "partialBearing": false,
+        "overturningRatio": 0.3346,
+        "slidingRatio": 0,
+        "checks": [
+          {
+            "label": "Soil bearing pressure",
+            "demand": 1.8708,
+            "capacity": 0.5,
+            "ratio": 3.7417,
+            "clause": "Service-level bearing vs the geotechnical allowable",
+            "status": "fail"
+          },
+          {
+            "label": "Overturning (FS 1.5)",
+            "demand": 144,
+            "capacity": 430.4,
+            "ratio": 0.3346,
+            "clause": "Gravity stability — resisting moment = N·L/2 about the toe",
+            "status": "pass"
+          },
+          {
+            "label": "Sliding (FS 1.5)",
+            "demand": 0,
+            "capacity": 6.2767,
+            "ratio": 0,
+            "clause": "Resistance = mu·N + c·A (user-supplied soil properties)",
+            "status": "na"
+          },
+          {
+            "label": "Punching (two-way) shear",
+            "demand": 13.6111,
+            "capacity": 80.9543,
+            "ratio": 0.1681,
+            "clause": "ACI 318-19 22.6.5.2",
+            "status": "pass"
+          },
+          {
+            "label": "Pier concrete bearing",
+            "demand": 15,
+            "capacity": 376.7965,
+            "ratio": 0.0398,
+            "clause": "ACI 318-19 14.5.6.2 / AISC J8",
+            "status": "pass"
+          }
+        ],
+        "governingRatio": 3.7417,
+        "governingCheck": "Soil bearing pressure"
+      },
+      "status": "fail",
+      "warnings": []
+    },
+    {
+      "input": {
+        "method": "ASD",
+        "pierLength": 0,
+        "pierWidth": 16,
+        "pierHeight": 24,
+        "fc": 4000,
+        "footingLength": 48,
+        "footingWidth": 48,
+        "footingThickness": 12,
+        "allowableBearing": 3,
+        "frictionCoefficient": 0.35,
+        "plateLength": 12,
+        "plateWidth": 12,
+        "P": 15,
+        "M": 96,
+        "V": 0
+      },
+      "error": "pier dimensions must be positive"
+    },
+    {
+      "input": {
+        "method": "ASD",
+        "pierLength": 16,
+        "pierWidth": 16,
+        "pierHeight": 0,
+        "fc": 4000,
+        "footingLength": 48,
+        "footingWidth": 48,
+        "footingThickness": 12,
+        "allowableBearing": 3,
+        "frictionCoefficient": 0.35,
+        "plateLength": 12,
+        "plateWidth": 12,
+        "P": 15,
+        "M": 96,
+        "V": 0
+      },
+      "error": "pier dimensions must be positive"
+    },
+    {
+      "input": {
+        "method": "ASD",
+        "pierLength": 16,
+        "pierWidth": 16,
+        "pierHeight": 24,
+        "fc": 0,
+        "footingLength": 48,
+        "footingWidth": 48,
+        "footingThickness": 12,
+        "allowableBearing": 3,
+        "frictionCoefficient": 0.35,
+        "plateLength": 12,
+        "plateWidth": 12,
+        "P": 15,
+        "M": 96,
+        "V": 0
+      },
+      "error": "f'c must be positive"
+    },
+    {
+      "input": {
+        "method": "ASD",
+        "pierLength": 16,
+        "pierWidth": 16,
+        "pierHeight": 24,
+        "fc": 4000,
+        "footingLength": 48,
+        "footingWidth": 48,
+        "footingThickness": 12,
+        "allowableBearing": 0,
+        "frictionCoefficient": 0.35,
+        "plateLength": 12,
+        "plateWidth": 12,
+        "P": 15,
+        "M": 96,
+        "V": 0
+      },
+      "error": "allowable soil bearing must be positive"
+    }
+  ]
+}

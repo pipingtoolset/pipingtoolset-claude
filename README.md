@@ -3,7 +3,7 @@
 **B31 calcs you can reproduce and defend in review, with Claude.**
 Claude does the interview. A script does the math. You read the table.
 
-Four ASME B31.1 / B31.3 piping engineering skills for Claude Code and Cowork, from the
+Five piping engineering skills for Claude Code and Cowork, from the
 people who build the free calculators at [pipingtoolset.com](https://pipingtoolset.com).
 Written and maintained by a practicing piping engineer at Flexible Piping Solutions LLC.
 
@@ -12,6 +12,7 @@ Written and maintained by a practicing piping engineer at Flexible Piping Soluti
 | `pressure-design` | Code-basis interview, then wall thickness, allowable pressure, branch reinforcement, bends, miters and leak-test pressure to B31.3 / B31.1, with a calc sheet that shows the edition, the equation and every input |
 | `stress-screening` | Sustained, occasional and expansion hand checks, the f factor by edition, which document supplies the SIFs, the formal-analysis exemption, support spans and spring variability |
 | `load-case-builder` | Complete B31.1 / B31.3 static load case sets for CAESAR II and AutoPIPE, generated symbolically so references never go stale, with a QC gate and a report extraction matrix |
+| `pipe-support` | Pipe support assemblies (arm, column, welds, bolts, base plate, anchors, pier) checked for CAESAR II restraint loads: ASCE 7-22 combinations, AISC 360-22, ACI 318-19 Chapter 17 and AWS D1.1 detailing, with a PE-style review, ranked code-passing alternatives (lighter, less field work, stocked sizes) and an engineer-ready calc report. The pipingtoolset.com PiperSTR engine, verified against a published PiperSTR report value for value |
 | `iso-to-pcf` | PDF stress isometrics to a clean CAESAR II PCF: Claude transcribes the drawing, a script builds the geometry in exact fractions (bend tangents, branches, sloped profiles) and a validator catches orphan nodes, zero-length elements and off-line supports before import |
 
 ## How it works
@@ -42,7 +43,7 @@ For a local checkout: `/plugin marketplace add <path-to-this-checkout>`.
 
 Invoke a skill by name, because other installed skills on the same topics would otherwise compete:
 `/piping-toolset:pressure-design`, `/piping-toolset:stress-screening`, `/piping-toolset:load-case-builder`,
-`/piping-toolset:iso-to-pcf`. The plugin shows as **PipingToolset** in the plugin list; its id (and the
+`/piping-toolset:iso-to-pcf`, `/piping-toolset:pipe-support`. The plugin shows as **PipingToolset** in the plugin list; its id (and the
 command prefix) stays `piping-toolset` so existing installs keep working.
 
 ## Try it in twenty seconds
