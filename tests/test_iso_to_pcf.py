@@ -30,7 +30,7 @@ import content_guard  # noqa: E402
 import pcf_lib as L  # noqa: E402
 import validate_pcf as V  # noqa: E402
 
-SITE_SKEYS = {"FLWN", "FLBL", "ELBW", "TEBW", "WTBW", "VBSW", "RCBW", "01HG", "01GU"}
+SITE_SKEYS = {"FLWN", "FLBL", "BEBW", "TEBW", "WTBW", "VBSW", "RCBW", "ANCH", "SKID", "GUID"}
 
 
 def demo() -> dict:
@@ -106,8 +106,12 @@ class DemoBuild(unittest.TestCase):
     def test_crlf_and_header(self):
         self.assertTrue(self.text.startswith("ISOGEN-FILES"))
         self.assertEqual(self.text.count("\r\n"), self.text.count("\n"))
-        self.assertIn("UNITS-CO-ORDS           MM", self.text)
-        self.assertIn("X=E, Y=N, Z=EL (Z vertical)", self.text)
+        # Import-proven header: mm for BOTH bore and coordinates, bare pipeline block.
+        for line in ("UNITS-BORE MM", "UNITS-CO-ORDS MM", "UNITS-WEIGHT LBS", "UNITS-BOLT-DIA MM",
+                     "PIPELINE-REFERENCE DEMO-6-P-1001", "    PROJECT-IDENTIFIER ", "    AREA "):
+            self.assertIn(line + "\r\n", self.text)
+        self.assertNotIn("ATTRIBUTE", self.text)
+        self.assertNotIn("ITEM-CODE", self.text)
 
     def test_report_clean(self):
         self.assertTrue(self.r["ok"])
@@ -121,29 +125,48 @@ class DemoBuild(unittest.TestCase):
 
     def test_hand_computed_coordinates(self):
         recs = records(self.text)
-        e1 = [a for k, a in recs if k == "ELBOW"][0]
+        e1 = [a for k, a in recs if k == "BEND"][0]
         # Corner N 215'0 EL 110'0 at E 100'0; LR R = 1.5 x 6 = 9 in; 90 deg so T = 9 in.
         self.assertEqual(e1["END-POINT"][0][:3], [mm(1200), mm(214 * 12 + 3), mm(1320)])
         self.assertEqual(e1["END-POINT"][1][:3], [mm(1200), mm(2580), mm(1329)])
         self.assertEqual(e1["CENTRE-POINT"][0][:3], [mm(1200), mm(2580), mm(1320)])
-        self.assertEqual(e1["ANGLE"][0], ["9000.0000"])
-        self.assertNotIn("BEND-RADIUS", e1)            # safe vocabulary drops it
+        self.assertEqual(e1["ANGLE"][0], ["9000"])
+        self.assertEqual(e1["BEND-RADIUS"][0], [mm(9)])
+        self.assertEqual(e1["SKEY"][0], ["BEBW"])
+        self.assertEqual(e1["END-POINT"][0][3], mm(6))   # bore in mm: NPS 6 -> 152.4000
         # Tee: centre E 110'0 EL 125'0, C = M = 5 5/8, branch DOWN.
         tee = [a for k, a in recs if k == "TEE"][0]
         self.assertEqual(tee["END-POINT"][0][0], mm(F(1320) - F(45, 8)))
         self.assertEqual(tee["END-POINT"][1][0], mm(F(1320) + F(45, 8)))
         self.assertEqual(tee["BRANCH1-POINT"][0][2], mm(F(1500) - F(45, 8)))
-        # Blind face: E 125'0 + 3 1/2 flange + 1/8 gasket + 1 blind.
-        self.assertEqual(recs[-1][1]["END-POINT"][1][0], mm(F(1500) + F(37, 8)))
+        self.assertEqual(tee["CENTRE-POINT"][0][:3], [mm(1320), mm(2580), mm(1500)])
+        # Blind face: E 125'0 + 3 1/2 flange + 1/8 gasket + 1 blind (last FLANGE record).
+        blind = [a for k, a in recs if k == "FLANGE"][-1]
+        self.assertEqual(blind["END-POINT"][1][0], mm(F(1500) + F(37, 8)))
+        self.assertEqual(blind["SKEY"][0], ["FLBL"])
 
     def test_safe_vocabulary_mapping(self):
         self.assertLessEqual({k for k, _ in records(self.text)}, set(L.SAFE_RECORDS))
         self.assertTrue(any("CAP written as a PIPE" in s for s in self.r["substitutions"]))
 
-    def test_support_attribute_order(self):
-        sup = self.text.split("SUPPORT\r\n", 1)[1].split("\r\n")[:6]
-        self.assertEqual([s.split()[0] for s in sup],
-                         ["CO-ORDS", "SUPPORT-DIRECTION", "SKEY", "ITEM-CODE", "ITEM-DESCRIPTION", "NAME"])
+    def test_support_shape_and_placement(self):
+        recs = records(self.text)
+        sups = [a for k, a in recs if k == "SUPPORT"]
+        # proven shape: CO-ORDS, SKEY, SUPPORT-DIRECTION (none on ANCH); guide -> two records
+        self.assertEqual([a["SKEY"][0][0] for a in sups], ["ANCH", "SKID", "GUID", "GUID"])
+        self.assertNotIn("SUPPORT-DIRECTION", sups[0])
+        self.assertEqual([a["SUPPORT-DIRECTION"][0][0] for a in sups[2:]], ["EAST", "WEST"])
+        body = self.text.split("SUPPORT\r\n")[2].split("\r\n")[:3]   # proven order first
+        self.assertEqual([s.split()[0] for s in body], ["CO-ORDS", "SKEY", "SUPPORT-DIRECTION"])
+        # every support sits on a node: the hanger at N 208'0 splits the pipe there
+        ends = {tuple(e[:3]) for k, a in recs if k != "SUPPORT" for e in a.get("END-POINT", [])}
+        for a in sups:
+            self.assertIn(tuple(a["CO-ORDS"][0][:3]), ends)
+
+    def test_branches_written_after_main_run(self):
+        kinds = [k for k, _ in records(self.text)]
+        last_main = max(i for i, k in enumerate(kinds) if k == "FLANGE")   # the blind
+        self.assertEqual(kinds[last_main + 1:], ["PIPE", "PIPE", "VALVE"])  # drain, cap, vent
 
     def test_pipe_length_by_bore(self):
         # 13'10 7/8 + 13'6 + 2 x 8'9 3/8 + 1'6 3/8 + 98'6 sloped (x 1.00005) + 0'9 = 1749.06 in
@@ -155,13 +178,26 @@ class DemoBuild(unittest.TestCase):
         self.assertTrue(any("1.5 x NPS" in a for a in self.r["assumed"]))
 
 
+class MinimalProven(unittest.TestCase):
+
+    def test_uses_only_import_proven_records_and_passes_clean(self):
+        with open(os.path.join(SCRIPTS, "examples", "minimal-proven.json"), encoding="utf-8") as fh:
+            b = build(json.load(fh))
+        r = build_pcf.report(b, b.bom_check())
+        self.assertTrue(r["ok"])
+        text = b.pcf.text()
+        self.assertLessEqual({k for k, _ in records(text)}, set(L.PROVEN_RECORDS))
+        v = V.validate(text)
+        self.assertEqual((v["errors"], v["warnings"]), ([], []))
+
+
 class Variants(unittest.TestCase):
 
     def test_full_vocabulary_keeps_native_records(self):
         s = demo()
         s["full_vocabulary"] = True
         text = build(s).pcf.text()
-        for k in ("FLANGE-BLIND", "CAP", "BEND-RADIUS"):
+        for k in ("FLANGE-BLIND", "CAP", "ELBOW"):
             self.assertIn(k, text)
         self.assertTrue(V.validate(text, safe=False)["ok"])
         self.assertFalse(V.validate(text, safe=True)["ok"])
@@ -169,7 +205,7 @@ class Variants(unittest.TestCase):
     def test_y_up_axes(self):
         s = demo()
         s["axes"] = "Y-up"
-        rec = records(build(s).pcf.text())[0][1]
+        rec = records(build(s).pcf.text())[1][1]   # [0] is the nozzle ANCH
         # start E 100'0, N 200'0, EL 110'0 -> X=E, Y=EL, Z=-N
         self.assertEqual(rec["END-POINT"][0][:3], [mm(1200), mm(1320), mm(-2400)])
 
@@ -177,7 +213,8 @@ class Variants(unittest.TestCase):
         s = demo()
         s["units"] = "INCH"
         text = build(s).pcf.text()
-        self.assertIn("UNITS-CO-ORDS           INCH", text)
+        self.assertIn("UNITS-CO-ORDS INCH", text)
+        self.assertIn("UNITS-BORE INCH", text)
         self.assertTrue(V.validate(text)["ok"])
 
     def test_failed_closure_check_flags_report(self):
@@ -194,13 +231,13 @@ class Variants(unittest.TestCase):
 
     def test_off_line_corner_is_a_spec_error(self):
         s = demo()
-        s["items"][4]["corner"] = {"EL": "125'0", "E": "100'1"}   # not plumb above the riser
+        s["items"][5]["corner"] = {"EL": "125'0", "E": "100'1"}   # not plumb above the riser
         with self.assertRaises(L.PCFError):
             build(s)
 
     def test_tangent_overrun_is_a_spec_error(self):
         s = demo()
-        s["items"][4]["corner"] = {"EL": "110'10"}   # 10 in riser cannot hold two 9 in tangents
+        s["items"][5]["corner"] = {"EL": "110'10"}   # 10 in riser cannot hold two 9 in tangents
         with self.assertRaises(L.PCFError):
             build(s)
 
@@ -210,12 +247,12 @@ class Variants(unittest.TestCase):
         s["items"] = [{"type": "elbow", "corner": {"len": "9"}, "out": "UP", "radius": "LR"},
                       {"type": "elbow", "corner": {"d": {"el": "1'6"}}, "out": "E", "radius": "LR"}]
         text = build(s).pcf.text()
-        self.assertEqual([k for k, _ in records(text)], ["ELBOW", "ELBOW"])
+        self.assertEqual([k for k, _ in records(text)], ["BEND", "BEND"])
         self.assertEqual(V.validate(text)["errors"], [])
 
     def test_stated_angle_must_match_geometry(self):
         s = demo()
-        s["items"][3]["angle"] = "45"
+        s["items"][4]["angle"] = "45"
         with self.assertRaises(L.PCFError):
             build(s)
 
@@ -249,14 +286,34 @@ class Variants(unittest.TestCase):
 
     def test_missing_key_names_the_item(self):
         s = demo()
-        del s["items"][3]["out"]
+        del s["items"][4]["out"]
         with self.assertRaises(L.PCFError) as cm:
             build(s)
-        self.assertIn("item 3", str(cm.exception))
+        self.assertIn("item 4", str(cm.exception))
 
-    def test_tee_record_has_no_centre_point(self):
+    def test_tee_record_has_centre_point(self):
+        # The import-proven Isogen TEE carries CENTRE-POINT before BRANCH1-POINT.
         tee = [a for k, a in records(build(demo()).pcf.text()) if k == "TEE"][0]
-        self.assertNotIn("CENTRE-POINT", tee)
+        self.assertEqual(list(tee)[:3], ["END-POINT", "CENTRE-POINT", "BRANCH1-POINT"])
+
+    def test_support_behind_cursor_is_a_spec_error(self):
+        s = demo()
+        s["items"].insert(5, {"type": "support", "at": {"N": "201'0"}, "skey": "SKID"})
+        with self.assertRaises(L.PCFError):
+            build(s)
+
+    def test_annotations_on_by_default_and_switchable(self):
+        # Import-proven (live CAESAR II import of the T2 ladder file), so on by default.
+        text = build(demo()).pcf.text()
+        self.assertIn("ITEM-DESCRIPTION FLANGE WN CL150 RF 6IN STD", text)
+        self.assertIn("WEIGHT 19.00", text)
+        self.assertIn("NAME PS-01_HG", text)
+        self.assertEqual(V.validate(text)["errors"], [])
+        s = demo()
+        s["annotate"] = False
+        bare = build(s).pcf.text()
+        for k in ("ITEM-DESCRIPTION ", "WEIGHT ", "NAME "):
+            self.assertNotIn("\r\n    " + k, bare)
 
     def test_cli_exit_codes(self):
         with tempfile.TemporaryDirectory() as d:
@@ -279,10 +336,10 @@ class Variants(unittest.TestCase):
 
 
 class Validator(unittest.TestCase):
-    HEAD = "UNITS-BORE INCH\r\nUNITS-CO-ORDS MM\r\n"
+    HEAD = "UNITS-BORE MM\r\nUNITS-CO-ORDS MM\r\n"
 
     @staticmethod
-    def pipe(a, b, bore=6, kind="PIPE"):
+    def pipe(a, b, bore=152.4, kind="PIPE"):
         return (f"{kind}\r\n    END-POINT {a} {bore}\r\n    END-POINT {b} {bore}\r\n"
                 f"    ITEM-DESCRIPTION X\r\n")
 
@@ -292,9 +349,9 @@ class Validator(unittest.TestCase):
 
     def test_branch_start_is_legal(self):
         t = (self.HEAD + self.pipe("0 0 0", "1000 0 0")
-             + "TEE\r\n    END-POINT 1000 0 0 6\r\n    END-POINT 1300 0 0 6\r\n"
-               "    CENTRE-POINT 1150 0 0\r\n    BRANCH1-POINT 1150 150 0 2\r\n"
-             + self.pipe("1300 0 0", "2000 0 0") + self.pipe("1150 150 0", "1150 900 0", bore=2))
+             + "TEE\r\n    END-POINT 1000 0 0 152.4\r\n    END-POINT 1300 0 0 152.4\r\n"
+               "    CENTRE-POINT 1150 0 0\r\n    BRANCH1-POINT 1150 150 0 50.8\r\n"
+             + self.pipe("1300 0 0", "2000 0 0") + self.pipe("1150 150 0", "1150 900 0", bore=50.8))
         r = V.validate(t)
         self.assertEqual(r["errors"], [])
         self.assertEqual(r["warnings"], [])
@@ -305,25 +362,40 @@ class Validator(unittest.TestCase):
 
     def test_support_off_line(self):
         t = (self.HEAD + self.pipe("0 0 0", "1000 0 0")
-             + "SUPPORT\r\n    CO-ORDS 500 0 300 6\r\n    NAME S1\r\n")
+             + "SUPPORT\r\n    CO-ORDS 500 0 300 152.4\r\n    SKEY SKID\r\n")
         self.assertTrue(any("OFF-LINE" in e for e in V.validate(t)["errors"]))
 
     def test_bore_change_without_reducer_warns(self):
-        t = self.HEAD + self.pipe("0 0 0", "1000 0 0") + self.pipe("1000 0 0", "2000 0 0", bore=4)
+        t = self.HEAD + self.pipe("0 0 0", "1000 0 0") + self.pipe("1000 0 0", "2000 0 0", bore=101.6)
         self.assertTrue(any("BORE CHANGE" in w for w in V.validate(t)["warnings"]))
 
-    def test_support_at_elbow_corner_is_on_line(self):
-        t = (self.HEAD + self.pipe("0 0 0", "1000 0 0")
-             + "ELBOW\r\n    END-POINT 1000 0 0 6\r\n    END-POINT 1228.6 228.6 0 6\r\n"
-               "    CENTRE-POINT 1228.6 0 0\r\n"
-             + "SUPPORT\r\n    CO-ORDS 1228.6 0 0 6\r\n    NAME S1\r\n")
-        self.assertEqual(V.validate(t)["errors"], [])
+    def test_support_must_sit_on_a_node(self):
+        bend = ("BEND\r\n    END-POINT 1000 0 0 152.4\r\n    END-POINT 1228.6 228.6 0 152.4\r\n"
+                "    CENTRE-POINT 1228.6 0 0\r\n    SKEY BEBW\r\n    ANGLE 9000\r\n"
+                "    BEND-RADIUS 228.6\r\n")
+        base = self.HEAD + self.pipe("0 0 0", "1000 0 0") + bend
+        at_end = base + "SUPPORT\r\n    CO-ORDS 1228.6 228.6 0 152.4\r\n    SKEY SKID\r\n"
+        self.assertEqual(V.validate(at_end)["errors"], [])
+        for where in ("1228.6 0 0", "500 0 0"):        # bend corner, mid-pipe
+            t = base + f"SUPPORT\r\n    CO-ORDS {where} 152.4\r\n    SKEY SKID\r\n"
+            self.assertTrue(any("not on a node" in e for e in V.validate(t)["errors"]), where)
+
+    def test_inch_bore_under_mm_units_is_an_error(self):
+        # The first-release failure: NPS written as the bore under a mm header.
+        t = self.HEAD + self.pipe("0 0 0", "1000 0 0", bore=6)
+        self.assertTrue(any("look like inches" in e for e in V.validate(t)["errors"]))
+        t = "UNITS-BORE INCH\r\nUNITS-CO-ORDS MM\r\n" + self.pipe("0 0 0", "1000 0 0", bore=6)
+        self.assertTrue(any("differs from UNITS-CO-ORDS" in e for e in V.validate(t)["errors"]))
+
+    def test_elbow_record_is_outside_the_safe_set(self):
+        t = self.HEAD + self.pipe("0 0 0", "1000 0 0", kind="ELBOW")
+        self.assertTrue(any("safe set" in e for e in V.validate(t)["errors"]))
 
     def test_bore_mismatch_on_tee_branch_warns(self):
         t = (self.HEAD + self.pipe("0 0 0", "1000 0 0")
-             + "TEE\r\n    END-POINT 1000 0 0 6\r\n    END-POINT 1300 0 0 6\r\n"
-               "    BRANCH1-POINT 1150 150 0 4\r\n"
-             + self.pipe("1150 150 0", "1150 900 0", bore=2))
+             + "TEE\r\n    END-POINT 1000 0 0 152.4\r\n    END-POINT 1300 0 0 152.4\r\n"
+               "    BRANCH1-POINT 1150 150 0 101.6\r\n"
+             + self.pipe("1150 150 0", "1150 900 0", bore=50.8))
         self.assertTrue(any("BORE CHANGE" in w for w in V.validate(t)["warnings"]))
 
     def test_unsafe_record_and_missing_units(self):

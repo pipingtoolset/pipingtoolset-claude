@@ -5,21 +5,55 @@ in the CAESAR II `System` folder (under the program-data directory, `Intergraph 
 Read them on the target machine before generating. They are the contract the PCF must satisfy,
 and sites customise them.
 
-Everything specific below was verified on **one CAESAR II v15 installation** (PCF interface build
-15.0.0.405, default maps). Treat it as a strong starting point, not a guarantee for other
+## The import-proven format
+
+The builder's default output mirrors Isogen "SISO" PCFs that import cleanly into CAESAR II:
+
+```
+ISOGEN-FILES ISOGEN.FLS
+UNITS-BORE MM                 <- bore in mm too: NPS 4 -> 101.6000
+UNITS-CO-ORDS MM
+UNITS-WEIGHT LBS
+UNITS-BOLT-DIA MM
+UNITS-BOLT-LENGTH MM
+PIPELINE-REFERENCE <line>
+    PROJECT-IDENTIFIER
+    AREA
+PIPE                          END-POINT x2 (+ ITEM-DESCRIPTION when annotated; never ITEM-CODE)
+BEND                          END-POINT x2, CENTRE-POINT (corner), SKEY BEBW, ANGLE 9000, BEND-RADIUS <mm>
+TEE                           END-POINT x2, CENTRE-POINT, BRANCH1-POINT, SKEY TEBW
+FLANGE / VALVE / REDUCER-CONCENTRIC   END-POINT x2, SKEY
+SUPPORT                       CO-ORDS (on a node), SKEY ANCH|SKID|GUID|SPRG, SUPPORT-DIRECTION
+```
+
+Main run first, then each branch leg. CRLF line endings.
+
+**Live-import confirmed (2026-10-23):** four builder files imported cleanly into CAESAR II.
+Together they covered the proven records above, `ITEM-DESCRIPTION` / `WEIGHT` / support `NAME`
+annotations, `GASKET` and `OLET` records, and a 1 % sloped run on an elevation profile. `INCH`
+coordinates have not been import-tested.
+
+**The first release failed to import** because it wrote `UNITS-BORE INCH` with bores like `6.0000`
+under mm coordinates, free text in `ATTRIBUTE1`, `ELBOW` records without `BEND-RADIUS`, a `TEE`
+without `CENTRE-POINT`, and supports in the middle of pipe elements. `validate_pcf.py` now flags
+each of these.
+
+Other importer behaviour below was observed on **one CAESAR II v15 installation** (PCF interface
+build 15.0.0.405, default maps). Treat it as a strong starting point, not a guarantee for other
 releases.
 
 | Map file | What it controls |
 |---|---|
-| `PCF_RES_MAP.TXT` | **Supports → restraints.** Restraints are matched on the support's `NAME` attribute (not its SKEY), prefix-style, longest key first. Each entry lists restraints in plant-axis vocabulary (`ANC`, `VERT`, `NS`, `EW`, local `A`/`B`/`C`, `GUI`, `LIM`, hanger types) with optional friction and gap |
+| `PCF_RES_MAP.TXT` | **Supports → restraints**, where a site uses it. It can match restraints on the support's `NAME` attribute (prefix-style, longest key first) in plant-axis vocabulary (`ANC`, `VERT`, `NS`, `EW`, local `A`/`B`/`C`, `GUI`, `LIM`, hanger types). The import-proven files carry **no** `NAME`: the restraint comes from the support SKEY (`ANCH`, `SKID`, `GUID`, `SPRG`) plus `SUPPORT-DIRECTION`. That is the builder's default |
 | `PCF_SIF_MAP.TXT` | **SKEY → SIF type.** Decides whether a tee imports as a welding tee, an unreinforced fabricated tee, a weldolet, and so on. Check the tee and olet SKEYs you use against it. A reducing tee with the wrong SKEY silently gets the wrong SIF |
 | `PCF_MAP.xml` | **Pipeline attributes → job data.** In the default map: `DESIGN-TEMPERATURE` → T1, `ALT-DESIGN-TEMPERATURE` → T2, `OPERATING-TEMPERATURE` → T3, `DESIGN-PRESSURE` → P1, `OPERATING-PRESSURE` → P3, `TEST-PRESSURE` → hydro pressure, `INSULATION-THICKNESS`, `SPECIFIC-GRAVITY`, and `PIPELINE-REFERENCE` → line number. `MATERIAL` and `WALLTHK` keys exist but are unmapped by default; the site can wire them to a PCF attribute name. If the line list is available, put these in `pipeline.attributes` and the design data imports with the geometry. Unit strings must be ones `PCF_Units_Map.txt` declares |
-| `PCF_Units_Map.txt` | The unit strings the importer recognises. Use only strings that appear in it |
+| `PCF_Units_Map.txt` | Conversion filters for **attribute** values (pressure, temperature, thickness, weight, density) written with a bracketed unit such as `[BARg]` or `[C]`. Use only strings that appear in it |
+| `PCF_MAT_MAP.TXT` | Material name → CAESAR II material number (for example `A106-B` → 106). Used only if a material attribute is mapped |
 
 Consequences for the spec:
 
-- Name supports `TYPE_TAG` (for example `PG-2A_PS-0235`). A short type key in
-  `PCF_RES_MAP.TXT` then matches, and the full string still imports as the support tag.
+- Give each support a proven SKEY and direction. If the site also relies on `PCF_RES_MAP.TXT`
+  `NAME` matching, name supports `TYPE_TAG` (for example `PG-2A_PS-0235`) and test the import.
 - Because restraints use `VERT`/`NS`/`EW`, the importer resolves the vertical axis itself. Still
   **check the orientation in the CAESAR II graphics after import**, and rebuild with the other
   `axes` value if it is wrong.
@@ -40,23 +74,20 @@ Other releases may accept more. The safe set is **conservative**, not a statemen
 version. To test a richer file on your build, use `"full_vocabulary": true`, import it, and check
 the event log.
 
-So by default `build_pcf.py` writes only:
+So by default `build_pcf.py` writes only the **import-proven** records
 
-`PIPE, ELBOW, BEND, TEE, OLET, FLANGE, GASKET, VALVE, REDUCER-CONCENTRIC, SUPPORT, WELD`
+`PIPE, PIPE-FIXED, BEND, TEE, FLANGE, VALVE, VALVE-ANGLE, REDUCER-CONCENTRIC, SUPPORT, GASKET, OLET`
 
-(`WELD` is accepted by the importer but never generated by the builder; field welds are not
-needed for stress geometry.) TEE records are written in the import-proven shape: two
-`END-POINT`s and `BRANCH1-POINT`, with no `CENTRE-POINT`. Everything else is mapped onto that
-set, with no geometric loss:
+Everything else is mapped onto that set, with no geometric loss:
 
 | Native record | Written as | Identity kept in |
 |---|---|---|
-| `FLANGE-BLIND` | `FLANGE` | SKEY + description |
+| `FLANGE-BLIND` | `FLANGE` | SKEY `FLBL` + description |
 | `CAP` | `PIPE` | description |
+| `ELBOW` | `BEND` (SKEY `BEBW`, with `BEND-RADIUS`) | SKEY |
 | `MISC-COMPONENT` (instruments, specials) | `VALVE` (rigid, keeps `WEIGHT`) | description |
 | `COUPLING` | `PIPE` | description |
 | `REDUCER-ECCENTRIC` + `FLAT-DIRECTION` | `REDUCER-CONCENTRIC` | the offset end points + description (state the flat side in `desc`) |
-| `BEND-RADIUS` on elbows | dropped | derivable from corner and tangent points |
 
 Every mapping is listed in the build report under *Record substitutions*. Set
 `"full_vocabulary": true` only for a reader known to accept the native records.

@@ -1,46 +1,237 @@
 {
   "pipeline": {
-    "reference": "DEMO-6-P-1001",
-    "attributes": [["ATTRIBUTE2", "SYNTHETIC DEMO LINE - NOT A REAL DRAWING"]]
+    "reference": "DEMO-6-P-1001"
   },
   "axes": "Z-up",
   "units": "MM",
-  "assumed": ["Gasket thickness 1/8 in (not dimensioned on the demo iso)"],
-  "profiles": {
-    "P1": {"along": "N", "points": [["215'0", "125'0"], ["265'0", "124'6"], ["315'0", "124'0"]]}
-  },
-  "start": {"at": {"E": "100'0", "N": "200'0", "EL": "110'0"}, "dir": "N", "bore": 6},
-  "items": [
-    {"type": "gasket", "len": "0.1/8", "desc": "Gasket CL150 spiral wound 6in"},
-    {"type": "flange", "len": "4", "weight": 19, "desc": "Flange WN CL150 RF 6in STD"},
-    {"type": "support", "at": {"N": "208'0"}, "name": "PS-01_HG", "skey": "01HG", "desc": "Rod hanger"},
-    {"type": "elbow", "corner": {"N": "215'0"}, "out": "UP", "radius": "LR", "desc": "Elbow 90 LR 6in STD BW"},
-    {"type": "elbow", "corner": {"EL": "125'0"}, "out": "E", "radius": "LR", "desc": "Elbow 90 LR 6in STD BW"},
-    {"type": "tee", "centre": {"E": "110'0"}, "C": "5.5/8", "branch_dir": "DOWN",
-     "desc": "Tee equal 6in STD BW",
-     "branch": [
-       {"type": "pipe", "to": {"d": {"el": "-2'0"}}, "desc": "Pipe 6in STD drain leg"},
-       {"type": "cap", "len": "3.1/2", "weight": 4, "desc": "Cap 6in STD BW"}
-     ]},
-    {"type": "olet", "at": {"E": "115'0"}, "height": "3.1/2", "branch_dir": "UP", "branch_bore": 1,
-     "desc": "Weldolet 6x1",
-     "branch": [
-       {"type": "valve", "len": "4", "weight": 2, "skey": "VBSW", "desc": "Ball valve 1in SW vent"}
-     ]},
-    {"type": "elbow", "corner": {"E": "120'0"}, "out": {"n": "100", "el": "-1"}, "radius": "LR",
-     "desc": "Elbow 90 LR 6in STD BW"},
-    {"type": "support", "at": {"N": "265'0", "EL": "@P1"}, "name": "PS-02_GU", "skey": "01GU", "desc": "Guide"},
-    {"type": "check", "label": "PS-02 EL on 1% fall", "expect": {"EL": "124'6"}},
-    {"type": "elbow", "corner": {"N": "315'0", "EL": "@P1"}, "out": "E", "radius": "LR",
-     "desc": "Elbow 90 LR 6in STD BW"},
-    {"type": "check", "label": "Corner EL 124'0 stated on iso", "expect": {"E": "120'0", "N": "315'0", "EL": "124'0"}},
-    {"type": "reducer", "at": {"d": {"e": "1'6"}}, "len": "5.1/2", "bore": 4, "desc": "Reducer conc 6x4 STD BW"},
-    {"type": "pipe", "to": {"E": "125'0"}, "desc": "Pipe 4in STD"},
-    {"type": "flange", "len": "3.1/2", "weight": 8, "desc": "Flange WN CL150 RF 4in STD"},
-    {"type": "gasket", "len": "0.1/8", "desc": "Gasket CL150 spiral wound 4in"},
-    {"type": "blind", "len": "1", "weight": 7, "desc": "Blind flange CL150 RF 4in"},
-    {"type": "check", "label": "Blind face E 125'4.5/8", "of": "cursor", "expect": {"E": "125'4.5/8"}}
+  "assumed": [
+    "Gasket thickness 1/8 in (not dimensioned on the demo iso)"
   ],
-  "bom": {"ELBOW": 4, "TEE": 1, "OLET": 1, "FLANGE": 2, "FLANGE-BLIND": 1, "GASKET": 2,
-          "VALVE": 1, "CAP": 1, "REDUCER-CONCENTRIC": 1}
+  "profiles": {
+    "P1": {
+      "along": "N",
+      "points": [
+        [
+          "215'0",
+          "125'0"
+        ],
+        [
+          "265'0",
+          "124'6"
+        ],
+        [
+          "315'0",
+          "124'0"
+        ]
+      ]
+    }
+  },
+  "start": {
+    "at": {
+      "E": "100'0",
+      "N": "200'0",
+      "EL": "110'0"
+    },
+    "dir": "N",
+    "bore": 6
+  },
+  "items": [
+    {
+      "type": "support",
+      "name": "N1_ANCH",
+      "skey": "ANCH",
+      "desc": "Vessel nozzle N1 anchor"
+    },
+    {
+      "type": "gasket",
+      "len": "0.1/8",
+      "desc": "Gasket CL150 spiral wound 6in"
+    },
+    {
+      "type": "flange",
+      "len": "4",
+      "weight": 19,
+      "desc": "Flange WN CL150 RF 6in STD"
+    },
+    {
+      "type": "support",
+      "at": {
+        "N": "208'0"
+      },
+      "name": "PS-01_HG",
+      "skey": "SKID",
+      "desc": "Rod hanger (resting +Y)",
+      "direction": "UP"
+    },
+    {
+      "type": "elbow",
+      "corner": {
+        "N": "215'0"
+      },
+      "out": "UP",
+      "radius": "LR",
+      "desc": "Elbow 90 LR 6in STD BW"
+    },
+    {
+      "type": "elbow",
+      "corner": {
+        "EL": "125'0"
+      },
+      "out": "E",
+      "radius": "LR",
+      "desc": "Elbow 90 LR 6in STD BW"
+    },
+    {
+      "type": "tee",
+      "centre": {
+        "E": "110'0"
+      },
+      "C": "5.5/8",
+      "branch_dir": "DOWN",
+      "desc": "Tee equal 6in STD BW",
+      "branch": [
+        {
+          "type": "pipe",
+          "to": {
+            "d": {
+              "el": "-2'0"
+            }
+          },
+          "desc": "Pipe 6in STD drain leg"
+        },
+        {
+          "type": "cap",
+          "len": "3.1/2",
+          "weight": 4,
+          "desc": "Cap 6in STD BW"
+        }
+      ]
+    },
+    {
+      "type": "olet",
+      "at": {
+        "E": "115'0"
+      },
+      "height": "3.1/2",
+      "branch_dir": "UP",
+      "branch_bore": 1,
+      "desc": "Weldolet 6x1",
+      "branch": [
+        {
+          "type": "valve",
+          "len": "4",
+          "weight": 2,
+          "skey": "VBSW",
+          "desc": "Ball valve 1in SW vent"
+        }
+      ]
+    },
+    {
+      "type": "elbow",
+      "corner": {
+        "E": "120'0"
+      },
+      "out": {
+        "n": "100",
+        "el": "-1"
+      },
+      "radius": "LR",
+      "desc": "Elbow 90 LR 6in STD BW"
+    },
+    {
+      "type": "support",
+      "at": {
+        "N": "265'0",
+        "EL": "@P1"
+      },
+      "name": "PS-02_GU",
+      "skey": "GUID",
+      "desc": "Guide",
+      "direction": [
+        "EAST",
+        "WEST"
+      ]
+    },
+    {
+      "type": "check",
+      "label": "PS-02 EL on 1% fall",
+      "expect": {
+        "EL": "124'6"
+      }
+    },
+    {
+      "type": "elbow",
+      "corner": {
+        "N": "315'0",
+        "EL": "@P1"
+      },
+      "out": "E",
+      "radius": "LR",
+      "desc": "Elbow 90 LR 6in STD BW"
+    },
+    {
+      "type": "check",
+      "label": "Corner EL 124'0 stated on iso",
+      "expect": {
+        "E": "120'0",
+        "N": "315'0",
+        "EL": "124'0"
+      }
+    },
+    {
+      "type": "reducer",
+      "at": {
+        "d": {
+          "e": "1'6"
+        }
+      },
+      "len": "5.1/2",
+      "bore": 4,
+      "desc": "Reducer conc 6x4 STD BW"
+    },
+    {
+      "type": "pipe",
+      "to": {
+        "E": "125'0"
+      },
+      "desc": "Pipe 4in STD"
+    },
+    {
+      "type": "flange",
+      "len": "3.1/2",
+      "weight": 8,
+      "desc": "Flange WN CL150 RF 4in STD"
+    },
+    {
+      "type": "gasket",
+      "len": "0.1/8",
+      "desc": "Gasket CL150 spiral wound 4in"
+    },
+    {
+      "type": "blind",
+      "len": "1",
+      "weight": 7,
+      "desc": "Blind flange CL150 RF 4in"
+    },
+    {
+      "type": "check",
+      "label": "Blind face E 125'4.5/8",
+      "of": "cursor",
+      "expect": {
+        "E": "125'4.5/8"
+      }
+    }
+  ],
+  "bom": {
+    "ELBOW": 4,
+    "TEE": 1,
+    "OLET": 1,
+    "FLANGE": 2,
+    "FLANGE-BLIND": 1,
+    "GASKET": 2,
+    "VALVE": 1,
+    "CAP": 1,
+    "REDUCER-CONCENTRIC": 1,
+    "SUPPORT": 4
+  }
 }

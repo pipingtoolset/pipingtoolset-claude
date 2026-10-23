@@ -20,6 +20,7 @@ to **transcribe the drawing faithfully**. The script does all of the geometry.
 | `scripts/build_pcf.py` | JSON walk spec → PCF + build report (closure checks, BOM reconciliation, ASSUMED list) |
 | `scripts/validate_pcf.py` | Checks any PCF, including third-party exports, before it goes near CAESAR II |
 | `scripts/pcf_lib.py` | Exact-fraction geometry and emitters, if a job needs a custom script |
+| `scripts/examples/minimal-proven.json` | Small line using only import-proven records: the first file to import on a new CAESAR II install |
 | `scripts/examples/demo-line.json` | Synthetic worked example that uses every item type |
 | `references/spec-format.md` | The walk spec: point forms, item types, profiles, checks |
 | `references/reading-isos.md` | Getting dimensions out of the PDF; the `X.n/d` convention; SKEYs |
@@ -33,7 +34,8 @@ Standard-library Python 3.9+. Nothing leaves the user's machine.
    - **Vertical axis.** The default is Z-up (E→X, N→Y, EL→Z). `Y-up` writes X=E, Y=EL, Z=−N.
      Isogen output is often Y-up, which is why third-party PCFs come in lying on their side.
      Say the convention back to the user. Getting it wrong costs a full rebuild.
-   - **Output units.** The default is mm coordinates. Bore is always in inches.
+   - **Output units.** mm, for coordinates **and** bore (nominal size × 25.4, so NPS 4 → `101.6`),
+     exactly as import-proven Isogen PCFs are written. You enter bores as NPS; the builder converts.
    - **The SKEYs the user's site actually emits.** Ask for one of their own Isogen PCFs and
      harvest the SKEYs from it (`references/reading-isos.md`).
    - **Drawing set and revision**, and which sheets are in scope.
@@ -65,8 +67,9 @@ Standard-library Python 3.9+. Nothing leaves the user's machine.
   *anchor*: the last corner, tee centre, olet, support or component end. That matches how isos
   chain their dimensions.
 - **Bends from corners.** Give the corner (theoretical intersection point) and the outgoing
-  direction. The builder computes `T = R·tan(θ/2)`, runs the pipe to the tangent, writes
-  `ANGLE` in centidegrees (90° → `9000`), and leaves the corner as `CENTRE-POINT`. If the
+  direction. The builder computes `T = R·tan(θ/2)`, runs the pipe to the tangent, and writes a
+  `BEND` record (SKEY `BEBW`, `ANGLE` in centidegrees, 90° → `9000`, `BEND-RADIUS` in mm) with
+  the corner as `CENTRE-POINT`. That is how import-proven files carry elbows. If the
   tangents use up the whole straight between two fittings, no pipe element is written. Zero-length
   elements are refused outright.
 - **Sloped runs are profiles, not chained deltas.** Stated elevations become profile anchors,
@@ -76,8 +79,12 @@ Standard-library Python 3.9+. Nothing leaves the user's machine.
   past one.
 - **Off-line is an error.** A point that is not ahead of the cursor along the current direction
   stops the build. That catches transcription slips at the item that caused them.
-- **Safe record set by default.** Only record types proven to import cleanly (verified on one
-  CAESAR II v15 build; conservative on others) are written. Blinds, caps, instruments and eccentric reducers are mapped onto that set with
+- **Import-proven format by default.** The header, record types, attribute order and units
+  mirror PCFs that import cleanly into CAESAR II. `ITEM-DESCRIPTION`, `WEIGHT` and support `NAME`
+  are written by default (import-proven); `"annotate": false` gives the bare form. `ITEM-CODE` is
+  never written. Branch legs are written after the main run, as Isogen does.
+- **Supports sit on nodes.** A support part-way along a run splits the pipe there, so the
+  restraint lands on a node. A support behind the cursor is an error. Blinds, caps, instruments and eccentric reducers are mapped onto that set with
   no loss of geometry, and every substitution is listed in the report
   (`references/caesar-import.md`).
 
@@ -107,13 +114,15 @@ Standard-library Python 3.9+. Nothing leaves the user's machine.
   PCFs. If a component type has none, use the nearest confirmed SKEY in the same family, keep
   the true identity in the description, and **tell the user**.
 - **Weights on rigids.** Valves, flanges, blinds and instruments take `weight` in the PCF's
-  weight unit. Without one, CAESAR II estimates, and hand-corrected rigid weights are a common
-  review finding.
-- **Supports.** Every support goes on the modelled centreline. An iso note like "support offline at
+  weight unit (lb by default). Without one, CAESAR II estimates, and hand-corrected rigid weights
+  are a common review finding. Spot-check one rigid's weight in CAESAR II after the first import.
+- **Supports.** The restraint type is carried by the support SKEY and direction, as in the
+  import-proven files: `ANCH` (anchor, no direction), `SKID` (resting, `UP`), `GUID` (guide; give
+  `["EAST", "WEST"]` or `["NORTH", "SOUTH"]` for both sides, written as two records), `SPRG`
+  (spring, `UP`). Every support goes on the modelled centreline. An iso note like "support offline at
   E… N… EL…" is dimensioned to the steel, not the pipe. Model it at the pipe station and keep the
-  note in the description. Name supports `TYPE_TAG` (for example `PG-2A_PS-0235`). The importer
-  matches restraint types on the `NAME` prefix, and the full string still carries the support
-  tag back to the support drawing.
+  note in the description. Give each support its drawing tag as `name`, so the analyst can tie
+  the restraint back to the support drawing.
 
 ## Handover
 

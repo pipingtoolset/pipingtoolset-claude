@@ -25,11 +25,15 @@ Point = Tuple[F, F, F]
 MM_PER_IN = F(254, 10)
 SNAP = 10000  # denominator for snapped trig results (1/10000 in)
 
-# Record types a CAESAR II PCF import is known to accept without crashing. Anything else
-# is mapped onto this set by the emitters when `safe` is on (the default); see
-# references/caesar-import.md.
-SAFE_RECORDS = ("PIPE", "ELBOW", "BEND", "TEE", "OLET", "FLANGE", "GASKET", "VALVE",
-                "REDUCER-CONCENTRIC", "SUPPORT", "WELD")
+# Record types proven to import cleanly into CAESAR II: seen in Isogen SISO exports that
+# import, or confirmed by a live import of this builder's output (GASKET, OLET). With
+# `safe` on (the default) the emitters write only these; see references/caesar-import.md.
+PROVEN_RECORDS = ("PIPE", "PIPE-FIXED", "BEND", "TEE", "FLANGE", "VALVE", "VALVE-ANGLE",
+                  "REDUCER-CONCENTRIC", "SUPPORT", "GASKET", "OLET")
+SAFE_RECORDS = PROVEN_RECORDS
+SAFE_MAP = {"FLANGE-BLIND": "FLANGE", "CAP": "PIPE", "MISC-COMPONENT": "VALVE",
+            "COUPLING": "PIPE", "REDUCER-ECCENTRIC": "REDUCER-CONCENTRIC"}
+SUPPORT_DIRECTIONS = ("UP", "DOWN", "NORTH", "SOUTH", "EAST", "WEST")
 
 AXES = {
     # name: (description, mapper (E, N, EL) -> (X, Y, Z))
@@ -198,118 +202,130 @@ class Profile:
 # --------------------------------------------------------------------------- writer
 
 class PCF:
-    """Accumulates PCF records. Coordinates are written in mm (default) or inches."""
+    """Accumulates PCF records in the CAESAR II import-proven format.
+
+    The format mirrors PCFs that import cleanly into CAESAR II (Isogen "SISO" exports):
+    mm coordinates AND mm bore (nominal size x 25.4), a bare header, elbows as BEND records
+    with ANGLE and BEND-RADIUS, TEE with CENTRE-POINT, SUPPORT as CO-ORDS / SKEY /
+    SUPPORT-DIRECTION on a node. `annotate` (default on, import-proven) adds
+    ITEM-DESCRIPTION, WEIGHT and support NAME; ITEM-CODE is never written.
+    """
 
     def __init__(self, axes: str = "Z-up", coords: str = "MM", safe: bool = True,
-                 weight_units: str = "KGS"):
+                 weight_units: str = "LBS", annotate: bool = True):
         if axes not in AXES:
             raise PCFError(f"axes must be one of {sorted(AXES)}")
         if coords not in ("MM", "INCH"):
             raise PCFError("coords must be MM or INCH")
-        self.axes, self.coords, self.safe, self.weight_units = axes, coords, safe, weight_units
+        if weight_units not in ("LBS", "KGS"):
+            raise PCFError("weight_units must be LBS or KGS")
+        self.axes, self.coords, self.safe = axes, coords, safe
+        self.weight_units, self.annotate = weight_units, annotate
         self.records: List[Tuple[str, List[str]]] = []
         self.header: List[str] = []
         self.census: Dict[str, int] = {}
 
-    # ---- formatting
+    # ---- formatting (coordinates and bore share one unit: MM -> both mm)
     def c(self, v: F) -> str:
         return f"{float(v * MM_PER_IN if self.coords == 'MM' else v):.4f}"
 
     def pt(self, p: Point, bore: Optional[F] = None) -> str:
         x, y, z = AXES[self.axes][1](p)
-        s = f"{self.c(x)}  {self.c(y)}  {self.c(z)}"
+        s = f"{self.c(x):>12}  {self.c(y):>12}  {self.c(z):>12}"
         if bore is not None:
-            s += f"  {float(bore):.4f}"
+            s += f"  {self.c(bore):>12}"     # NPS 4 -> 101.6000 mm, as Isogen writes it
         return s
 
     def set_header(self, reference: str, attributes: Sequence[Tuple[str, str]] = ()):
-        h = ["ISOGEN-FILES            ISOGEN.FLS",
-             "UNITS-BORE              INCH",
-             f"UNITS-CO-ORDS           {self.coords}",
-             f"UNITS-WEIGHT            {self.weight_units}",
-             "UNITS-BOLT-DIA          INCH",
-             "UNITS-BOLT-LENGTH       INCH",
-             f"PIPELINE-REFERENCE      {reference}",
-             f"    ATTRIBUTE1  COORDS {self.coords} - {AXES[self.axes][0]}"]
+        u = self.coords
+        self.header = ["ISOGEN-FILES ISOGEN.FLS",
+                       f"UNITS-BORE {u}",
+                       f"UNITS-CO-ORDS {u}",
+                       f"UNITS-WEIGHT {self.weight_units}",
+                       f"UNITS-BOLT-DIA {u}",
+                       f"UNITS-BOLT-LENGTH {u}",
+                       f"PIPELINE-REFERENCE {reference}",
+                       "    PROJECT-IDENTIFIER ",
+                       "    AREA "]
         for k, v in attributes:
-            h.append(f"    {k}  {v}")
-        self.header = h
+            self.header.append(f"    {k} {v}")
 
     def _rec(self, logical: str, kind: str, attrs: List[str]):
         self.census[logical] = self.census.get(logical, 0) + 1
         self.records.append((kind, attrs))
 
-    @staticmethod
-    def _common(code: Optional[str], desc: Optional[str], kind: str) -> List[str]:
-        return [f"ITEM-CODE   {code or 'PCF-' + kind}",
-                f"ITEM-DESCRIPTION   {(desc or kind).upper()}"]
+    def _notes(self, desc: Optional[str], weight: Optional[F] = None) -> List[str]:
+        if not self.annotate:
+            return []
+        a = [f"ITEM-DESCRIPTION {desc.upper()}"] if desc else []
+        if weight is not None:
+            a.append(f"WEIGHT {float(weight):.2f}")
+        return a
 
     # ---- two-ended inline components
     def inline(self, logical: str, p1: Point, p2: Point, bore: F, bore2: Optional[F] = None,
-               desc: Optional[str] = None, code: Optional[str] = None, skey: Optional[str] = None,
+               desc: Optional[str] = None, skey: Optional[str] = None,
                weight: Optional[F] = None, extra: Sequence[str] = ()):
-        """logical: PIPE FLANGE FLANGE-BLIND GASKET VALVE CAP MISC-COMPONENT COUPLING
-        REDUCER-CONCENTRIC REDUCER-ECCENTRIC. Mapped onto SAFE_RECORDS when safe."""
+        """logical: PIPE PIPE-FIXED FLANGE FLANGE-BLIND GASKET VALVE CAP MISC-COMPONENT
+        COUPLING REDUCER-CONCENTRIC REDUCER-ECCENTRIC. Mapped onto SAFE_RECORDS when safe."""
         if p1 == p2:
             raise PCFError(f"zero-length {logical} ({desc or ''}) - fix the walk, do not emit it")
         kind = logical
         extra = list(extra)
         if self.safe:
-            kind = {"FLANGE-BLIND": "FLANGE", "CAP": "PIPE", "MISC-COMPONENT": "VALVE",
-                    "COUPLING": "PIPE", "REDUCER-ECCENTRIC": "REDUCER-CONCENTRIC"}.get(logical, logical)
+            kind = SAFE_MAP.get(logical, logical)
             extra = [e for e in extra if not e.startswith("FLAT-DIRECTION")]
-        a = [f"END-POINT    {self.pt(p1, bore)}",
-             f"END-POINT    {self.pt(p2, bore2 if bore2 is not None else bore)}"]
-        a += self._common(code, desc, logical)
+        a = [f"END-POINT {self.pt(p1, bore)}",
+             f"END-POINT {self.pt(p2, bore2 if bore2 is not None else bore)}"]
         if skey and kind != "PIPE":
-            a.append(f"SKEY  {skey}")
-        a += extra
-        if weight is not None:
-            a.append(f"WEIGHT  {float(weight):.2f}")
+            a.append(f"SKEY {skey}")
+        a += extra + self._notes(desc, weight)
         self._rec(logical, kind, a)
 
-    def elbow(self, t1: Point, t2: Point, corner: Point, bore: F, angle: float, radius: F,
-              desc=None, code=None, skey: Optional[str] = "ELBW", bend: bool = False):
-        a = [f"END-POINT    {self.pt(t1, bore)}",
-             f"END-POINT    {self.pt(t2, bore)}",
-             f"CENTRE-POINT     {self.pt(corner)}"]
-        kind = "BEND" if bend else "ELBOW"
-        a += self._common(code, desc, kind)
+    def bend(self, t1: Point, t2: Point, corner: Point, bore: F, angle: float, radius: F,
+             desc=None, skey: Optional[str] = "BEBW", logical: str = "ELBOW"):
+        """Elbows and pipe bends are both written as BEND records (import-proven)."""
+        cd = round(angle * 100, 2)                       # centidegrees: 90 deg -> 9000
+        a = [f"END-POINT {self.pt(t1, bore)}",
+             f"END-POINT {self.pt(t2, bore)}",
+             f"CENTRE-POINT {self.pt(corner)}"]
         if skey:
-            a.append(f"SKEY  {skey}")
-        a.append(f"ANGLE  {angle * 100:.4f}")           # centidegrees: 90 deg -> 9000.0000
-        if not self.safe:
-            a.append(f"BEND-RADIUS  {self.c(radius)}")   # derivable from corner + tangents
-        self._rec(kind, kind, a)
+            a.append(f"SKEY {skey}")
+        a.append(f"ANGLE {int(cd) if cd == int(cd) else cd}")
+        a.append(f"BEND-RADIUS {self.c(radius)}")
+        a += self._notes(desc)
+        self._rec(logical, "BEND" if self.safe else ("ELBOW" if logical == "ELBOW" else "BEND"), a)
 
-    def tee(self, p1: Point, p2: Point, bore: F, bp: Point, bbore: F, desc=None, code=None,
-            skey: Optional[str] = "TEBW"):
-        a = [f"END-POINT    {self.pt(p1, bore)}",
-             f"END-POINT    {self.pt(p2, bore)}",
-             f"BRANCH1-POINT   {self.pt(bp, bbore)}"]   # no CENTRE-POINT: import-proven shape
-        a += self._common(code, desc, "TEE")
+    def tee(self, p1: Point, p2: Point, centre: Point, bore: F, bp: Point, bbore: F,
+            desc=None, skey: Optional[str] = "TEBW"):
+        a = [f"END-POINT {self.pt(p1, bore)}",
+             f"END-POINT {self.pt(p2, bore)}",
+             f"CENTRE-POINT {self.pt(centre)}",
+             f"BRANCH1-POINT {self.pt(bp, bbore)}"]
         if skey:
-            a.append(f"SKEY  {skey}")
+            a.append(f"SKEY {skey}")
+        a += self._notes(desc)
         self._rec("TEE", "TEE", a)
 
-    def olet(self, centre: Point, bp: Point, bbore: F, desc=None, code=None,
-             skey: Optional[str] = "WTBW"):
-        a = [f"CENTRE-POINT   {self.pt(centre)}",
-             f"BRANCH1-POINT   {self.pt(bp, bbore)}"]
-        a += self._common(code, desc, "OLET")
+    def olet(self, centre: Point, bp: Point, bbore: F, desc=None, skey: Optional[str] = "WTBW"):
+        a = [f"CENTRE-POINT {self.pt(centre)}",
+             f"BRANCH1-POINT {self.pt(bp, bbore)}"]
         if skey:
-            a.append(f"SKEY  {skey}")
+            a.append(f"SKEY {skey}")
+        a += self._notes(desc)
         self._rec("OLET", "OLET", a)
 
-    def support(self, at: Point, bore: F, name: str, skey: str = "01HG",
-                direction: str = "UP", desc=None, code=None):
-        # Attribute order follows the CAESAR II example PCFs: CO-ORDS, SUPPORT-DIRECTION,
-        # SKEY, ITEM-CODE, ITEM-DESCRIPTION, NAME.
-        a = [f"CO-ORDS    {self.pt(at, bore)}",
-             f"SUPPORT-DIRECTION  {direction}",
-             f"SKEY  {skey}"]
-        a += self._common(code, desc, "SUPPORT")
-        a.append(f"NAME  {name}")
+    def support(self, at: Point, bore: F, skey: str = "SKID", direction: Optional[str] = "UP",
+                name: Optional[str] = None, desc: Optional[str] = None):
+        # Import-proven shape and order: CO-ORDS, SKEY, SUPPORT-DIRECTION (none on ANCH).
+        a = [f"CO-ORDS {self.pt(at, bore)}", f"SKEY {skey}"]
+        if direction:
+            if direction not in SUPPORT_DIRECTIONS:
+                raise PCFError(f"support direction {direction!r}: use one of {SUPPORT_DIRECTIONS}")
+            a.append(f"SUPPORT-DIRECTION {direction}")
+        if self.annotate:
+            a += [f"NAME {name}"] if name else []
+            a += self._notes(desc)
         self._rec("SUPPORT", "SUPPORT", a)
 
     # ---- output
