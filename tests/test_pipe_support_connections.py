@@ -98,7 +98,7 @@ class CalcCoreFixtures(unittest.TestCase):
         self._run("structural.pier-soil")
 
     def test_case_counts(self):
-        for module, n in (("structural.fillet-weld", 4), ("structural.baseplate-anchorage", 4),
+        for module, n in (("structural.fillet-weld", 6), ("structural.baseplate-anchorage", 4),
                           ("structural.pier-soil", 3)):
             self.assertEqual(len(parity.load(module)["cases"]), n)
 
@@ -140,8 +140,19 @@ class Goldens(unittest.TestCase):
         self.assertTrue(any(c["output"]["directionalFactor"] == 1 for c in outs))
         self.assertTrue(any(c["output"]["baseMetalPerInch"] is not None for c in outs))
         self.assertTrue(any(c["status"] == "fail" for c in outs))
+        # PR #138 J4 split: every new input and output branch is exercised.
+        self.assertTrue(any("baseMetalThickness" in c["input"] for c in outs))
+        self.assertTrue(any("baseForces" in c["input"] for c in outs))
+        self.assertTrue(any(c["input"].get("alongEdge") is False for c in outs))
+        self.assertTrue(any(c["input"].get("alongEdge") is True for c in outs))
+        self.assertTrue(any(c["output"]["baseTensionYieldPerInch"] is not None for c in outs))
+        self.assertTrue(any(c["output"]["baseTensionYieldPerInch"] is None and c["output"]["baseMetalRatio"] is not None
+                            for c in outs))
+        self.assertTrue(any((c["output"]["baseMetalRatio"] or 0) > c["output"]["ratio"] for c in outs))
+        self.assertTrue(any(c["output"]["ratio"] <= 1 < (c["output"]["baseMetalRatio"] or 0) and c["status"] == "fail"
+                            for c in outs))
         joined = " ".join(x for c in outs for x in c["warnings"])
-        for frag in ("below the Table J2.4", "exceeds the J2.2b", "Base-metal shear rupture", "eccentric", "4x the leg"):
+        for frag in ("below the Table J2.4", "exceeds the J2.2b", "Base metal governs over the weld metal (AISC J4)", "eccentric", "4x the leg"):
             self.assertIn(frag, joined)
 
         b = [c for c in self._golden("baseplate")["cases"] if "output" in c]

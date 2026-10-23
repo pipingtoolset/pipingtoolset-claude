@@ -21,7 +21,9 @@
         "designPerInch": 5.5676,
         "demandPerInch": 1,
         "ratio": 0.1796,
-        "minSize": 0
+        "minSize": 0,
+        "normalPerInch": 0,
+        "shearPerInch": 1
       },
       "status": "pass",
       "tol": 0.0001
@@ -46,7 +48,9 @@
         "designPerInch": 8.3514,
         "demandPerInch": 1,
         "ratio": 0.1197,
-        "minSize": 0
+        "minSize": 0,
+        "normalPerInch": 0,
+        "shearPerInch": 1
       },
       "status": "pass",
       "tol": 0.0001
@@ -78,7 +82,13 @@
         "ratio": 0.2404,
         "minSize": 0.25,
         "maxSize": 0.6875,
-        "baseMetalPerInch": 19.575
+        "normalPerInch": 2.0067,
+        "shearPerInch": 0.0626,
+        "baseMetalThickness": 0.75,
+        "baseTensionYieldPerInch": 24.3,
+        "baseTensionRupturePerInch": 32.625,
+        "baseMetalPerInch": 19.575,
+        "baseMetalRatio": 0.0826
       },
       "status": "pass",
       "tol": 0.0001
@@ -106,7 +116,94 @@
         "demandPerInch": 3.0685,
         "ratio": 0.4409,
         "minSize": 0.125,
-        "maxSize": 0.23
+        "maxSize": 0.23,
+        "normalPerInch": 3.0602,
+        "shearPerInch": 0.2254,
+        "baseMetalThickness": 0.23
+      },
+      "status": "pass",
+      "tol": 0.0001
+    },
+    {
+      "input": {
+        "method": "LRFD",
+        "size": 0.25,
+        "FEXX": 70,
+        "pattern": "all-round",
+        "depth": 5.99,
+        "width": 5.99,
+        "Vtransverse": 0.45,
+        "M": 79.8,
+        "Pnormal": 0,
+        "basePartThickness": 0.23,
+        "alongEdge": false,
+        "baseFy": 36,
+        "baseFu": 58
+      },
+      "expect": {
+        "length": 23.96,
+        "throat": 0.1768,
+        "Awe": 4.2349,
+        "Sw": 47.8401,
+        "stress": 9.438,
+        "theta": 90,
+        "directionalFactor": 1.5,
+        "designPerInch": 8.3514,
+        "demandPerInch": 1.6682,
+        "ratio": 0.1997,
+        "minSize": 0.125,
+        "maxSize": 0.23,
+        "normalPerInch": 1.6681,
+        "shearPerInch": 0.0188,
+        "baseMetalThickness": 0.23,
+        "baseTensionYieldPerInch": 7.452,
+        "baseTensionRupturePerInch": 10.005,
+        "baseMetalPerInch": 6.003,
+        "baseMetalRatio": 0.2238
+      },
+      "status": "pass",
+      "tol": 0.0001
+    },
+    {
+      "input": {
+        "method": "LRFD",
+        "size": 0.25,
+        "FEXX": 70,
+        "pattern": "two-parallel",
+        "depth": 5.99,
+        "Vtransverse": 2.7,
+        "Vparallel": 0.45,
+        "M": 36.6,
+        "basePartThickness": 0.23,
+        "baseMetalThickness": 0.115,
+        "alongEdge": false,
+        "baseForces": {
+          "normal": 0.45,
+          "shear": 2.7
+        },
+        "baseFy": 36,
+        "baseFu": 58
+      },
+      "expect": {
+        "length": 11.98,
+        "throat": 0.1768,
+        "Awe": 2.1175,
+        "Sw": 11.96,
+        "stress": 17.3619,
+        "theta": 89.2987,
+        "directionalFactor": 1.4999,
+        "designPerInch": 8.3511,
+        "demandPerInch": 3.0687,
+        "ratio": 0.3675,
+        "minSize": 0.125,
+        "maxSize": 0.23,
+        "normalPerInch": 3.0978,
+        "shearPerInch": 0.2254,
+        "baseMetalThickness": 0.115,
+        "baseTensionYieldPerInch": 3.726,
+        "baseTensionRupturePerInch": 5.0025,
+        "baseMetalPerInch": 3.0015,
+        "baseMetalRatio": 0.8314
       },
       "status": "pass",
       "tol": 0.0001

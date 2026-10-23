@@ -65,6 +65,9 @@ class PS101(unittest.TestCase):
         for w in self.e["warningsContain"]:
             with self.subTest(warning=w):
                 self.assertIn(w, text)
+        for w in self.e.get("warningsAbsent", []):        # the false J2.4 / J2.2b warnings are gone
+            with self.subTest(absent=w):
+                self.assertNotIn(w, text)
 
 
 if __name__ == "__main__":

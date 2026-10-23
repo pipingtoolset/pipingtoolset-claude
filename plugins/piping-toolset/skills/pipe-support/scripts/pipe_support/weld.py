@@ -11,7 +11,7 @@ from __future__ import annotations
 import math
 
 from .common import InputError, result, round_half_up
-from .jsmath import div, js_num, nn, pow_, truthy
+from .jsmath import div, jmax, js_num, nn, pow_, truthy
 
 MODULE = "structural.fillet-weld"
 
@@ -21,6 +21,9 @@ _OMEGA_WELD = 2.00
 # aisc-section.ts PHI.tensionRupture / OMEGA.tensionRupture (J4-4 base-metal rupture).
 _PHI_TENSION_RUPTURE = 0.75
 _OMEGA_TENSION_RUPTURE = 2.00
+# aisc-section.ts PHI.tensionYield / OMEGA.tensionYield (J4-1 base-metal tension yielding).
+_PHI_TENSION_YIELD = 0.90
+_OMEGA_TENSION_YIELD = 1.67
 
 
 def _design(nominal, method, phi, omega):
@@ -115,17 +118,38 @@ def fillet_weld(input):
     if truthy(tBase) and w < minSize:
         warnings.append(
             f"Fillet size {js_num(w)} in is below the Table J2.4 minimum of {js_num(minSize)} in for a {js_num(tBase)} in part.")
-    if truthy(tBase) and w > maxSize:
+    if truthy(tBase) and input.get("alongEdge") is not False and w > maxSize:
         warnings.append(
             f"Fillet size {js_num(w)} in exceeds the J2.2b maximum of {js_num(round_half_up(maxSize, 4))} in along the edge of a {js_num(tBase)} in part.")
 
-    # --- base metal shear rupture (J4-4) ---------------------------------------
+    # --- base metal (J4), split by direction ------------------------------------
+    # The moment and axial force pull the base metal NORMAL to the weld: tension yielding (J4-1) and
+    # rupture (J4-2). The direct shears run along it: shear rupture (J4-4). Each component is checked
+    # against its own limit state on the thickness available to one weld line; highest ratio governs.
+    bf = input.get("baseForces")
+    normalPerInch = abs((bf["normal"] if bf else P) / L + (M / Sw if Sw > 0 else 0))
+    shearPerInch = abs(bf["shear"]) / L if bf else math.hypot(Vt / L, Vp / L)
+    tJ4 = input.get("baseMetalThickness")
+    if tJ4 is None:
+        tJ4 = tBase
+    baseTensionYieldPerInch = None
+    baseTensionRupturePerInch = None
     baseMetalPerInch = None
+    baseMetalRatio = None
     baseFu = input.get("baseFu")
-    if truthy(baseFu) and truthy(tBase):
-        baseMetalPerInch = _design(0.6 * baseFu * tBase, method, _PHI_TENSION_RUPTURE, _OMEGA_TENSION_RUPTURE)
-        if baseMetalPerInch < designPerInch:
-            warnings.append("Base-metal shear rupture governs over the weld metal — the connected part, not the fillet, sets this joint's strength.")
+    if truthy(baseFu) and truthy(tJ4):
+        def over(d, c):
+            return d / c if c > 0 else math.inf
+        baseTensionRupturePerInch = _design(baseFu * tJ4, method, _PHI_TENSION_RUPTURE, _OMEGA_TENSION_RUPTURE)
+        baseMetalPerInch = _design(0.6 * baseFu * tJ4, method, _PHI_TENSION_RUPTURE, _OMEGA_TENSION_RUPTURE)
+        ratios = [over(normalPerInch, baseTensionRupturePerInch), over(shearPerInch, baseMetalPerInch)]
+        baseFy = input.get("baseFy")
+        if truthy(baseFy):
+            baseTensionYieldPerInch = _design(baseFy * tJ4, method, _PHI_TENSION_YIELD, _OMEGA_TENSION_YIELD)
+            ratios.append(over(normalPerInch, baseTensionYieldPerInch))
+        baseMetalRatio = jmax(*ratios)
+        if baseMetalRatio > ratio:
+            warnings.append("Base metal governs over the weld metal (AISC J4) — the connected part, not the fillet, sets this joint's strength.")
 
     if M != 0 and pattern == "single":
         warnings.append("A single fillet carrying moment is eccentric and not self-balancing — confirm the joint detail can develop it.")
@@ -145,6 +169,15 @@ def fillet_weld(input):
         "ratio": r4(ratio) if math.isfinite(ratio) else ratio,
         "minSize": r4(minSize),
         "maxSize": r4(maxSize) if math.isfinite(maxSize) else maxSize,
+        "normalPerInch": r4(normalPerInch),
+        "shearPerInch": r4(shearPerInch),
+        "baseMetalThickness": r4(tJ4) if truthy(tJ4) else None,
+        "baseTensionYieldPerInch": None if baseTensionYieldPerInch is None else r4(baseTensionYieldPerInch),
+        "baseTensionRupturePerInch": None if baseTensionRupturePerInch is None else r4(baseTensionRupturePerInch),
         "baseMetalPerInch": None if baseMetalPerInch is None else r4(baseMetalPerInch),
+        "baseMetalRatio": (None if baseMetalRatio is None
+                           else r4(baseMetalRatio) if math.isfinite(baseMetalRatio) else baseMetalRatio),
     }
-    return result(MODULE, out, "pass" if ratio <= 1.0 else "fail", warnings)
+    # The joint is no stronger than its base metal: either limit state fails it.
+    ok = ratio <= 1.0 and (baseMetalRatio is None or baseMetalRatio <= 1.0)
+    return result(MODULE, out, "pass" if ok else "fail", warnings)

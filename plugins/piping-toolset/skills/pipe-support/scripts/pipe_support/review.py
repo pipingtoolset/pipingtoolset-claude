@@ -95,16 +95,14 @@ def review(design: dict, env: dict, spec: dict, opt: Optional[dict] = None) -> L
         if "exceeds the j2.2b maximum" in lw:
             sev = "major"
         elif "below the table j2.4 minimum" in lw:
-            # The engine keys Table J2.4 on the base plate for the column-base weld; the table is
-            # keyed on the thinner part joined. The cross-check below states the correct minimum.
-            sev = "info"
-        elif "governs over the weld metal" in lw or "17.6.2.1.2" in lw or "clipped" in lw:
+            sev = "major"
+        elif "governs over the weld metal" in lw or "17.6.2.1.2" in lw or "clipped" in lw \
+                or "j10.1" in lw:
             sev = "minor"
         if lw.startswith("no deflection supplied"):
             w += " (applies to the column stage: a cantilever post has no deflection limit in the model)"
         out.append(_f(sev, _title(w), w, "engine warning"))
-    # 4. independent cross-checks the parametric engine does not make
-    out += _column_base_weld_crosscheck(design, env)
+    # 4. checks the parametric engine does not make
     out += _pipe_moments(spec)
     for f in DT.constructability({**design, "connections": spec.get("fabrication")}):
         out.append(_f("minor" if f["severity"] != "violation" else "major",
@@ -146,50 +144,6 @@ def _weight(design):
     if bp:
         w += bp["plateLength"] * bp["plateWidth"] * bp["plateThickness"] * 0.2836
     return round_half_up(w, 1)
-
-
-def _column_base_weld_crosscheck(design: dict, env: dict) -> List[dict]:
-    """The column-to-base-plate fillet is checked by the engine with the BASE PLATE as the
-    'base part' (min size and base-metal rupture). AISC 360-22 Table J2.4 and J4.2(b)
-    are governed by the THINNER connected element - the column wall/flange. Recompute
-    the base-metal limit on the column element and flag if it is lower."""
-    col = design.get("columnShape")
-    bp = design.get("baseplate")
-    if not col or not bp:
-        return []
-    row = find_shape(col) or {}
-    t_col = min(x for x in (row.get("tf"), row.get("tw")) if x) if (row.get("tf") or row.get("tw")) else None
-    if not t_col:
-        return []
-    Fu = float(design["material"]["Fu"])
-    method = design["method"]
-    base_cap = 0.6 * Fu * t_col * (0.75 if method == "LRFD" else 1 / 2.0)     # J4-4 per inch
-    out = []
-    stage = next((s for s in env["stages"] if s["component"] == "weld" and "base" in s["stage"].lower()), None)
-    if stage:
-        chk = next((c for c in stage["checks"] if c["label"].lower().startswith("fillet weld")), None)
-        if chk and _num(chk["capacity"]) > base_cap:
-            ratio = _num(chk["demand"]) / base_cap
-            out.append(_f("major", "Column-to-base weld: column-side base metal governs over the weld metal",
-                          f"The engine's weld capacity {chk['capacity']} kip/in takes the {bp['plateThickness']} in "
-                          f"plate as the base part. On the column element (t = {t_col} in), J4-4 gives "
-                          f"{round_half_up(base_cap, 3)} kip/in -> ratio {round_half_up(ratio, 3)} vs "
-                          f"{chk['ratio']}. The column-side row is included in this report's verdict and "
-                          "compliance matrix (tagged [cross-check]).",
-                          "AISC 360-22 J2.4 / J4.2(b) (J4-4); Table J2.4 by thinner part joined",
-                          "The row assumes a fillet on ONE face of the column element (Manual Part 9: "
-                          "t_min = 3.09 D / Fu). Where the element is welded on both faces, the limit is "
-                          "6.19 D / Fu - check that case by hand.", source="cross-check"))
-    wmin = DT.min_fillet(t_col)
-    ws = design.get("weldSize", 0)
-    if ws + 1e-9 >= wmin:
-        if any("below the table j2.4 minimum" in w.lower() and str(bp["plateThickness"]) in w
-               for w in env["governingRun"]["warnings"]):
-            out.append(_f("info", "Engine minimum-fillet warning on the base plate is conservative",
-                          f"Table J2.4 is keyed on the thinner part joined ({t_col} in column element): "
-                          f"minimum {DT._frac(wmin)}; the {DT._frac(ws)} fillet satisfies it.",
-                          "AISC 360-22 J2.2b, Table J2.4", source="cross-check"))
-    return out
 
 
 def _pipe_moments(spec: dict) -> List[dict]:

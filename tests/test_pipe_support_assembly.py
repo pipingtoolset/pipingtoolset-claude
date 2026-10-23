@@ -87,6 +87,30 @@ class GoldenParity(unittest.TestCase):
         self.assertTrue({"t-post", "multi-tier", "cantilever", "goalpost", "trapeze"} <= types)
         self.assertGreaterEqual(sum(1 for c in cases if "error" in c), 3)
 
+    def test_golden_covers_pr138_branches(self):
+        """The goldens exercise the J4 split rows, J10.1 (required / not required / near top) and the t/2 rule."""
+        clauses, labels, warns = [], set(), []
+        for c in self.data["cases"]:
+            if "output" not in c:
+                continue
+            warns.extend(c["warnings"])
+            for st in c["output"]["stages"]:
+                for ck in st["checks"]:
+                    labels.add(ck["label"])
+                    clauses.append(ck["clause"])
+        self.assertTrue({"Base-metal tension yielding", "Base-metal tension rupture", "Base-metal shear rupture",
+                         "Column flange local bending"} <= labels)
+        joined = " | ".join(clauses)
+        for frag in ("(both faces of the arm element)", "in per line", "×0.5 within 10·tf of the column top"):
+            self.assertIn(frag, joined)
+        self.assertTrue(any("J10-1 (6.25·Fy·tf², tf = " in x and "×0.5" not in x for x in clauses))
+        self.assertTrue(any("J10.1 column-flange local bending not required" in w for w in warns))
+        self.assertTrue(any(ck["label"] == "Column flange local bending" and ck["status"] == "fail"
+                            for c in self.data["cases"] if "output" in c
+                            for st in c["output"]["stages"] for ck in st["checks"]))
+        self.assertTrue(any(c["input"]["arms"][0]["shape"].startswith(("HSS", "PIPE")) for c in self.data["cases"]
+                            if "output" in c))
+
     def test_every_golden_reproduces_in_full(self):
         failures = []
         for i, case in enumerate(self.data["cases"]):

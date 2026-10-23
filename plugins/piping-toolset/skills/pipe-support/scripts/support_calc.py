@@ -77,7 +77,7 @@ def preset_provenance(spec: dict) -> list:
 
 def factored_spec(spec: dict, design: dict) -> dict:
     """Factored mode: the loads on design.arms[].pipes become one demand set, so the same
-    envelope, cross-checks and optimizer run on them."""
+    envelope, review and optimizer run on them."""
     s = copy.deepcopy(spec)
     pipes, dem, seen = [], {}, set()
     for ai, arm in enumerate(design["arms"]):

@@ -20,7 +20,7 @@ Standard library only (Python 3.9+).
 from __future__ import annotations
 
 import math
-from decimal import ROUND_HALF_UP, Decimal
+from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
 
@@ -29,7 +29,19 @@ def round_half_up(x: float, decimals: int) -> float:
     from zero), so reported values match the web engine digit for digit."""
     if not isinstance(x, (int, float)) or not math.isfinite(x):
         return x
-    return float(Decimal(repr(float(x))).quantize(Decimal(1).scaleb(-decimals), rounding=ROUND_HALF_UP))
+    # Exactly rounding.ts: scaled = Number(`${x}e${decimals}`) is parsed to a DOUBLE first, so a value a hair
+    # under a half (13.893749999999999e4 -> 138937.5) still rounds up; Math.round is half-up on that double.
+    scaled = float(Decimal(repr(float(x))).scaleb(decimals))
+    a = abs(scaled)
+    f = math.floor(a)
+    r = float(f + 1 if a - f >= 0.5 else f)
+    rounded = r if scaled > 0 else (-r if scaled < 0 else 0.0)
+    factor = 10 ** decimals
+    if abs(rounded) < 1e21:
+        out = float(Decimal(int(rounded)).scaleb(-decimals))
+        if out:
+            return out
+    return rounded / factor
 
 
 class InputError(ValueError):

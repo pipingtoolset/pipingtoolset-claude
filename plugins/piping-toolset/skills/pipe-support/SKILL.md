@@ -71,7 +71,7 @@ capacity, ratio or alternative itself.** Every number in a response comes from a
    information.
 5. **Optimise.** This works in CAESAR II mode and in factored mode. Present the ranked
    alternatives table from the run, not a list you made up. Every alternative passes every
-   combination, the J2.2b weld limits and the column-side weld cross-check.
+   combination and the weld base-metal (J4) and column-flange (J10.1) checks.
    Explain *why* each one ranks where it does (weight, field work, stocked sizes), what
    governs it, and what changes in the field (bolted versus welded, fewer families, standard
    plate). If the user wants reserve margin, re-run with `optimize.maxRatio` (for example 0.85).
@@ -93,10 +93,8 @@ capacity, ratio or alternative itself.** Every number in a response comes from a
 - **Service versus strength.** Soil bearing, overturning and sliding are service-level
   checks. With LRFD and a gravity pier, the envelope runs those checks on the ASD
   combinations automatically. Tell the user.
-- **Known engine deviations** are listed in `references/code-basis.md`. The main one is
-  that the engine checks the column-to-base-plate weld's base metal on the plate, not on the
-  thinner column element. The skill adds a column-side base-metal row, tagged
-  `[cross-check]`, to that weld stage, so it counts in the verdict and the compliance matrix.
+- **Known engine behaviour** is listed in `references/code-basis.md`. Mention an item when
+  the design is close to a limit in the element it affects.
 - **Preset values are never silent.** Anchor and concrete values taken from a CSA preset
   are listed in the report's assumptions as not user-supplied. Replace the bond stress with
   the anchor ESR value before issue.

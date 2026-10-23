@@ -266,13 +266,16 @@ class EndToEnd(unittest.TestCase):
         doc = support_calc.run(load("ps-101-factored.json"))
         self.assertTrue(doc["optimizer"]["alternatives"])
 
-    def test_column_base_weld_crosscheck_fires(self):
-        titles = [f["title"] for f in self.doc["findings"]]
-        self.assertIn("Column-to-base weld: column-side base metal governs over the weld metal", titles)
+    def test_engine_checks_weld_base_metal_on_the_column(self):
+        # pipecalcpro #138 / plugin 0.3.1: the engine checks J4 on the thinner (column) element
+        # itself, so the 0.3.0 [cross-check] row is retired.
         st = [x for x in self.doc["envelope"]["stages"] if x["component"] == "weld" and "base" in x["stage"].lower()][0]
-        row = [c for c in st["checks"] if c["label"].endswith("[cross-check]")][0]
-        self.assertAlmostEqual(row["capacity"], 0.75 * 0.6 * 58 * 0.23, places=3)   # J4-4 on W6X15 tw
-        self.assertEqual(st["ratio"], row["ratio"])                                  # counts in the verdict
+        rows = {c["label"]: c for c in st["checks"]}
+        self.assertIn("Base-metal shear rupture", rows)
+        self.assertAlmostEqual(rows["Base-metal shear rupture"]["capacity"], 0.75 * 0.6 * 58 * 0.23, places=3)
+        labels = [c["label"] for s in self.doc["envelope"]["stages"] for c in s["checks"]]
+        self.assertFalse([l for l in labels if "cross-check" in l])
+        self.assertFalse([f for f in self.doc["findings"] if f.get("source") == "cross-check"])
 
     def test_pipe_moments_are_a_critical_finding(self):
         spec = copy.deepcopy(self.spec)
@@ -310,7 +313,7 @@ class EndToEnd(unittest.TestCase):
 
     def test_factored_mode_reproduces_ps101_verdict(self):
         doc = support_calc.run(load("ps-101-factored.json"), optimize=False)
-        self.assertAlmostEqual(doc["envelope"]["governingRatio"], 0.4163, places=4)
+        self.assertAlmostEqual(doc["envelope"]["governingRatio"], 0.8314, places=4)
 
 
 class SkillContent(unittest.TestCase):

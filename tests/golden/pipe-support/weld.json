@@ -23,7 +23,13 @@
         "ratio": 0.1796,
         "minSize": 0,
         "maxSize": "Infinity",
-        "baseMetalPerInch": null
+        "normalPerInch": 0,
+        "shearPerInch": 1,
+        "baseMetalThickness": null,
+        "baseTensionYieldPerInch": null,
+        "baseTensionRupturePerInch": null,
+        "baseMetalPerInch": null,
+        "baseMetalRatio": null
       },
       "status": "pass",
       "warnings": []
@@ -50,7 +56,13 @@
         "ratio": 0.1197,
         "minSize": 0,
         "maxSize": "Infinity",
-        "baseMetalPerInch": null
+        "normalPerInch": 0,
+        "shearPerInch": 1,
+        "baseMetalThickness": null,
+        "baseTensionYieldPerInch": null,
+        "baseTensionRupturePerInch": null,
+        "baseMetalPerInch": null,
+        "baseMetalRatio": null
       },
       "status": "pass",
       "warnings": []
@@ -78,7 +90,13 @@
         "ratio": 0.1958,
         "minSize": 0,
         "maxSize": "Infinity",
-        "baseMetalPerInch": null
+        "normalPerInch": 0,
+        "shearPerInch": 1.4142,
+        "baseMetalThickness": null,
+        "baseTensionYieldPerInch": null,
+        "baseTensionRupturePerInch": null,
+        "baseMetalPerInch": null,
+        "baseMetalRatio": null
       },
       "status": "pass",
       "warnings": []
@@ -107,7 +125,13 @@
         "ratio": 0.1393,
         "minSize": 0,
         "maxSize": "Infinity",
-        "baseMetalPerInch": null
+        "normalPerInch": 0.2,
+        "shearPerInch": 0.8544,
+        "baseMetalThickness": null,
+        "baseTensionYieldPerInch": null,
+        "baseTensionRupturePerInch": null,
+        "baseMetalPerInch": null,
+        "baseMetalRatio": null
       },
       "status": "pass",
       "warnings": []
@@ -134,7 +158,13 @@
         "ratio": 0.1796,
         "minSize": 0,
         "maxSize": "Infinity",
-        "baseMetalPerInch": null
+        "normalPerInch": 1.5,
+        "shearPerInch": 0,
+        "baseMetalThickness": null,
+        "baseTensionYieldPerInch": null,
+        "baseTensionRupturePerInch": null,
+        "baseMetalPerInch": null,
+        "baseMetalRatio": null
       },
       "status": "pass",
       "warnings": []
@@ -160,7 +190,13 @@
         "ratio": 0,
         "minSize": 0,
         "maxSize": "Infinity",
-        "baseMetalPerInch": null
+        "normalPerInch": 0,
+        "shearPerInch": 0,
+        "baseMetalThickness": null,
+        "baseTensionYieldPerInch": null,
+        "baseTensionRupturePerInch": null,
+        "baseMetalPerInch": null,
+        "baseMetalRatio": null
       },
       "status": "pass",
       "warnings": []
@@ -188,7 +224,13 @@
         "ratio": 0.2884,
         "minSize": 0,
         "maxSize": "Infinity",
-        "baseMetalPerInch": null
+        "normalPerInch": 2.4,
+        "shearPerInch": 0.2,
+        "baseMetalThickness": null,
+        "baseTensionYieldPerInch": null,
+        "baseTensionRupturePerInch": null,
+        "baseMetalPerInch": null,
+        "baseMetalRatio": null
       },
       "status": "pass",
       "warnings": [
@@ -217,7 +259,13 @@
         "ratio": 0.1796,
         "minSize": 0,
         "maxSize": "Infinity",
-        "baseMetalPerInch": null
+        "normalPerInch": 0,
+        "shearPerInch": 1,
+        "baseMetalThickness": null,
+        "baseTensionYieldPerInch": null,
+        "baseTensionRupturePerInch": null,
+        "baseMetalPerInch": null,
+        "baseMetalRatio": null
       },
       "status": "pass",
       "warnings": []
@@ -244,7 +292,13 @@
         "ratio": 0.2694,
         "minSize": 0,
         "maxSize": "Infinity",
-        "baseMetalPerInch": null
+        "normalPerInch": 0,
+        "shearPerInch": 1,
+        "baseMetalThickness": null,
+        "baseTensionYieldPerInch": null,
+        "baseTensionRupturePerInch": null,
+        "baseMetalPerInch": null,
+        "baseMetalRatio": null
       },
       "status": "pass",
       "warnings": []
@@ -271,7 +325,13 @@
         "ratio": 0.3193,
         "minSize": 0,
         "maxSize": "Infinity",
-        "baseMetalPerInch": null
+        "normalPerInch": 0,
+        "shearPerInch": 2.6667,
+        "baseMetalThickness": null,
+        "baseTensionYieldPerInch": null,
+        "baseTensionRupturePerInch": null,
+        "baseMetalPerInch": null,
+        "baseMetalRatio": null
       },
       "status": "pass",
       "warnings": [
@@ -301,7 +361,13 @@
         "ratio": 0.3193,
         "minSize": 0,
         "maxSize": "Infinity",
-        "baseMetalPerInch": null
+        "normalPerInch": 0,
+        "shearPerInch": 2.6667,
+        "baseMetalThickness": null,
+        "baseTensionYieldPerInch": null,
+        "baseTensionRupturePerInch": null,
+        "baseMetalPerInch": null,
+        "baseMetalRatio": null
       },
       "status": "pass",
       "warnings": []
@@ -330,7 +396,13 @@
         "ratio": 0.1557,
         "minSize": 0,
         "maxSize": "Infinity",
-        "baseMetalPerInch": null
+        "normalPerInch": 1.2,
+        "shearPerInch": 0.5,
+        "baseMetalThickness": null,
+        "baseTensionYieldPerInch": null,
+        "baseTensionRupturePerInch": null,
+        "baseMetalPerInch": null,
+        "baseMetalRatio": null
       },
       "status": "pass",
       "warnings": [
@@ -360,7 +432,13 @@
         "ratio": 0.4003,
         "minSize": 0,
         "maxSize": "Infinity",
-        "baseMetalPerInch": null
+        "normalPerInch": 3.3333,
+        "shearPerInch": 0.25,
+        "baseMetalThickness": null,
+        "baseTensionYieldPerInch": null,
+        "baseTensionRupturePerInch": null,
+        "baseMetalPerInch": null,
+        "baseMetalRatio": null
       },
       "status": "pass",
       "warnings": []
@@ -389,7 +467,13 @@
         "ratio": 0.259,
         "minSize": 0,
         "maxSize": "Infinity",
-        "baseMetalPerInch": null
+        "normalPerInch": 2,
+        "shearPerInch": 0.6667,
+        "baseMetalThickness": null,
+        "baseTensionYieldPerInch": null,
+        "baseTensionRupturePerInch": null,
+        "baseMetalPerInch": null,
+        "baseMetalRatio": null
       },
       "status": "pass",
       "warnings": []
@@ -418,7 +502,13 @@
         "ratio": 0.4409,
         "minSize": 0.125,
         "maxSize": 0.23,
-        "baseMetalPerInch": null
+        "normalPerInch": 3.0602,
+        "shearPerInch": 0.2254,
+        "baseMetalThickness": 0.23,
+        "baseTensionYieldPerInch": null,
+        "baseTensionRupturePerInch": null,
+        "baseMetalPerInch": null,
+        "baseMetalRatio": null
       },
       "status": "pass",
       "warnings": [
@@ -448,7 +538,13 @@
         "ratio": 0.0499,
         "minSize": 0,
         "maxSize": "Infinity",
-        "baseMetalPerInch": null
+        "normalPerInch": 0,
+        "shearPerInch": 0.4167,
+        "baseMetalThickness": null,
+        "baseTensionYieldPerInch": null,
+        "baseTensionRupturePerInch": null,
+        "baseMetalPerInch": null,
+        "baseMetalRatio": null
       },
       "status": "pass",
       "warnings": []
@@ -480,7 +576,13 @@
         "ratio": 0.2404,
         "minSize": 0.25,
         "maxSize": 0.6875,
-        "baseMetalPerInch": 19.575
+        "normalPerInch": 2.0067,
+        "shearPerInch": 0.0626,
+        "baseMetalThickness": 0.75,
+        "baseTensionYieldPerInch": 24.3,
+        "baseTensionRupturePerInch": 32.625,
+        "baseMetalPerInch": 19.575,
+        "baseMetalRatio": 0.0826
       },
       "status": "pass",
       "warnings": []
@@ -511,7 +613,13 @@
         "ratio": 0.2164,
         "minSize": 0,
         "maxSize": "Infinity",
-        "baseMetalPerInch": null
+        "normalPerInch": 1.7995,
+        "shearPerInch": 0.1597,
+        "baseMetalThickness": null,
+        "baseTensionYieldPerInch": null,
+        "baseTensionRupturePerInch": null,
+        "baseMetalPerInch": null,
+        "baseMetalRatio": null
       },
       "status": "pass",
       "warnings": []
@@ -540,7 +648,13 @@
         "ratio": 0.2603,
         "minSize": 0,
         "maxSize": "Infinity",
-        "baseMetalPerInch": null
+        "normalPerInch": 1.4423,
+        "shearPerInch": 0.1429,
+        "baseMetalThickness": null,
+        "baseTensionYieldPerInch": null,
+        "baseTensionRupturePerInch": null,
+        "baseMetalPerInch": null,
+        "baseMetalRatio": null
       },
       "status": "pass",
       "warnings": []
@@ -570,7 +684,13 @@
         "ratio": 0.147,
         "minSize": 0,
         "maxSize": "Infinity",
-        "baseMetalPerInch": null
+        "normalPerInch": 1.2115,
+        "shearPerInch": 0.2,
+        "baseMetalThickness": null,
+        "baseTensionYieldPerInch": null,
+        "baseTensionRupturePerInch": null,
+        "baseMetalPerInch": null,
+        "baseMetalRatio": null
       },
       "status": "pass",
       "warnings": []
@@ -599,7 +719,13 @@
         "ratio": 1.1448,
         "minSize": 0,
         "maxSize": "Infinity",
-        "baseMetalPerInch": null
+        "normalPerInch": 18.75,
+        "shearPerInch": 3.75,
+        "baseMetalThickness": null,
+        "baseTensionYieldPerInch": null,
+        "baseTensionRupturePerInch": null,
+        "baseMetalPerInch": null,
+        "baseMetalRatio": null
       },
       "status": "fail",
       "warnings": []
@@ -627,7 +753,13 @@
         "ratio": 0.0718,
         "minSize": 0.125,
         "maxSize": 0.1875,
-        "baseMetalPerInch": null
+        "normalPerInch": 0,
+        "shearPerInch": 0.2,
+        "baseMetalThickness": 0.25,
+        "baseTensionYieldPerInch": null,
+        "baseTensionRupturePerInch": null,
+        "baseMetalPerInch": null,
+        "baseMetalRatio": null
       },
       "status": "pass",
       "warnings": []
@@ -655,7 +787,13 @@
         "ratio": 0.0718,
         "minSize": 0.1875,
         "maxSize": 0.3375,
-        "baseMetalPerInch": null
+        "normalPerInch": 0,
+        "shearPerInch": 0.2,
+        "baseMetalThickness": 0.4,
+        "baseTensionYieldPerInch": null,
+        "baseTensionRupturePerInch": null,
+        "baseMetalPerInch": null,
+        "baseMetalRatio": null
       },
       "status": "pass",
       "warnings": [
@@ -685,7 +823,13 @@
         "ratio": 0.0479,
         "minSize": 0.25,
         "maxSize": 0.5375,
-        "baseMetalPerInch": null
+        "normalPerInch": 0,
+        "shearPerInch": 0.2,
+        "baseMetalThickness": 0.6,
+        "baseTensionYieldPerInch": null,
+        "baseTensionRupturePerInch": null,
+        "baseMetalPerInch": null,
+        "baseMetalRatio": null
       },
       "status": "pass",
       "warnings": [
@@ -715,7 +859,13 @@
         "ratio": 0.0359,
         "minSize": 0.3125,
         "maxSize": 0.9375,
-        "baseMetalPerInch": null
+        "normalPerInch": 0,
+        "shearPerInch": 0.2,
+        "baseMetalThickness": 1,
+        "baseTensionYieldPerInch": null,
+        "baseTensionRupturePerInch": null,
+        "baseMetalPerInch": null,
+        "baseMetalRatio": null
       },
       "status": "pass",
       "warnings": [
@@ -745,7 +895,13 @@
         "ratio": 0.0287,
         "minSize": 0.1875,
         "maxSize": 0.4375,
-        "baseMetalPerInch": null
+        "normalPerInch": 0,
+        "shearPerInch": 0.2,
+        "baseMetalThickness": 0.5,
+        "baseTensionYieldPerInch": null,
+        "baseTensionRupturePerInch": null,
+        "baseMetalPerInch": null,
+        "baseMetalRatio": null
       },
       "status": "pass",
       "warnings": []
@@ -773,7 +929,13 @@
         "ratio": 0.0239,
         "minSize": 0.1875,
         "maxSize": 0.3125,
-        "baseMetalPerInch": null
+        "normalPerInch": 0,
+        "shearPerInch": 0.2,
+        "baseMetalThickness": 0.375,
+        "baseTensionYieldPerInch": null,
+        "baseTensionRupturePerInch": null,
+        "baseMetalPerInch": null,
+        "baseMetalRatio": null
       },
       "status": "pass",
       "warnings": [
@@ -803,7 +965,13 @@
         "ratio": 0.018,
         "minSize": 0.125,
         "maxSize": 0.1875,
-        "baseMetalPerInch": null
+        "normalPerInch": 0,
+        "shearPerInch": 0.1,
+        "baseMetalThickness": 0.1875,
+        "baseTensionYieldPerInch": null,
+        "baseTensionRupturePerInch": null,
+        "baseMetalPerInch": null,
+        "baseMetalRatio": null
       },
       "status": "pass",
       "warnings": [
@@ -833,7 +1001,13 @@
         "ratio": 0.0359,
         "minSize": 0.125,
         "maxSize": 0.1875,
-        "baseMetalPerInch": null
+        "normalPerInch": 0,
+        "shearPerInch": 0.1,
+        "baseMetalThickness": 0.1875,
+        "baseTensionYieldPerInch": null,
+        "baseTensionRupturePerInch": null,
+        "baseMetalPerInch": null,
+        "baseMetalRatio": null
       },
       "status": "pass",
       "warnings": []
@@ -861,7 +1035,13 @@
         "ratio": 0.0144,
         "minSize": 0.125,
         "maxSize": 0.23,
-        "baseMetalPerInch": null
+        "normalPerInch": 0,
+        "shearPerInch": 0.1,
+        "baseMetalThickness": 0.23,
+        "baseTensionYieldPerInch": null,
+        "baseTensionRupturePerInch": null,
+        "baseMetalPerInch": null,
+        "baseMetalRatio": null
       },
       "status": "pass",
       "warnings": [
@@ -891,7 +1071,13 @@
         "ratio": 0.0359,
         "minSize": 0,
         "maxSize": "Infinity",
-        "baseMetalPerInch": null
+        "normalPerInch": 0,
+        "shearPerInch": 0.2,
+        "baseMetalThickness": null,
+        "baseTensionYieldPerInch": null,
+        "baseTensionRupturePerInch": null,
+        "baseMetalPerInch": null,
+        "baseMetalRatio": null
       },
       "status": "pass",
       "warnings": []
@@ -920,12 +1106,18 @@
         "ratio": 0.0898,
         "minSize": 0.125,
         "maxSize": 0.1875,
-        "baseMetalPerInch": 6.525
+        "normalPerInch": 0,
+        "shearPerInch": 1,
+        "baseMetalThickness": 0.25,
+        "baseTensionYieldPerInch": null,
+        "baseTensionRupturePerInch": 10.875,
+        "baseMetalPerInch": 6.525,
+        "baseMetalRatio": 0.1533
       },
       "status": "pass",
       "warnings": [
         "Fillet size 0.5 in exceeds the J2.2b maximum of 0.1875 in along the edge of a 0.25 in part.",
-        "Base-metal shear rupture governs over the weld metal — the connected part, not the fillet, sets this joint's strength."
+        "Base metal governs over the weld metal (AISC J4) — the connected part, not the fillet, sets this joint's strength."
       ]
     },
     {
@@ -952,7 +1144,13 @@
         "ratio": 0.1796,
         "minSize": 0.25,
         "maxSize": 0.6875,
-        "baseMetalPerInch": 19.575
+        "normalPerInch": 0,
+        "shearPerInch": 1,
+        "baseMetalThickness": 0.75,
+        "baseTensionYieldPerInch": null,
+        "baseTensionRupturePerInch": 32.625,
+        "baseMetalPerInch": 19.575,
+        "baseMetalRatio": 0.0511
       },
       "status": "pass",
       "warnings": []
@@ -981,12 +1179,18 @@
         "ratio": 0.1347,
         "minSize": 0.125,
         "maxSize": 0.1875,
-        "baseMetalPerInch": 4.35
+        "normalPerInch": 0,
+        "shearPerInch": 1,
+        "baseMetalThickness": 0.25,
+        "baseTensionYieldPerInch": null,
+        "baseTensionRupturePerInch": 7.25,
+        "baseMetalPerInch": 4.35,
+        "baseMetalRatio": 0.2299
       },
       "status": "pass",
       "warnings": [
         "Fillet size 0.5 in exceeds the J2.2b maximum of 0.1875 in along the edge of a 0.25 in part.",
-        "Base-metal shear rupture governs over the weld metal — the connected part, not the fillet, sets this joint's strength."
+        "Base metal governs over the weld metal (AISC J4) — the connected part, not the fillet, sets this joint's strength."
       ]
     },
     {
@@ -1012,7 +1216,13 @@
         "ratio": 0.1796,
         "minSize": 0,
         "maxSize": "Infinity",
-        "baseMetalPerInch": null
+        "normalPerInch": 0,
+        "shearPerInch": 1,
+        "baseMetalThickness": null,
+        "baseTensionYieldPerInch": null,
+        "baseTensionRupturePerInch": null,
+        "baseMetalPerInch": null,
+        "baseMetalRatio": null
       },
       "status": "pass",
       "warnings": []
@@ -1039,7 +1249,13 @@
         "ratio": 0.0698,
         "minSize": 0,
         "maxSize": "Infinity",
-        "baseMetalPerInch": null
+        "normalPerInch": 0,
+        "shearPerInch": 0.5,
+        "baseMetalThickness": null,
+        "baseTensionYieldPerInch": null,
+        "baseTensionRupturePerInch": null,
+        "baseMetalPerInch": null,
+        "baseMetalRatio": null
       },
       "status": "pass",
       "warnings": []
@@ -1067,10 +1283,1170 @@
         "ratio": 0.0571,
         "minSize": 0,
         "maxSize": "Infinity",
-        "baseMetalPerInch": null
+        "normalPerInch": 0,
+        "shearPerInch": 0.7071,
+        "baseMetalThickness": null,
+        "baseTensionYieldPerInch": null,
+        "baseTensionRupturePerInch": null,
+        "baseMetalPerInch": null,
+        "baseMetalRatio": null
       },
       "status": "pass",
       "warnings": []
+    },
+    {
+      "input": {
+        "method": "LRFD",
+        "size": 0.25,
+        "FEXX": 70,
+        "pattern": "single",
+        "depth": 10,
+        "basePartThickness": 0.75,
+        "baseFu": 58,
+        "Vparallel": 10
+      },
+      "output": {
+        "length": 10,
+        "throat": 0.1768,
+        "Awe": 1.7675,
+        "Sw": 16.6667,
+        "stress": 5.6577,
+        "theta": 0,
+        "directionalFactor": 1,
+        "designPerInch": 5.5676,
+        "demandPerInch": 1,
+        "ratio": 0.1796,
+        "minSize": 0.25,
+        "maxSize": 0.6875,
+        "normalPerInch": 0,
+        "shearPerInch": 1,
+        "baseMetalThickness": 0.75,
+        "baseTensionYieldPerInch": null,
+        "baseTensionRupturePerInch": 32.625,
+        "baseMetalPerInch": 19.575,
+        "baseMetalRatio": 0.0511
+      },
+      "status": "pass",
+      "warnings": []
+    },
+    {
+      "input": {
+        "method": "LRFD",
+        "size": 0.25,
+        "FEXX": 70,
+        "pattern": "single",
+        "depth": 10,
+        "basePartThickness": 0.75,
+        "baseFu": 58,
+        "baseFy": 36,
+        "Vparallel": 10
+      },
+      "output": {
+        "length": 10,
+        "throat": 0.1768,
+        "Awe": 1.7675,
+        "Sw": 16.6667,
+        "stress": 5.6577,
+        "theta": 0,
+        "directionalFactor": 1,
+        "designPerInch": 5.5676,
+        "demandPerInch": 1,
+        "ratio": 0.1796,
+        "minSize": 0.25,
+        "maxSize": 0.6875,
+        "normalPerInch": 0,
+        "shearPerInch": 1,
+        "baseMetalThickness": 0.75,
+        "baseTensionYieldPerInch": 24.3,
+        "baseTensionRupturePerInch": 32.625,
+        "baseMetalPerInch": 19.575,
+        "baseMetalRatio": 0.0511
+      },
+      "status": "pass",
+      "warnings": []
+    },
+    {
+      "input": {
+        "method": "LRFD",
+        "size": 0.25,
+        "FEXX": 70,
+        "pattern": "single",
+        "depth": 10,
+        "basePartThickness": 0.75,
+        "baseFu": 58,
+        "baseFy": 36,
+        "Pnormal": 15
+      },
+      "output": {
+        "length": 10,
+        "throat": 0.1768,
+        "Awe": 1.7675,
+        "Sw": 16.6667,
+        "stress": 8.4866,
+        "theta": 90,
+        "directionalFactor": 1.5,
+        "designPerInch": 8.3514,
+        "demandPerInch": 1.5,
+        "ratio": 0.1796,
+        "minSize": 0.25,
+        "maxSize": 0.6875,
+        "normalPerInch": 1.5,
+        "shearPerInch": 0,
+        "baseMetalThickness": 0.75,
+        "baseTensionYieldPerInch": 24.3,
+        "baseTensionRupturePerInch": 32.625,
+        "baseMetalPerInch": 19.575,
+        "baseMetalRatio": 0.0617
+      },
+      "status": "pass",
+      "warnings": []
+    },
+    {
+      "input": {
+        "method": "LRFD",
+        "size": 0.25,
+        "FEXX": 70,
+        "pattern": "single",
+        "depth": 10,
+        "basePartThickness": 0.75,
+        "baseFu": 58,
+        "baseFy": 36,
+        "M": 40,
+        "Vtransverse": 2
+      },
+      "output": {
+        "length": 10,
+        "throat": 0.1768,
+        "Awe": 1.7675,
+        "Sw": 16.6667,
+        "stress": 13.6256,
+        "theta": 90,
+        "directionalFactor": 1.5,
+        "designPerInch": 8.3514,
+        "demandPerInch": 2.4083,
+        "ratio": 0.2884,
+        "minSize": 0.25,
+        "maxSize": 0.6875,
+        "normalPerInch": 2.4,
+        "shearPerInch": 0.2,
+        "baseMetalThickness": 0.75,
+        "baseTensionYieldPerInch": 24.3,
+        "baseTensionRupturePerInch": 32.625,
+        "baseMetalPerInch": 19.575,
+        "baseMetalRatio": 0.0988
+      },
+      "status": "pass",
+      "warnings": [
+        "A single fillet carrying moment is eccentric and not self-balancing — confirm the joint detail can develop it."
+      ]
+    },
+    {
+      "input": {
+        "method": "ASD",
+        "size": 0.25,
+        "FEXX": 70,
+        "pattern": "single",
+        "depth": 10,
+        "basePartThickness": 0.75,
+        "baseFu": 58,
+        "baseFy": 36,
+        "M": 40,
+        "Vtransverse": 2
+      },
+      "output": {
+        "length": 10,
+        "throat": 0.1768,
+        "Awe": 1.7675,
+        "Sw": 16.6667,
+        "stress": 13.6256,
+        "theta": 90,
+        "directionalFactor": 1.5,
+        "designPerInch": 5.5676,
+        "demandPerInch": 2.4083,
+        "ratio": 0.4326,
+        "minSize": 0.25,
+        "maxSize": 0.6875,
+        "normalPerInch": 2.4,
+        "shearPerInch": 0.2,
+        "baseMetalThickness": 0.75,
+        "baseTensionYieldPerInch": 16.1677,
+        "baseTensionRupturePerInch": 21.75,
+        "baseMetalPerInch": 13.05,
+        "baseMetalRatio": 0.1484
+      },
+      "status": "pass",
+      "warnings": [
+        "A single fillet carrying moment is eccentric and not self-balancing — confirm the joint detail can develop it."
+      ]
+    },
+    {
+      "input": {
+        "method": "LRFD",
+        "size": 0.5,
+        "FEXX": 70,
+        "pattern": "single",
+        "depth": 10,
+        "basePartThickness": 0.25,
+        "baseFu": 58,
+        "baseFy": 36,
+        "Pnormal": 12,
+        "Vparallel": 4
+      },
+      "output": {
+        "length": 10,
+        "throat": 0.3535,
+        "Awe": 3.535,
+        "Sw": 16.6667,
+        "stress": 3.5782,
+        "theta": 71.5651,
+        "directionalFactor": 1.462,
+        "designPerInch": 16.2799,
+        "demandPerInch": 1.2649,
+        "ratio": 0.0777,
+        "minSize": 0.125,
+        "maxSize": 0.1875,
+        "normalPerInch": 1.2,
+        "shearPerInch": 0.4,
+        "baseMetalThickness": 0.25,
+        "baseTensionYieldPerInch": 8.1,
+        "baseTensionRupturePerInch": 10.875,
+        "baseMetalPerInch": 6.525,
+        "baseMetalRatio": 0.1481
+      },
+      "status": "pass",
+      "warnings": [
+        "Fillet size 0.5 in exceeds the J2.2b maximum of 0.1875 in along the edge of a 0.25 in part.",
+        "Base metal governs over the weld metal (AISC J4) — the connected part, not the fillet, sets this joint's strength."
+      ]
+    },
+    {
+      "input": {
+        "method": "ASD",
+        "size": 0.5,
+        "FEXX": 70,
+        "pattern": "single",
+        "depth": 10,
+        "basePartThickness": 0.25,
+        "baseFu": 58,
+        "baseFy": 36,
+        "Pnormal": 6,
+        "Vparallel": 2
+      },
+      "output": {
+        "length": 10,
+        "throat": 0.3535,
+        "Awe": 3.535,
+        "Sw": 16.6667,
+        "stress": 1.7891,
+        "theta": 71.5651,
+        "directionalFactor": 1.462,
+        "designPerInch": 10.8532,
+        "demandPerInch": 0.6325,
+        "ratio": 0.0583,
+        "minSize": 0.125,
+        "maxSize": 0.1875,
+        "normalPerInch": 0.6,
+        "shearPerInch": 0.2,
+        "baseMetalThickness": 0.25,
+        "baseTensionYieldPerInch": 5.3892,
+        "baseTensionRupturePerInch": 7.25,
+        "baseMetalPerInch": 4.35,
+        "baseMetalRatio": 0.1113
+      },
+      "status": "pass",
+      "warnings": [
+        "Fillet size 0.5 in exceeds the J2.2b maximum of 0.1875 in along the edge of a 0.25 in part.",
+        "Base metal governs over the weld metal (AISC J4) — the connected part, not the fillet, sets this joint's strength."
+      ]
+    },
+    {
+      "input": {
+        "method": "LRFD",
+        "size": 0.5,
+        "FEXX": 70,
+        "pattern": "single",
+        "depth": 10,
+        "basePartThickness": 0.25,
+        "baseFu": 58,
+        "Vparallel": 3
+      },
+      "output": {
+        "length": 10,
+        "throat": 0.3535,
+        "Awe": 3.535,
+        "Sw": 16.6667,
+        "stress": 0.8487,
+        "theta": 0,
+        "directionalFactor": 1,
+        "designPerInch": 11.1353,
+        "demandPerInch": 0.3,
+        "ratio": 0.0269,
+        "minSize": 0.125,
+        "maxSize": 0.1875,
+        "normalPerInch": 0,
+        "shearPerInch": 0.3,
+        "baseMetalThickness": 0.25,
+        "baseTensionYieldPerInch": null,
+        "baseTensionRupturePerInch": 10.875,
+        "baseMetalPerInch": 6.525,
+        "baseMetalRatio": 0.046
+      },
+      "status": "pass",
+      "warnings": [
+        "Fillet size 0.5 in exceeds the J2.2b maximum of 0.1875 in along the edge of a 0.25 in part.",
+        "Base metal governs over the weld metal (AISC J4) — the connected part, not the fillet, sets this joint's strength."
+      ]
+    },
+    {
+      "input": {
+        "method": "LRFD",
+        "size": 0.5,
+        "FEXX": 70,
+        "pattern": "single",
+        "depth": 10,
+        "basePartThickness": 0.25,
+        "baseFu": 58,
+        "baseFy": 36,
+        "Pnormal": 2
+      },
+      "output": {
+        "length": 10,
+        "throat": 0.3535,
+        "Awe": 3.535,
+        "Sw": 16.6667,
+        "stress": 0.5658,
+        "theta": 90,
+        "directionalFactor": 1.5,
+        "designPerInch": 16.7029,
+        "demandPerInch": 0.2,
+        "ratio": 0.012,
+        "minSize": 0.125,
+        "maxSize": 0.1875,
+        "normalPerInch": 0.2,
+        "shearPerInch": 0,
+        "baseMetalThickness": 0.25,
+        "baseTensionYieldPerInch": 8.1,
+        "baseTensionRupturePerInch": 10.875,
+        "baseMetalPerInch": 6.525,
+        "baseMetalRatio": 0.0247
+      },
+      "status": "pass",
+      "warnings": [
+        "Fillet size 0.5 in exceeds the J2.2b maximum of 0.1875 in along the edge of a 0.25 in part.",
+        "Base metal governs over the weld metal (AISC J4) — the connected part, not the fillet, sets this joint's strength."
+      ]
+    },
+    {
+      "input": {
+        "method": "LRFD",
+        "size": 0.25,
+        "FEXX": 70,
+        "pattern": "single",
+        "depth": 10,
+        "basePartThickness": 0.75,
+        "baseMetalThickness": 0.1,
+        "baseFu": 58,
+        "baseFy": 36,
+        "Vparallel": 6
+      },
+      "output": {
+        "length": 10,
+        "throat": 0.1768,
+        "Awe": 1.7675,
+        "Sw": 16.6667,
+        "stress": 3.3946,
+        "theta": 0,
+        "directionalFactor": 1,
+        "designPerInch": 5.5676,
+        "demandPerInch": 0.6,
+        "ratio": 0.1078,
+        "minSize": 0.25,
+        "maxSize": 0.6875,
+        "normalPerInch": 0,
+        "shearPerInch": 0.6,
+        "baseMetalThickness": 0.1,
+        "baseTensionYieldPerInch": 3.24,
+        "baseTensionRupturePerInch": 4.35,
+        "baseMetalPerInch": 2.61,
+        "baseMetalRatio": 0.2299
+      },
+      "status": "pass",
+      "warnings": [
+        "Base metal governs over the weld metal (AISC J4) — the connected part, not the fillet, sets this joint's strength."
+      ]
+    },
+    {
+      "input": {
+        "method": "ASD",
+        "size": 0.25,
+        "FEXX": 70,
+        "pattern": "single",
+        "depth": 10,
+        "basePartThickness": 0.75,
+        "baseMetalThickness": 0.1,
+        "baseFu": 58,
+        "baseFy": 36,
+        "Pnormal": 4
+      },
+      "output": {
+        "length": 10,
+        "throat": 0.1768,
+        "Awe": 1.7675,
+        "Sw": 16.6667,
+        "stress": 2.2631,
+        "theta": 90,
+        "directionalFactor": 1.5,
+        "designPerInch": 5.5676,
+        "demandPerInch": 0.4,
+        "ratio": 0.0718,
+        "minSize": 0.25,
+        "maxSize": 0.6875,
+        "normalPerInch": 0.4,
+        "shearPerInch": 0,
+        "baseMetalThickness": 0.1,
+        "baseTensionYieldPerInch": 2.1557,
+        "baseTensionRupturePerInch": 2.9,
+        "baseMetalPerInch": 1.74,
+        "baseMetalRatio": 0.1856
+      },
+      "status": "pass",
+      "warnings": [
+        "Base metal governs over the weld metal (AISC J4) — the connected part, not the fillet, sets this joint's strength."
+      ]
+    },
+    {
+      "input": {
+        "method": "LRFD",
+        "size": 0.25,
+        "FEXX": 70,
+        "pattern": "single",
+        "depth": 10,
+        "baseMetalThickness": 0.125,
+        "baseFu": 58,
+        "baseFy": 36,
+        "Vparallel": 3
+      },
+      "output": {
+        "length": 10,
+        "throat": 0.1768,
+        "Awe": 1.7675,
+        "Sw": 16.6667,
+        "stress": 1.6973,
+        "theta": 0,
+        "directionalFactor": 1,
+        "designPerInch": 5.5676,
+        "demandPerInch": 0.3,
+        "ratio": 0.0539,
+        "minSize": 0,
+        "maxSize": "Infinity",
+        "normalPerInch": 0,
+        "shearPerInch": 0.3,
+        "baseMetalThickness": 0.125,
+        "baseTensionYieldPerInch": 4.05,
+        "baseTensionRupturePerInch": 5.4375,
+        "baseMetalPerInch": 3.2625,
+        "baseMetalRatio": 0.092
+      },
+      "status": "pass",
+      "warnings": [
+        "Base metal governs over the weld metal (AISC J4) — the connected part, not the fillet, sets this joint's strength."
+      ]
+    },
+    {
+      "input": {
+        "method": "LRFD",
+        "size": 0.25,
+        "FEXX": 70,
+        "pattern": "single",
+        "depth": 10,
+        "baseMetalThickness": 0.125,
+        "baseFu": 58,
+        "Vparallel": 3
+      },
+      "output": {
+        "length": 10,
+        "throat": 0.1768,
+        "Awe": 1.7675,
+        "Sw": 16.6667,
+        "stress": 1.6973,
+        "theta": 0,
+        "directionalFactor": 1,
+        "designPerInch": 5.5676,
+        "demandPerInch": 0.3,
+        "ratio": 0.0539,
+        "minSize": 0,
+        "maxSize": "Infinity",
+        "normalPerInch": 0,
+        "shearPerInch": 0.3,
+        "baseMetalThickness": 0.125,
+        "baseTensionYieldPerInch": null,
+        "baseTensionRupturePerInch": 5.4375,
+        "baseMetalPerInch": 3.2625,
+        "baseMetalRatio": 0.092
+      },
+      "status": "pass",
+      "warnings": [
+        "Base metal governs over the weld metal (AISC J4) — the connected part, not the fillet, sets this joint's strength."
+      ]
+    },
+    {
+      "input": {
+        "method": "LRFD",
+        "size": 0.25,
+        "FEXX": 70,
+        "pattern": "single",
+        "depth": 10,
+        "baseMetalThickness": 0.125,
+        "Vparallel": 3
+      },
+      "output": {
+        "length": 10,
+        "throat": 0.1768,
+        "Awe": 1.7675,
+        "Sw": 16.6667,
+        "stress": 1.6973,
+        "theta": 0,
+        "directionalFactor": 1,
+        "designPerInch": 5.5676,
+        "demandPerInch": 0.3,
+        "ratio": 0.0539,
+        "minSize": 0,
+        "maxSize": "Infinity",
+        "normalPerInch": 0,
+        "shearPerInch": 0.3,
+        "baseMetalThickness": 0.125,
+        "baseTensionYieldPerInch": null,
+        "baseTensionRupturePerInch": null,
+        "baseMetalPerInch": null,
+        "baseMetalRatio": null
+      },
+      "status": "pass",
+      "warnings": []
+    },
+    {
+      "input": {
+        "method": "LRFD",
+        "size": 0.25,
+        "FEXX": 70,
+        "pattern": "single",
+        "depth": 10,
+        "basePartThickness": 0.75,
+        "baseMetalThickness": 0,
+        "baseFu": 58,
+        "Vparallel": 3
+      },
+      "output": {
+        "length": 10,
+        "throat": 0.1768,
+        "Awe": 1.7675,
+        "Sw": 16.6667,
+        "stress": 1.6973,
+        "theta": 0,
+        "directionalFactor": 1,
+        "designPerInch": 5.5676,
+        "demandPerInch": 0.3,
+        "ratio": 0.0539,
+        "minSize": 0.25,
+        "maxSize": 0.6875,
+        "normalPerInch": 0,
+        "shearPerInch": 0.3,
+        "baseMetalThickness": null,
+        "baseTensionYieldPerInch": null,
+        "baseTensionRupturePerInch": null,
+        "baseMetalPerInch": null,
+        "baseMetalRatio": null
+      },
+      "status": "pass",
+      "warnings": []
+    },
+    {
+      "input": {
+        "method": "LRFD",
+        "size": 0.25,
+        "FEXX": 70,
+        "pattern": "single",
+        "depth": 10,
+        "basePartThickness": 0.375,
+        "baseFu": 58,
+        "baseFy": 36
+      },
+      "output": {
+        "length": 10,
+        "throat": 0.1768,
+        "Awe": 1.7675,
+        "Sw": 16.6667,
+        "stress": 0,
+        "theta": 0,
+        "directionalFactor": 1,
+        "designPerInch": 5.5676,
+        "demandPerInch": 0,
+        "ratio": 0,
+        "minSize": 0.1875,
+        "maxSize": 0.3125,
+        "normalPerInch": 0,
+        "shearPerInch": 0,
+        "baseMetalThickness": 0.375,
+        "baseTensionYieldPerInch": 12.15,
+        "baseTensionRupturePerInch": 16.3125,
+        "baseMetalPerInch": 9.7875,
+        "baseMetalRatio": 0
+      },
+      "status": "pass",
+      "warnings": []
+    },
+    {
+      "input": {
+        "method": "LRFD",
+        "size": 0.25,
+        "FEXX": 70,
+        "pattern": "single",
+        "depth": 10,
+        "basePartThickness": 0.375,
+        "baseFu": 58,
+        "baseFy": 36,
+        "baseForces": {
+          "normal": 0,
+          "shear": 0
+        }
+      },
+      "output": {
+        "length": 10,
+        "throat": 0.1768,
+        "Awe": 1.7675,
+        "Sw": 16.6667,
+        "stress": 0,
+        "theta": 0,
+        "directionalFactor": 1,
+        "designPerInch": 5.5676,
+        "demandPerInch": 0,
+        "ratio": 0,
+        "minSize": 0.1875,
+        "maxSize": 0.3125,
+        "normalPerInch": 0,
+        "shearPerInch": 0,
+        "baseMetalThickness": 0.375,
+        "baseTensionYieldPerInch": 12.15,
+        "baseTensionRupturePerInch": 16.3125,
+        "baseMetalPerInch": 9.7875,
+        "baseMetalRatio": 0
+      },
+      "status": "pass",
+      "warnings": []
+    },
+    {
+      "input": {
+        "method": "LRFD",
+        "size": 0.25,
+        "FEXX": 70,
+        "pattern": "two-parallel",
+        "depth": 6,
+        "basePartThickness": 0.23,
+        "baseMetalThickness": 0.115,
+        "baseFu": 58,
+        "baseFy": 36,
+        "Vtransverse": 3,
+        "Vparallel": 2,
+        "M": 40,
+        "baseForces": {
+          "normal": 1.5,
+          "shear": 3.6
+        }
+      },
+      "output": {
+        "length": 12,
+        "throat": 0.1768,
+        "Awe": 2.121,
+        "Sw": 12,
+        "stress": 18.9355,
+        "theta": 87.1456,
+        "directionalFactor": 1.4991,
+        "designPerInch": 8.3463,
+        "demandPerInch": 3.3468,
+        "ratio": 0.401,
+        "minSize": 0.125,
+        "maxSize": 0.23,
+        "normalPerInch": 3.4583,
+        "shearPerInch": 0.3,
+        "baseMetalThickness": 0.115,
+        "baseTensionYieldPerInch": 3.726,
+        "baseTensionRupturePerInch": 5.0025,
+        "baseMetalPerInch": 3.0015,
+        "baseMetalRatio": 0.9282
+      },
+      "status": "pass",
+      "warnings": [
+        "Fillet size 0.25 in exceeds the J2.2b maximum of 0.23 in along the edge of a 0.23 in part.",
+        "Base metal governs over the weld metal (AISC J4) — the connected part, not the fillet, sets this joint's strength."
+      ]
+    },
+    {
+      "input": {
+        "method": "LRFD",
+        "size": 0.25,
+        "FEXX": 70,
+        "pattern": "two-parallel",
+        "depth": 6,
+        "basePartThickness": 0.23,
+        "baseMetalThickness": 0.115,
+        "baseFu": 58,
+        "baseFy": 36,
+        "Vparallel": 2.5,
+        "M": 40,
+        "baseForces": {
+          "normal": 8,
+          "shear": 1
+        }
+      },
+      "output": {
+        "length": 12,
+        "throat": 0.1768,
+        "Awe": 2.121,
+        "Sw": 12,
+        "stress": 18.8958,
+        "theta": 86.4237,
+        "directionalFactor": 1.4985,
+        "designPerInch": 8.3433,
+        "demandPerInch": 3.3398,
+        "ratio": 0.4003,
+        "minSize": 0.125,
+        "maxSize": 0.23,
+        "normalPerInch": 4,
+        "shearPerInch": 0.0833,
+        "baseMetalThickness": 0.115,
+        "baseTensionYieldPerInch": 3.726,
+        "baseTensionRupturePerInch": 5.0025,
+        "baseMetalPerInch": 3.0015,
+        "baseMetalRatio": 1.0735
+      },
+      "status": "fail",
+      "warnings": [
+        "Fillet size 0.25 in exceeds the J2.2b maximum of 0.23 in along the edge of a 0.23 in part.",
+        "Base metal governs over the weld metal (AISC J4) — the connected part, not the fillet, sets this joint's strength."
+      ]
+    },
+    {
+      "input": {
+        "method": "ASD",
+        "size": 0.25,
+        "FEXX": 70,
+        "pattern": "two-parallel",
+        "depth": 6,
+        "basePartThickness": 0.23,
+        "baseFu": 58,
+        "baseFy": 36,
+        "Vtransverse": 3,
+        "Vparallel": 2,
+        "M": 20,
+        "baseForces": {
+          "normal": -6,
+          "shear": -2
+        }
+      },
+      "output": {
+        "length": 12,
+        "throat": 0.1768,
+        "Awe": 2.121,
+        "Sw": 12,
+        "stress": 9.5815,
+        "theta": 84.3522,
+        "directionalFactor": 1.4964,
+        "designPerInch": 5.5541,
+        "demandPerInch": 1.6935,
+        "ratio": 0.3049,
+        "minSize": 0.125,
+        "maxSize": 0.23,
+        "normalPerInch": 1.1667,
+        "shearPerInch": 0.1667,
+        "baseMetalThickness": 0.23,
+        "baseTensionYieldPerInch": 4.9581,
+        "baseTensionRupturePerInch": 6.67,
+        "baseMetalPerInch": 4.002,
+        "baseMetalRatio": 0.2353
+      },
+      "status": "pass",
+      "warnings": [
+        "Fillet size 0.25 in exceeds the J2.2b maximum of 0.23 in along the edge of a 0.23 in part."
+      ]
+    },
+    {
+      "input": {
+        "method": "LRFD",
+        "size": 0.3125,
+        "FEXX": 70,
+        "pattern": "all-round",
+        "depth": 8,
+        "width": 6,
+        "basePartThickness": 0.23,
+        "baseFu": 58,
+        "baseFy": 36,
+        "Vtransverse": 4,
+        "M": 100
+      },
+      "output": {
+        "length": 28,
+        "throat": 0.2209,
+        "Awe": 6.1862,
+        "Sw": 69.3333,
+        "stress": 6.5601,
+        "theta": 90,
+        "directionalFactor": 1.5,
+        "designPerInch": 10.4393,
+        "demandPerInch": 1.4494,
+        "ratio": 0.1388,
+        "minSize": 0.125,
+        "maxSize": 0.23,
+        "normalPerInch": 1.4423,
+        "shearPerInch": 0.1429,
+        "baseMetalThickness": 0.23,
+        "baseTensionYieldPerInch": 7.452,
+        "baseTensionRupturePerInch": 10.005,
+        "baseMetalPerInch": 6.003,
+        "baseMetalRatio": 0.1935
+      },
+      "status": "pass",
+      "warnings": [
+        "Fillet size 0.3125 in exceeds the J2.2b maximum of 0.23 in along the edge of a 0.23 in part.",
+        "Base metal governs over the weld metal (AISC J4) — the connected part, not the fillet, sets this joint's strength."
+      ]
+    },
+    {
+      "input": {
+        "method": "LRFD",
+        "size": 0.3125,
+        "FEXX": 70,
+        "pattern": "all-round",
+        "depth": 8,
+        "width": 6,
+        "length": 20,
+        "basePartThickness": 0.25,
+        "baseFu": 58,
+        "baseFy": 36,
+        "Vtransverse": 4,
+        "M": 60,
+        "Pnormal": 3
+      },
+      "output": {
+        "length": 20,
+        "throat": 0.2209,
+        "Awe": 4.4187,
+        "Sw": 49.5238,
+        "stress": 6.2287,
+        "theta": 90,
+        "directionalFactor": 1.5,
+        "designPerInch": 10.4393,
+        "demandPerInch": 1.3761,
+        "ratio": 0.1318,
+        "minSize": 0.125,
+        "maxSize": 0.1875,
+        "normalPerInch": 1.3615,
+        "shearPerInch": 0.2,
+        "baseMetalThickness": 0.25,
+        "baseTensionYieldPerInch": 8.1,
+        "baseTensionRupturePerInch": 10.875,
+        "baseMetalPerInch": 6.525,
+        "baseMetalRatio": 0.1681
+      },
+      "status": "pass",
+      "warnings": [
+        "Fillet size 0.3125 in exceeds the J2.2b maximum of 0.1875 in along the edge of a 0.25 in part.",
+        "Base metal governs over the weld metal (AISC J4) — the connected part, not the fillet, sets this joint's strength."
+      ]
+    },
+    {
+      "input": {
+        "method": "LRFD",
+        "size": 0.25,
+        "FEXX": 70,
+        "pattern": "two-parallel",
+        "depth": 8,
+        "length": 12,
+        "basePartThickness": 0.3,
+        "baseFu": 65,
+        "baseFy": 50,
+        "Vtransverse": 5,
+        "M": 30
+      },
+      "output": {
+        "length": 12,
+        "throat": 0.1768,
+        "Awe": 2.121,
+        "Sw": 16,
+        "stress": 10.867,
+        "theta": 90,
+        "directionalFactor": 1.5,
+        "designPerInch": 8.3514,
+        "demandPerInch": 1.9207,
+        "ratio": 0.23,
+        "minSize": 0.1875,
+        "maxSize": 0.2375,
+        "normalPerInch": 1.875,
+        "shearPerInch": 0.4167,
+        "baseMetalThickness": 0.3,
+        "baseTensionYieldPerInch": 13.5,
+        "baseTensionRupturePerInch": 14.625,
+        "baseMetalPerInch": 8.775,
+        "baseMetalRatio": 0.1389
+      },
+      "status": "pass",
+      "warnings": [
+        "Fillet size 0.25 in exceeds the J2.2b maximum of 0.2375 in along the edge of a 0.3 in part."
+      ]
+    },
+    {
+      "input": {
+        "method": "LRFD",
+        "size": 0.1875,
+        "FEXX": 60,
+        "pattern": "single",
+        "depth": 10,
+        "basePartThickness": 0.2,
+        "baseFu": 58,
+        "baseFy": 36,
+        "Pnormal": 5
+      },
+      "output": {
+        "length": 10,
+        "throat": 0.1326,
+        "Awe": 1.3256,
+        "Sw": 16.6667,
+        "stress": 3.7718,
+        "theta": 90,
+        "directionalFactor": 1.5,
+        "designPerInch": 5.3688,
+        "demandPerInch": 0.5,
+        "ratio": 0.0931,
+        "minSize": 0.125,
+        "maxSize": 0.2,
+        "normalPerInch": 0.5,
+        "shearPerInch": 0,
+        "baseMetalThickness": 0.2,
+        "baseTensionYieldPerInch": 6.48,
+        "baseTensionRupturePerInch": 8.7,
+        "baseMetalPerInch": 5.22,
+        "baseMetalRatio": 0.0772
+      },
+      "status": "pass",
+      "warnings": []
+    },
+    {
+      "input": {
+        "method": "LRFD",
+        "size": 0.375,
+        "FEXX": 70,
+        "pattern": "single",
+        "depth": 10,
+        "basePartThickness": 0.375,
+        "Vparallel": 2
+      },
+      "output": {
+        "length": 10,
+        "throat": 0.2651,
+        "Awe": 2.6513,
+        "Sw": 16.6667,
+        "stress": 0.7544,
+        "theta": 0,
+        "directionalFactor": 1,
+        "designPerInch": 8.3514,
+        "demandPerInch": 0.2,
+        "ratio": 0.0239,
+        "minSize": 0.1875,
+        "maxSize": 0.3125,
+        "normalPerInch": 0,
+        "shearPerInch": 0.2,
+        "baseMetalThickness": 0.375,
+        "baseTensionYieldPerInch": null,
+        "baseTensionRupturePerInch": null,
+        "baseMetalPerInch": null,
+        "baseMetalRatio": null
+      },
+      "status": "pass",
+      "warnings": [
+        "Fillet size 0.375 in exceeds the J2.2b maximum of 0.3125 in along the edge of a 0.375 in part."
+      ]
+    },
+    {
+      "input": {
+        "method": "LRFD",
+        "size": 0.375,
+        "FEXX": 70,
+        "pattern": "single",
+        "depth": 10,
+        "basePartThickness": 0.375,
+        "Vparallel": 2,
+        "alongEdge": true
+      },
+      "output": {
+        "length": 10,
+        "throat": 0.2651,
+        "Awe": 2.6513,
+        "Sw": 16.6667,
+        "stress": 0.7544,
+        "theta": 0,
+        "directionalFactor": 1,
+        "designPerInch": 8.3514,
+        "demandPerInch": 0.2,
+        "ratio": 0.0239,
+        "minSize": 0.1875,
+        "maxSize": 0.3125,
+        "normalPerInch": 0,
+        "shearPerInch": 0.2,
+        "baseMetalThickness": 0.375,
+        "baseTensionYieldPerInch": null,
+        "baseTensionRupturePerInch": null,
+        "baseMetalPerInch": null,
+        "baseMetalRatio": null
+      },
+      "status": "pass",
+      "warnings": [
+        "Fillet size 0.375 in exceeds the J2.2b maximum of 0.3125 in along the edge of a 0.375 in part."
+      ]
+    },
+    {
+      "input": {
+        "method": "LRFD",
+        "size": 0.375,
+        "FEXX": 70,
+        "pattern": "single",
+        "depth": 10,
+        "basePartThickness": 0.375,
+        "Vparallel": 2,
+        "alongEdge": false
+      },
+      "output": {
+        "length": 10,
+        "throat": 0.2651,
+        "Awe": 2.6513,
+        "Sw": 16.6667,
+        "stress": 0.7544,
+        "theta": 0,
+        "directionalFactor": 1,
+        "designPerInch": 8.3514,
+        "demandPerInch": 0.2,
+        "ratio": 0.0239,
+        "minSize": 0.1875,
+        "maxSize": 0.3125,
+        "normalPerInch": 0,
+        "shearPerInch": 0.2,
+        "baseMetalThickness": 0.375,
+        "baseTensionYieldPerInch": null,
+        "baseTensionRupturePerInch": null,
+        "baseMetalPerInch": null,
+        "baseMetalRatio": null
+      },
+      "status": "pass",
+      "warnings": []
+    },
+    {
+      "input": {
+        "method": "LRFD",
+        "size": 0.25,
+        "FEXX": 70,
+        "pattern": "single",
+        "depth": 10,
+        "basePartThickness": 0.1875,
+        "Vparallel": 1,
+        "alongEdge": false
+      },
+      "output": {
+        "length": 10,
+        "throat": 0.1768,
+        "Awe": 1.7675,
+        "Sw": 16.6667,
+        "stress": 0.5658,
+        "theta": 0,
+        "directionalFactor": 1,
+        "designPerInch": 5.5676,
+        "demandPerInch": 0.1,
+        "ratio": 0.018,
+        "minSize": 0.125,
+        "maxSize": 0.1875,
+        "normalPerInch": 0,
+        "shearPerInch": 0.1,
+        "baseMetalThickness": 0.1875,
+        "baseTensionYieldPerInch": null,
+        "baseTensionRupturePerInch": null,
+        "baseMetalPerInch": null,
+        "baseMetalRatio": null
+      },
+      "status": "pass",
+      "warnings": []
+    },
+    {
+      "input": {
+        "method": "LRFD",
+        "size": 0.125,
+        "FEXX": 70,
+        "pattern": "single",
+        "depth": 10,
+        "basePartThickness": 0.4,
+        "Vparallel": 2,
+        "alongEdge": false
+      },
+      "output": {
+        "length": 10,
+        "throat": 0.0884,
+        "Awe": 0.8837,
+        "Sw": 16.6667,
+        "stress": 2.2631,
+        "theta": 0,
+        "directionalFactor": 1,
+        "designPerInch": 2.7838,
+        "demandPerInch": 0.2,
+        "ratio": 0.0718,
+        "minSize": 0.1875,
+        "maxSize": 0.3375,
+        "normalPerInch": 0,
+        "shearPerInch": 0.2,
+        "baseMetalThickness": 0.4,
+        "baseTensionYieldPerInch": null,
+        "baseTensionRupturePerInch": null,
+        "baseMetalPerInch": null,
+        "baseMetalRatio": null
+      },
+      "status": "pass",
+      "warnings": [
+        "Fillet size 0.125 in is below the Table J2.4 minimum of 0.1875 in for a 0.4 in part."
+      ]
+    },
+    {
+      "input": {
+        "method": "LRFD",
+        "size": 0.375,
+        "FEXX": 70,
+        "pattern": "single",
+        "depth": 10,
+        "basePartThickness": 0.375,
+        "baseMetalThickness": 0.1875,
+        "baseFu": 58,
+        "baseFy": 36,
+        "Vparallel": 4,
+        "alongEdge": false
+      },
+      "output": {
+        "length": 10,
+        "throat": 0.2651,
+        "Awe": 2.6513,
+        "Sw": 16.6667,
+        "stress": 1.5087,
+        "theta": 0,
+        "directionalFactor": 1,
+        "designPerInch": 8.3514,
+        "demandPerInch": 0.4,
+        "ratio": 0.0479,
+        "minSize": 0.1875,
+        "maxSize": 0.3125,
+        "normalPerInch": 0,
+        "shearPerInch": 0.4,
+        "baseMetalThickness": 0.1875,
+        "baseTensionYieldPerInch": 6.075,
+        "baseTensionRupturePerInch": 8.1563,
+        "baseMetalPerInch": 4.8938,
+        "baseMetalRatio": 0.0817
+      },
+      "status": "pass",
+      "warnings": [
+        "Base metal governs over the weld metal (AISC J4) — the connected part, not the fillet, sets this joint's strength."
+      ]
     },
     {
       "input": {
