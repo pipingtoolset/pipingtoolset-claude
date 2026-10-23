@@ -1,6 +1,6 @@
 ---
 name: pressure-design
-description: "Traceable ASME B31.1 / B31.3 pressure-design calculations with a reviewer-ready calc sheet: pressure design thickness and ordered wall (B31.3 304.1.2 Eq. 3a, B31.1 104.1.2) with mill tolerance and corrosion allowance, schedule check, allowable pressure / MAWP, branch reinforcement (area replacement, 304.3.3), pipe bend thinning (304.2.1 I-factor), mitered bend allowable pressure (304.2.3), and hydrostatic / pneumatic leak test pressure (345.4.2, B31.1 137). Runs a bundled deterministic script, never supplies code table values (S, E, W, Y are read by the user from a licensed copy), and pins the code edition and table names. Use when the user mentions wall thickness, minimum thickness, pressure design thickness, schedule check, MAWP, allowable pressure, branch reinforcement, area replacement, bend thickness, miter, hydrotest or leak test pressure, or needs a B31 pressure calc to survive review."
+description: "Traceable ASME B31.1/B31.3 pressure design via a bundled script: wall thickness (304.1.2, 104.1.2), schedule check, MAWP, branch reinforcement, bends, miter and leak test / hydrotest pressure (345.4.2). You supply S, E, W, Y from a licensed copy."
 ---
 
 # Pressure Design — B31.1 and B31.3

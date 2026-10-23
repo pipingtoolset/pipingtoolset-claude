@@ -2,7 +2,7 @@
 """
 loadcase_gen.py - B31-compliant static load case set generator for CAESAR II / AutoPIPE.
 
-Part of the Piping Toolset skill pack (pipingtoolset.com).
+Part of the PipingToolset skill pack (pipingtoolset.com).
 
 WHY THIS EXISTS
     Hand-maintained load case templates break in one specific way: every combination

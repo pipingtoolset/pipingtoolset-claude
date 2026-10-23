@@ -274,7 +274,7 @@ class SkillContent(unittest.TestCase):
     def test_frontmatter(self):
         self.assertTrue(self.text.startswith("---\nname: load-case-builder\n"))
         desc = self.text.split("description: ", 1)[1].split("\n", 1)[0].strip('"')
-        self.assertLessEqual(len(desc), 1024)
+        self.assertLessEqual(len(desc), 400)  # short slash-menu blurb
 
     def test_no_personal_or_employer_material(self):
         content_guard.assert_clean(self, SKILL)

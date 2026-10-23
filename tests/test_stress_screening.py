@@ -650,7 +650,7 @@ class SkillContent(unittest.TestCase):
         head = self.text.split("\n---\n", 1)[0]
         self.assertEqual([ln.split(":", 1)[0] for ln in head.splitlines()[1:]], ["name", "description"])
         desc = self.text.split("description: ", 1)[1].split("\n", 1)[0].strip('"')
-        self.assertLessEqual(len(desc), 1024)
+        self.assertLessEqual(len(desc), 400)  # short slash-menu blurb
         for trigger in ("sustained", "S_A", "f factor", "Eq. 17", "1.33 Sh", "formal analysis exemption",
                         "support span", "spring variability", "B31J", "B31.1", "B31.3"):
             self.assertIn(trigger, desc)

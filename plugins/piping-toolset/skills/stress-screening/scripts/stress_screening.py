@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Stress screening calculators for the Piping Toolset `stress-screening` skill.
+"""Stress screening calculators for the PipingToolset `stress-screening` skill.
 
 Python 3.9+, standard library only.
 

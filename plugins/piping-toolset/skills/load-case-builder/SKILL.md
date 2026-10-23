@@ -1,6 +1,6 @@
 ---
 name: load-case-builder
-description: "Build complete, ASME B31.1/B31.3-compliant static load case sets for CAESAR II and AutoPIPE from project inputs, with symbolic references that never go stale. Covers the hanger/hydro/operating/sustained/expansion/occasional/envelope block order, the nonlinear subtract-then-scalar occasional pattern, combination methods, B31.1 k-factor and B31.3 1.33 Sh occasional allowables, the ASCE 7 ASD-reduction conflict, B31E triage, and the report extraction matrix. Use when the user mentions load cases, load combinations, L1/L2 case numbering, OPE/SUS/EXP/OCC/HGR/HYD, Algebraic/Scalar/SRSS combination, hanger design cases, occasional load factors, friction with/without runs, wind or seismic vectors (WIN1-4, U1-U3), PSV thrust cases, steam-out or upset cases, seismic anchor movement, or asks how to set up a CAESAR II or AutoPIPE static analysis."
+description: "Build complete ASME B31.1/B31.3 static load case sets for CAESAR II and AutoPIPE: HGR, HYD, OPE, SUS, EXP, OCC and envelopes, with Algebraic/Scalar/SRSS combinations and occasional allowables. Use for load cases, L-case numbering, wind/seismic, PSV thrust, steam-out or friction runs."
 ---
 
 # Load Case Builder — CAESAR II and AutoPIPE

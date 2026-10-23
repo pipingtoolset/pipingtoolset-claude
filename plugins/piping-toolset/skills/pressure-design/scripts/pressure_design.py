@@ -2,7 +2,7 @@
 """
 pressure_design.py - ASME B31.1 / B31.3 pressure-design calculators.
 
-Part of the Piping Toolset skill pack (pipingtoolset.com).
+Part of the PipingToolset skill pack (pipingtoolset.com).
 
 WHAT THIS IS
     Seven small, deterministic calculators for the pressure-design checks that

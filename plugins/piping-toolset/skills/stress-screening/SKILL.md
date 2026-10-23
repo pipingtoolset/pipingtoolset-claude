@@ -1,6 +1,6 @@
 ---
 name: stress-screening
-description: "Hand-check an ASME B31.1 / B31.3 pipe stress calculation the way a reviewer will, and build the calc sheet around it: sustained (SUS), occasional (OCC) and expansion (EXP) stress, S_A and the f factor (both edition forms, caps), displacement stress range (Eq. 17), the B31.3 1.33 Sh and B31.1 k occasional factors, which document supplies the SIFs (B31J vs Appendix D by code and edition), the formal flexibility-analysis exemption and its limits, support span (bending vs deflection) and spring variability. Ships a standard-library Python screening tool. Use when the user mentions sustained, occasional or expansion stress, SUS/OCC/EXP hand check, S_A, f factor, cycles, displacement stress range, Eq. 17, 1.33 Sh, k factor, formal analysis exemption, support span, spring variability, SIF source, B31J, Appendix D, or asks whether a B31.1/B31.3 stress calc will pass review."
+description: "Hand-check ASME B31.1/B31.3 sustained, occasional and expansion (SUS/OCC/EXP) stress the way a reviewer will: S_A and f factor, Eq. 17, 1.33 Sh / k factor, SIF source (B31J vs App. D), formal analysis exemption, support span, spring variability."
 ---
 
 # Stress Screening — B31.1 and B31.3 hand checks
