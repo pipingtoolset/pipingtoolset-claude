@@ -53,6 +53,13 @@ class ManifestParity(unittest.TestCase):
         for key in ("name", "version", "description"):
             self.assertEqual(self.claude[key], self.agent[key], key)
 
+    def test_description_fits_the_cowork_upload_validator(self):
+        # Cowork's Settings > Plugins > Upload rejects a plugin.json whose description
+        # exceeds 500 characters ("Plugin description must be at most 500 characters",
+        # observed on the 0.5.0 archive at 536 on 2026-10-27). The SKILL.md descriptions
+        # already carry their own cap in test_skill_descriptions; this is the manifest's.
+        self.assertLessEqual(len(self.claude["description"]), 500, len(self.claude["description"]))
+
     def test_claude_marketplace_entry_matches_manifest(self):
         (entry,) = self.claude_market["plugins"]
         self.assertEqual(entry["name"], self.claude["name"])

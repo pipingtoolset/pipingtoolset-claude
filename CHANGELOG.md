@@ -8,6 +8,15 @@ keep a defect until the plugin is updated, so each such entry names the skill, t
 affected inputs and the release that fixed it. GitHub Releases carry the same
 label and are the recall channel.
 
+## [0.5.1] — 2026-10-27
+
+Packaging only; no change to any skill, script, fixture or golden file.
+
+- The plugin description in `plugin.json` (both manifests and `marketplace.json`) is shortened
+  from 536 to under 500 characters. Cowork's **Upload a plugin** dialog rejected the 0.5.0
+  archive with "Plugin description must be at most 500 characters"; the drag-into-chat route
+  did not check it. `tests/test_manifests.py` now enforces the cap.
+
 ## [0.5.0] — 2026-10-27
 
 Two new skills, and distribution to assistants other than Claude. No change to any existing
