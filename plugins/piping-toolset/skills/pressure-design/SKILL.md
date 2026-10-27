@@ -1,6 +1,7 @@
 ---
 name: pressure-design
 description: "Traceable ASME B31.3 / B31.1 pressure design through a bundled script. Use when the user asks for wall thickness or minimum thickness, a schedule check, MAWP or allowable pressure, branch reinforcement, bend or miter checks, or hydrotest / leak test pressure (304.1.2, 104.1.2, 345.4.2). The user supplies S, E, W, Y from a licensed copy; no code table values are embedded."
+compatibility: Requires Python 3.9+ (standard library only)
 ---
 
 # Pressure Design — B31.1 and B31.3

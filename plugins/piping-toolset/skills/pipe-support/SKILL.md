@@ -1,6 +1,7 @@
 ---
 name: pipe-support
 description: "Check a pipe support assembly (arm, column, welds, bolts, base plate, anchor bolts, pier) for CAESAR II restraint loads: ASCE 7-22 combinations, AISC 360-22, ACI 318-19 Ch. 17, AWS D1.1 detailing. Use when the user asks to check, review or optimize a pipe support, t-post, trapeze, goalpost or cantilever arm. Reviews it like a PE and proposes optimized code-passing alternatives with a calc report."
+compatibility: Requires Python 3.9+ (standard library only)
 ---
 
 # Pipe Support - structural check, review and optimisation

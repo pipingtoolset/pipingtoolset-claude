@@ -1,6 +1,7 @@
 ---
 name: iso-to-pcf
 description: "Turn PDF stress isometrics into a clean, CAESAR II-ready PCF: transcribe the drawing to a JSON walk, build it with exact fraction arithmetic, then validate connectivity, zero-length elements and on-line supports. Use when the user asks to convert an iso or isometric PDF to a PCF, import a line into CAESAR II, or fix a PCF that imports with orphan nodes or broken continuity (Isogen, SKEY)."
+compatibility: Requires Python 3.9+ (standard library only)
 ---
 
 # Isometric PDF → CAESAR II PCF

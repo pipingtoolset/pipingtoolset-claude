@@ -1,0 +1,28 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "piping-toolset",
+  "version": "0.4.0",
+  "description": "ASME B31.1 / B31.3 piping skills from PipingToolset (pipingtoolset.com): pressure design, stress screening, CAESAR II / AutoPIPE load cases, PDF isometric to CAESAR II PCF, and pipe support structural checks (AISC 360-22, ACI 318-19, ASCE 7-22) with review and optimization. No ASME code table values are embedded.",
+  "author": {
+    "name": "Flexible Piping Solutions LLC",
+    "url": "https://pipingtoolset.com"
+  },
+  "homepage": "https://pipingtoolset.com",
+  "repository": "https://github.com/pipingtoolset/pipingtoolset-claude",
+  "license": "Apache-2.0",
+  "keywords": [
+    "piping",
+    "asme",
+    "b31.3",
+    "b31.1",
+    "pipe-stress",
+    "caesar-ii",
+    "autopipe",
+    "load-cases",
+    "pcf",
+    "isometric",
+    "pipe-support",
+    "aisc-360",
+    "anchor-bolts"
+  ]
+}

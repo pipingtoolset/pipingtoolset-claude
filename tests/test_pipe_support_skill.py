@@ -326,7 +326,7 @@ class SkillContent(unittest.TestCase):
     def test_frontmatter(self):
         self.assertTrue(self.text.startswith("---\nname: pipe-support\ndescription: \""))
         head = self.text.split("\n---\n", 1)[0]
-        self.assertEqual([ln.split(":", 1)[0] for ln in head.splitlines()[1:]], ["name", "description"])
+        self.assertEqual([ln.split(":", 1)[0] for ln in head.splitlines()[1:]], ["name", "description", "compatibility"])
         desc = self.text.split("description: ", 1)[1].split("\n", 1)[0].strip('"')
         self.assertLessEqual(len(desc), 400)
         for t in ("CAESAR II", "ASCE 7-22", "AISC 360-22", "ACI 318-19", "AWS D1.1", "optimized"):

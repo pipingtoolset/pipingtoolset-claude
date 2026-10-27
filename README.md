@@ -3,7 +3,8 @@
 **B31 calcs you can reproduce and defend in review, with Claude.**
 Claude does the interview. A script does the math. You read the table.
 
-Five piping engineering skills for Claude Code and Cowork, from the
+Five piping engineering skills for Claude Code and Cowork, and for any assistant that reads
+the Agent Skills format (OpenAI Codex and ChatGPT, Cursor, GitHub Copilot and others), from the
 people who build the free calculators at [pipingtoolset.com](https://pipingtoolset.com).
 Written and maintained by a practicing piping engineer at Flexible Piping Solutions LLC.
 
@@ -53,6 +54,32 @@ shipped with until you update it, so **UNCONSERVATIVE-FIX** releases (see
 ```
 
 For a local checkout: `/plugin marketplace add <path-to-this-checkout>`.
+
+### Other assistants
+
+The skills are plain [Agent Skills](https://agentskills.io) and the plugin carries an
+[Agent Plugins 1.0](https://agent-plugins.org) manifest, so the same repository installs into
+assistants other than Claude. These commands need the repository to be **public**; while
+`pipingtoolset/pipingtoolset-claude` is private they return "not found".
+
+| Assistant | Command |
+|---|---|
+| OpenAI Codex (CLI, IDE, ChatGPT desktop) | `codex plugin marketplace add pipingtoolset/pipingtoolset-claude`, then install **PipingToolset** from the plugin picker |
+| Any Agent Skills host via the `skills` CLI (Cursor, Copilot, Codex, Gemini CLI and others) | `npx skills add pipingtoolset/pipingtoolset-claude` |
+| GitHub CLI | `gh skill install pipingtoolset/pipingtoolset-claude` |
+| ChatGPT, Manus, Perplexity (file upload) | Upload `piping-toolset-skills.zip` from the [latest release](https://github.com/pipingtoolset/pipingtoolset-claude/releases/latest); it holds only the `skills/` folder |
+
+Where the skills land after a CLI install:
+
+| Scope | Path |
+|---|---|
+| Project (default) | `.agents/skills/<skill-name>/` in the current repository |
+| User (`--global` / `-g`) | `~/.agents/skills/<skill-name>/` |
+
+Hosts without a `/piping-toolset:` prefix see the five skills by name (`pressure-design`,
+`stress-screening`, `load-case-builder`, `pipe-support`, `iso-to-pcf`); name the one you want in
+plain words, as in Cowork. Each skill's frontmatter states its only requirement, Python 3.9+ with
+the standard library, so a host can check it before running a script.
 
 ### Requirements
 
@@ -115,7 +142,9 @@ python -m unittest discover -s tests -v
 CRLF, kept byte-exact by `.gitattributes`) for the worked examples. A change to case order,
 combination strings or QC text must be a deliberate golden update, reviewed by the engineer of record.
 `tools/sync_fixtures.py --check` confirms the vendored calc-core fixture snapshot is current.
-`python tools/package_plugin.py` builds `piping-toolset.plugin` for a release.
+`python tools/package_plugin.py` builds `piping-toolset.plugin` (Cowork and Agent Plugins hosts) and
+`piping-toolset-skills.zip` (skills-only upload) for a release; `tests/test_manifests.py` keeps the
+Claude and Agent Plugins manifests in step.
 
 See [`ROADMAP.md`](ROADMAP.md) for the plan and [`CHANGELOG.md`](CHANGELOG.md) for releases.
 A release labelled **UNCONSERVATIVE-FIX** corrects a result that could have been less conservative

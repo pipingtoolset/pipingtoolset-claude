@@ -1,6 +1,7 @@
 ---
 name: load-case-builder
 description: "Build complete ASME B31.1 / B31.3 static load case sets for CAESAR II and AutoPIPE: HGR, HYD, OPE, SUS, EXP, OCC and envelopes with Algebraic / Scalar / SRSS combinations and occasional allowables. Use when the user asks for load cases, a load case set, combination cases or L-case numbering, hanger cases, wind or seismic cases, PSV thrust, steam-out or friction runs."
+compatibility: Requires Python 3.9+ (standard library only)
 ---
 
 # Load Case Builder — CAESAR II and AutoPIPE
