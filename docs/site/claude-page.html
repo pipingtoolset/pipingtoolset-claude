@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!--
+  DRAFT for pipingtoolset.com/claude/  (2026-10-27)
+  Chrome copied from the generated trust pages so this file previews exactly as
+  the site would render it. For production this body becomes a content module
+  (scripts/seo/claude-content.mjs) built by scripts/seo/build-pages.mjs, which
+  also emits the llms.txt line. See docs/site/README.md in this repo.
+-->
+<title>PipingToolset for Claude — B31 Piping Skills for Claude Code and Cowork</title>
+<meta name="description" content="Five ASME B31.3 / B31.1 skills for Claude Code and Cowork. Claude runs the interview, a script does the math, no code table values are embedded, and nothing you enter reaches PipingToolset.">
+<link rel="canonical" href="https://pipingtoolset.com/claude/">
+<link rel="preload" href="/fonts/archivo-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="icon" href="/favicon.ico" sizes="48x48">
+<link rel="icon" type="image/svg+xml" href="/brand/favicon.svg">
+<link rel="icon" type="image/png" sizes="192x192" href="/brand/favicon-192.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/brand/apple-touch-icon.png">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://pipingtoolset.com/claude/">
+<meta property="og:title" content="PipingToolset for Claude — B31 Piping Skills for Claude Code and Cowork">
+<meta property="og:description" content="Five ASME B31.3 / B31.1 skills for Claude Code and Cowork. Claude runs the interview, a script does the math, no code table values are embedded, and nothing you enter reaches PipingToolset.">
+<meta property="og:image" content="https://pipingtoolset.com/brand/og/claude.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="PipingToolset for Claude — Piping Toolset">
+<meta property="og:site_name" content="Piping Toolset">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://pipingtoolset.com/brand/og/claude.png">
+<meta name="robots" content="index, follow">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","@id":"https://pipingtoolset.com/claude/#plugin","name":"PipingToolset for Claude","alternateName":"piping-toolset","applicationCategory":"EngineeringApplication","applicationSubCategory":"Claude Code / Claude Cowork plugin","operatingSystem":"Claude Code, Claude Cowork (Python 3.9+ in the host environment)","softwareVersion":"0.4.0","datePublished":"2026-10-26","license":"https://www.apache.org/licenses/LICENSE-2.0","isAccessibleForFree":true,"offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"downloadUrl":"https://github.com/pipingtoolset/pipingtoolset-claude/releases/latest","codeRepository":"https://github.com/pipingtoolset/pipingtoolset-claude","url":"https://pipingtoolset.com/claude/","description":"Five ASME B31.3 / B31.1 piping engineering skills for Claude Code and Claude Cowork: pressure design, stress screening, CAESAR II / AutoPIPE load cases, PDF isometric to PCF, and pipe support structural checks. No ASME code table values are embedded; every number comes from a script run.","author":{"@id":"https://pipingtoolset.com/about/#founder"},"publisher":{"@type":"Organization","@id":"https://pipingtoolset.com/#organization","name":"Piping Toolset","legalName":"Flexible Piping Solutions LLC","url":"https://pipingtoolset.com/","email":"support@pipingtoolset.com","logo":"https://pipingtoolset.com/brand/favicon-512.png","sameAs":["https://www.youtube.com/channel/UCgSuXlXGl_iD4ZMsVkuvjew"],"founder":{"@type":"Person","@id":"https://pipingtoolset.com/about/#founder","name":"Matthew Norris, P.E.","jobTitle":"Founder — Licensed Professional Engineer (Mechanical / Piping)","sameAs":["https://www.linkedin.com/in/mattrnorris"]}}}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://pipingtoolset.com/"},{"@type":"ListItem","position":2,"name":"PipingToolset for Claude"}]}</script>
+<style>
+@font-face{font-family:"Archivo";font-style:normal;font-weight:100 900;font-display:optional;src:url("/fonts/archivo-latin.woff2") format("woff2")}
+@font-face{font-family:"Archivo Fallback";src:local("Arial"),local("Helvetica"),local("Liberation Sans"),local("Arimo");size-adjust:105%;ascent-override:89%;descent-override:23%;line-gap-override:0%}
+:root{--bg:#f3f2f2;--panel:#fff;--ink:#201e1d;--muted:#605d5d;--accent:#ec3013;--accent-btn:#c9280e;--accent-deep:#ae1800;
+--pass:#217346;--fail:#ae1800;--border:rgba(32,30,29,.4);--border-soft:rgba(32,30,29,.22)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 "Archivo","Archivo Fallback",system-ui,sans-serif}
+a{color:var(--ink)}
+.topbar{background:var(--ink);color:#fff;padding:12px 22px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.topbar .brand{font-weight:800;font-size:19px;letter-spacing:-.02em;color:#fff;text-decoration:none}
+.topbar .brand span{color:var(--accent)}
+.topbar nav{display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin-left:auto}
+.topbar nav a{color:#fff;text-decoration:none;font-weight:700;font-size:14px;opacity:.85;display:inline-flex;align-items:center;min-height:44px}
+.topbar nav a:hover{opacity:1;text-decoration:underline}
+.topbar nav a.cta{background:var(--accent-btn);padding:10px 16px;opacity:1}
+main{max-width:880px;margin:0 auto;padding:30px 22px 60px}
+.crumbs{font-size:12.5px;color:var(--muted);margin-bottom:14px}
+.crumbs a{color:var(--muted);display:inline-block;padding:5px 4px;margin-left:-4px}
+h1{font-weight:800;font-size:31px;letter-spacing:-.02em;line-height:1.08;margin:.2em 0 .4em}
+h2{font-weight:800;font-size:20px;letter-spacing:-.01em;margin:1.6em 0 .5em;border-top:2px solid var(--ink);padding-top:.7em}
+h3{font-weight:800;font-size:16px;margin:1.2em 0 .4em}
+p.lede{font-size:17px;color:var(--muted)}
+p.stamp{font-size:12.5px;color:var(--muted);margin:2px 0 16px}
+.eq{font-family:ui-monospace,Consolas,monospace;font-size:14.5px;background:var(--panel);border:1px solid var(--border-soft);border-left:3px solid var(--accent);padding:9px 13px;margin:10px 0;overflow-x:auto}
+table{border-collapse:collapse;width:100%;margin:12px 0;background:var(--panel);font-size:14px}
+th,td{border:1px solid var(--border-soft);padding:7px 10px;text-align:left;vertical-align:top}
+th{background:#eae9e9;font-weight:700}
+code,pre{font-family:ui-monospace,Consolas,monospace;font-size:13.5px}
+pre{background:var(--panel);border:1px solid var(--border-soft);padding:12px 14px;overflow-x:auto;white-space:pre-wrap}
+.badge{display:inline-block;font-weight:800;font-size:12px;padding:2px 9px;color:#fff;letter-spacing:.03em}
+.badge.pass{background:var(--pass)}.badge.fail{background:var(--fail)}.badge.na{background:var(--muted)}
+.ctarow{display:flex;gap:12px;flex-wrap:wrap;margin:18px 0}
+.btn{display:inline-flex;align-items:center;min-height:44px;text-decoration:none;font-weight:800;font-size:14px;padding:11px 18px;border:2px solid var(--ink);background:none;color:var(--ink);font-family:inherit;cursor:pointer}
+.btn.primary{background:var(--accent-btn);border-color:var(--accent-btn);color:#fff}
+.btn.primary:hover{background:var(--accent-deep)}
+.btn:not(.primary):hover{background:#eae9e9}
+.scroll{overflow-x:auto}
+.cardgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px;margin:18px 0}
+.tile{background:var(--panel);border:1px solid var(--border);border-top:3px solid var(--accent);padding:14px 16px;text-decoration:none;display:block}
+.tile b{display:block;font-size:15px;margin-bottom:5px}
+.tile span{color:var(--muted);font-size:13px}
+.tile .fam{display:block;color:var(--accent-deep);font-weight:700;font-size:11.5px;letter-spacing:.05em;text-transform:uppercase;margin-bottom:6px}
+ul{padding-left:22px}
+li{margin:5px 0}
+.notice{background:#fff2ef;border:1px solid var(--accent);padding:10px 14px;font-size:13.5px;margin:16px 0}
+.workedbox{background:var(--panel);border:1px solid var(--border);border-left:4px solid var(--accent);padding:12px 16px;margin:16px 0}
+.workedbox h2{border-top:none;padding-top:0;margin:0 0 6px;font-size:17px}
+.workedbox table{font-size:13px;margin:8px 0}
+.workedbox .result{font-size:15px}
+.workedbox .result b{color:var(--accent-deep)}
+.videocard{display:block;position:relative;max-width:480px;margin:14px 0;text-decoration:none;border:1px solid var(--border);background:var(--panel)}
+.videocard .cap{display:block;padding:10px 12px;font-size:13.5px;color:var(--muted)}
+.videocard .cap b{color:var(--ink)}
+.flow{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:14px 0}
+.flow div{background:var(--panel);border:1px solid var(--border-soft);padding:10px 12px;font-size:13.5px}
+.flow div b{display:block;font-size:11.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--accent-deep);margin-bottom:4px}
+details{margin:8px 0;background:var(--panel);border:1px solid var(--border-soft);padding:8px 12px}
+summary{cursor:pointer;font-weight:700;font-size:13.5px;padding:5px 0}
+footer{border-top:2px solid var(--ink);margin-top:40px;padding:22px;font-size:13px;color:var(--muted)}
+footer .brand{max-width:880px;margin:0 auto 18px;padding-bottom:14px;display:flex;align-items:baseline;gap:6px 20px;flex-wrap:wrap;border-bottom:1px solid var(--border-soft)}
+footer .brand b{color:var(--ink);font-size:15px}
+footer .brand .op{flex:0 0 auto;margin-left:auto;white-space:nowrap}
+footer .cols{max-width:880px;margin:0 auto;display:flex;gap:32px;flex-wrap:wrap;justify-content:space-between}
+footer a{color:var(--muted);display:inline-block;padding:4px 0}
+.disc{max-width:880px;margin:14px auto 0;font-size:12px}
+@media (max-width:640px){footer .brand .op{margin-left:0;white-space:normal;flex:1 1 100%}}
+@media print{.topbar,footer,.ctarow{display:none}}
+</style>
+</head>
+<body>
+<header class="topbar"><a class="brand" href="/">Piping<span>&nbsp;</span>Toolset</a><nav>
+<a href="/calculators/">Calculators</a>
+<a href="/tools/">Tools</a>
+<a href="/trust/validation.html">Validation</a>
+<a href="/pricing/">Pricing</a>
+<a class="cta" href="/">Open the App</a></nav></header>
+<main><div class="crumbs"><a href="/">Home</a> › PipingToolset for Claude</div>
+<h1>PipingToolset for Claude — B31 Piping Skills for Claude Code and Cowork</h1>
+<p class="stamp">Version 0.4.0 · released 2026-10-26 · Apache-2.0 · free · Content last reviewed 2026-10-27</p>
+<p class="lede"><b>B31 calcs you can reproduce and defend in review, with Claude.</b> Claude does the interview. A script does the math. You read the table. Five piping engineering skills from the people who build the free calculators on this site, written and maintained by a practicing, licensed piping engineer.</p>
+
+<div class="ctarow">
+<a class="btn primary" href="https://github.com/pipingtoolset/pipingtoolset-claude/releases/latest">Download for Cowork (.plugin)</a>
+<a class="btn" href="#install">Install in Claude Code</a>
+<a class="btn" href="https://github.com/pipingtoolset/pipingtoolset-claude">Source on GitHub</a>
+</div>
+
+<div class="workedbox">
+<h2>What a run looks like</h2>
+<p style="margin:0 0 6px;font-size:13.5px;color:var(--muted)">You type (Cowork form; in Claude Code prefix <code>/piping-toolset:pressure-design</code>):</p>
+<pre>Use the pressure design skill. B31.3-2022, normal fluid service. NPS 6 seamless pipe, OD 6.625 in,
+design 750 psig at 600 F, corrosion allowance 0.0625 in, 12.5% mill tolerance. My allowable S at
+600 F is 17900 psi from my copy, E = 1.0, W = 1.0, Y = 0.4. What minimum thickness do I need and
+does 0.280 in nominal wall work?</pre>
+<p style="margin:6px 0;font-size:13.5px;color:var(--muted)">The skill writes the inputs to a job file, runs <code>pressure_design.py</code>, and reports from the script output:</p>
+<table><tr><th>Quantity</th><th>Value</th><th>Basis</th></tr>
+<tr><td>Pressure design thickness t</td><td>0.13650 in</td><td>B31.3-2022 ¶304.1.2 Eq. (3a): PD / 2(SEW + PY)</td></tr>
+<tr><td>Minimum required t<sub>m</sub></td><td>0.19900 in</td><td>t + c, c = 0.0625 in</td></tr>
+<tr><td>0.280 in nominal × 0.875</td><td>0.245 in</td><td>12.5 % mill tolerance</td></tr>
+</table>
+<p class="result">Verdict: <span class="badge pass">ADEQUATE</span> 0.245 in ≥ 0.199 in. <b>S, E, W and Y are echoed as user-supplied.</b> The calc sheet names the edition, the equation, every input and anything you left to be ASSUMED.</p>
+</div>
+
+<h2>What it does</h2>
+<p>PipingToolset for Claude is a plugin: five skills, each a set of written instructions Claude follows plus a standard-library Python script that performs the calculation. Claude asks for the code basis and the inputs, writes a small specification file, runs the script by path, and reads the result back to you. The same engine behind the <a href="/calculators/">free calculators</a> on this site produces the numbers.</p>
+<div class="scroll"><table>
+<tr><th>Skill</th><th>What it does</th><th>What you get</th></tr>
+<tr><td><b>Pressure design</b></td><td>Code-basis interview, then wall thickness, allowable pressure, branch reinforcement, bends, miters and leak-test pressure to B31.3 / B31.1</td><td>A calc sheet with the edition, the equation, every input and the ASSUMED flags</td></tr>
+<tr><td><b>Stress screening</b></td><td>Sustained, occasional and expansion hand checks; the f factor by edition; which document supplies the SIFs; the formal-analysis exemption; support spans and spring variability</td><td>A reviewer's hand check of what CAESAR II or AutoPIPE applied</td></tr>
+<tr><td><b>Load case builder</b></td><td>Complete B31.1 / B31.3 static load case sets for CAESAR II and AutoPIPE: HGR, HYD, OPE, SUS, EXP, OCC and envelopes, generated symbolically so references never go stale</td><td>The load case table, a QC gate and a report extraction matrix</td></tr>
+<tr><td><b>Pipe support</b></td><td>Support assemblies (arm, column, welds, bolts, base plate, anchors, pier) checked against CAESAR II restraint loads: ASCE 7-22 combinations, AISC 360-22, ACI 318-19 Chapter 17, AWS D1.1 detailing. The PiperSTR engine from this site</td><td>A PE-style review, ranked code-passing alternatives and an engineer-ready calc report (<code>calc.md</code>, <code>result.json</code>)</td></tr>
+<tr><td><b>Iso to PCF</b></td><td>PDF stress isometrics to a clean CAESAR II PCF: Claude transcribes the drawing, a script builds the geometry in exact fractions, a validator catches orphan nodes, zero-length elements and off-line supports before import</td><td><code>line.pcf</code> and a report text file; live CAESAR II import confirmed</td></tr>
+</table></div>
+
+<h2>How it works</h2>
+<div class="flow">
+<div><b>1 · You describe</b>The line, the code and edition, the service, the inputs you have read from your licensed copy.</div>
+<div><b>2 · Claude interviews</b>Anything missing is asked for. Anything you leave open is written down as ASSUMED.</div>
+<div><b>3 · A script computes</b>Standard-library Python, called by path, no network. Claude never does the arithmetic.</div>
+<div><b>4 · You read the table</b>Edition, equation, inputs, result, verdict, warnings. Output files land in your working folder.</div>
+</div>
+<p>Three rules hold in every skill:</p>
+<ul>
+<li><b>Claude never does the arithmetic.</b> Every number a skill states comes from a script run on inputs you supplied. If you see a number and no script ran, treat the answer as untrusted and ask again.</li>
+<li><b>Claude never recalls a code table value.</b> Allowable stresses, moduli, SIFs, spans, ASCE 7 coefficients, anchor bond values: the skill names the table, row and edition and asks you to read it from your own copy. Asking for "just the number" is a pinned test, and the answer is no.</li>
+<li><b>The edition is an input, never a silent default.</b> Where a rule changed between editions (for example the f-factor form before and after B31.3-2022, or Appendix D giving way to B31J from B31.3-2020), the skill asks which one governs your project.</li>
+</ul>
+
+<h2>What it will not do</h2>
+<ul>
+<li><b>It will not give you a tabulated code value.</b> Not an allowable stress, not a quality factor, not a Y coefficient, not an SIF, not a support span, not a catalog bond strength. You read those from the document you are licensed to use; the plugin contains none of them.</li>
+<li><b>It will not replace a flexibility analysis.</b> Stress screening is a hand check of what the program applied. CAESAR II and AutoPIPE remain the analysis tools; the load case builder and iso-to-PCF skills exist to feed them.</li>
+<li><b>It will not pick your code or edition for you.</b> Basis items you do not answer are marked ASSUMED on the calc sheet, never silently filled in.</li>
+<li><b>It will not compute in the model's head.</b> A skill that cannot run its script stops and says so instead of estimating.</li>
+<li><b>It will not seal anything.</b> Results are engineering aids. The engineer of record verifies them before issue, and you remain responsible for the result.</li>
+<li><b>It will not reproduce code text.</b> Paragraph numbers and equation references are cited; the wording of the standard is not included.</li>
+<li><b>It will not touch your Piping Toolset account.</b> The plugin is free and separate from the site's paid tiers. Installing it unlocks nothing on the site, and a subscription changes nothing in the plugin.</li>
+</ul>
+
+<h2>Where your data goes</h2>
+<p>Short answer: <b>nothing you enter reaches PipingToolset or Flexible Piping Solutions.</b> The plugin makes no network calls, carries no telemetry, needs no API key and no account with us. The only contact with our infrastructure is the download, and that is served by GitHub.</p>
+<div class="scroll"><table>
+<tr><th>What</th><th>Claude Code</th><th>Claude Cowork</th></tr>
+<tr><td>Your prompt and the files you attach</td><td colspan="2">Go to Anthropic to be processed by Claude, under the terms and data-handling settings of <em>your</em> Anthropic account or your employer's plan. We do not see them.</td></tr>
+<tr><td>The calculation scripts</td><td>Run on your own machine, with your own Python 3.9+</td><td>Run inside the Cowork session's sandbox, which provides Python</td></tr>
+<tr><td>Input files the skill writes (<code>job.json</code>, <code>spec.json</code>)</td><td>Your current working directory</td><td>The chat's outputs folder</td></tr>
+<tr><td>Output files (calc reports, result JSON, PCF)</td><td>Your current working directory</td><td>The chat's outputs folder, offered as downloads</td></tr>
+<tr><td>Anything sent to pipingtoolset.com</td><td colspan="2"><b>Nothing.</b> No usage pings, no crash reports, no copies of inputs or results.</td></tr>
+<tr><td>Update checks</td><td colspan="2">None. You update by installing the next release; see the recall note below.</td></tr>
+</table></div>
+<div class="notice">Because your prompts are processed by Anthropic and not by us, the governing privacy terms are Anthropic's and your organization's, not this site's <a href="/legal/privacy.html">privacy policy</a>. If your project data is client-confidential, check your employer's AI-use policy and your Anthropic plan's data settings before pasting drawings or line lists into any assistant, this one included.</div>
+
+<h2 id="install">Install</h2>
+<h3>In Claude Cowork</h3>
+<ol>
+<li>Download <code>piping-toolset.plugin</code> from the <a href="https://github.com/pipingtoolset/pipingtoolset-claude/releases/latest">latest GitHub Release</a>.</li>
+<li>Drag the file into a Cowork chat. A preview card appears; press <b>Accept</b>.</li>
+<li>Start a fresh chat. The five skills appear in the skills menu under <b>PipingToolset</b>.</li>
+</ol>
+<p>Or, in the app's plugin settings, add the marketplace <code>pipingtoolset/pipingtoolset-claude</code>.</p>
+<h3>In Claude Code</h3>
+<pre>/plugin marketplace add pipingtoolset/pipingtoolset-claude
+/plugin install piping-toolset@pipingtoolset</pre>
+<p>Then call a skill by its slash name: <code>/piping-toolset:pressure-design</code>, <code>/piping-toolset:stress-screening</code>, <code>/piping-toolset:load-case-builder</code>, <code>/piping-toolset:pipe-support</code>, <code>/piping-toolset:iso-to-pcf</code>. In Cowork there is no slash prefix; name the skill in plain words ("use the pipe support skill to check PS-201"). Naming it matters, because other installed skills on the same topics would otherwise compete.</p>
+<h3>Requirements</h3>
+<p>Python 3.9 or newer wherever the skills run: your own machine for Claude Code; Cowork's sandbox provides it. There is nothing else to install.</p>
+
+<h2>Try it in twenty seconds</h2>
+<p>Paste the worked example at the top of this page. Then ask for what it will not give you:</p>
+<pre>Use the pressure design skill. What's the allowable stress for A106 Grade B at 650 F under B31.3?
+Just give me the number.</pre>
+<p>Expected: no number. It names B31.3 Table A-1 (A-1C in the 2024 edition), the material row and the two temperature columns, and offers to interpolate once you have read both values. Ten more prompts with pass criteria are in the repository's <a href="https://github.com/pipingtoolset/pipingtoolset-claude/blob/main/tests/e2e/PROMPTS.md">test prompt set</a>.</p>
+
+<h2>How it is verified</h2>
+<ul>
+<li><b>One engine.</b> Every script that computes a code equation reproduces the locked fixture cases of this site's calculation engine, value for value. A red parity test blocks a release. The fixtures and the method are described on the <a href="/trust/validation.html">validation page</a> and listed on the <a href="/trust/coverage.html">coverage page</a>.</li>
+<li><b>Golden outputs.</b> The load case generator's tables and the PCF builder's output are locked byte for byte for the worked examples. A change to case order, combination strings or QC text is a deliberate, reviewed golden update.</li>
+<li><b>Content guard.</b> An automated test fails the build if any skill text or script embeds a tabulated code value or third-party proprietary material.</li>
+<li><b>Recall channel.</b> An installed copy keeps any defect it shipped with until you update it. A release labelled <b>UNCONSERVATIVE-FIX</b> in the <a href="https://github.com/pipingtoolset/pipingtoolset-claude/blob/main/CHANGELOG.md">changelog</a> and on GitHub Releases corrects a result that could have been less conservative than the code requires, and names the skill, the affected inputs and the fix. Update when you see one.</li>
+</ul>
+
+<h2>Questions</h2>
+<details><summary>Do I still need my own copy of the code?</summary><p>Yes. The skills cite paragraphs and equations and ask you to read table values from your licensed copy. They are a way to apply the code correctly and traceably, not a substitute for having it.</p></details>
+<details><summary>Which codes and editions?</summary><p>ASME B31.3 and B31.1 for pressure design, screening and load cases, with the edition as an explicit input wherever a rule differs between editions. Pipe support checks use ASCE 7-22, AISC 360-22, ACI 318-19 Chapter 17 and AWS D1.1. The iso-to-PCF skill targets the CAESAR II PCF import.</p></details>
+<details><summary>Does it work in the claude.ai chat, or in other assistants?</summary><p>It is built and tested for Claude Code and Claude Cowork, which can run the bundled scripts. Running the same skills in other AI assistants is under evaluation; the skill format is an open standard and the scripts are plain Python, so watch the repository for news.</p></details>
+<details><summary>How much does it cost?</summary><p>Nothing. The plugin is free and open source under the Apache License 2.0. You pay only for your own Anthropic plan.</p></details>
+<details><summary>How do I report a wrong result?</summary><p>Open an issue in the <a href="https://github.com/pipingtoolset/pipingtoolset-claude/issues">GitHub repository</a> with the prompt, the script command that ran and the line you dispute, or write to <a href="mailto:support@pipingtoolset.com">support@pipingtoolset.com</a>. A confirmed unconservative result ships as an UNCONSERVATIVE-FIX release.</p></details>
+
+<div class="ctarow">
+<a class="btn primary" href="https://github.com/pipingtoolset/pipingtoolset-claude/releases/latest">Download the plugin</a>
+<a class="btn" href="/calculators/">Use the free calculators instead</a>
+</div>
+</main>
+<footer>
+<div class="brand"><b>Piping Toolset</b> <span>Fast, auditable piping calculation reports.</span> <span class="op">Operated by Flexible Piping Solutions LLC</span></div>
+<div class="cols">
+<div><b>Trust</b><br>
+<a href="/about/">About the engineer</a><br>
+<a href="/trust/validation.html">Validation methodology</a><br>
+<a href="/trust/coverage.html">Fixture coverage</a><br>
+<a href="/trust/changelog.html">Calculation changelog</a><br>
+<a href="/trust/sources.html">Source &amp; citation policy</a></div>
+<div><b>Browse</b><br>
+<a href="/calculators/">All calculators</a><br>
+<a href="/tools/">All tools</a><br>
+<a href="/guides/">All guides</a><br>
+<a href="/examples/">Worked examples</a><br>
+<a href="/faq/">FAQ index</a><br>
+<a href="/claude/">PipingToolset for Claude</a><br>
+<a href="/pricing/">Pricing</a><br>
+<a href="/">Launch the app</a></div>
+<div><b>Legal</b><br>
+<a href="/legal/privacy.html">Privacy policy</a><br>
+<a href="/legal/terms.html">Terms of use</a></div>
+</div>
+<p class="disc">The plugin is an engineering aid. Results must be independently verified and reviewed by a qualified, licensed engineer before any design, fabrication or operation decision. "Piping Toolset" is a name of Flexible Piping Solutions LLC. Claude is a product of Anthropic, PBC; this plugin is not affiliated with or endorsed by Anthropic.</p>
+</footer>
+</body>
+</html>

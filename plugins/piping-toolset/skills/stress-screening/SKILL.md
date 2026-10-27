@@ -1,6 +1,7 @@
 ---
 name: stress-screening
 description: "Hand-check ASME B31.3 / B31.1 sustained, occasional and expansion (SUS/OCC/EXP) stress the way a reviewer will. Use when the user asks about S_A, the f factor or cycle count, Eq. 17, 1.33 Sh or the k factor, which document gives the SIF (B31J vs Appendix D), the formal analysis exemption, support span, spring variability, or wants to check what CAESAR II or AutoPIPE applied."
+compatibility: Requires Python 3.9+ (standard library only)
 ---
 
 # Stress Screening — B31.1 and B31.3 hand checks

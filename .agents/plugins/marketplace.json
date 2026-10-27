@@ -1,0 +1,20 @@
+{
+  "name": "pipingtoolset",
+  "interface": {
+    "displayName": "PipingToolset"
+  },
+  "plugins": [
+    {
+      "name": "piping-toolset",
+      "source": {
+        "source": "local",
+        "path": "./plugins/piping-toolset"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}

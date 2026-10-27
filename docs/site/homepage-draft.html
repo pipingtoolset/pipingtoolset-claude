@@ -1,0 +1,216 @@
+<title>Homepage with Claude Plugin Category</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;700;800&display=swap">
+<style>
+/* Layout: the live pipingtoolset.com homepage (hero, tiered launcher grid, static footer),
+   single light theme by choice to match the site brand. Additions are outlined in
+   dashed accent and flagged NEW; everything else mirrors apps/web/index.html + App.tsx. */
+:root{
+  --bg:#f3f2f2; --panel:#ffffff; --ink:#201e1d; --muted:#605d5d;
+  --accent:#ec3013; --accent-btn:#c9280e; --accent-deep:#ae1800;
+  --border:rgba(32,30,29,.4); --border-soft:rgba(32,30,29,.22);
+  --new-bg:#fff2ef;
+  --font-heading:"Archivo",Arial,Helvetica,sans-serif;
+  --font-body:"Archivo",Arial,Helvetica,sans-serif;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 var(--font-body)}
+a{color:inherit}
+.gutter{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.rail{max-width:1180px;margin:0 auto}
+
+/* Draft banner (not part of the site) */
+.draftbar{background:var(--ink);color:#fff;font-size:12.5px;padding-block:8px}
+.draftbar .rail{display:flex;gap:14px;flex-wrap:wrap;align-items:center}
+.draftbar b{color:var(--accent)}
+.draftbar .key{display:inline-flex;align-items:center;gap:6px;opacity:.9}
+.draftbar .key i{display:inline-block;width:14px;height:14px;border:2px dashed var(--accent);background:var(--new-bg)}
+
+/* Hero */
+.shell-hero{background:var(--bg);border-bottom:2px solid var(--ink)}
+.shell-hero .rail{padding-block:26px 22px}
+.shell-hero h1{margin:0;font-family:var(--font-heading);font-weight:800;font-size:25px;letter-spacing:-.02em;line-height:1.1;text-wrap:balance}
+.shell-hero h1::after{content:"";display:block;height:3px;width:64px;background:var(--accent);margin-top:10px}
+.shell-cta{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0 0;align-items:center}
+.shell-cta a{display:inline-flex;align-items:center;min-height:44px;padding:10px 16px;font-weight:800;font-size:14px;text-decoration:none;border:2px solid var(--ink);color:var(--ink)}
+.shell-cta a.primary{background:var(--accent-btn);border-color:var(--accent-btn);color:#fff}
+.shell-cta .hide{margin-left:auto;color:var(--muted);font-weight:700;font-size:12.5px;text-decoration:underline;text-underline-offset:3px}
+.shell-hero-lede{margin:14px 0 0;font-size:16px;line-height:1.55;max-width:76ch}
+.shell-hero-sub{margin:12px 0 0;font-size:14px;line-height:1.55;color:var(--muted);max-width:90ch}
+
+/* NEW markers */
+.new{position:relative;outline:2px dashed var(--accent);outline-offset:4px;background:var(--new-bg)}
+.new::before{content:"NEW";position:absolute;top:-12px;left:-6px;background:var(--accent);color:#fff;font-weight:800;font-size:10.5px;letter-spacing:.08em;padding:2px 7px;z-index:2}
+a.new{background:var(--new-bg)}
+.new-block{position:relative;outline:2px dashed var(--accent);outline-offset:10px;margin:36px 0 10px}
+.new-block::before{content:"NEW CATEGORY";position:absolute;top:-22px;left:-10px;background:var(--accent);color:#fff;font-weight:800;font-size:10.5px;letter-spacing:.08em;padding:2px 8px;z-index:2}
+
+/* Launcher */
+.wrap .rail{padding-block:18px 30px}
+.apps-heading{font-weight:800;font-size:17px;letter-spacing:-.01em;margin:4px 0 2px}
+.tier-heading{font-family:var(--font-heading);font-weight:800;font-size:12.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:26px 2px 10px;display:flex;align-items:center;gap:10px}
+.tier-heading::after{content:"";flex:1;height:1px;background:var(--border-soft)}
+.tier-heading .star{color:var(--accent);font-size:13px}
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
+.tile{background:var(--panel);border:2px solid var(--border-soft);text-align:left;padding:0;font:inherit;color:inherit;position:relative;overflow:hidden;text-decoration:none;display:block;min-width:0}
+.tile::before{content:"";position:absolute;left:0;right:0;top:0;height:3px;background:var(--accent);transform:scaleX(0);transform-origin:left;transition:transform .18s}
+.tile:hover{border-color:var(--ink);box-shadow:0 3px 10px rgba(45,43,43,.16)}
+.tile:hover::before{transform:scaleX(1)}
+.tile:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.tile-head{display:flex;align-items:flex-start;gap:10px;padding:12px 14px 6px;font-weight:800;font-size:14.5px;line-height:1.25}
+.tile-head svg{flex:0 0 auto;width:28px;height:28px;stroke:var(--ink);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.tile-body{padding:0 14px 13px;font-size:13px;color:var(--muted);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.tile .sub{display:block;font-weight:700;color:var(--muted);font-size:12px;margin-top:2px}
+
+/* The new plugin tiles */
+.plugin-tiles .tile{border-color:var(--border)}
+.plugin-tiles .tile-head svg{stroke:var(--accent-deep)}
+.plugin-tiles .tile-body{color:var(--ink)}
+.plugin-tiles code{font:12.5px/1.5 ui-monospace,Consolas,monospace;background:var(--bg);padding:1px 5px}
+.plugin-note{display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin:12px 2px 0;font-size:13px;color:var(--muted)}
+.plugin-note a{font-weight:700;color:var(--ink)}
+.plugin-note .pill{display:inline-block;font-weight:800;font-size:11px;letter-spacing:.05em;text-transform:uppercase;padding:2px 8px;border:1.5px solid var(--ink)}
+
+/* Footer */
+.sitefooter{border-top:2px solid var(--ink);margin-top:10px;background:var(--bg);font-size:13px;color:var(--muted)}
+.sitefooter .rail{padding-block:24px 30px}
+.sitefooter-brand{display:flex;gap:8px 22px;flex-wrap:wrap;align-items:baseline;padding-bottom:14px;border-bottom:1px solid var(--border-soft)}
+.sitefooter-brand b{color:var(--ink);font-size:15px}
+.sitefooter-brand .op{margin-left:auto}
+.sitefooter-browse{display:flex;gap:6px 18px;flex-wrap:wrap;padding:14px 0 8px}
+.sitefooter-browse a{font-weight:700;color:var(--ink);text-decoration:none;padding:4px 0}
+.sitefooter-cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:18px 24px;padding-top:10px}
+.sitefooter-col{display:flex;flex-direction:column;gap:4px;min-width:0}
+.sitefooter-col b{color:var(--ink);font-size:13px;margin-bottom:2px}
+.sitefooter-col b.gap{margin-top:12px}
+.sitefooter-col a{text-decoration:none;color:var(--muted);padding:2px 0}
+.sitefooter-col a:hover{color:var(--accent-deep);text-decoration:underline}
+.sitefooter-disc{margin:18px 0 0;font-size:12px}
+.sitefooter-col .new{display:inline-block;padding:1px 4px}
+@media (max-width:640px){
+  .shell-hero h1{font-size:21px}
+  .shell-cta .hide{margin-left:0}
+  .sitefooter-brand .op{margin-left:0;flex:1 1 100%}
+}
+@media (prefers-reduced-motion:reduce){.tile::before{transition:none}}
+</style>
+
+<div class="draftbar gutter"><div class="rail">
+  <span><b>DRAFT</b> pipingtoolset.com homepage · 2026-10-27</span>
+  <span class="key"><i></i> dashed = proposed addition; everything else is the live page</span>
+</div></div>
+
+<header class="shell-hero gutter">
+  <div class="rail">
+    <h1>ASME B31.1 / B31.3 / BPE Piping Calculators</h1>
+    <div class="shell-cta">
+      <a class="primary" href="#calculators">Browse all calculators</a>
+      <a href="#pricing">Pricing</a>
+      <a class="new" href="#claude">For Claude</a>
+      <span class="hide">Hide intro ▾</span>
+    </div>
+    <p class="shell-hero-lede">
+      Piping Toolset is a browser-based suite of piping, pressure-equipment, and support-structure
+      calculators built for engineers who need report-grade output they can hand to a reviewer. Every
+      calculator is a pure function: the same inputs always return the same result, and each one is
+      locked behind a fixture-verified worked example that must reproduce a hand-checked reference case
+      before a release ships.
+    </p>
+    <p class="shell-hero-lede">
+      Every free calculator runs entirely in your browser: its inputs are never transmitted to a server,
+      so line numbers, design conditions, and process data stay on your device. The few paid features that
+      need a server, such as PiperFEA solves and cloud-saved designs, send only the model you submit and say
+      so where you use them. Piping Toolset is operated by Flexible Piping Solutions LLC.
+    </p>
+    <p class="shell-hero-sub">
+      Open a toolset below, run a calculation, and add the result to a project report with a titleblock,
+      a captured-calculation list, and print-to-PDF output. <span class="new" style="outline-offset:2px;padding:0 3px">The same engine now runs inside Claude Code and Claude Cowork as a free plugin; see PipingToolset for Claude below.</span>
+    </p>
+  </div>
+</header>
+
+<div class="wrap gutter"><div class="rail">
+  <div class="apps-heading">Applications — select a toolset to open</div>
+
+  <div class="tier-heading">Piping Calculators — code compliance · free</div>
+  <div class="tiles">
+    <a class="tile" href="#"><div class="tile-head"><svg viewBox="0 0 24 24"><path d="M4 8h16M4 16h16M8 4v16M16 4v16"/></svg>BPE / Hygienic</div><div class="tile-body">BPE fitting dimensions (DT-4.1), dead-leg L/d, GSD slope, spray-flow sizing, CIP velocity, tube-weld acceptance, PREN, ferrite, Ra finish</div></a>
+    <a class="tile" href="#"><div class="tile-head"><svg viewBox="0 0 24 24"><path d="M3 12h7a4 4 0 0 0 4-4V3M14 21v-5a4 4 0 0 1 4-4h3"/></svg>Process Piping — B31.3</div><div class="tile-body">Wall thickness, allowable pressure, leak test, bends, miters, branch reinforcement</div></a>
+    <a class="tile" href="#"><div class="tile-head"><svg viewBox="0 0 24 24"><path d="M4 20V4l6 8 4-5 6 13"/></svg>Power Piping — B31.1</div><div class="tile-body">Wall thickness, allowable pressure, leak test, bends, branch reinforcement</div></a>
+    <a class="tile" href="#"><div class="tile-head"><svg viewBox="0 0 24 24"><path d="M2 12h20M6 8v8M18 8v8"/></svg>Pipelines — B31.4 / B31.8 / B31.11</div><div class="tile-body">Liquids, gas &amp; slurry: wall thickness and allowable pressure (SMYS·F·E·T)</div></a>
+    <a class="tile" href="#"><div class="tile-head"><svg viewBox="0 0 24 24"><path d="M3 21V9l9-6 9 6v12M9 21v-6h6v6"/></svg>Building &amp; HVAC — B31.5 / B31.9</div><div class="tile-body">Refrigeration &amp; building services: wall thickness, allowable pressure, leak test</div></a>
+    <a class="tile" href="#"><div class="tile-head"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M9 9v6M15 9v6M9 12h6"/></svg>Hydrogen Piping — B31.12</div><div class="tile-body">Part IP with material performance factor Mf: pressure design, bends, miters, branches</div></a>
+  </div>
+
+  <div class="tier-heading">Engineering Tools — free</div>
+  <div class="tiles">
+    <a class="tile" href="#"><div class="tile-head"><svg viewBox="0 0 24 24"><path d="M4 4h16v16H4zM4 12h16M12 4v16"/></svg>General</div><div class="tile-body">Trapeze/strongback sizing, flange bolt-up sequence, criticality evaluation, AISC member check, EJMA rating</div></a>
+    <a class="tile" href="#"><div class="tile-head"><svg viewBox="0 0 24 24"><path d="M3 17l5-9 4 6 3-4 6 7z"/></svg>Occasional Loads — Wind &amp; Seismic</div><div class="tile-body">Wind on piping (ASCE 7), seismic design force (B31E), occasional-load combination</div></a>
+    <a class="tile" href="#"><div class="tile-head"><svg viewBox="0 0 24 24"><path d="M12 3v6M6 9h12M8 9l-3 12M16 9l3 12"/></svg>Pipe Supports</div><div class="tile-body">Spring variability &amp; max spring rate, thermal growth, pipe weight, support spans</div></a>
+    <a class="tile" href="#"><div class="tile-head"><svg viewBox="0 0 24 24"><path d="M3 18h5v-8h8v8h5"/></svg>Thermal Flexibility — Expansion Loops</div><div class="tile-body">Expansion loop / leg sizing (guided cantilever): U-loops, Z-offsets, L-bends</div></a>
+    <a class="tile" href="#"><div class="tile-head"><svg viewBox="0 0 24 24"><path d="M4 6c4 0 4 4 8 4s4-4 8-4M4 14c4 0 4 4 8 4s4-4 8-4"/></svg>Non-Metallic — FRP/HDPE/CPVC</div><div class="tile-body">PPI DR rating, HDPE Code Case N-755, FRP/GRP (NM-2 / ISO 14692), spans, polymer expansion</div></a>
+    <a class="tile" href="#"><div class="tile-head"><svg viewBox="0 0 24 24"><path d="M3 12c3-6 6 6 9 0s6 6 9 0"/></svg>Fatigue</div><div class="tile-body">Fatigue factor &amp; equivalent cycles (B31.3 302.3.5(d)), B31G / Modified B31G remaining strength</div></a>
+  </div>
+
+  <div class="new-block" id="claude">
+    <div class="tier-heading" style="margin-top:14px">PipingToolset for Claude — free · open source · Apache-2.0</div>
+    <div class="tiles plugin-tiles">
+      <a class="tile" href="#claude-page"><div class="tile-head"><svg viewBox="0 0 24 24"><path d="M12 3v12M8 11l4 4 4-4M4 17v3h16v-3"/></svg>Install in Claude Cowork<span class="sub">Download the .plugin, drag it into a chat, press Accept</span></div><div class="tile-body">Five skills appear under PipingToolset in the skills menu. Python is provided by the Cowork sandbox; nothing else to install.</div></a>
+      <a class="tile" href="#claude-page"><div class="tile-head"><svg viewBox="0 0 24 24"><path d="M4 5l6 7-6 7M12 19h8"/></svg>Install in Claude Code<span class="sub">Two commands in the terminal</span></div><div class="tile-body"><code>/plugin marketplace add pipingtoolset/pipingtoolset-claude</code> then <code>/plugin install piping-toolset@pipingtoolset</code>. Needs Python 3.9+ on your machine.</div></a>
+      <a class="tile" href="#claude-page"><div class="tile-head"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>What it does, what it will not do, where data goes<span class="sub">pipingtoolset.com/claude/</span></div><div class="tile-body">Pressure design, stress screening, load case builder, pipe support, iso to PCF. Claude interviews, a script computes, no code table values are embedded, nothing you enter reaches us.</div></a>
+    </div>
+    <div class="plugin-note">
+      <span class="pill">v0.4.0</span>
+      <span>Built on the same fixture-verified engine as the calculators above.</span>
+      <a href="#claude-page">Read the page →</a>
+      <a href="https://github.com/pipingtoolset/pipingtoolset-claude">Source on GitHub →</a>
+    </div>
+  </div>
+
+  <div class="tier-heading">Pro Tools · <span class="star">★</span></div>
+  <div class="tiles">
+    <a class="tile" href="#"><div class="tile-head"><svg viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6zM9 12h7M9 16h7"/></svg>Report Manager · <span class="star">★</span></div><div class="tile-body">Titleblock, captured calculations, .pcp project files, HTML / print-to-PDF reports</div></a>
+    <a class="tile" href="#"><div class="tile-head"><svg viewBox="0 0 24 24"><path d="M3 20h18M6 20V9l6-5 6 5v11"/></svg>PiperSIF — SIF &amp; Flexibility Factors<span class="sub">B31J-2023 / NM.1</span></div><div class="tile-body">B31J-2023 Table 1-1 stress intensification &amp; flexibility factors plus the NM.1-2022 HDPE catalog</div></a>
+    <a class="tile" href="#"><div class="tile-head"><svg viewBox="0 0 24 24"><path d="M12 2v6M8 8h8l-2 12H10zM4 20h16"/></svg>PiperPSV — Overpressure &amp; Relief Sizing<span class="sub">API 520 / B31.1 App. II</span></div><div class="tile-body">API 520 orifice sizing (gas/steam/liquid), discharge reaction force, API 521 scenario router</div></a>
+  </div>
+
+  <div class="tier-heading">Pro Plus Tools · <span class="star">★★</span></div>
+  <div class="tiles">
+    <a class="tile" href="#"><div class="tile-head"><svg viewBox="0 0 24 24"><path d="M12 2v4M9 6h6M12 6c-3 2-3 10 0 12s3-10 0-12M10 18h4v4h-4z"/></svg>PiperHGR — PT&amp;P Spring Sizing<span class="sub">3D model / datasheet</span></div><div class="tile-body">Variable &amp; compact spring selection, hardware BOM with 3D assembly drawing, submittal sheet</div></a>
+    <a class="tile" href="#"><div class="tile-head"><svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 18 0M12 12l4-4M12 21v-9"/></svg>PiperOCC — ASCE Site Hazards</div><div class="tile-body">ASCE 7-10 / 7-16 / 7-22 static wind and seismic demand, response-spectrum CSV review</div></a>
+    <a class="tile" href="#"><div class="tile-head"><svg viewBox="0 0 24 24"><path d="M4 20L20 4M4 20l8-2M20 4l-2 8"/></svg>PiperBRC — Pipe Brace Demand &amp; Selection</div><div class="tile-body">MSS SP-127 brace-demand screen, SeisBrace reconciliation, Ultimate DXF export</div></a>
+    <a class="tile" href="#"><div class="tile-head"><svg viewBox="0 0 24 24"><path d="M3 12h3l1-3 2 6 2-6 2 6 2-6 1 3h5"/></svg>PiperEXJ — Expansion Joint Design Package</div><div class="tile-body">VIII-2 §4.19 / EJMA bellows verification, rubber joint rating, anchor loads, GA sheet, DXF</div></a>
+    <a class="tile" href="#"><div class="tile-head"><svg viewBox="0 0 24 24"><circle cx="12" cy="14" r="7"/><path d="M12 7V3M9 3h6"/></svg>PiperNOZ — Nozzle Loading Tool<span class="sub">API / NEMA / WRC</span></div><div class="tile-body">API 610 Annex F, NEMA SM-23, WRC-107 shell screen, UCS-66 MDMT</div></a>
+    <a class="tile" href="#"><div class="tile-head"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2"/></svg>PiperFLG — Bolted Flange Analysis<span class="sub">Peq &amp; VIII App. 2</span></div><div class="tile-body">Kellogg equivalent-pressure screen and ASME VIII Appendix 2 flange design</div></a>
+  </div>
+
+  <div class="tier-heading">Ultimate Tools · <span class="star">★★★</span></div>
+  <div class="tiles">
+    <a class="tile" href="#"><div class="tile-head"><svg viewBox="0 0 24 24"><path d="M4 4h16v16H4zM4 10h16M4 16h16M10 4v16M16 4v16"/></svg>PiperFEA — Nozzle/Shell Finite Element Analysis</div><div class="tile-body">Design-grade FEA of nozzle-to-shell junctions: gmsh meshing + CalculiX solve</div></a>
+    <a class="tile" href="#"><div class="tile-head"><svg viewBox="0 0 24 24"><path d="M4 16l8-4 8 4M12 4v8M4 16v4M20 16v4"/></svg>PiperISO — 3D Piping Isometric Drawing Tool</div><div class="tile-body">Fabrication isometrics on a 3D routing model: auto-dimensioning, weld symbols, BOM, DXF</div></a>
+    <a class="tile" href="#"><div class="tile-head"><svg viewBox="0 0 24 24"><path d="M12 3v10M6 13h12M4 21h16M8 13v8M16 13v8"/></svg>PiperSTR — AISC &amp; ACI Compliance (LRFD/ASD)</div><div class="tile-body">Whole pipe-support load path in one run: member, weld, base plate, anchors, pier &amp; soil</div></a>
+  </div>
+
+  <div class="tier-heading">Project Utilities &amp; Admin</div>
+  <div class="tiles">
+    <a class="tile" href="#"><div class="tile-head"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h10"/></svg>Utilities</div><div class="tile-body">Unit conversion, pipe section properties (B36.10), batch import/export, CSV ⇄ JSON, interpolation</div></a>
+    <a class="tile" href="#"><div class="tile-head"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M5 19l2-2M17 7l2-2"/></svg>Settings</div><div class="tile-body">Units, report defaults, account and entitlements</div></a>
+  </div>
+</div></div>
+
+<footer class="sitefooter gutter"><div class="rail">
+  <div class="sitefooter-brand"><b>Piping Toolset</b><span>Fast, auditable piping calculation reports: fixture-verified pure functions, grounded in code compliance.</span><span class="op">Operated by Flexible Piping Solutions LLC</span></div>
+  <nav class="sitefooter-browse" aria-label="Browse">
+    <a href="#">All calculators</a><a href="#">All tools</a><a href="#">Guides</a><a href="#">FAQ index</a><a href="#">Worked examples</a><a class="new" href="#claude-page" style="padding:2px 6px">For Claude</a><a href="#">Pricing</a>
+  </nav>
+  <nav class="sitefooter-cols" aria-label="Site sections">
+    <div class="sitefooter-col"><b>Process Piping — B31.3</b><a href="#">Wall thickness</a><a href="#">Allowable pressure</a><a href="#">Leak test pressure</a><a href="#">Branch reinforcement</a><a href="#">Miter bend pressure</a></div>
+    <div class="sitefooter-col"><b>Power Piping — B31.1</b><a href="#">Wall thickness</a><b class="gap">B31.1 FAQ</b><a href="#">Leak test pressure</a><a href="#">Occasional loads</a></div>
+    <div class="sitefooter-col"><b>BPE / Hygienic</b><a href="#">Dead-leg L/d</a><a href="#">Slope &amp; drainability</a><a href="#">CIP flow &amp; velocity</a></div>
+    <div class="sitefooter-col"><b>Occasional Loads</b><a href="#">Wind load (ASCE 7)</a><a href="#">Seismic force (B31E)</a><b class="gap">Fatigue</b><a href="#">B31G remaining strength</a></div>
+    <div class="sitefooter-col"><b>Trust</b><a href="#">About the engineer</a><a href="#">Validation methodology</a><a href="#">Fixture coverage</a><a href="#">Calculation changelog</a><a href="#">Source &amp; citation policy</a><b class="gap">For AI assistants</b><a class="new" href="#claude-page">PipingToolset for Claude</a><a href="https://github.com/pipingtoolset/pipingtoolset-claude">Plugin source (GitHub)</a><a href="#">llms.txt</a></div>
+    <div class="sitefooter-col"><b>Legal</b><a href="#">Privacy policy</a><a href="#">Terms of use</a><b class="gap">Connect</b><a href="#">support@pipingtoolset.com</a><a href="#">YouTube</a><a href="#">LinkedIn</a></div>
+  </nav>
+  <p class="sitefooter-disc">Free calculators run entirely in your browser and never transmit their inputs; server-backed paid features say so where you use them. The Claude plugin runs in your own Claude environment and sends nothing to Piping Toolset.</p>
+</div></footer>

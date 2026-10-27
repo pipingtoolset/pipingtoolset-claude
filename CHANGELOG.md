@@ -10,8 +10,9 @@ label and are the recall channel.
 
 ## [0.5.0] — 2026-10-27
 
-Two new skills. No change to any existing skill, script, fixture or golden file; every number
-the five earlier skills produce is identical to 0.4.0.
+Two new skills, and distribution to assistants other than Claude. No change to any existing
+skill's calculations, scripts, fixtures or golden files; every number the five earlier skills
+produce is identical to 0.4.0.
 
 - **New `nozzle-load`**: piping forces and moments on equipment nozzles against the allowables
   for that equipment type. Ported from the pipingtoolset.com calculation engine, fixture-locked
@@ -42,6 +43,19 @@ the five earlier skills produce is identical to 0.4.0.
 - Pack: `tools/sync_fixtures.py` vendors five more engine modules (22 modules, 76 cases);
   `tests/test_skill_references.py` asserts seven skills; README, ROADMAP and the prompt set
   (`tests/e2e/PROMPTS.md`) cover the new skills; plugin and marketplace manifests at 0.5.0.
+- `plugins/piping-toolset/plugin.json`: an Agent Plugins 1.0 manifest (agent-plugins.org) next
+  to the unchanged `.claude-plugin/plugin.json`, so the same folder installs in OpenAI Codex and
+  any other Agent Plugins host. `tests/test_manifests.py` fails if the two manifests disagree on
+  name, version or description, or if either marketplace drifts from them.
+- `.agents/plugins/marketplace.json`: the Codex marketplace file for
+  `codex plugin marketplace add pipingtoolset/pipingtoolset-claude`.
+- **All seven skills**: frontmatter gains the Agent Skills `compatibility` field,
+  `Requires Python 3.9+ (standard library only)`. Nothing else in the skills changed.
+- Packaging: `tools/package_plugin.py` also builds `piping-toolset-skills.zip` (only `skills/`,
+  for ChatGPT, Manus and Perplexity uploads), reproducibly; CI uploads it and attaches it to the
+  GitHub Release beside the `.plugin`. The `.plugin` now carries the root `plugin.json` too.
+- README: "Other assistants" section with the Codex, `npx skills` and `gh skill` install commands,
+  where the skills land, and the note that those commands need the repository to be public.
 
 ## [0.4.0] — 2026-10-26
 
