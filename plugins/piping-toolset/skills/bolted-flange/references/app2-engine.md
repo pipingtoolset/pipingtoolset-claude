@@ -2,7 +2,7 @@
 
 Module `aux.app2-flange-integral`, a port of the pipingtoolset.com calculation engine's flange module. Clause path: ASME BPVC VIII-2 Part 4.16 (4.16.6 bolt loads, 4.16.7 moments, stresses, acceptance and rigidity, Tables 4.16.4 to 4.16.11). The retired VIII-1 Mandatory Appendix 2 carried the same method; the 2025 edition of VIII-1 sends the reader to 4.16. B31.3 304.5.1(b) permits either route with B31.3 allowables.
 
-**Verify on the printed page.** The bodies of Eq. 4.16.4 to 4.16.19 and of Tables 4.16.4, 4.16.5 and 4.16.8 to 4.16.12 could not be verified here; confirm them on the printed page. The equations below are what the tool runs, and they reproduce a commercial pipe-stress program's flange report to the digits it prints. They are not offered as a transcription of the Code. The user checks the sequence against the printed 4.16.6 and 4.16.7 before a sealed issue.
+**Verify on the printed page.** The bodies of Eq. 4.16.4 to 4.16.18 and of Tables 4.16.4, 4.16.5 and 4.16.8 to 4.16.12 could not be verified here; confirm them on the printed page. The equations below are what the tool runs, and they reproduce a commercial pipe-stress program's flange report to the digits it prints. They are not offered as a transcription of the Code. The user checks the sequence against the printed 4.16.6 and 4.16.7 before a sealed issue.
 
 ## Symbols
 
