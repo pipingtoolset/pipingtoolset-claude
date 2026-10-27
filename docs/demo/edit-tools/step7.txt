@@ -1,0 +1,9 @@
+# language=en p=0.99
+[  10.1 -   18.1] I give it a code, the addition, the service, and the allowable stress from my own copy of B313.
+[  18.1 -   42.7] It writes a job file and runs the script.
+[  42.7 -   48.7] T is 0.1365 inches.
+[  48.7 -   54.7] T-M with the corrosion allowance is 0.199.
+[  54.7 -   61.7] And 0.280 nominal works with about a third of the pressure in margin.
+[  61.7 -   73.7] Hand check, 750 times 6.625 over 2 times 36,400 is 0.1365, same number.
+[  73.7 -   76.7] Then it tells me what a reviewer would flag.
+[  76.7 -   82.7] The table line behind that allowable stress is not on the sheet yet, and it says so.
