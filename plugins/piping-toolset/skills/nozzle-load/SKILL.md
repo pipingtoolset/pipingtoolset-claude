@@ -33,7 +33,7 @@ Ask these in one pass, accept a partial answer, and mark every unanswered item *
 4. **Resolution point** and nozzle coordinates relative to it (needed for pump Annex F).
 5. **Allowable source**: table name, edition, NPS and rating row the user read, or the vendor letter. For a vessel with none, the PVP2011 table (1A, 1B or 2).
 6. **Owner practice** invoked, and the machinery class (vital or sensitive, essential or spared, neither). PIP RECE002 is an owner practice; ask, do not assume. See [references/owner-practices.md](references/owner-practices.md).
-7. Design pressure and temperature; exchangers and heaters: corroded wall; tanks: diameter, bottom-course thickness, opening elevation; vessels: class, thickness **excluding corrosion allowance**, materials, diameter.
+7. Design pressure and temperature; exchangers and heaters: corroded wall; tanks: diameter, bottom-course thickness, opening elevation; vessels: class, thickness **excluding corrosion allowance**, diameter, and two Division 1 allowable stresses at design temperature that the user reads from Section II Part D: the **vessel shell** and the **nozzle neck**. The paper's 18,800 and 17,100 psi reference values are constants the script holds; never ask the user for them.
 
 ---
 
