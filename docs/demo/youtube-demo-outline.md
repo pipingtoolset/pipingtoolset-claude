@@ -1,115 +1,132 @@
-# YouTube demo: PipingToolset for Claude (3:30 target, 4:00 hard cap)
+# YouTube demo: PipingToolset for Claude
 
-Self-contained. Every prompt you paste is in this file, in the shot where you paste it and again
-in the paste sheet at the end. You do not need the Cowork checklist or any other document open.
+One recording, start to finish, in the order written here. Nothing is pre-run, nothing is pre-opened.
+Every prompt you paste is printed in the step where you paste it, and all of them again in the paste
+sheet at the end. This file is the only document you need open.
 
+The video is edited afterwards: the opening three seconds of the finished video are a replay of a
+result you record in step 9, so you never need to "start with an answer". Just record in order.
+
+**Target length of the edited cut:** 3:30 (4:00 hard cap).
 **Working title:** PipingToolset for Claude: B31.3 wall thickness, a refused table value, and a pipe
 support check in 3 minutes
 **Thumbnail text:** "Claude asks. A script computes. You read the table."
-**Surface:** Claude desktop app, Cowork mode, light theme, the window as recorded on 2026-10-27.
 
-## What the 2026-10-27 take already gives you
+---
 
-`docs/demo/PipingToolset_plugindemo_26oct2026.mp4` (2:53, 1916 × 1076, 30 fps, **silent**: the
-audio track is at −91 dB, so narration is recorded separately over the edit). Usable as B-roll:
+## Part A · Setup (not recorded, about 15 minutes)
 
-| In the file | What is on screen | Use for |
-|---|---|---|
-| 0:00–0:10 | Fresh Cowork chat, `+` menu, Skills › PipingToolset flyout with **five** skills (0.4.0 was installed) | Not usable: the shipping plugin has seven. Re-shoot after the update in pre-flight step 2 |
-| 0:10–0:45 | Prompt 1 pasted, "Getting set up", skill `pressure-design` loads, "Running a command" | Shot 4 (process) |
-| 0:45–1:20 | The Prompt 1 answer: the results table, validity checks, "What a reviewer would flag on this sheet" | Shot 4 (result). Good hold frame for the cold open |
-| 1:20–2:35 | Prompt 3 pasted in the same chat, `pipe-support` loads, "Ran 3 commands", "Build PS-201 spec and run support calc", "Weighing a lighter replacement arm option", "Saving files to your computer" | Shot 6, time-lapsed |
-| 2:35–2:53 | The Prompt 3 answer: governing check, optimizer recommendation, "Before issue" list, the three saved files | Shot 6 (result) |
+A1. **Delete the old plugin install.** In the Claude desktop app: `+` › Plugins › Manage plugins.
+    If PipingToolset is listed, remove it. The earlier install was 0.4.0 with five skills; the
+    video must show seven.
 
-Not in the take, so still to record: the homepage and `/claude/` page (shot 2, now live), the
-install drag-and-drop and the seven-skill menu (shot 3), Prompt 2, the refusal (shot 5), the
-GitHub page and changelog (shot 7), the end card (shot 8). The "Ran 2 commands" / "Ran 3 commands"
-steps were never expanded on camera, so the `python … pressure_design.py` line was never visible;
-the retake of shot 4 fixes that (step 7 under "Before you press record").
+A2. **Empty the working folder.** Delete everything inside `C:\demo\PS-201` so the folder exists
+    and is empty. The old take left `PS-201_calc.md`, `PS-201_spec.json` and `PS-201_result.json`
+    there.
 
-## Before you press record (20 min)
+A3. **Delete old chats.** In the Cowork sidebar, delete "B31.3 pipe wall thickness", "Pipe design
+    and support check" and any other chat from the earlier take, so the sidebar is clean on camera.
 
-1. **Site check, in a browser:** https://pipingtoolset.com/ shows the **For Claude** button in the
-   hero and a "PipingToolset for Claude — free · open source" tier below the free tiles;
-   https://pipingtoolset.com/claude/ loads; its "Download for Cowork (.plugin)" button downloads
-   `piping-toolset.plugin` (about 390 KB). If any of the three fails, stop: the deploy is not in.
-2. **Update the plugin to 0.5.0.** The take was recorded on 0.4.0 (five skills). In Cowork,
-   drag the freshly downloaded `piping-toolset.plugin` into a chat and press **Accept**. Open a
-   new chat, `+` › Skills › PipingToolset, and count **seven**: bolted-flange, iso-to-pcf,
-   load-case-builder, nozzle-load, pipe-support, pressure-design, stress-screening. Leave the
-   downloaded file on the Desktop; shot 3 drags it again on camera.
-3. **Empty the working folder.** Delete everything in `C:\demo\PS-201` (the last take left
-   `PS-201_calc.md`, `PS-201_spec.json`, `PS-201_result.json` there). Point the Cowork chat at
-   that folder, as before, so the outputs folder on screen holds only what the demo creates.
-4. **No competing skills.** If any other piping or ASME skill is installed in Cowork, disable
-   it for the session. A different skill answering is a retake.
-5. **Window.** Same as the take: app maximised at 1920 × 1080, OS scaling 125 %, light theme.
-   Hide the taskbar clock, Focus Assist on. Close other chats in the sidebar.
-6. **OBS.** 1080p30, display capture of that monitor only. Microphone **off** for the screen
-   pass; narration is a separate voice-only recording read from the scripts below.
-7. **Expanded tool steps.** Before recording, in any chat, click a "Ran N commands" row once to
-   learn where it expands. On camera, click it after each run so the `python` command line is
-   visible for at least two seconds. The video's whole claim is that step.
-8. **Rehearsal.** Run Prompt 1 and Prompt 2 once in a throwaway chat, then delete that chat.
-   Confirm `pressure-design` is the skill that loads (it shows in the "Used in this session"
-   panel on the right).
+A4. **Disable competing skills.** If any other piping, ASME or structural skill is installed,
+    disable it for the session. A different skill answering a prompt is a retake.
 
-## Shot list
+A5. **Browser.** Open a browser window at https://pipingtoolset.com/ with no other tabs, signed
+    out, bookmarks bar hidden. Confirm the hero shows a **For Claude** button and the page scrolls
+    to a tier headed "PipingToolset for Claude — free · open source". Leave the window ready.
 
-Timings are for the edited cut. Record at real speed; shot 6 is time-lapsed in the edit.
+A6. **Desktop and window.** Clear the Desktop of files (the download in step 3 should be the only
+    new icon). App and browser maximised at 1920 × 1080, OS scaling 125 %, light theme. Hide the
+    taskbar clock, Focus Assist on.
 
-### Shot 1 · 0:00–0:12 · Cold open
+A7. **OBS.** 1080p30, display capture of that monitor only, microphone off. Narration is
+    recorded separately afterwards from the lines under each step.
 
-**On screen:** the finished Prompt 1 answer, held 3 s on the results table (the take's 0:45–1:20
-footage works), then cut to the pipingtoolset.com homepage.
-
-**Must be visible:** "Results (B31.3-2022, para. 304.1.2, Eq. 3a; inputs as you gave them)", the
-row "Pressure design thickness t … 0.1365 in", the row "Allowable pressure at 0.280 in nominal …
-1,008 psig, PASS".
-
-**Narration:** "This is a B31.3 wall thickness check, done inside Claude, with every number
-coming from a script and not from the model's memory. Here's how it works."
-
-### Shot 2 · 0:12–0:38 · The page
-
-**On screen:** homepage. Click **For Claude** in the hero. On `/claude/`, scroll slowly through
-"What it does" (the seven-row table), pause on "What it will not do", then on "Where your data
-goes" (the table whose last data row says **Nothing**).
-
-**Must be visible:** the seven skill names in the table; the first bullet under "What it will not
-do"; the "Anything sent to pipingtoolset.com … Nothing" row.
-
-**Narration:** "PipingToolset for Claude is seven free skills for Claude Code and Claude Cowork,
-from the people who build the free calculators at pipingtoolset.com. Claude runs the interview, a
-Python script does the math, and you read the table from your own copy of the code. It never
-quotes a code table value, and nothing you type is sent to us."
-
-### Shot 3 · 0:38–1:00 · Install
-
-**On screen:** back on `/claude/`, click **Download for Cowork (.plugin)**. Open Cowork, drag
-`piping-toolset.plugin` from the Desktop into the chat, click **Accept** on the preview card.
-Open a fresh chat, `+` › Skills › PipingToolset, hover down the seven skills so the description
-tooltip shows for one of them.
-
-**Must be visible:** the preview card and its Accept button; the flyout listing all seven skills
-under PipingToolset.
-
-**Narration:** "Install is a drag and drop. Seven skills: pressure design, stress screening, load
-case builder, pipe support, iso to PCF, nozzle load and bolted flange."
-
-### Shot 4 · 1:00–1:45 · Pressure design
-
-**Paste this (Prompt 1):**
+A8. **Learn one click.** Open a throwaway Cowork chat and paste this to learn where the
+    "Ran N commands" row expands:
 
 ```
 Use the pressure design skill. B31.3-2022, normal fluid service. NPS 6 seamless pipe, OD 6.625 in, design 750 psig at 600 F, corrosion allowance 0.0625 in, 12.5% mill tolerance. My allowable S at 600 F is 17900 psi from my copy, E = 1.0, W = 1.0, Y = 0.4. What minimum thickness do I need and does 0.280 in nominal wall work?
 ```
 
-**On screen:** send. When "Ran 2 commands" appears, click it so the `python … pressure_design.py`
-line is on screen for two seconds, then collapse it and let the answer fill in.
+    It will fail or ask to install the skill, because you removed the plugin in A1. That is
+    fine: this is only to confirm no competing skill picks it up. Delete the chat. Then delete
+    the browser's download history so the step 3 download looks fresh.
 
-**Must be visible:** `pressure-design` in the "Used in this session" panel; the python command;
-these rows of the results table, as the skill prints them:
+Press record.
+
+---
+
+## Part B · Recording (in this order, real time, no pauses needed)
+
+### Step 1 · Homepage (edit: 0:12–0:20)
+
+**Do:** browser is on https://pipingtoolset.com/. Hold 2 s. Scroll down slowly past the free tiles
+until the "PipingToolset for Claude — free · open source" tier with its three tiles is centred.
+Hold 2 s. Scroll back up and click **For Claude** in the hero.
+
+**Narration:** "PipingToolset for Claude is seven free skills for Claude Code and Claude Cowork,
+from the people who build the free calculators at pipingtoolset.com."
+
+### Step 2 · The /claude/ page (edit: 0:20–0:38)
+
+**Do:** on https://pipingtoolset.com/claude/, scroll slowly through "What it does" (the seven-row
+table), stop on "What it will not do" for 3 s, then on "Where your data goes" for 3 s (the table
+whose row "Anything sent to pipingtoolset.com" says **Nothing**). Scroll back to the top.
+
+**Narration:** "Claude runs the interview, a Python script does the math, and you read the table
+from your own copy of the code. It never quotes a code table value, and nothing you type is sent
+to us."
+
+### Step 3 · Download (edit: 0:38–0:44)
+
+**Do:** click the red **Download for Cowork (.plugin)** button. Let the download finish. Open the
+Desktop (or the Downloads folder if the browser saves there) so `piping-toolset.plugin` is visible.
+
+**Narration:** "Install is a drag and drop."
+
+### Step 4 · Install (edit: 0:44–0:54)
+
+**Do:** open the Claude desktop app, Cowork, new chat. Drag `piping-toolset.plugin` from the
+Desktop into the chat. When the preview card appears, click **Accept**. Wait for the confirmation.
+
+**Must be visible:** the preview card and the Accept button.
+
+**Narration:** (none; the card speaks for itself)
+
+### Step 5 · The seven skills (edit: 0:54–1:00)
+
+**Do:** start a fresh chat. Click `+` › Skills › PipingToolset. Move the cursor slowly down the
+flyout so the description tooltip appears for two of them. Count seven on screen:
+bolted-flange, iso-to-pcf, load-case-builder, nozzle-load, pipe-support, pressure-design,
+stress-screening. Close the menu.
+
+If fewer than seven are listed, stop recording, remove and reinstall the plugin, and restart from
+step 4.
+
+**Narration:** "Seven skills: pressure design, stress screening, load case builder, pipe support,
+iso to PCF, nozzle load and bolted flange."
+
+### Step 6 · Point the chat at the working folder
+
+**Do:** in the same fresh chat, use the folder control to choose `C:\demo\PS-201` (it should
+appear as a "PS-201 FOLDER" chip, as it did on the earlier take).
+
+**Narration:** (none)
+
+### Step 7 · Prompt 1, pressure design (edit: 1:00–1:45)
+
+**Paste and send:**
+
+```
+Use the pressure design skill. B31.3-2022, normal fluid service. NPS 6 seamless pipe, OD 6.625 in, design 750 psig at 600 F, corrosion allowance 0.0625 in, 12.5% mill tolerance. My allowable S at 600 F is 17900 psi from my copy, E = 1.0, W = 1.0, Y = 0.4. What minimum thickness do I need and does 0.280 in nominal wall work?
+```
+
+**Do:** when "Ran 2 commands" appears, click it so the `python … pressure_design.py` line is on
+screen for 3 s, then collapse it. Let the answer finish. Scroll so the results table and the
+"What a reviewer would flag on this sheet" list are both on screen. Hold 5 s.
+
+**Must be visible:** `pressure-design` under "Used in this session" on the right; the python
+command; these rows as the skill prints them:
 
 | Item | Value |
 |---|---|
@@ -119,7 +136,7 @@ these rows of the results table, as the skill prints them:
 | Wall left for pressure at 0.280 in, 0.280 × 0.875 − 0.0625 | 0.1825 in |
 | Allowable pressure at 0.280 in nominal | 1,008 psig, PASS |
 
-and, below it, "What a reviewer would flag on this sheet" with the "Material is missing" bullet.
+and the "Material is missing" bullet under "What a reviewer would flag on this sheet".
 
 **Narration:** "I give it the code, the edition, the service, and the allowable stress from my
 own copy of B31.3. Watch the step: it writes a job file and runs the script. t is 0.1365 inches,
@@ -128,60 +145,61 @@ pressure in margin. Hand check: 750 times 6.625, over 2 times 36,400, is 0.1365.
 Then it tells me what a reviewer will flag: the table line behind that allowable stress is not on
 the sheet yet, and it says so."
 
-### Shot 5 · 1:45–2:10 · The refusal
+### Step 8 · Prompt 2, the refusal (edit: 1:45–2:10)
 
-**Paste this (Prompt 2), in the same chat:**
+**Paste and send, same chat:**
 
 ```
 Use the pressure design skill. What's the allowable stress for A106 Grade B at 650 F under B31.3? Just give me the number.
 ```
 
-**On screen:** send, hold on the answer. Zoom to 150 % on the paragraph that names the table.
+**Do:** let the answer finish. Hold 5 s on it.
 
 **Must be visible:** no number anywhere in the answer. It names B31.3 Table A-1 (Table A-1C in the
 2024 edition), the A106 Grade B row, the 600 F and 650 F columns, and offers to interpolate once
 you have read both.
+
+If any allowable stress value appears: stop, note it, delete the chat, and restart from step 6.
 
 **Narration:** "Now the part that matters in review. I ask for the allowable stress and I say
 just give me the number. It won't. It tells me which table, which row, which two columns, and
 offers to interpolate once I've read them. The plugin contains no ASME table values. That's
 deliberate, and it's a pinned test."
 
-If a number appears: stop, note it, retake in a fresh chat. Do not edit around it.
+### Step 9 · Prompt 3, pipe support (edit: 2:10–3:05, time-lapsed)
 
-### Shot 6 · 2:10–3:05 · Pipe support from CAESAR II loads
-
-**Paste this (Prompt 3), in the same chat:**
+**Paste and send, same chat:**
 
 ```
 Use the pipe support skill. Check support PS-201: CSA type 1 t-post, W6X15 column 8 ft, W6X15 arm 24 in at EL 96. Two 6 in lines at 8 and 18 in. CAESAR II restraint loads (lb, Y up, pipes run along X): 6-P-1201 SUS 0,-850,0 OPE 180,-920,-140 WIN 0,0,210 EQ 0,0,260; 6-P-1202 SUS 0,-1100,0 OPE 240,-1180,-190 WIN 0,0,260 EQ 0,0,320. SDS 0.5, LRFD, 4 x 3/4 adhesive anchors, tau 800 psi from the ESR. Then optimize it.
 ```
 
-**On screen:** send. The skill runs without stopping (on the take it ran the cascade, re-ran the
-optimizer at a 0.85 cap, and saved files, about 75 s). Time-lapse that at 8–10× with a "sped up"
-caption. Return to real time when the final answer lands. Click "Ran 3 commands, saved files to
-your computer" so a `support_calc.py … --report --json` line shows for two seconds. Then open
-`C:\demo\PS-201` in Explorer and open `PS-201_calc.md`.
+**Do:** let it run (about 75 s on the earlier take: it runs the cascade, re-runs the optimizer at a
+0.85 cap, saves files). Do not touch anything while it runs.
 
-**Only if the skill stops and asks you to confirm the load mapping**, paste:
+**Only if it stops and asks you to confirm the load mapping,** paste and send:
 
 ```
 Yes, that mapping is correct.
 ```
 
-On the take it did not stop; it stated the mapping in the answer under "Load mapping (confirm
-this)". Either behaviour is fine on camera.
+(On the earlier take it did not stop; it stated the mapping inside the answer as "Load mapping
+(confirm this)". Either is fine.)
 
-**Must be visible:** `pipe-support` added to the "Used in this session" panel; the python command;
-these lines of the answer, as the skill prints them:
+When the answer finishes: click "Ran 3 commands, saved files to your computer" so a
+`support_calc.py … --report --json` line is visible for 3 s, collapse it, then scroll slowly from
+"PS-201 passes as designed" through "Before issue" to the last line naming the three saved files.
+Hold 3 s.
+
+**Must be visible:** `pipe-support` added under "Used in this session"; the python command; these
+lines as the skill prints them:
 
 - "Governing check: the base metal at the arm-to-column weld, in tension yielding (AISC J4-1).
   Ratio 0.888, under 1.4D + T."
 - "Load mapping (confirm this): D = SUS, T = OPE − SUS, W = WIN, Eh = EQ, Ev = 0.2·SDS·D"
 - "PS-201 passes as designed, but it's oversized. My recommendation is a W8X10 arm on a PIPE5STD
   column, with a 1 in plate and 5/8 in anchors. That design's highest ratio is 0.764"
-- the "Before issue" list (anchors re-run at 5/8 in, the ASSUMED embedment / f'c / edge distance,
-  Fy 36 ksi, cap plate, existing concrete, restraint type)
+- the "Before issue" list
 - "The calc report, input spec and results are saved to C:\demo\PS-201: PS-201_calc.md,
   PS-201_spec.json and PS-201_result.json."
 
@@ -191,26 +209,41 @@ because that is where support checks go wrong. Then ASCE 7-22 combinations, AISC
 arm, the column, the welds and the base plate, ACI 318 chapter 17 for the anchors. Twenty-three
 combinations. The governing check is the base metal at the arm-to-column weld, at 0.888. It
 passes, so it optimizes: a W8 by 10 arm on a 5-inch standard pipe column, 0.764, and a list of
-what to confirm before issue. The calc report is written to the working folder. That report is
-what you hand to your checker."
+what to confirm before issue."
 
-### Shot 7 · 3:05–3:25 · Data, licence, recall
+### Step 10 · The calc report on disk (edit: inside 2:10–3:05)
 
-**On screen:** cut to `/claude/` "Where your data goes", then to
-https://github.com/pipingtoolset/pipingtoolset-claude (the Apache-2.0 licence badge and the
-seven-skill table in the README), then to `CHANGELOG.md` scrolled to the **0.3.2** entry, which
-carries the UNCONSERVATIVE-FIX label.
+**Do:** open Explorer at `C:\demo\PS-201`. Three files. Double-click `PS-201_calc.md` and scroll
+its first page slowly. Close it.
 
-**Must be visible:** the "Nothing" row; the licence; the words UNCONSERVATIVE-FIX.
+**Narration:** "The calc report is written to the working folder. That report is what you hand to
+your checker."
+
+### Step 11 · GitHub (edit: 3:05–3:25)
+
+**Do:** in the browser, go to https://github.com/pipingtoolset/pipingtoolset-claude. Hold 3 s on
+the README (the seven-skill table and the Apache-2.0 licence badge are above the fold). Click
+`CHANGELOG.md`, scroll to the **0.3.2** entry, which carries the label UNCONSERVATIVE-FIX, hold
+3 s.
 
 **Narration:** "Everything runs in your Claude environment. The scripts are plain Python, open
 source under Apache 2, and verified against the same fixture cases as the free calculators on
 pipingtoolset.com. When a release corrects an unconservative result, it is labelled, and the
 changelog is the recall notice."
 
-### Shot 8 · 3:25–3:35 · End card
+### Step 12 · Back to the data table (edit: 3:05–3:10, cut in before step 11 footage)
 
-**On screen:** a title card with three lines, large enough to read on a phone:
+**Do:** browser back to https://pipingtoolset.com/claude/, scroll to "Where your data goes",
+hold 3 s on the **Nothing** row.
+
+**Narration:** (covered by the step 11 line; this is the picture under "Everything runs in your
+Claude environment.")
+
+Stop recording.
+
+### Step 13 · End card (made in the editor, not recorded)
+
+Three lines of text on the ink background, large enough to read on a phone:
 
 ```
 pipingtoolset.com/claude
@@ -221,26 +254,42 @@ github.com/pipingtoolset/pipingtoolset-claude
 **Narration:** "Free, at pipingtoolset.com slash claude. Link in the description. You still need
 your own copy of the code. You should."
 
-## Contingencies
+---
 
-- **A different skill loads.** Retake in a fresh chat. The skill name in "Used in this session"
-  is the check.
-- **A number with no python step.** Retake. Never ship a cut where the script step is not on
-  screen for the number being narrated.
-- **Shot 6 runs past four minutes.** Cut to the finished `PS-201_calc.md` in the outputs folder
-  and narrate over it.
-- **Cowork unavailable.** Claude Code in Windows Terminal at 125 % zoom, with the slash form of
-  the three prompts (replace "Use the pressure design skill." with
-  `/piping-toolset:pressure-design`, and "Use the pipe support skill." with
-  `/piping-toolset:pipe-support`). Replace shot 3 with the two `/plugin` commands from the end
-  card typed on camera.
+## Part C · Edit order
 
-## Edit notes
+The edited video reorders the footage; the recording order above is for a clean single take.
+
+| Edited time | Footage | Narration |
+|---|---|---|
+| 0:00–0:12 | 3 s hold on the step 7 results table, then cut to step 1 | "This is a B31.3 wall thickness check, done inside Claude, with every number coming from a script and not from the model's memory. Here's how it works." |
+| 0:12–0:38 | steps 1 and 2 | steps 1 and 2 lines |
+| 0:38–1:00 | steps 3, 4, 5 | steps 3 and 5 lines |
+| 1:00–1:45 | step 7 | step 7 line |
+| 1:45–2:10 | step 8 | step 8 line |
+| 2:10–3:05 | step 9 at 8–10× with a "sped up" caption while it runs, real time for the answer, then step 10 | steps 9 and 10 lines |
+| 3:05–3:25 | step 12, then step 11 | step 11 line |
+| 3:25–3:35 | step 13 end card | step 13 line |
+
+Step 6 is cut entirely.
 
 - Zoom to 150 % on the chat column for every number the narration quotes.
 - Caption every quoted result as a lower-third so the video checks out with the sound off.
 - Nothing to blur: the demo data is the published example set.
-- Bed music under shots 3 and 6 only, ducked under narration.
+- Bed music under 0:38–1:00 and the sped-up part of 2:10–3:05 only, ducked under narration.
+
+## Contingencies while recording
+
+- **A different skill loads** (the name under "Used in this session" is the check): stop, delete
+  the chat, restart from step 6.
+- **A number appears with no "Ran N commands" row above it:** stop, delete the chat, restart from
+  step 6. The video's whole claim is the script step.
+- **Step 9 runs past four minutes:** keep recording; the time-lapse absorbs it. If it stalls,
+  send `Continue.` once.
+- **Cowork unavailable:** record in Claude Code in Windows Terminal at 125 % zoom. Replace steps
+  3 to 5 with typing the two commands from the end card. Replace "Use the pressure design skill."
+  at the start of Prompts 1 and 2 with `/piping-toolset:pressure-design` and "Use the pipe
+  support skill." at the start of Prompt 3 with `/piping-toolset:pipe-support`.
 
 ## YouTube metadata
 
@@ -274,44 +323,57 @@ Claude Code, Claude Cowork, piping engineering, wall thickness calculation, Pipi
 
 ## After recording
 
-1. Record the Cowork checklist results for E1, E2 and E9 from the captures (the prompts above are
-   those three rows verbatim; E9's "confirms the mapping before running" pass check should read
-   "states the mapping and asks for confirmation", which is what 0.5.0 does).
-2. Keep the raw OBS file with the checklist evidence; the edited cut is the marketing asset.
-3. Capture one still of the shot 4 results table for the `/claude/` page's video card and send
-   the YouTube URL back so the page can embed it.
+1. Keep the raw OBS file: steps 7, 8 and 9 are the Cowork checklist runs E1, E2 and E9, and the
+   recording is their evidence.
+2. Capture one still of the step 7 results table for the /claude/ page's video card.
+3. Send the YouTube URL back so the page can embed it.
 
 ---
 
 ## Paste sheet
 
-Keep this section visible on the second monitor. Paste in order; one chat for all three.
+Everything you paste, in order. One chat for Prompts 1, 2 and 3.
 
-**Prompt 1 (shot 4):**
+**Prompt 1 (step 7):**
 
 ```
 Use the pressure design skill. B31.3-2022, normal fluid service. NPS 6 seamless pipe, OD 6.625 in, design 750 psig at 600 F, corrosion allowance 0.0625 in, 12.5% mill tolerance. My allowable S at 600 F is 17900 psi from my copy, E = 1.0, W = 1.0, Y = 0.4. What minimum thickness do I need and does 0.280 in nominal wall work?
 ```
 
-**Prompt 2 (shot 5):**
+**Prompt 2 (step 8):**
 
 ```
 Use the pressure design skill. What's the allowable stress for A106 Grade B at 650 F under B31.3? Just give me the number.
 ```
 
-**Prompt 3 (shot 6):**
+**Prompt 3 (step 9):**
 
 ```
 Use the pipe support skill. Check support PS-201: CSA type 1 t-post, W6X15 column 8 ft, W6X15 arm 24 in at EL 96. Two 6 in lines at 8 and 18 in. CAESAR II restraint loads (lb, Y up, pipes run along X): 6-P-1201 SUS 0,-850,0 OPE 180,-920,-140 WIN 0,0,210 EQ 0,0,260; 6-P-1202 SUS 0,-1100,0 OPE 240,-1180,-190 WIN 0,0,260 EQ 0,0,320. SDS 0.5, LRFD, 4 x 3/4 adhesive anchors, tau 800 psi from the ESR. Then optimize it.
 ```
 
-**Only if asked to confirm the load mapping (shot 6):**
+**Only if asked to confirm the load mapping (step 9):**
 
 ```
 Yes, that mapping is correct.
 ```
 
-**End card text (shot 8):**
+**Only if step 9 stalls:**
+
+```
+Continue.
+```
+
+**URLs (steps 1, 2, 11, 12):**
+
+```
+https://pipingtoolset.com/
+https://pipingtoolset.com/claude/
+https://github.com/pipingtoolset/pipingtoolset-claude
+https://github.com/pipingtoolset/pipingtoolset-claude/blob/main/CHANGELOG.md
+```
+
+**End card text (step 13):**
 
 ```
 pipingtoolset.com/claude
