@@ -1,6 +1,6 @@
 ---
 name: load-case-builder
-description: "Build complete ASME B31.1/B31.3 static load case sets for CAESAR II and AutoPIPE: HGR, HYD, OPE, SUS, EXP, OCC and envelopes, with Algebraic/Scalar/SRSS combinations and occasional allowables. Use for load cases, L-case numbering, wind/seismic, PSV thrust, steam-out or friction runs."
+description: "Build complete ASME B31.1 / B31.3 static load case sets for CAESAR II and AutoPIPE: HGR, HYD, OPE, SUS, EXP, OCC and envelopes with Algebraic / Scalar / SRSS combinations and occasional allowables. Use when the user asks for load cases, a load case set, combination cases or L-case numbering, hanger cases, wind or seismic cases, PSV thrust, steam-out or friction runs."
 ---
 
 # Load Case Builder — CAESAR II and AutoPIPE
@@ -284,11 +284,11 @@ The generator checks items 4, 5, 7, 10 and 11 automatically and prints its findi
 `scripts/loadcase_gen.py` (Python 3.9+, standard library only) builds a complete set from a JSON spec, holds every reference symbolically, resolves numbering in one pass, refuses forward references, and prints the case table, the report extraction matrix and QC findings.
 
 1. Turn the Step 0 interview into a spec. The format is in `references/spec-format.md`; `scripts/examples/two-state-b313.json` is a worked example.
-2. Run it from this skill's directory:
+2. Run it. Script paths below are relative to this skill's directory. Call them by their full path from wherever the session is working; do not change into the skill folder (in Cowork it is a read-only mount and the working directory is the outputs folder). Write `job.json` and every output file to the working directory, never into the skill folder, so the user can open and download them. Save the spec as `spec.json` in the working directory first:
    ```
-   python scripts/loadcase_gen.py --spec <spec.json>                 # markdown report
-   python scripts/loadcase_gen.py --spec <spec.json> --format csv    # for a spreadsheet
-   python scripts/loadcase_gen.py --spec <spec.json> --format json   # machine-readable
+   python scripts/loadcase_gen.py --spec spec.json                   # markdown report
+   python scripts/loadcase_gen.py --spec spec.json --format csv      # for a spreadsheet
+   python scripts/loadcase_gen.py --spec spec.json --format json     # machine-readable
    ```
 3. Present the table, the extraction matrix and every QC finding. Put the ASSUMED items from Step 0 at the top. If the spec changes (a state added, an occasional dropped), regenerate — never hand-edit L-numbers.
 
