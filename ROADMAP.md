@@ -7,7 +7,7 @@ One plugin, `piping-toolset` (display name **PipingToolset**), with five skills 
 | `load-case-builder` | Complete B31.1/B31.3 static load case sets for CAESAR II and AutoPIPE, generated symbolically so references never go stale; QC gate; report extraction matrix | Built |
 | `pressure-design` | Code-basis interview, edition logic and copyright-safe lookups for B31.3/B31.1 pressure design: wall thickness, allowable pressure, branch reinforcement, bends, miters, leak test | Built |
 | `stress-screening` | Sustained / occasional / expansion hand checks, f factor by edition, SIF-source resolution, formal-analysis exemption, support spans, springs | Built |
-| `pipe-support` | Support assembly check (ASCE 7-22 combos from CAESAR II loads, AISC 360-22 members/welds/bolts, DG1 base plate, ACI 318-19 Ch. 17 anchors, pier), review findings, optimizer, calc report | Built (0.3.0). Next: fatigue/vibration/seismic workflows (plan phase 4), company-standard detail library, header-beam check for goalpost/trapeze |
+| `pipe-support` | Support assembly check (ASCE 7-22 combos from CAESAR II loads, AISC 360-22 members/welds/bolts, DG1 base plate, ACI 318-19 Ch. 17 anchors, pier), review findings, optimizer, calc report | Built (0.3.0; header-beam check and WT stem orientation 0.3.2). Next: fatigue/vibration/seismic workflows (plan phase 4), company-standard detail library |
 | `iso-to-pcf` | PDF stress isometrics to a CAESAR II PCF: JSON walk spec, exact-fraction builder, CAESAR II safe record set, validator | Built (0.2.0) — live CAESAR II import confirmed 2026-10-23 (four-file ladder incl. the demo line) |
 
 ## Remaining before release

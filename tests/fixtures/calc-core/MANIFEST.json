@@ -1,6 +1,6 @@
 {
   "source": "pipecalcpro packages/calc-core/fixtures",
-  "calc_core_commit": "0f9282b3a21814bcac5998d9f04a8121b85768fe",
+  "calc_core_commit": "6eab3e155aee42d821f257bb3faaeebdd5a763c2",
   "modules": {
     "noncode.pipe-section": {
       "skill": "stress-screening",
@@ -71,14 +71,14 @@
     "structural.aisc-member": {
       "skill": "pipe-support",
       "source_file": "piperstr-member.json",
-      "source_sha256": "003053c30703c03b084744dd04a94c2df261345f76d9cdc8700e0c54226167ed",
-      "cases": 14
+      "source_sha256": "37a9b874c84b8d2f9d1b405d31e67657cf067b76bcbd24618b9f831a46a95222",
+      "cases": 15
     },
     "structural.baseplate-anchorage": {
       "skill": "pipe-support",
       "source_file": "piperstr-baseplate.json",
-      "source_sha256": "ba2671d9f6648f1c33650c96585979070a3e79335cd8641882f1512f106bc9ac",
-      "cases": 4
+      "source_sha256": "508c4a081b147ecf769f0a13ada5846d012a2dda82d4b1c4c6881245ac5230c2",
+      "cases": 6
     },
     "structural.fillet-weld": {
       "skill": "pipe-support",

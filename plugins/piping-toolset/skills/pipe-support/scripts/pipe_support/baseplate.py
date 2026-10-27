@@ -17,7 +17,7 @@ import math
 import re
 
 from .common import InputError, result, round_half_up
-from .jsmath import div, finite, jmax, jmin, js_num, nn, pow_, sqrt
+from .jsmath import div, finite, jmax, jmin, js_num, nn, pow_, sqrt, truthy
 
 MODULE = "structural.baseplate-anchorage"
 
@@ -238,10 +238,28 @@ def base_plate_anchorage(input):
     ANc = jmin(spanN, pierLength) * jmin(spanB, pierWidth)
     psiEdN = 1.0 if ca1 >= 1.5 * hefEff else 0.7 + div(0.3 * ca1, 1.5 * hefEff)  # 17.6.2.4
     psiCN = 1.0 if cracked else 1.25  # 17.6.2.5
-    psiCpN = 1.0 if anchorType == "cast-in" else jmin(1.0, jmax(div(ca1, 1.5 * hefEff), 1.0))  # 17.6.2.6
+    # 17.6.2.6 splitting, post-installed anchors in UNCRACKED concrete (no supplementary
+    # reinforcement): psi_cp,N = 1.0 when ca,min >= cac, else max(ca,min/cac, 1.5*hef/cac).
+    # Cracked concrete and cast-in anchors: 1.0. Until 2026-10-26 an inner max() pinned this
+    # at 1.0 in every case; cac comes from the ESR or the Table 17.9.5 default.
+    psiCpN = 1.0
+    cp_note = ""
+    if anchorType != "cast-in" and not cracked:
+        cac_default = 2 * hef if anchorType == "post-installed-adhesive" else 4 * hef
+        cac_in = input.get("cac")
+        has_cac = truthy(cac_in) and cac_in > 0
+        cac = cac_in if has_cac else cac_default
+        if not has_cac:
+            warnings.append(
+                f"Uncracked concrete with {anchorType} anchors and no critical edge distance cac supplied — psi_cp,N (ACI 17.6.2.6) "
+                f"uses the Table 17.9.5 default cac = {'2' if anchorType == 'post-installed-adhesive' else '4'}·hef = {js_num(round_half_up(cac, 3))} in. "
+                "Enter cac from the product's ESR to replace it."
+            )
+        psiCpN = 1.0 if ca1 >= cac else jmin(1.0, jmax(div(ca1, cac), div(1.5 * hef, cac)))
+        cp_note = f", psi_cp,N = {js_num(round_half_up(psiCpN, 4))} (17.6.2.6, cac = {js_num(round_half_up(cac, 3))} in)"
     Ncbg = div(ANc, ANco) * psiEdN * psiCN * psiCpN * Nb  # 17.6.2.1b
     phiNcbg = aci_design(Ncbg, _PHI_ANCHOR["concreteTension"])
-    checks.append(_row("Concrete breakout (tension)", Tanchor, phiNcbg, "ACI 318-19 17.6.2.1b"))
+    checks.append(_row("Concrete breakout (tension)", Tanchor, phiNcbg, f"ACI 318-19 17.6.2.1b{cp_note}"))
 
     # --- pullout, ACI 17.6.3 ---------------------------------------------------
     if anchorType == "cast-in":

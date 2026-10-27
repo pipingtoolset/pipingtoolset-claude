@@ -650,16 +650,40 @@ def _flexure_tee(s, m, cls, f):
     Lb = f["Lb"]
     Sx, Zx = _n(s.get("Sx"), 0), _n(s.get("Zx"), 0)
     My = Fy * Sx
-    Mp = _min(Fy * Zx, 1.6 * My)  # F9-2
-    results = [_nominal(Mp, "F9-1 (yielding)", {"Mp": Mp, "My": My})]
+    stem_comp = f.get("stemInCompression") is True
+    # Stem in tension: Mp = Fy*Zx <= 1.6*My (F9-2). Stem in compression: Mp = My (F9-4) -
+    # the stem tip yields first and there is no plastic reserve. The orientation is an
+    # input since 2026-10-26; before that only the tension branch was evaluated, which was
+    # UNCONSERVATIVE for a flange-up WT cantilever arm (hogging puts the stem in compression).
+    Mp = My if stem_comp else _min(Fy * Zx, 1.6 * My)  # F9-2 / F9-4
+    results = [_nominal(Mp, "F9-4 (yielding, stem in compression: Mp = My)" if stem_comp else "F9-1 (yielding)",
+                        {"Mp": Mp, "My": My})]
 
+    # LTB, F9-4/F9-5: B is NEGATIVE when the stem is in compression (F9-5 sign convention).
     J, Iy = _n(s.get("J"), 0), _n(s.get("Iy"), 0)
     if Lb > 0 and J > 0 and Iy > 0:
-        B = 2.3 * (s["d"] / Lb) * _sq(Iy / J)
+        B = (-2.3 if stem_comp else 2.3) * (s["d"] / Lb) * _sq(Iy / J)  # F9-5
         Mcr = ((1.95 * E) / Lb) * _sq(Iy * J) * (B + _sq(1 + B * B))  # F9-4
-        results.append(_nominal(_min(Mcr, Mp), "F9-4 (LTB)", {"Lb": Lb, "Mcr": Mcr}))
+        results.append(_nominal(_min(Mcr, Mp),
+                                f"F9-4 (LTB, B {'< 0, stem in compression' if stem_comp else '> 0'})",
+                                {"Lb": Lb, "Mcr": Mcr, "B": B}))
     fl = cls["flange"]
-    if fl["flex"] != "compact" and Sx > 0:
+    if stem_comp:
+        # Local buckling of the tee stem in flexural compression, F9.4: Mn = Fcr*Sx with Fcr
+        # stepped on d/tw against 0.84*sqrt(E/Fy) and 1.52*sqrt(E/Fy) (F9-17/18/19).
+        tw = _n(s.get("tw"), 0)
+        if tw > 0 and Sx > 0:
+            lam = s["d"] / tw
+            k = _sq(E / Fy)
+            if lam <= 0.84 * k:
+                Fcr = Fy
+            elif lam <= 1.52 * k:
+                Fcr = (1.52 - 0.84 * lam * _sq(Fy / E)) * Fy  # F9-18
+            else:
+                Fcr = (1.52 * E) / (lam * lam)  # F9-19
+            results.append(_nominal(Fcr * Sx, "F9-16 (stem local buckling)", {"lambda": lam, "Fcr": Fcr}))
+    elif fl["flex"] != "compact" and Sx > 0:
+        # Flange local buckling (F9-6/F9-7) - only when the flange is the compression element.
         lam, lamP, lamR = fl["lambda"], fl["lambdaP"], fl["lambdaR"]
         if fl["flex"] == "noncompact":
             Mn = Mp - (Mp - 0.7 * Fy * Sx) * ((lam - lamP) / (lamR - lamP))
@@ -792,7 +816,8 @@ def aisc_member_design(input: Dict[str, Any]) -> Dict[str, Any]:  # noqa: A002 -
 
     tens = tension_strength(s, m, {"An": input.get("An"), "U": input.get("U")})
     comp = compression_strength(s, m, cls, {"Lcx": Kx * Lx, "Lcy": Ky * Ly, "Lcz": Kz * Lz})
-    mnx = flexural_strength(s, m, cls, {"Lb": Lb, "Cb": input.get("Cb")}, "major")
+    mnx = flexural_strength(s, m, cls, {"Lb": Lb, "Cb": input.get("Cb"),
+                                        "stemInCompression": input.get("stemInCompression")}, "major")
     mny = flexural_strength(s, m, cls, {"Lb": Lb, "Cb": input.get("Cb")}, "minor")
     vnx = shear_strength(s, m, cls, "major")
     vny = shear_strength(s, m, cls, "minor")
@@ -876,8 +901,16 @@ def aisc_member_design(input: Dict[str, Any]) -> Dict[str, Any]:  # noqa: A002 -
             warnings.append("Shear lag factor U defaulted to 0.60 for the angle (single-leg connection assumed). "
                             "Supply U from Table D3.1 when the connection is known.")
     if kind == "T":
-        warnings.append("Tee flexure assumes the stem in tension. With the stem in compression F9 caps Mn at "
-                        "My — confirm the orientation.")
+        sic = input.get("stemInCompression")
+        if sic is None:
+            warnings.append("Tee flexure assumes the stem in tension (no orientation supplied). With the stem in "
+                            "compression F9 caps Mn at My, B goes negative in F9-5 and stem local buckling (F9.4) "
+                            "applies — supply stemInCompression.")
+        elif sic:
+            warnings.append("Tee stem in flexural compression: F9 uses Mp = My, B < 0 in the LTB term and the "
+                            "F9.4 stem local-buckling limit.")
+        else:
+            warnings.append("Tee stem in flexural tension: F9 yielding Mp <= 1.6·My with B > 0 in the LTB term.")
     if slGov > slLimit:
         warnings.append(f"KL/r = {_js_num(round_half_up(slGov, 1))} exceeds the AISC recommended limit of "
                         f"{_js_num(slLimit)}.")

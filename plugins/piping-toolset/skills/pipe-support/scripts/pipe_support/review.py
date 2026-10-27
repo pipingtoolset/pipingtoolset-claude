@@ -15,12 +15,14 @@ explains them; it does not change a ratio or a verdict.
 
 from __future__ import annotations
 
+import re
 from typing import Dict, List, Optional
 
 from . import detailing as DT
 from .aisc import find_shape
 from .bolts import bolt_group, end_plate_no_prying
 from .common import round_half_up
+from .loads import ASD as ASD_TABLE
 
 SEV_ORDER = {"critical": 0, "major": 1, "minor": 2, "info": 3}
 
@@ -104,6 +106,8 @@ def review(design: dict, env: dict, spec: dict, opt: Optional[dict] = None) -> L
         out.append(_f(sev, _title(w), w, "engine warning"))
     # 4. checks the parametric engine does not make
     out += _pipe_moments(spec)
+    out += _j10_flange_weld_note(env)
+    out += _asd_wind_anchorage(design, env)
     for f in DT.constructability({**design, "connections": spec.get("fabrication")}):
         out.append(_f("minor" if f["severity"] != "violation" else "major",
                       f"Detailing - {f['severity']}", f["message"], f["clause"]))
@@ -158,6 +162,73 @@ def _pipe_moments(spec: dict) -> List[dict]:
                           "needs those moments added to the arm and column - model it as a frame or "
                           "confirm the restraint is a simple support (moments ~0).",
                           "load path completeness"))
+    return out
+
+
+def _j10_flange_weld_note(env: dict) -> List[dict]:
+    """P.E. ruling 2026-10-26: the engine's J10.1 loaded width is tw + 2w, the footprint of the
+    two web/leg fillets. If the arm FLANGES are also welded to the column flange, the loaded
+    width is the arm's bf: the 0.15·bf exemption may no longer apply and J10.1 must be checked
+    with that detail. The engine does not know the flange welds, so the reviewer says so."""
+    out = []
+    for st in env["stages"]:
+        if st.get("component") != "weld":
+            continue
+        for c in st.get("checks", []):
+            if c["label"] == "Column flange local bending" and "web fillets only" in (c.get("clause") or ""):
+                out.append(_f("info", "J10.1 loaded width assumes web fillets only",
+                              f"{st['stage']}: column flange local bending ratio {c['ratio']} on a loaded width of "
+                              "tw + 2w (the two web fillets). If the arm flanges are also welded to the column, the "
+                              "loaded width is the arm flange width bf — re-run the check with that detail.",
+                              c.get("clause", "")))
+    for w in dict.fromkeys(env.get("warnings") or env["governingRun"]["warnings"]):
+        if "J10.1 column-flange local bending not required" in w:
+            out.append(_f("minor", "J10.1 exemption rests on web-only fillets",
+                          w + " That exemption assumes the arm is welded along its web or leg only. If the arm "
+                          "flanges are also welded, the loaded width is bf, the 0.15·bf exemption may not hold "
+                          "and J10.1 must be checked — re-run with that detail.",
+                          "AISC 360-22 J10.1"))
+    return out
+
+
+_COMBO_ID = re.compile(r"^ASD-(.+?)(?:[+-](?:T)?|\+T)?(?: \(service\))?$")
+
+
+def asd_wind_combo(combo_id: str) -> bool:
+    """True when an envelope combination id names an ASD combination that carries wind.
+
+    Ids are built by loads.combinations as "<method>-<cid>[+|-][+T]", e.g. "ASD-5a+",
+    "ASD-7a-+T"; the cid is looked up in the ASD table so this never depends on the clause text."""
+    m = _COMBO_ID.match(str(combo_id or ""))
+    if not m:
+        return False
+    tag = m.group(1)
+    for cid, _clause, fac in ASD_TABLE:
+        if tag == cid or (tag.startswith(cid) and tag[len(cid):len(cid) + 1] in ("+", "-")):
+            return "W" in fac
+    return False
+
+
+def _asd_wind_anchorage(design: dict, env: dict) -> List[dict]:
+    """P.E. ruling 2026-10-26 (code-basis item 10, deliberately not changed in the engine): in
+    ASD the ACI 318-19 strength-design anchor capacity is converted with a fixed 1/1.5
+    (R17.5.3). Where a 0.6W combination governs anchorage the implied factor is 1/0.6 = 1.67,
+    so ASD anchorage can be about 10 % unconservative there. Recommend LRFD."""
+    out = []
+    for st in env["stages"]:
+        if st.get("component") != "anchorage":
+            continue
+        combo = str(st.get("combo") or "")
+        if not asd_wind_combo(combo):
+            continue
+        out.append(_f("major", "ASD anchorage governed by a wind combination",
+                      f"{st['stage']}: {st['governing']} = {st['ratio']} under {combo}. The engine converts the "
+                      "ACI 318-19 strength capacity to allowable with a fixed 1/1.5 (R17.5.3); a 0.6W ASD "
+                      "combination implies 1/0.6 = 1.67, so this row can be about 10 % unconservative. "
+                      "Run the anchorage in LRFD (ACI 318-19 Ch. 17 is strength design) or check the "
+                      "wind-governed anchors by hand with the 0.6W / 1.0W pairing.",
+                      "ACI 318-19 R17.5.3; ASCE 7-22 2.4.1",
+                      "re-run with method LRFD for the anchorage verdict"))
     return out
 
 

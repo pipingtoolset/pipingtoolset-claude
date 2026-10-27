@@ -49,25 +49,48 @@ verdict.
    column-flange local bending at the arm. 0.3.0's `[cross-check]` row is retired.
 2. **Base plate: "Concrete breakout (tension)" compares the total group tension** with the group
    capacity Ncbg. This is consistent; the steel, pullout and bond rows are per anchor.
-3. **Base plate: the post-installed splitting factor ψcp,N** evaluates to 1.0 in every case (an
-   inner `max` where `min` looks intended), so splitting never reduces capacity. Review
-   anchors near edges against the ESR's own critical edge distance.
+3. **Base plate: the post-installed splitting factor ψcp,N - FIXED (engine 2026-10-26; plugin 0.3.2).**
+   Up to 0.3.1 it evaluated to 1.0 in every case. For post-installed anchors in **uncracked**
+   concrete it is now ACI 17.6.2.6: 1.0 when ca,min ≥ cac, else max(ca,min / cac, 1.5·hef / cac).
+   `cac` is a new base-plate input from the anchor's ESR; omitted, the Table 17.9.5 default
+   (adhesive 2·hef, mechanical 4·hef) is used with a warning. Cracked concrete - the default -
+   and cast-in anchors stay at 1.0, so no earlier result moves unless `cracked: false` was set.
 4. **Base plate: the 17.6.2.1.2 reduced hef** uses the pier edge distances, not ca1.
 5. **Fillet weld: L/w < 4** warns but does not reduce anything. J2.2b limits the effective
    *size* to 1/4 of the length; the engine's warning text speaks of the effective length.
-6. **WT flexure, F9 LTB term B** is always taken positive. With the stem in compression this is
-   unconservative. Avoid WT arms with the stem down, or check them by hand.
+6. **WT flexure, stem orientation - FIXED (engine 2026-10-26; plugin 0.3.2, UNCONSERVATIVE-FIX).**
+   Up to 0.3.1 F9 was always evaluated with the stem in tension (Mp = min(Fy·Zx, 1.6·My), B > 0).
+   A flange-up WT arm hogs at the column face with its stem in compression, where F9 gives
+   Mp = My, B < 0 in F9-5 and the F9.4 stem local-buckling limit - on a WT5X11 at Lb = 24 in
+   that is φMn 89.2 → 55.7 kip-in. `stemOrientation` is a new per-arm input: "down" (flange up,
+   the usual detail, the default) or "up". The cascade maps it per member: cantilever arm →
+   stem down is compression; goalpost / trapeze header (sagging) → stem down is tension. A WT
+   arm with no orientation is analysed stem down and warned.
 7. **Cantilever with no columnHeight** returns NaN for the base moment. The skill's spec
    validation requires it.
-8. **Goalpost / trapeze headers** are not checked as spanning members. Check the header
-   separately.
+8. **Goalpost / trapeze headers - FIXED (engine 2026-10-26; plugin 0.3.2).** With `columnSpacing`
+   given, each arm is also checked as a header: a simple span between the column centrelines
+   with the pipes as point loads at their offsets (reactions, Mmax under a load, shear,
+   deflection by superposition at the load points and midspan) through the AISC D-H check
+   with Lb = span and K = 1. The header statics are reported, and a warning names the heavier
+   column when the reactions split worse than 55/45 - the column stages keep the 50 % share.
+   Without a spacing the header is still not checked and the engine says so.
 9. **Pier with a resultant outside the footing** returns an infinite soil ratio. That means
    "footing too small", not a numerical fault.
 
 10. **ASD anchorage** converts the ACI 318-19 (strength-design) anchor capacity to an allowable
     value with a fixed 1/1.5 (R17.5.3). For a wind-governed ASD combination (0.6W) the
     implied factor is 1/0.6 = 1.67, so ASD anchorage can be about 10 % unconservative there.
-    Run anchorage in **LRFD**, or check wind-governed anchors by hand.
+    Run anchorage in **LRFD**, or check wind-governed anchors by hand. **Kept as is by P.E.
+    ruling (2026-10-26)**; since 0.3.2 the reviewer raises a *major* finding whenever an ASD
+    anchorage stage is governed by a wind combination.
+
+11. **J10.1 loaded width** for an open-shape arm is tw + 2w, the footprint of the two web or
+    leg fillets, and the clause says so. If the arm **flanges** are also welded to the column,
+    the loaded width is bf: the 0.15·bf exemption may no longer apply and J10.1 must be
+    re-checked with that detail. Kept by P.E. ruling (2026-10-26); the reviewer notes it.
+12. **"Base metal governs over the weld metal (AISC J4)"** is only raised when the base-metal
+    ratio is ≥ 0.5 (engine 2026-10-26). The J4 rows are always in the stage table.
 
 ## Not generated - supply by hand when they apply
 
@@ -75,4 +98,4 @@ verdict.
   needed for some anchorage designs. Map a case scaled by Ω0 as `Eh` and re-run.
 - **Torsion** (H3) of the column under longitudinal pipe loads: reported, not checked.
 
-Report items 6 and 10 to the user whenever the design is close to a limit in that element.
+Report items 10 and 11 to the user whenever the design is close to a limit in that element.

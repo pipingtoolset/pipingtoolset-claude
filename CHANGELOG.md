@@ -8,6 +8,48 @@ keep a defect until the plugin is updated, so each such entry names the skill, t
 affected inputs and the release that fixed it. GitHub Releases carry the same
 label and are the recall channel.
 
+## [0.3.2] — 2026-10-26
+
+- **UNCONSERVATIVE-FIX** `pipe-support`: WT (tee) arm flexure was always evaluated on
+  the AISC 360-22 F9 **stem-in-tension** branch (Mp = min(Fy·Zx, 1.6·My), B > 0 in
+  F9-5, flange local buckling).
+  - **Affected:** every assembly with a WT arm. A flange-up tee (pipes resting on the
+    flange, stem down — the usual detail) hogs at the column face with its stem in
+    compression, where F9 gives Mp = My, B < 0 and the F9.4 stem local-buckling limit.
+    On a WT5X11 at Lb = 24 in the arm's φMn is 55.73 kip-in, not the 89.16 reported by
+    0.3.0 / 0.3.1 — a 37 % overstatement. Other arm shapes are not affected.
+  - **Fix:** follows the pipingtoolset.com engine fix (2026-10-26). New per-arm input
+    `stemOrientation` ("down" = flange up, the default; "up" = inverted). The cascade
+    maps it per member: cantilever arm → stem down is compression; goalpost / trapeze
+    header (sagging) → stem down is tension. A WT arm with no orientation given is
+    analysed stem down and warned.
+  - **Affected inputs:** any `pipe-support` run whose `design.arms[].shape` is a WT.
+    Upgrade and re-run; if the tee is inverted, set `stemOrientation: "up"`.
+- `pipe-support`: ACI 318-19 **17.6.2.6 splitting factor ψcp,N** is now evaluated for
+  post-installed anchors in **uncracked** concrete (it was pinned at 1.0): 1.0 when
+  ca,min ≥ cac, else max(ca,min / cac, 1.5·hef / cac). New base-plate input `cac` from the
+  anchor's ESR; omitted, the Table 17.9.5 default (adhesive 2·hef, mechanical 4·hef) is
+  used with a warning. Cracked concrete (the default) and cast-in anchors are unchanged,
+  so no earlier result moves unless `cracked: false` was set.
+- `pipe-support`: **goalpost / trapeze headers are checked.** With `columnSpacing` given,
+  each arm is also analysed as a header — a simple span between the column centrelines
+  with the pipes as point loads at their offsets (reactions, Mmax, shear, deflection by
+  superposition), through the AISC D–H check with Lb = span and K = 1 — as a new `header`
+  stage. The header statics are reported and a warning names the heavier column when the
+  reactions split worse than 55/45.
+- `pipe-support` reviewer, two new findings (P.E. rulings 2026-10-26): the J10.1
+  column-flange check assumes web-only fillets — if the arm flanges are also welded the
+  loaded width is bf and the check must be re-run; and when an **ASD** anchorage stage is
+  governed by a wind combination, re-run the anchorage in LRFD (the engine's fixed 1/1.5
+  conversion is about 10 % unconservative against 0.6W — kept as documented behaviour).
+- `pipe-support`: the "Base metal governs over the weld metal (AISC J4)" warning now fires
+  only when the base-metal ratio is ≥ 0.5; the J4 rows stay in every weld-stage table.
+  The J10.1 clause states its loaded width (tw + 2w, web fillets only).
+- Parity goldens regenerated from the fixed engine (new WT, header and ψcp,N cases);
+  calc-core fixtures re-vendored (one WT5X11 member case, two ψcp,N base-plate cases,
+  each hand-checked in the engine repo). The PS-101 verification is unchanged: it has no
+  WT, header or uncracked concrete.
+
 ## [0.3.1] — 2026-10-23
 
 - **UNCONSERVATIVE-FIX** `pipe-support`: in 0.3.0 the column-to-base-plate fillet

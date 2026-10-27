@@ -2025,9 +2025,9 @@
           {
             "label": "Concrete breakout (tension)",
             "demand": 4.0673,
-            "capacity": 14.4198,
-            "ratio": 0.2821,
-            "clause": "ACI 318-19 17.6.2.1b",
+            "capacity": 5.4074,
+            "ratio": 0.7522,
+            "clause": "ACI 318-19 17.6.2.1b, psi_cp,N = 0.375 (17.6.2.6, cac = 20 in)",
             "status": "pass",
             "userSupplied": false
           },
@@ -2043,27 +2043,28 @@
           {
             "label": "Concrete pryout (shear)",
             "demand": 1.5,
-            "capacity": 28.8397,
-            "ratio": 0.052,
+            "capacity": 10.8149,
+            "ratio": 0.1387,
             "clause": "ACI 318-19 17.7.3.1b",
             "status": "pass",
             "userSupplied": false
           },
           {
             "label": "Tension-shear interaction",
-            "demand": 0.5558,
+            "demand": 1.0259,
             "capacity": 1.2,
-            "ratio": 0.4632,
+            "ratio": 0.8549,
             "clause": "ACI 318-19 17.8.3",
             "status": "pass"
           }
         ],
-        "governingRatio": 0.673,
-        "governingCheck": "Base plate yield (bearing interface)"
+        "governingRatio": 0.8549,
+        "governingCheck": "Tension-shear interaction"
       },
       "status": "pass",
       "warnings": [
         "ACI 318-19 17.6.2.1.2 applies — anchors are within 1.5·hef of 4 edges, so the breakout calculation uses a reduced hef of 3 in (max of ca,max/1.5 and s/3) instead of the 5 in actual embedment. Deeper embedment will not raise breakout capacity on a pier this size; widen the pier or add supplementary reinforcement.",
+        "Uncracked concrete with post-installed-mechanical anchors and no critical edge distance cac supplied — psi_cp,N (ACI 17.6.2.6) uses the Table 17.9.5 default cac = 4·hef = 20 in. Enter cac from the product's ESR to replace it.",
         "Post-installed anchor: kc = 17 is ACI 318-19's generic value. A product-specific ESR normally lists a higher kc and its own edge/spacing limits — enter those for a final design.",
         "Edge distance 3.5 in is less than 1.5·hef = 7.5 in — the breakout cone is clipped and psi_ed,N reduces the capacity."
       ]
@@ -2154,10 +2155,10 @@
           {
             "label": "Concrete breakout (tension)",
             "demand": 4.102,
-            "capacity": 9.6132,
-            "ratio": 0.4267,
-            "clause": "ACI 318-19 17.6.2.1b",
-            "status": "pass",
+            "capacity": 3.605,
+            "ratio": 1.1379,
+            "clause": "ACI 318-19 17.6.2.1b, psi_cp,N = 0.375 (17.6.2.6, cac = 20 in)",
+            "status": "fail",
             "userSupplied": false
           },
           {
@@ -2172,27 +2173,28 @@
           {
             "label": "Concrete pryout (shear)",
             "demand": 1.5,
-            "capacity": 19.2265,
-            "ratio": 0.078,
+            "capacity": 7.2099,
+            "ratio": 0.208,
             "clause": "ACI 318-19 17.7.3.1b",
             "status": "pass",
             "userSupplied": false
           },
           {
             "label": "Tension-shear interaction",
-            "demand": 0.8374,
+            "demand": 1.5485,
             "capacity": 1.2,
-            "ratio": 0.6978,
+            "ratio": 1.2904,
             "clause": "ACI 318-19 17.8.3",
-            "status": "pass"
+            "status": "fail"
           }
         ],
-        "governingRatio": 0.8211,
-        "governingCheck": "Base plate yield (bearing interface)"
+        "governingRatio": 1.2904,
+        "governingCheck": "Tension-shear interaction"
       },
-      "status": "pass",
+      "status": "fail",
       "warnings": [
         "ACI 318-19 17.6.2.1.2 applies — anchors are within 1.5·hef of 4 edges, so the breakout calculation uses a reduced hef of 3 in (max of ca,max/1.5 and s/3) instead of the 5 in actual embedment. Deeper embedment will not raise breakout capacity on a pier this size; widen the pier or add supplementary reinforcement.",
+        "Uncracked concrete with post-installed-mechanical anchors and no critical edge distance cac supplied — psi_cp,N (ACI 17.6.2.6) uses the Table 17.9.5 default cac = 4·hef = 20 in. Enter cac from the product's ESR to replace it.",
         "Post-installed anchor: kc = 17 is ACI 318-19's generic value. A product-specific ESR normally lists a higher kc and its own edge/spacing limits — enter those for a final design.",
         "Edge distance 3.5 in is less than 1.5·hef = 7.5 in — the breakout cone is clipped and psi_ed,N reduces the capacity.",
         "ACI 318-19 Chapter 17 is a strength-design (LRFD) chapter. Anchor capacities shown were divided by 1.5 to compare against service-level ASD demands, per ACI R17.5.3."
@@ -2630,6 +2632,793 @@
         "Edge distance 7.5 in is less than 1.5·hef = 18 in — the breakout cone is clipped and psi_ed,N reduces the capacity.",
         "Plate is 0.75 in but 1.027 in is required for the bearing-interface yield line.",
         "ACI 318-19 Chapter 17 is a strength-design (LRFD) chapter. Anchor capacities shown were divided by 1.5 to compare against service-level ASD demands, per ACI R17.5.3."
+      ]
+    },
+    {
+      "input": {
+        "columnDepth": 5.99,
+        "columnWidth": 5.99,
+        "plateLength": 12,
+        "plateWidth": 12,
+        "plateThickness": 0.75,
+        "plateFy": 36,
+        "fc": 4000,
+        "pierLength": 16,
+        "pierWidth": 16,
+        "anchorType": "post-installed-adhesive",
+        "anchorCount": 4,
+        "anchorDiameter": 0.75,
+        "anchorEmbedment": 4.25,
+        "anchorFuta": 58,
+        "anchorSpacingLength": 9,
+        "anchorSpacingWidth": 9,
+        "anchorEdgeDistance": 3.5,
+        "method": "LRFD",
+        "P": 2.7,
+        "M": 75,
+        "V": 0.85,
+        "cracked": false
+      },
+      "output": {
+        "A1": 144,
+        "A2": 256,
+        "bearingRatio": 1.3333,
+        "bearingCapacity": 424.32,
+        "bearingPressure": 2.9467,
+        "eccentricity": 27.7778,
+        "anchorsInTension": true,
+        "requiredThickness": 0.5486,
+        "cantilever": 3.604,
+        "anchorTension": 2.8475,
+        "anchorShear": 0.2125,
+        "checks": [
+          {
+            "label": "Concrete bearing",
+            "demand": 2.7,
+            "capacity": 424.32,
+            "ratio": 0.0064,
+            "clause": "AISC J8-2 / ACI 318-19 14.5.6.2",
+            "status": "pass",
+            "userSupplied": false
+          },
+          {
+            "label": "Base plate yield (bearing interface)",
+            "demand": 0.5486,
+            "capacity": 0.75,
+            "ratio": 0.7315,
+            "clause": "AISC Design Guide 1 §3.1 (yield-line cantilever 3.604 in, bearing over 0.237 in)",
+            "status": "pass",
+            "userSupplied": false
+          },
+          {
+            "label": "Base plate yield (tension interface)",
+            "demand": 0.3114,
+            "capacity": 0.75,
+            "ratio": 0.4152,
+            "clause": "AISC Design Guide 1 §3.4 (anchor-side cantilever)",
+            "status": "pass",
+            "userSupplied": false
+          },
+          {
+            "label": "Anchor rod tensile (steel)",
+            "demand": 2.8475,
+            "capacity": 14.549,
+            "ratio": 0.1957,
+            "clause": "ACI 318-19 17.6.1.2",
+            "status": "pass",
+            "userSupplied": false
+          },
+          {
+            "label": "Anchor rod shear (steel)",
+            "demand": 0.2125,
+            "capacity": 7.5655,
+            "ratio": 0.0281,
+            "clause": "ACI 318-19 17.7.1.2b",
+            "status": "pass",
+            "userSupplied": false
+          },
+          {
+            "label": "Concrete breakout (tension)",
+            "demand": 5.6949,
+            "capacity": 10.8149,
+            "ratio": 0.5266,
+            "clause": "ACI 318-19 17.6.2.1b, psi_cp,N = 0.75 (17.6.2.6, cac = 8.5 in)",
+            "status": "pass",
+            "userSupplied": false
+          },
+          {
+            "label": "Concrete breakout (shear)",
+            "demand": 0.85,
+            "capacity": 5.3037,
+            "ratio": 0.1603,
+            "clause": "ACI 318-19 17.7.2.1b",
+            "status": "pass",
+            "userSupplied": false
+          },
+          {
+            "label": "Concrete pryout (shear)",
+            "demand": 0.85,
+            "capacity": 21.6298,
+            "ratio": 0.0393,
+            "clause": "ACI 318-19 17.7.3.1b",
+            "status": "pass",
+            "userSupplied": false
+          },
+          {
+            "label": "Tension-shear interaction",
+            "demand": 0.5266,
+            "capacity": 1,
+            "ratio": 0.5266,
+            "clause": "ACI 318-19 17.8.3",
+            "status": "pass"
+          }
+        ],
+        "governingRatio": 0.7315,
+        "governingCheck": "Base plate yield (bearing interface)"
+      },
+      "status": "pass",
+      "warnings": [
+        "ACI 318-19 17.6.2.1.2 applies — anchors are within 1.5·hef of 4 edges, so the breakout calculation uses a reduced hef of 3 in (max of ca,max/1.5 and s/3) instead of the 4.25 in actual embedment. Deeper embedment will not raise breakout capacity on a pier this size; widen the pier or add supplementary reinforcement.",
+        "Uncracked concrete with post-installed-adhesive anchors and no critical edge distance cac supplied — psi_cp,N (ACI 17.6.2.6) uses the Table 17.9.5 default cac = 2·hef = 8.5 in. Enter cac from the product's ESR to replace it.",
+        "Adhesive anchor selected but no characteristic bond stress (tau_cr) supplied — the ACI 17.6.5 bond check was NOT run. Bond commonly governs adhesive anchors. Enter tau_cr from the product's ICC-ES evaluation report (e.g. the Hilti HVU2 ESR) to complete the check.",
+        "Post-installed anchor: kc = 17 is ACI 318-19's generic value. A product-specific ESR normally lists a higher kc and its own edge/spacing limits — enter those for a final design.",
+        "Edge distance 3.5 in is less than 1.5·hef = 6.38 in — the breakout cone is clipped and psi_ed,N reduces the capacity."
+      ]
+    },
+    {
+      "input": {
+        "columnDepth": 5.99,
+        "columnWidth": 5.99,
+        "plateLength": 12,
+        "plateWidth": 12,
+        "plateThickness": 0.75,
+        "plateFy": 36,
+        "fc": 4000,
+        "pierLength": 16,
+        "pierWidth": 16,
+        "anchorType": "post-installed-adhesive",
+        "anchorCount": 4,
+        "anchorDiameter": 0.75,
+        "anchorEmbedment": 4.25,
+        "anchorFuta": 58,
+        "anchorSpacingLength": 9,
+        "anchorSpacingWidth": 9,
+        "anchorEdgeDistance": 3.5,
+        "method": "LRFD",
+        "P": 2.7,
+        "M": 75,
+        "V": 0.85,
+        "cracked": false,
+        "cac": 7
+      },
+      "output": {
+        "A1": 144,
+        "A2": 256,
+        "bearingRatio": 1.3333,
+        "bearingCapacity": 424.32,
+        "bearingPressure": 2.9467,
+        "eccentricity": 27.7778,
+        "anchorsInTension": true,
+        "requiredThickness": 0.5486,
+        "cantilever": 3.604,
+        "anchorTension": 2.8475,
+        "anchorShear": 0.2125,
+        "checks": [
+          {
+            "label": "Concrete bearing",
+            "demand": 2.7,
+            "capacity": 424.32,
+            "ratio": 0.0064,
+            "clause": "AISC J8-2 / ACI 318-19 14.5.6.2",
+            "status": "pass",
+            "userSupplied": false
+          },
+          {
+            "label": "Base plate yield (bearing interface)",
+            "demand": 0.5486,
+            "capacity": 0.75,
+            "ratio": 0.7315,
+            "clause": "AISC Design Guide 1 §3.1 (yield-line cantilever 3.604 in, bearing over 0.237 in)",
+            "status": "pass",
+            "userSupplied": false
+          },
+          {
+            "label": "Base plate yield (tension interface)",
+            "demand": 0.3114,
+            "capacity": 0.75,
+            "ratio": 0.4152,
+            "clause": "AISC Design Guide 1 §3.4 (anchor-side cantilever)",
+            "status": "pass",
+            "userSupplied": false
+          },
+          {
+            "label": "Anchor rod tensile (steel)",
+            "demand": 2.8475,
+            "capacity": 14.549,
+            "ratio": 0.1957,
+            "clause": "ACI 318-19 17.6.1.2",
+            "status": "pass",
+            "userSupplied": false
+          },
+          {
+            "label": "Anchor rod shear (steel)",
+            "demand": 0.2125,
+            "capacity": 7.5655,
+            "ratio": 0.0281,
+            "clause": "ACI 318-19 17.7.1.2b",
+            "status": "pass",
+            "userSupplied": false
+          },
+          {
+            "label": "Concrete breakout (tension)",
+            "demand": 5.6949,
+            "capacity": 13.1324,
+            "ratio": 0.4337,
+            "clause": "ACI 318-19 17.6.2.1b, psi_cp,N = 0.9107 (17.6.2.6, cac = 7 in)",
+            "status": "pass",
+            "userSupplied": false
+          },
+          {
+            "label": "Concrete breakout (shear)",
+            "demand": 0.85,
+            "capacity": 5.3037,
+            "ratio": 0.1603,
+            "clause": "ACI 318-19 17.7.2.1b",
+            "status": "pass",
+            "userSupplied": false
+          },
+          {
+            "label": "Concrete pryout (shear)",
+            "demand": 0.85,
+            "capacity": 26.2647,
+            "ratio": 0.0324,
+            "clause": "ACI 318-19 17.7.3.1b",
+            "status": "pass",
+            "userSupplied": false
+          },
+          {
+            "label": "Tension-shear interaction",
+            "demand": 0.4337,
+            "capacity": 1,
+            "ratio": 0.4337,
+            "clause": "ACI 318-19 17.8.3",
+            "status": "pass"
+          }
+        ],
+        "governingRatio": 0.7315,
+        "governingCheck": "Base plate yield (bearing interface)"
+      },
+      "status": "pass",
+      "warnings": [
+        "ACI 318-19 17.6.2.1.2 applies — anchors are within 1.5·hef of 4 edges, so the breakout calculation uses a reduced hef of 3 in (max of ca,max/1.5 and s/3) instead of the 4.25 in actual embedment. Deeper embedment will not raise breakout capacity on a pier this size; widen the pier or add supplementary reinforcement.",
+        "Adhesive anchor selected but no characteristic bond stress (tau_cr) supplied — the ACI 17.6.5 bond check was NOT run. Bond commonly governs adhesive anchors. Enter tau_cr from the product's ICC-ES evaluation report (e.g. the Hilti HVU2 ESR) to complete the check.",
+        "Post-installed anchor: kc = 17 is ACI 318-19's generic value. A product-specific ESR normally lists a higher kc and its own edge/spacing limits — enter those for a final design.",
+        "Edge distance 3.5 in is less than 1.5·hef = 6.38 in — the breakout cone is clipped and psi_ed,N reduces the capacity."
+      ]
+    },
+    {
+      "input": {
+        "columnDepth": 5.99,
+        "columnWidth": 5.99,
+        "plateLength": 12,
+        "plateWidth": 12,
+        "plateThickness": 0.75,
+        "plateFy": 36,
+        "fc": 4000,
+        "pierLength": 16,
+        "pierWidth": 16,
+        "anchorType": "post-installed-adhesive",
+        "anchorCount": 4,
+        "anchorDiameter": 0.75,
+        "anchorEmbedment": 4.25,
+        "anchorFuta": 58,
+        "anchorSpacingLength": 9,
+        "anchorSpacingWidth": 9,
+        "anchorEdgeDistance": 3.5,
+        "method": "LRFD",
+        "P": 2.7,
+        "M": 75,
+        "V": 0.85,
+        "cracked": false,
+        "cac": 3
+      },
+      "output": {
+        "A1": 144,
+        "A2": 256,
+        "bearingRatio": 1.3333,
+        "bearingCapacity": 424.32,
+        "bearingPressure": 2.9467,
+        "eccentricity": 27.7778,
+        "anchorsInTension": true,
+        "requiredThickness": 0.5486,
+        "cantilever": 3.604,
+        "anchorTension": 2.8475,
+        "anchorShear": 0.2125,
+        "checks": [
+          {
+            "label": "Concrete bearing",
+            "demand": 2.7,
+            "capacity": 424.32,
+            "ratio": 0.0064,
+            "clause": "AISC J8-2 / ACI 318-19 14.5.6.2",
+            "status": "pass",
+            "userSupplied": false
+          },
+          {
+            "label": "Base plate yield (bearing interface)",
+            "demand": 0.5486,
+            "capacity": 0.75,
+            "ratio": 0.7315,
+            "clause": "AISC Design Guide 1 §3.1 (yield-line cantilever 3.604 in, bearing over 0.237 in)",
+            "status": "pass",
+            "userSupplied": false
+          },
+          {
+            "label": "Base plate yield (tension interface)",
+            "demand": 0.3114,
+            "capacity": 0.75,
+            "ratio": 0.4152,
+            "clause": "AISC Design Guide 1 §3.4 (anchor-side cantilever)",
+            "status": "pass",
+            "userSupplied": false
+          },
+          {
+            "label": "Anchor rod tensile (steel)",
+            "demand": 2.8475,
+            "capacity": 14.549,
+            "ratio": 0.1957,
+            "clause": "ACI 318-19 17.6.1.2",
+            "status": "pass",
+            "userSupplied": false
+          },
+          {
+            "label": "Anchor rod shear (steel)",
+            "demand": 0.2125,
+            "capacity": 7.5655,
+            "ratio": 0.0281,
+            "clause": "ACI 318-19 17.7.1.2b",
+            "status": "pass",
+            "userSupplied": false
+          },
+          {
+            "label": "Concrete breakout (tension)",
+            "demand": 5.6949,
+            "capacity": 14.4198,
+            "ratio": 0.3949,
+            "clause": "ACI 318-19 17.6.2.1b, psi_cp,N = 1 (17.6.2.6, cac = 3 in)",
+            "status": "pass",
+            "userSupplied": false
+          },
+          {
+            "label": "Concrete breakout (shear)",
+            "demand": 0.85,
+            "capacity": 5.3037,
+            "ratio": 0.1603,
+            "clause": "ACI 318-19 17.7.2.1b",
+            "status": "pass",
+            "userSupplied": false
+          },
+          {
+            "label": "Concrete pryout (shear)",
+            "demand": 0.85,
+            "capacity": 28.8397,
+            "ratio": 0.0295,
+            "clause": "ACI 318-19 17.7.3.1b",
+            "status": "pass",
+            "userSupplied": false
+          },
+          {
+            "label": "Tension-shear interaction",
+            "demand": 0.3949,
+            "capacity": 1,
+            "ratio": 0.3949,
+            "clause": "ACI 318-19 17.8.3",
+            "status": "pass"
+          }
+        ],
+        "governingRatio": 0.7315,
+        "governingCheck": "Base plate yield (bearing interface)"
+      },
+      "status": "pass",
+      "warnings": [
+        "ACI 318-19 17.6.2.1.2 applies — anchors are within 1.5·hef of 4 edges, so the breakout calculation uses a reduced hef of 3 in (max of ca,max/1.5 and s/3) instead of the 4.25 in actual embedment. Deeper embedment will not raise breakout capacity on a pier this size; widen the pier or add supplementary reinforcement.",
+        "Adhesive anchor selected but no characteristic bond stress (tau_cr) supplied — the ACI 17.6.5 bond check was NOT run. Bond commonly governs adhesive anchors. Enter tau_cr from the product's ICC-ES evaluation report (e.g. the Hilti HVU2 ESR) to complete the check.",
+        "Post-installed anchor: kc = 17 is ACI 318-19's generic value. A product-specific ESR normally lists a higher kc and its own edge/spacing limits — enter those for a final design.",
+        "Edge distance 3.5 in is less than 1.5·hef = 6.38 in — the breakout cone is clipped and psi_ed,N reduces the capacity."
+      ]
+    },
+    {
+      "input": {
+        "columnDepth": 5.99,
+        "columnWidth": 5.99,
+        "plateLength": 12,
+        "plateWidth": 12,
+        "plateThickness": 0.75,
+        "plateFy": 36,
+        "fc": 4000,
+        "pierLength": 16,
+        "pierWidth": 16,
+        "anchorType": "post-installed-adhesive",
+        "anchorCount": 4,
+        "anchorDiameter": 0.75,
+        "anchorEmbedment": 4.25,
+        "anchorFuta": 58,
+        "anchorSpacingLength": 9,
+        "anchorSpacingWidth": 9,
+        "anchorEdgeDistance": 3.5,
+        "method": "LRFD",
+        "P": 2.7,
+        "M": 75,
+        "V": 0.85,
+        "cracked": false,
+        "cac": 0
+      },
+      "output": {
+        "A1": 144,
+        "A2": 256,
+        "bearingRatio": 1.3333,
+        "bearingCapacity": 424.32,
+        "bearingPressure": 2.9467,
+        "eccentricity": 27.7778,
+        "anchorsInTension": true,
+        "requiredThickness": 0.5486,
+        "cantilever": 3.604,
+        "anchorTension": 2.8475,
+        "anchorShear": 0.2125,
+        "checks": [
+          {
+            "label": "Concrete bearing",
+            "demand": 2.7,
+            "capacity": 424.32,
+            "ratio": 0.0064,
+            "clause": "AISC J8-2 / ACI 318-19 14.5.6.2",
+            "status": "pass",
+            "userSupplied": false
+          },
+          {
+            "label": "Base plate yield (bearing interface)",
+            "demand": 0.5486,
+            "capacity": 0.75,
+            "ratio": 0.7315,
+            "clause": "AISC Design Guide 1 §3.1 (yield-line cantilever 3.604 in, bearing over 0.237 in)",
+            "status": "pass",
+            "userSupplied": false
+          },
+          {
+            "label": "Base plate yield (tension interface)",
+            "demand": 0.3114,
+            "capacity": 0.75,
+            "ratio": 0.4152,
+            "clause": "AISC Design Guide 1 §3.4 (anchor-side cantilever)",
+            "status": "pass",
+            "userSupplied": false
+          },
+          {
+            "label": "Anchor rod tensile (steel)",
+            "demand": 2.8475,
+            "capacity": 14.549,
+            "ratio": 0.1957,
+            "clause": "ACI 318-19 17.6.1.2",
+            "status": "pass",
+            "userSupplied": false
+          },
+          {
+            "label": "Anchor rod shear (steel)",
+            "demand": 0.2125,
+            "capacity": 7.5655,
+            "ratio": 0.0281,
+            "clause": "ACI 318-19 17.7.1.2b",
+            "status": "pass",
+            "userSupplied": false
+          },
+          {
+            "label": "Concrete breakout (tension)",
+            "demand": 5.6949,
+            "capacity": 10.8149,
+            "ratio": 0.5266,
+            "clause": "ACI 318-19 17.6.2.1b, psi_cp,N = 0.75 (17.6.2.6, cac = 8.5 in)",
+            "status": "pass",
+            "userSupplied": false
+          },
+          {
+            "label": "Concrete breakout (shear)",
+            "demand": 0.85,
+            "capacity": 5.3037,
+            "ratio": 0.1603,
+            "clause": "ACI 318-19 17.7.2.1b",
+            "status": "pass",
+            "userSupplied": false
+          },
+          {
+            "label": "Concrete pryout (shear)",
+            "demand": 0.85,
+            "capacity": 21.6298,
+            "ratio": 0.0393,
+            "clause": "ACI 318-19 17.7.3.1b",
+            "status": "pass",
+            "userSupplied": false
+          },
+          {
+            "label": "Tension-shear interaction",
+            "demand": 0.5266,
+            "capacity": 1,
+            "ratio": 0.5266,
+            "clause": "ACI 318-19 17.8.3",
+            "status": "pass"
+          }
+        ],
+        "governingRatio": 0.7315,
+        "governingCheck": "Base plate yield (bearing interface)"
+      },
+      "status": "pass",
+      "warnings": [
+        "ACI 318-19 17.6.2.1.2 applies — anchors are within 1.5·hef of 4 edges, so the breakout calculation uses a reduced hef of 3 in (max of ca,max/1.5 and s/3) instead of the 4.25 in actual embedment. Deeper embedment will not raise breakout capacity on a pier this size; widen the pier or add supplementary reinforcement.",
+        "Uncracked concrete with post-installed-adhesive anchors and no critical edge distance cac supplied — psi_cp,N (ACI 17.6.2.6) uses the Table 17.9.5 default cac = 2·hef = 8.5 in. Enter cac from the product's ESR to replace it.",
+        "Adhesive anchor selected but no characteristic bond stress (tau_cr) supplied — the ACI 17.6.5 bond check was NOT run. Bond commonly governs adhesive anchors. Enter tau_cr from the product's ICC-ES evaluation report (e.g. the Hilti HVU2 ESR) to complete the check.",
+        "Post-installed anchor: kc = 17 is ACI 318-19's generic value. A product-specific ESR normally lists a higher kc and its own edge/spacing limits — enter those for a final design.",
+        "Edge distance 3.5 in is less than 1.5·hef = 6.38 in — the breakout cone is clipped and psi_ed,N reduces the capacity."
+      ]
+    },
+    {
+      "input": {
+        "columnDepth": 5.99,
+        "columnWidth": 5.99,
+        "plateLength": 12,
+        "plateWidth": 12,
+        "plateThickness": 0.75,
+        "plateFy": 36,
+        "fc": 4000,
+        "pierLength": 16,
+        "pierWidth": 16,
+        "anchorType": "post-installed-adhesive",
+        "anchorCount": 4,
+        "anchorDiameter": 0.75,
+        "anchorEmbedment": 4.25,
+        "anchorFuta": 58,
+        "anchorSpacingLength": 9,
+        "anchorSpacingWidth": 9,
+        "anchorEdgeDistance": 3.5,
+        "method": "ASD",
+        "P": 2.7,
+        "M": 75,
+        "V": 0.85,
+        "cracked": false,
+        "cac": 7
+      },
+      "output": {
+        "A1": 144,
+        "A2": 256,
+        "bearingRatio": 1.3333,
+        "bearingCapacity": 282.5974,
+        "bearingPressure": 1.9625,
+        "eccentricity": 27.7778,
+        "anchorsInTension": true,
+        "requiredThickness": 0.6687,
+        "cantilever": 3.604,
+        "anchorTension": 2.8721,
+        "anchorShear": 0.2125,
+        "checks": [
+          {
+            "label": "Concrete bearing",
+            "demand": 2.7,
+            "capacity": 282.5974,
+            "ratio": 0.0096,
+            "clause": "AISC J8-2 / ACI 318-19 14.5.6.2",
+            "status": "pass",
+            "userSupplied": false
+          },
+          {
+            "label": "Base plate yield (bearing interface)",
+            "demand": 0.6687,
+            "capacity": 0.75,
+            "ratio": 0.8916,
+            "clause": "AISC Design Guide 1 §3.1 (yield-line cantilever 3.604 in, bearing over 0.359 in)",
+            "status": "pass",
+            "userSupplied": false
+          },
+          {
+            "label": "Base plate yield (tension interface)",
+            "demand": 0.3834,
+            "capacity": 0.75,
+            "ratio": 0.5112,
+            "clause": "AISC Design Guide 1 §3.4 (anchor-side cantilever)",
+            "status": "pass",
+            "userSupplied": false
+          },
+          {
+            "label": "Anchor rod tensile (steel)",
+            "demand": 2.8721,
+            "capacity": 9.6994,
+            "ratio": 0.2961,
+            "clause": "ACI 318-19 17.6.1.2",
+            "status": "pass",
+            "userSupplied": false
+          },
+          {
+            "label": "Anchor rod shear (steel)",
+            "demand": 0.2125,
+            "capacity": 5.0437,
+            "ratio": 0.0421,
+            "clause": "ACI 318-19 17.7.1.2b",
+            "status": "pass",
+            "userSupplied": false
+          },
+          {
+            "label": "Concrete breakout (tension)",
+            "demand": 5.7442,
+            "capacity": 8.7549,
+            "ratio": 0.6561,
+            "clause": "ACI 318-19 17.6.2.1b, psi_cp,N = 0.9107 (17.6.2.6, cac = 7 in)",
+            "status": "pass",
+            "userSupplied": false
+          },
+          {
+            "label": "Concrete breakout (shear)",
+            "demand": 0.85,
+            "capacity": 3.5358,
+            "ratio": 0.2404,
+            "clause": "ACI 318-19 17.7.2.1b",
+            "status": "pass",
+            "userSupplied": false
+          },
+          {
+            "label": "Concrete pryout (shear)",
+            "demand": 0.85,
+            "capacity": 17.5098,
+            "ratio": 0.0485,
+            "clause": "ACI 318-19 17.7.3.1b",
+            "status": "pass",
+            "userSupplied": false
+          },
+          {
+            "label": "Tension-shear interaction",
+            "demand": 0.8965,
+            "capacity": 1.2,
+            "ratio": 0.7471,
+            "clause": "ACI 318-19 17.8.3",
+            "status": "pass"
+          }
+        ],
+        "governingRatio": 0.8916,
+        "governingCheck": "Base plate yield (bearing interface)"
+      },
+      "status": "pass",
+      "warnings": [
+        "ACI 318-19 17.6.2.1.2 applies — anchors are within 1.5·hef of 4 edges, so the breakout calculation uses a reduced hef of 3 in (max of ca,max/1.5 and s/3) instead of the 4.25 in actual embedment. Deeper embedment will not raise breakout capacity on a pier this size; widen the pier or add supplementary reinforcement.",
+        "Adhesive anchor selected but no characteristic bond stress (tau_cr) supplied — the ACI 17.6.5 bond check was NOT run. Bond commonly governs adhesive anchors. Enter tau_cr from the product's ICC-ES evaluation report (e.g. the Hilti HVU2 ESR) to complete the check.",
+        "Post-installed anchor: kc = 17 is ACI 318-19's generic value. A product-specific ESR normally lists a higher kc and its own edge/spacing limits — enter those for a final design.",
+        "Edge distance 3.5 in is less than 1.5·hef = 6.38 in — the breakout cone is clipped and psi_ed,N reduces the capacity.",
+        "ACI 318-19 Chapter 17 is a strength-design (LRFD) chapter. Anchor capacities shown were divided by 1.5 to compare against service-level ASD demands, per ACI R17.5.3."
+      ]
+    },
+    {
+      "input": {
+        "columnDepth": 5.99,
+        "columnWidth": 5.99,
+        "plateLength": 12,
+        "plateWidth": 12,
+        "plateThickness": 0.75,
+        "plateFy": 36,
+        "fc": 4000,
+        "pierLength": 16,
+        "pierWidth": 16,
+        "anchorType": "post-installed-mechanical",
+        "anchorCount": 4,
+        "anchorDiameter": 0.75,
+        "anchorEmbedment": 5,
+        "anchorFuta": 58,
+        "anchorSpacingLength": 9,
+        "anchorSpacingWidth": 9,
+        "anchorEdgeDistance": 3.5,
+        "method": "LRFD",
+        "P": 3,
+        "M": 60,
+        "V": 1.5,
+        "cracked": false,
+        "cac": 12
+      },
+      "output": {
+        "A1": 144,
+        "A2": 256,
+        "bearingRatio": 1.3333,
+        "bearingCapacity": 424.32,
+        "bearingPressure": 2.9467,
+        "eccentricity": 20,
+        "anchorsInTension": true,
+        "requiredThickness": 0.5048,
+        "cantilever": 3.604,
+        "anchorTension": 2.0336,
+        "anchorShear": 0.375,
+        "checks": [
+          {
+            "label": "Concrete bearing",
+            "demand": 3,
+            "capacity": 424.32,
+            "ratio": 0.0071,
+            "clause": "AISC J8-2 / ACI 318-19 14.5.6.2",
+            "status": "pass",
+            "userSupplied": false
+          },
+          {
+            "label": "Base plate yield (bearing interface)",
+            "demand": 0.5048,
+            "capacity": 0.75,
+            "ratio": 0.673,
+            "clause": "AISC Design Guide 1 §3.1 (yield-line cantilever 3.604 in, bearing over 0.2 in)",
+            "status": "pass",
+            "userSupplied": false
+          },
+          {
+            "label": "Base plate yield (tension interface)",
+            "demand": 0.2631,
+            "capacity": 0.75,
+            "ratio": 0.3509,
+            "clause": "AISC Design Guide 1 §3.4 (anchor-side cantilever)",
+            "status": "pass",
+            "userSupplied": false
+          },
+          {
+            "label": "Anchor rod tensile (steel)",
+            "demand": 2.0336,
+            "capacity": 14.549,
+            "ratio": 0.1398,
+            "clause": "ACI 318-19 17.6.1.2",
+            "status": "pass",
+            "userSupplied": false
+          },
+          {
+            "label": "Anchor rod shear (steel)",
+            "demand": 0.375,
+            "capacity": 7.5655,
+            "ratio": 0.0496,
+            "clause": "ACI 318-19 17.7.1.2b",
+            "status": "pass",
+            "userSupplied": false
+          },
+          {
+            "label": "Concrete breakout (tension)",
+            "demand": 4.0673,
+            "capacity": 9.0124,
+            "ratio": 0.4513,
+            "clause": "ACI 318-19 17.6.2.1b, psi_cp,N = 0.625 (17.6.2.6, cac = 12 in)",
+            "status": "pass",
+            "userSupplied": false
+          },
+          {
+            "label": "Concrete breakout (shear)",
+            "demand": 1.5,
+            "capacity": 5.479,
+            "ratio": 0.2738,
+            "clause": "ACI 318-19 17.7.2.1b",
+            "status": "pass",
+            "userSupplied": false
+          },
+          {
+            "label": "Concrete pryout (shear)",
+            "demand": 1.5,
+            "capacity": 18.0248,
+            "ratio": 0.0832,
+            "clause": "ACI 318-19 17.7.3.1b",
+            "status": "pass",
+            "userSupplied": false
+          },
+          {
+            "label": "Tension-shear interaction",
+            "demand": 0.7251,
+            "capacity": 1.2,
+            "ratio": 0.6042,
+            "clause": "ACI 318-19 17.8.3",
+            "status": "pass"
+          }
+        ],
+        "governingRatio": 0.673,
+        "governingCheck": "Base plate yield (bearing interface)"
+      },
+      "status": "pass",
+      "warnings": [
+        "ACI 318-19 17.6.2.1.2 applies — anchors are within 1.5·hef of 4 edges, so the breakout calculation uses a reduced hef of 3 in (max of ca,max/1.5 and s/3) instead of the 5 in actual embedment. Deeper embedment will not raise breakout capacity on a pier this size; widen the pier or add supplementary reinforcement.",
+        "Post-installed anchor: kc = 17 is ACI 318-19's generic value. A product-specific ESR normally lists a higher kc and its own edge/spacing limits — enter those for a final design.",
+        "Edge distance 3.5 in is less than 1.5·hef = 7.5 in — the breakout cone is clipped and psi_ed,N reduces the capacity."
       ]
     },
     {
