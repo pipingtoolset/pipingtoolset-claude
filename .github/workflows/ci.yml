@@ -6,7 +6,9 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    # Pinned 2026-10-26: ubuntu-latest rolled to 26.04, for which setup-python has no
+    # 3.9 build. 24.04 keeps the 3.9 floor the skill scripts promise under test.
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     strategy:
       matrix:
