@@ -2,7 +2,7 @@
 
 The Cowork trims (0.4.0) moved detail out of the skill bodies into ``references/``. A body
 that links a file that does not exist, or a reference file nothing points at, is silent
-content loss, so both directions are checked for all five skills.
+content loss, so both directions are checked for all seven skills.
 """
 
 import glob
@@ -17,8 +17,8 @@ LINK = re.compile(r"references/([A-Za-z0-9_.-]+\.md)(?:#[^)\s`]*)?")
 
 class SkillReferences(unittest.TestCase):
 
-    def test_five_skills_present(self):
-        self.assertEqual(len(SKILLS), 5, SKILLS)
+    def test_seven_skills_present(self):
+        self.assertEqual(len(SKILLS), 7, SKILLS)
 
     def test_links_resolve_and_files_are_linked(self):
         for skill in SKILLS:

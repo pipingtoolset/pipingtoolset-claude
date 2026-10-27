@@ -1,0 +1,292 @@
+{
+  "module": "connections.api610-annexf",
+  "cases": [
+    {
+      "input": {
+        "pumpType": "horizontal",
+        "units": "USC",
+        "suctionApplied": {
+          "Fx": 0,
+          "Fy": 0,
+          "Fz": 0,
+          "Mx": 0,
+          "My": 0,
+          "Mz": 0
+        },
+        "dischargeApplied": {
+          "Fx": 0,
+          "Fy": 0,
+          "Fz": 0,
+          "Mx": 0,
+          "My": 0,
+          "Mz": 0
+        },
+        "suctionAllowable": {
+          "Fx": 1000,
+          "Fy": 1000,
+          "Fz": 1000,
+          "Mx": 1000,
+          "My": 1000,
+          "Mz": 1000
+        },
+        "dischargeAllowable": {
+          "Fx": 1000,
+          "Fy": 1000,
+          "Fz": 1000,
+          "Mx": 1000,
+          "My": 1000,
+          "Mz": 1000
+        },
+        "suctionPosition": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "dischargePosition": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      },
+      "expect": {
+        "FRSA": 0,
+        "MRSA": 0,
+        "FRDA": 0,
+        "MRDA": 0,
+        "eqF1Value": 0,
+        "eqF1Ratio": 0,
+        "eqF2Value": 0,
+        "eqF2Ratio": 0,
+        "FXCA": 0,
+        "FYCA": 0,
+        "FZCA": 0,
+        "FRCA": 0,
+        "MXCA": 0,
+        "MYCA": 0,
+        "MZCA": 0,
+        "MRCA": 0,
+        "eqF3Ratio": 0,
+        "eqF4Ratio": 0,
+        "eqF5Ratio": 0,
+        "maxComponentRatio": 0,
+        "governingComponent": "suction.Fx",
+        "governingRatio": 0,
+        "governingEquation": "F.1.2(a)"
+      },
+      "status": "pass",
+      "tol": 0.0001
+    },
+    {
+      "input": {
+        "pumpType": "horizontal",
+        "units": "USC",
+        "suctionApplied": {
+          "Fx": 300,
+          "Fy": 400,
+          "Fz": 0,
+          "Mx": 0,
+          "My": 300,
+          "Mz": 400
+        },
+        "dischargeApplied": {
+          "Fx": 0,
+          "Fy": 300,
+          "Fz": 400,
+          "Mx": 400,
+          "My": 0,
+          "Mz": 300
+        },
+        "suctionAllowable": {
+          "Fx": 1000,
+          "Fy": 1000,
+          "Fz": 1000,
+          "Mx": 1000,
+          "My": 1000,
+          "Mz": 1000
+        },
+        "dischargeAllowable": {
+          "Fx": 1000,
+          "Fy": 1000,
+          "Fz": 1000,
+          "Mx": 1000,
+          "My": 1000,
+          "Mz": 1000
+        },
+        "suctionPosition": {
+          "x": 12,
+          "y": 0,
+          "z": 0
+        },
+        "dischargePosition": {
+          "x": 0,
+          "y": 0,
+          "z": 24
+        }
+      },
+      "expect": {
+        "FRSA": 500,
+        "MRSA": 500,
+        "FRDA": 500,
+        "MRDA": 500,
+        "eqF1Value": 0.3849,
+        "eqF1Ratio": 0.19245,
+        "eqF2Value": 0.3849,
+        "eqF2Ratio": 0.19245,
+        "FXCA": 300,
+        "FYCA": 700,
+        "FZCA": 400,
+        "FRCA": 860.2325,
+        "MXCA": -200,
+        "MYCA": 300,
+        "MZCA": 1100,
+        "MRCA": 1157.5837,
+        "eqF3Ratio": 0.16555,
+        "eqF4Ratio": 0.075,
+        "eqF5Ratio": 0.22278,
+        "maxComponentRatio": 0.2,
+        "governingComponent": "suction.Fy",
+        "governingRatio": 0.22278,
+        "governingEquation": "F.5"
+      },
+      "status": "pass",
+      "tol": 0.0001
+    },
+    {
+      "input": {
+        "pumpType": "horizontal",
+        "units": "USC",
+        "suctionApplied": {
+          "Fx": 0,
+          "Fy": 1000,
+          "Fz": 0,
+          "Mx": 0,
+          "My": 0,
+          "Mz": 0
+        },
+        "dischargeApplied": {
+          "Fx": 0,
+          "Fy": 0,
+          "Fz": 0,
+          "Mx": 0,
+          "My": 0,
+          "Mz": 500
+        },
+        "suctionAllowable": {
+          "Fx": 1000,
+          "Fy": 1000,
+          "Fz": 1000,
+          "Mx": 1000,
+          "My": 1000,
+          "Mz": 1000
+        },
+        "dischargeAllowable": {
+          "Fx": 1000,
+          "Fy": 1000,
+          "Fz": 1000,
+          "Mx": 1000,
+          "My": 1000,
+          "Mz": 1000
+        },
+        "suctionPosition": {
+          "x": 120,
+          "y": 0,
+          "z": 0
+        },
+        "dischargePosition": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      },
+      "expect": {
+        "FRSA": 1000,
+        "MRSA": 0,
+        "FRDA": 0,
+        "MRDA": 500,
+        "eqF1Value": 0.3849,
+        "eqF1Ratio": 0.19245,
+        "eqF2Value": 0.19245,
+        "eqF2Ratio": 0.09623,
+        "FXCA": 0,
+        "FYCA": 1000,
+        "FZCA": 0,
+        "FRCA": 1000,
+        "MXCA": 0,
+        "MYCA": 0,
+        "MZCA": 10500,
+        "MRCA": 10500,
+        "eqF3Ratio": 0.19245,
+        "eqF4Ratio": 0,
+        "eqF5Ratio": 2.02073,
+        "maxComponentRatio": 0.5,
+        "governingComponent": "suction.Fy",
+        "governingRatio": 2.02073,
+        "governingEquation": "F.5"
+      },
+      "status": "fail",
+      "tol": 0.0001
+    },
+    {
+      "input": {
+        "pumpType": "vertical-inline",
+        "units": "SI",
+        "suctionApplied": {
+          "Fx": 200,
+          "Fy": -1000,
+          "Fz": 300,
+          "Mx": 150,
+          "My": 400,
+          "Mz": 100
+        },
+        "dischargeApplied": {
+          "Fx": 100,
+          "Fy": 800,
+          "Fz": 150,
+          "Mx": 200,
+          "My": -250,
+          "Mz": 80
+        },
+        "suctionAllowable": {
+          "Fx": 1000,
+          "Fy": 1000,
+          "Fz": 1000,
+          "Mx": 1000,
+          "My": 1000,
+          "Mz": 1000
+        },
+        "dischargeAllowable": {
+          "Fx": 1000,
+          "Fy": 1000,
+          "Fz": 1000,
+          "Mx": 1000,
+          "My": 1000,
+          "Mz": 1000
+        },
+        "suctionBore": {
+          "Do": 100,
+          "Di": 80
+        },
+        "dischargeBore": {
+          "Do": 80,
+          "Di": 60
+        }
+      },
+      "expect": {
+        "suctionSigmaL": 2.7618,
+        "suctionTau": 3.5825,
+        "suctionSigmaP": 5.2203,
+        "suctionStressRatio": 0.12732,
+        "dischargeSigmaL": 6.6404,
+        "dischargeTau": 3.7246,
+        "dischargeSigmaP": 8.3099,
+        "dischargeStressRatio": 0.20268,
+        "maxComponentRatio": 0.5,
+        "governingComponent": "suction.Fy",
+        "governingRatio": 0.20268,
+        "governingEquation": "F.6"
+      },
+      "status": "pass",
+      "tol": 0.0001
+    }
+  ]
+}

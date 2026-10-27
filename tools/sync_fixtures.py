@@ -45,6 +45,11 @@ MODULES = {
     "structural.fillet-weld": "pipe-support",
     "structural.baseplate-anchorage": "pipe-support",
     "structural.pier-soil": "pipe-support",
+    "connections.nozzle-load-check": "nozzle-load",
+    "connections.nema-sm23": "nozzle-load",
+    "connections.api610-annexf": "nozzle-load",
+    "connections.flange-equivalent-pressure": "bolted-flange",
+    "aux.app2-flange-integral": "bolted-flange",
 }
 
 
@@ -96,12 +101,15 @@ def main() -> int:
                                 text=True, check=True).stdout.strip()
     except (OSError, subprocess.CalledProcessError):
         commit = "unknown"
+    sys.path.insert(0, os.path.join(ROOT, "tests"))
+    from parity import fixture_filename  # one Windows-safe naming rule for writer and reader
+
     os.makedirs(DEST, exist_ok=True)
     manifest = {"source": "pipecalcpro packages/calc-core/fixtures", "calc_core_commit": commit,
                 "modules": {}}
     for module, (fname, fx, h) in sorted(found.items()):
         clean = sanitize(fx)
-        with open(os.path.join(DEST, f"{module}.json"), "w", encoding="utf-8", newline="\n") as fh:
+        with open(os.path.join(DEST, fixture_filename(module)), "w", encoding="utf-8", newline="\n") as fh:
             json.dump(clean, fh, indent=2)
             fh.write("\n")
         manifest["modules"][module] = {"skill": MODULES[module], "source_file": fname,

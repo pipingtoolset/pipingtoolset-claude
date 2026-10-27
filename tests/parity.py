@@ -21,8 +21,20 @@ CALC_CORE = os.path.join(ROOT, "tests", "fixtures", "calc-core")
 HAND = os.path.join(ROOT, "tests", "fixtures", "hand")
 
 
+# Windows reserves these device names for any file stem (aux.json, aux.foo.json, ...): git
+# cannot index such a file there and a Windows checkout fails. The module id stays as the
+# engine writes it; only the vendored file name is prefixed.
+_RESERVED = {"con", "prn", "aux", "nul"} | {f"com{i}" for i in range(1, 10)} | {f"lpt{i}" for i in range(1, 10)}
+
+
+def fixture_filename(module: str) -> str:
+    """File name of a vendored fixture: the module id, made safe on Windows."""
+    stem = module.split(".", 1)[0].lower()
+    return f"_{module}.json" if stem in _RESERVED else f"{module}.json"
+
+
 def load(module: str, *, hand: bool = False) -> dict[str, Any]:
-    path = os.path.join(HAND if hand else CALC_CORE, f"{module}.json")
+    path = os.path.join(HAND if hand else CALC_CORE, fixture_filename(module))
     with open(path, encoding="utf-8") as fh:
         return json.load(fh)
 

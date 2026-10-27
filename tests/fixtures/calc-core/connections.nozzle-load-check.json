@@ -1,0 +1,61 @@
+{
+  "module": "connections.nozzle-load-check",
+  "cases": [
+    {
+      "input": {
+        "standard": "API 610",
+        "applied": {
+          "Fx": 100,
+          "Fy": 200,
+          "Fz": 200,
+          "Mx": 300,
+          "My": 400,
+          "Mz": 0
+        },
+        "allowable": {
+          "Fx": 400,
+          "Fy": 400,
+          "Fz": 400,
+          "Mx": 600,
+          "My": 600,
+          "Mz": 600
+        }
+      },
+      "expect": {
+        "FR": 300,
+        "MR": 500,
+        "maxRatio": 0.66667,
+        "governing": "My"
+      },
+      "status": "pass",
+      "tol": 1e-05
+    },
+    {
+      "input": {
+        "standard": "NEMA SM23",
+        "applied": {
+          "Fx": 100,
+          "Fy": 200,
+          "Fz": 500,
+          "Mx": 300,
+          "My": 400,
+          "Mz": 0
+        },
+        "allowable": {
+          "Fx": 400,
+          "Fy": 400,
+          "Fz": 400,
+          "Mx": 600,
+          "My": 600,
+          "Mz": 600
+        }
+      },
+      "expect": {
+        "maxRatio": 1.25,
+        "governing": "Fz"
+      },
+      "status": "fail",
+      "tol": 1e-05
+    }
+  ]
+}
