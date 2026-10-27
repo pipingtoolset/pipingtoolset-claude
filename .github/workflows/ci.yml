@@ -2,6 +2,8 @@ name: ci
 
 on:
   push:
+    branches: ['**']
+    tags: ['v*']
   pull_request:
 
 jobs:
@@ -23,3 +25,52 @@ jobs:
       - name: Manifests parse
         run: |
           python -c "import json; json.load(open('.claude-plugin/marketplace.json')); json.load(open('plugins/piping-toolset/.claude-plugin/plugin.json'))"
+
+  package:
+    needs: test
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Build Cowork .plugin
+        run: python tools/package_plugin.py --out dist --check
+      - uses: actions/upload-artifact@v4
+        with:
+          name: piping-toolset-plugin
+          path: dist/piping-toolset.plugin
+          if-no-files-found: error
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: package
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: piping-toolset-plugin
+          path: dist
+      - name: Tag matches the plugin version
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          python - <<'PY'
+          import json, os, sys
+          v = json.load(open('plugins/piping-toolset/.claude-plugin/plugin.json'))['version']
+          sys.exit(0 if os.environ['TAG'] == 'v' + v else f"tag {os.environ['TAG']} != plugin version {v}")
+          PY
+      - name: Attach .plugin to the GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          if ! gh release view "$TAG" >/dev/null 2>&1; then
+            gh release create "$TAG" --verify-tag --generate-notes
+          fi
+          gh release upload "$TAG" dist/piping-toolset.plugin --clobber
