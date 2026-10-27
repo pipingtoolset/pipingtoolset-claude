@@ -40,7 +40,9 @@ produce is identical to 0.4.0.
   UG-44(b) / 4.16.12, ASME III NC-3658.3 and EN 1591-1 are named as the next rungs, not computed.
   B16.5 dimensions and ratings, B16.20 gasket dimensions, Table 4.16.1 gasket factors and every
   allowable stress are user-supplied.
-- Pack: `tools/sync_fixtures.py` vendors five more engine modules (22 modules, 76 cases);
+- Pack: `tools/sync_fixtures.py` vendors five more engine modules (22 modules, 74 cases). The
+  engine's two Table 4.16.5 curve-fit cases are excluded by rule, with the reason in `MANIFEST.json`,
+  and a fixture whose name is a Windows device name (`aux.*`) is vendored with a leading underscore;
   `tests/test_skill_references.py` asserts seven skills; README, ROADMAP and the prompt set
   (`tests/e2e/PROMPTS.md`) cover the new skills; plugin and marketplace manifests at 0.5.0.
 - `plugins/piping-toolset/plugin.json`: an Agent Plugins 1.0 manifest (agent-plugins.org) next

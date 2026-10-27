@@ -53,9 +53,27 @@ MODULES = {
 }
 
 
+# Engine cases the plugin deliberately does not ship, by module: (input key, value, reason).
+# The VIII-2 Table 4.16.5 curve-fit option ("fit-4165") carries ~60 coefficients transcribed
+# from a licensed table; the plugin ships only the closed-form series with user overrides.
+EXCLUDE = {
+    "aux.app2-flange-integral": [("hubFactorMethod", "fit-4165",
+                                  "Table 4.16.5 curve fits are tabulated code data; not shipped")],
+}
+
+
+def _excluded(module: str, case: dict):
+    for key, value, reason in EXCLUDE.get(module, []):
+        if case.get("input", {}).get(key) == value:
+            return reason
+    return None
+
+
 def sanitize(fx: dict) -> dict:
     cases = []
     for c in fx["cases"]:
+        if _excluded(fx["module"], c):
+            continue
         keep = {"input": c["input"]}
         for k in ("expect", "status", "tol"):
             if k in c:
@@ -114,6 +132,10 @@ def main() -> int:
             fh.write("\n")
         manifest["modules"][module] = {"skill": MODULES[module], "source_file": fname,
                                        "source_sha256": h, "cases": len(clean["cases"])}
+        dropped = sorted({r for c in fx["cases"] for r in [_excluded(module, c)] if r})
+        if dropped:
+            manifest["modules"][module]["excluded_cases"] = len(fx["cases"]) - len(clean["cases"])
+            manifest["modules"][module]["excluded_reason"] = "; ".join(dropped)
     with open(MANIFEST, "w", encoding="utf-8", newline="\n") as fh:
         json.dump(manifest, fh, indent=2)
         fh.write("\n")

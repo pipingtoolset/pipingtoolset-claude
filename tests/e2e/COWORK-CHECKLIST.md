@@ -17,8 +17,9 @@ chat as the skill is loaded; if a different skill answers, mark the run as faile
 
 ## 2. What to check first
 
-- Open the skills menu. The five skills should be listed under the PipingToolset display name:
-  Pressure Design, Stress Screening, Load Case Builder, Iso to PCF, Pipe Support.
+- Open the skills menu. The seven skills should be listed under the PipingToolset display name:
+  Pressure Design, Stress Screening, Load Case Builder, Iso to PCF, Pipe Support, Nozzle Load,
+  Bolted Flange.
 - If a skill is missing, stop and record which one in the results table. Do not continue to the runs.
 
 ## 3. Runs

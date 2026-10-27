@@ -6,7 +6,9 @@
       "skill": "bolted-flange",
       "source_file": "app2-flange-integral.json",
       "source_sha256": "ae2268bda8fe32fc733a33ff4a1332ad5389ab58511fa3c59cd9052c1d715b13",
-      "cases": 6
+      "cases": 4,
+      "excluded_cases": 2,
+      "excluded_reason": "Table 4.16.5 curve fits are tabulated code data; not shipped"
     },
     "connections.api610-annexf": {
       "skill": "nozzle-load",
