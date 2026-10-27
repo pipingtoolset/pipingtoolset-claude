@@ -57,8 +57,8 @@ For a local checkout: `/plugin marketplace add <path-to-this-checkout>`.
 ### Requirements
 
 Python 3.9 or newer wherever the skills run: your own machine for Claude Code; Cowork's built-in
-sandbox is expected to provide it (`tests/e2e/COWORK-CHECKLIST.md` is the live check). There is
-nothing else to install, and nothing is sent to PipingToolset.
+sandbox provides it (confirmed on a live Cowork session with `tests/e2e/COWORK-CHECKLIST.md`,
+2026-10-27). There is nothing else to install, and nothing is sent to PipingToolset.
 
 ### Invoking a skill
 
