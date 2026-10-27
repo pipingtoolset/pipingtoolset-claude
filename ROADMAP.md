@@ -17,7 +17,7 @@ One plugin, `piping-toolset` (display name **PipingToolset**), with seven skills
 1. Engineer-of-record review of every page of the seven skills.
 2. Eval prompt set per skill (`tests/e2e/PROMPTS.md` is the starting set).
 3. Licence terms and pricing decided.
-4. Repository history squashed before the first public push.
+4. ~~Repository history squashed before the first public push.~~ Repository made public 2026-10-27 without a squash: the history was scanned (no secrets, single committer, largest blob the pipe-support golden file) and the drafts on pipingtoolset.com needed working links for the launch video.
 
 ## Rules every skill in this pack follows
 

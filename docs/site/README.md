@@ -1,15 +1,15 @@
 # pipingtoolset.com drafts for the plugin launch (2026-10-27)
 
-Two drafts for the pipecalcpro site (`C:\dev\projects\pipecalcpro`), kept here until the plugin repository is public. Nothing in this folder is wired into the site build.
+Two drafts for the pipecalcpro site (`C:\dev\projects\pipecalcpro`). **Wired into the site on 2026-10-27** (pipecalcpro PR 145): `scripts/seo/claude-content.mjs` + `claudePage()` in `build-pages.mjs` produce `/claude/`; the homepage launcher tier, hero CTA, footer group and llms.txt section are in. These drafts are the design record; the live copy says seven skills and v0.5.0 where the drafts still say five and v0.4.0.
 
 | File | What it is | Where it lands in pipecalcpro |
 |---|---|---|
 | `claude-page.html` | Full draft of `https://pipingtoolset.com/claude/` in the trust-page chrome, previewable as is | Body becomes `scripts/seo/claude-content.mjs`; `build-pages.mjs` writes `apps/web/public/claude/index.html` |
 | `homepage-draft.html` | Homepage mock with the new "PipingToolset for Claude" launcher category, hero button and footer links (additions outlined) | `apps/web/index.html` (static shell + footer) and `apps/web/src/App.tsx` (launcher tier) |
 
-## Blocker before publishing either page
+## Repository visibility
 
-The GitHub repository is private (verified 2026-10-27: `gh repo view` reports PRIVATE; anonymous fetch returns 404). Every download and install link on both drafts points at it. Publish the pages only after the repository is public, or the page ships broken links.
+Public since 2026-10-27 (`gh repo view --json visibility` → PUBLIC; anonymous fetch of the repo, the latest release and the raw marketplace.json all return 200). Every download and install link on the live page resolves.
 
 ## llms.txt entry
 

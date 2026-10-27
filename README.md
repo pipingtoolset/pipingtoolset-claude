@@ -61,8 +61,7 @@ For a local checkout: `/plugin marketplace add <path-to-this-checkout>`.
 
 The skills are plain [Agent Skills](https://agentskills.io) and the plugin carries an
 [Agent Plugins 1.0](https://agent-plugins.org) manifest, so the same repository installs into
-assistants other than Claude. These commands need the repository to be **public**; while
-`pipingtoolset/pipingtoolset-claude` is private they return "not found".
+assistants other than Claude.
 
 | Assistant | Command |
 |---|---|
