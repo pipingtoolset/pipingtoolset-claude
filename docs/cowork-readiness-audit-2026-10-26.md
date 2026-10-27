@@ -31,7 +31,37 @@ mounted plugins. Treat that note as stale until a live run confirms the current 
 
 ## Status (same day)
 
-Fixes 1, 2 and 5 applied on branch `claude/kai-cowork-usability-audit-03c2b9` (five SKILL.md files, 354 tests green, validator clean; three description tests pin exact phrases such as "formal analysis exemption", "schedule check" and a 400-character ceiling, so future rewrites must keep them). Fixes 3, 4, 6, 7 and 8 followed the same day via a nine-agent workflow (seven edits, a verify pass, a diff review whose findings were applied); version bumped to 0.4.0. Only the live Cowork test remains: `tests/e2e/COWORK-CHECKLIST.md`.
+Fixes 1, 2 and 5 applied on branch `claude/kai-cowork-usability-audit-03c2b9` (five SKILL.md files, 354 tests green, validator clean; three description tests pin exact phrases such as "formal analysis exemption", "schedule check" and a 400-character ceiling, so future rewrites must keep them). Fixes 3, 4, 6, 7 and 8 followed the same day via a nine-agent workflow (seven edits, a verify pass, a diff review whose findings were applied); version bumped to 0.4.0. The live Cowork test ran on 2026-10-27 against the v0.4.0 release asset; see "Live Cowork run" below.
+
+## Live Cowork run (2026-10-27, v0.4.0)
+
+Matthew installed `piping-toolset.plugin` from the v0.4.0 GitHub Release into a Cowork session and ran
+`tests/e2e/COWORK-CHECKLIST.md`. Results as pasted back (Cowork build number not recorded):
+
+| Run | P/F | Skill triggered correctly | Script ran |
+|---|---|---|---|
+| Install | done | n/a | n/a |
+| Skills menu | done | n/a | n/a |
+| E1 pressure-design | P | Y | Y |
+| E2 pressure-design (refusal) | P | Y | Y |
+| E3 stress-screening | P | Y | Y |
+| E4 stress-screening | P | Y | Y |
+| E5 stress-screening | P | Y | Y |
+| E6 load-case-builder | P | Y | Y |
+| E8 iso-to-pcf | P | Y | Y |
+| E9 pipe-support | P | Y | Y |
+| E10 pipe-support (refusal) | P | Y | Y |
+
+What this settles:
+
+- The Cowork sandbox runs the bundled standard-library Python scripts. README now states this as fact.
+- Plain-language invocation ("use the pressure design skill ...") selects the PipingToolset skill on an
+  account that also carries overlapping third-party piping skills, for all five skills.
+- The must-fix items 1 to 3 and the should-fix items 4 to 8 are closed.
+
+What it does not settle: no run read a PDF, so the availability of pdfplumber, pypdf and poppler in the
+Cowork sandbox is still inferred; `reading-isos.md` keeps the word "expected" until an iso PDF run (E7)
+is done in Cowork. The 2026-08-01 memory note on Cowork's Windows-side layout is superseded by this run.
 
 ## Must fix (blocks a Cowork user)
 
