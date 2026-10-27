@@ -8,6 +8,26 @@ keep a defect until the plugin is updated, so each such entry names the skill, t
 affected inputs and the release that fixed it. GitHub Releases carry the same
 label and are the recall channel.
 
+## [Unreleased]
+
+Distribution to assistants other than Claude. No calculation, script-engine, fixture, golden or
+skill-body change; every number the skills produce is identical to 0.4.0.
+
+- `plugins/piping-toolset/plugin.json`: an Agent Plugins 1.0 manifest (agent-plugins.org) next
+  to the unchanged `.claude-plugin/plugin.json`, so the same folder installs in OpenAI Codex and
+  any other Agent Plugins host. `tests/test_manifests.py` fails if the two manifests disagree on
+  name, version or description, or if either marketplace drifts from them.
+- `.agents/plugins/marketplace.json`: the Codex marketplace file for
+  `codex plugin marketplace add pipingtoolset/pipingtoolset-claude`. `.claude-plugin/marketplace.json`
+  is unchanged.
+- **All five skills**: frontmatter gains the Agent Skills `compatibility` field,
+  `Requires Python 3.9+ (standard library only)`. Nothing else in the skills changed.
+- Packaging: `tools/package_plugin.py` also builds `piping-toolset-skills.zip` (only `skills/`,
+  for ChatGPT, Manus and Perplexity uploads), reproducibly; CI uploads it and attaches it to the
+  GitHub Release beside the `.plugin`. The `.plugin` now carries the root `plugin.json` too.
+- README: "Other assistants" section with the Codex, `npx skills` and `gh skill` install commands,
+  where the skills land, and the note that those commands need the repository to be public.
+
 ## [0.4.0] — 2026-10-26
 
 Cowork support. No calculation, script-engine, fixture or golden change; every number the

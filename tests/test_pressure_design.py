@@ -543,7 +543,7 @@ class SkillContent(unittest.TestCase):
     def test_frontmatter(self):
         self.assertTrue(self.text.startswith("---\nname: pressure-design\ndescription: "))
         head = self.text.split("\n---\n", 1)[0]
-        self.assertEqual([ln.split(":", 1)[0] for ln in head.splitlines()[1:]], ["name", "description"])
+        self.assertEqual([ln.split(":", 1)[0] for ln in head.splitlines()[1:]], ["name", "description", "compatibility"])
         desc = self.text.split("description: ", 1)[1].split("\n", 1)[0].strip('"')
         self.assertLessEqual(len(desc), 400)  # short slash-menu blurb
         for term in ("wall thickness", "304.1.2", "104.1.2", "MAWP", "branch reinforcement", "miter",
