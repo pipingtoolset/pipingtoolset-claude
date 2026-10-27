@@ -1,6 +1,6 @@
 ---
 name: iso-to-pcf
-description: "Turn PDF stress isometrics into a clean, CAESAR II-ready PCF: transcribe the drawing to a JSON walk, build it with exact fraction arithmetic, then validate connectivity, zero-length elements and on-line supports. Also repairs PCFs that import with orphan nodes or broken continuity."
+description: "Turn PDF stress isometrics into a clean, CAESAR II-ready PCF: transcribe the drawing to a JSON walk, build it with exact fraction arithmetic, then validate connectivity, zero-length elements and on-line supports. Use when the user asks to convert an iso or isometric PDF to a PCF, import a line into CAESAR II, or fix a PCF that imports with orphan nodes or broken continuity (Isogen, SKEY)."
 ---
 
 # Isometric PDF → CAESAR II PCF
@@ -26,7 +26,7 @@ to **transcribe the drawing faithfully**. The script does all of the geometry.
 | `references/reading-isos.md` | Getting dimensions out of the PDF; the `X.n/d` convention; SKEYs |
 | `references/caesar-import.md` | The importer's map files, the safe record set, and what a PCF cannot carry |
 
-Standard-library Python 3.9+. Nothing leaves the user's machine.
+Standard-library Python 3.9+. Nothing leaves the user's machine. Script paths below are relative to this skill's directory. Call them by their full path from wherever the session is working; do not change into the skill folder (in Cowork it is a read-only mount and the working directory is the outputs folder). Write `job.json` and every output file to the working directory, never into the skill folder, so the user can open and download them.
 
 ## Workflow
 
@@ -46,7 +46,7 @@ Standard-library Python 3.9+. Nothing leaves the user's machine.
    printed (`"13.7/8"`, `"2635'0.7/16"`). Never convert them to decimals. Record every stated
    coordinate and elevation as a `check` or a profile anchor. Anything that cannot be read
    goes in `assumed`. It is never guessed silently.
-4. **Build:** `python scripts/build_pcf.py spec.json -o line.pcf --report line-report.txt`.
+4. **Build** (spec, PCF and report all in the working directory): `python scripts/build_pcf.py spec.json -o line.pcf --report line-report.txt`.
    Exit 0 means clean. Exit 2 means a closure check or BOM count failed. Exit 1 means the spec is
    defective: an off-line point, a tangent overrun, or an unreadable dimension.
 5. **Validate:** `python scripts/validate_pcf.py line.pcf --skeys <the site's list>`.

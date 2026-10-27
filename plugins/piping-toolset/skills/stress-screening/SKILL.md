@@ -1,6 +1,6 @@
 ---
 name: stress-screening
-description: "Hand-check ASME B31.1/B31.3 sustained, occasional and expansion (SUS/OCC/EXP) stress the way a reviewer will: S_A and f factor, Eq. 17, 1.33 Sh / k factor, SIF source (B31J vs App. D), formal analysis exemption, support span, spring variability."
+description: "Hand-check ASME B31.3 / B31.1 sustained, occasional and expansion (SUS/OCC/EXP) stress the way a reviewer will. Use when the user asks about S_A, the f factor or cycle count, Eq. 17, 1.33 Sh or the k factor, which document gives the SIF (B31J vs Appendix D), the formal analysis exemption, support span, spring variability, or wants to check what CAESAR II or AutoPIPE applied."
 ---
 
 # Stress Screening — B31.1 and B31.3 hand checks
@@ -219,7 +219,7 @@ Owner practices (stress design criteria, PIP practices) may add rules on top of 
 
 ## Running the tool
 
-`scripts/stress_screening.py` (Python 3.9+, standard library only). Run from this skill's directory.
+`scripts/stress_screening.py` (Python 3.9+, standard library only). Script paths below are relative to this skill's directory. Call them by their full path from wherever the session is working; do not change into the skill folder (in Cowork it is a read-only mount and the working directory is the outputs folder). Write `job.json` and every output file to the working directory, never into the skill folder, so the user can open and download them.
 
 - **Run `python scripts/stress_screening.py list` first** to get the exact field names (for example `SA`, not `S_A`). Names are case-sensitive and unknown names are rejected with exit code 2.
 - **Every number you state comes from a script run**, including side comparisons, what-ifs and sensitivity remarks (for example "what would f be at 7,000 cycles"): run the script again rather than computing in your head.

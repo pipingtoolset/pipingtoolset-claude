@@ -1,6 +1,6 @@
 ---
 name: pipe-support
-description: "Check a pipe support assembly (arm, column, welds, bolts, base plate, anchors, pier) for CAESAR II restraint loads: ASCE 7-22 combinations, AISC 360-22, ACI 318-19 Ch. 17, AWS D1.1 detailing. Reviews it like a PE and proposes optimized code-passing alternatives with a calc report."
+description: "Check a pipe support assembly (arm, column, welds, bolts, base plate, anchor bolts, pier) for CAESAR II restraint loads: ASCE 7-22 combinations, AISC 360-22, ACI 318-19 Ch. 17, AWS D1.1 detailing. Use when the user asks to check, review or optimize a pipe support, t-post, trapeze, goalpost or cantilever arm. Reviews it like a PE and proposes optimized code-passing alternatives with a calc report."
 ---
 
 # Pipe Support - structural check, review and optimisation
@@ -57,8 +57,9 @@ capacity, ratio or alternative itself.** Every number in a response comes from a
    Eh = pure seismic, HYD on its own. Say it back to the user. The T factor defaults to 1.0
    for both methods. LRFD may not go lower (2.3.4); ASD may be reduced to 0.75 (2.4.4) if the
    engineer accepts it. Every combination also runs without T.
-3. **Write the spec** (`references/spec-format.md`) and run:
+3. **Write the spec** (`references/spec-format.md`) to `spec.json` in the working directory and run:
    `python scripts/support_calc.py spec.json --report calc.md --json result.json`.
+   Script paths below are relative to this skill's directory. Call them by their full path from wherever the session is working; do not change into the skill folder (in Cowork it is a read-only mount and the working directory is the outputs folder). Write `job.json` and every output file to the working directory, never into the skill folder, so the user can open and download them.
    - **Exit 0:** every combination passes and there is no critical review finding.
    - **Exit 3:** strength passes but a critical finding stands (for example pipe moments the
      model cannot carry). The report banner says so; never present it as a clean pass.

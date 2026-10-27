@@ -1,6 +1,6 @@
 ---
 name: pressure-design
-description: "Traceable ASME B31.1/B31.3 pressure design via a bundled script: wall thickness (304.1.2, 104.1.2), schedule check, MAWP, branch reinforcement, bends, miter and leak test / hydrotest pressure (345.4.2). You supply S, E, W, Y from a licensed copy."
+description: "Traceable ASME B31.3 / B31.1 pressure design through a bundled script. Use when the user asks for wall thickness or minimum thickness, a schedule check, MAWP or allowable pressure, branch reinforcement, bend or miter checks, or hydrotest / leak test pressure (304.1.2, 104.1.2, 345.4.2). The user supplies S, E, W, Y from a licensed copy; no code table values are embedded."
 ---
 
 # Pressure Design — B31.1 and B31.3
@@ -63,7 +63,7 @@ Verify each table name and number against the printed page of the user's edition
 
 ## How to run the calculators
 
-`scripts/pressure_design.py` — Python 3.9+, standard library only. Run it from this skill's directory.
+`scripts/pressure_design.py` — Python 3.9+, standard library only. Script paths below are relative to this skill's directory. Call them by their full path from wherever the session is working; do not change into the skill folder (in Cowork it is a read-only mount and the working directory is the outputs folder). Write `job.json` and every output file to the working directory, never into the skill folder, so the user can open and download them.
 
 ```
 python scripts/pressure_design.py list                      # modules, units, which inputs are user-supplied
@@ -71,14 +71,7 @@ python scripts/pressure_design.py b313-wall-thickness --input-file job.json
 python scripts/pressure_design.py piping.b313-wall-thickness --input '{"P": 1000, "D": 10, "S": 24800, "E": 1, "W": 1, "Y": 0.4, "c": 0.1, "millTolerance": 0.125}'
 ```
 
-The numbers above are placeholders to show the shape of a complete input, not code values. `job.json` holds the same object. In PowerShell, quoting inline JSON is unreliable, so write the file first and use `--input-file`:
-
-```
-@'
-{"P": 1000, "D": 10, "S": 24800, "E": 1, "W": 1, "Y": 0.4, "c": 0.1, "millTolerance": 0.125}
-'@ | Set-Content job.json -Encoding utf8
-python scripts/pressure_design.py b313-wall-thickness --input-file job.json
-```
+The numbers above are placeholders to show the shape of a complete input, not code values. `job.json` holds the same object. Quoting inline JSON on a command line is shell-dependent (PowerShell in particular mangles it), so prefer the file route: write the object to `job.json` in the working directory with the file tool, then pass `--input-file job.json`.
 
 - **Run `python scripts/pressure_design.py list` first** to get the exact field names; do not guess them.
 - **Every number you state comes from a script run**, including side comparisons, what-ifs and sensitivity remarks (for example "what would the wall be at 10 % lower pressure"): run the script again rather than computing in your head.
