@@ -8,6 +8,33 @@ keep a defect until the plugin is updated, so each such entry names the skill, t
 affected inputs and the release that fixed it. GitHub Releases carry the same
 label and are the recall channel.
 
+## [0.4.0] — 2026-10-26
+
+Cowork support. No calculation, script-engine, fixture or golden change; every number the
+skills produce is identical to 0.3.2. The invocation surface changes for every user, hence the
+minor bump.
+
+- **All five skills**: run instructions no longer say "run from this skill's directory".
+  Scripts are called by full path from the session's working directory and every input and
+  output file (`job.json`, `spec.json`, calc reports, result JSON, PCF files) is written to the
+  working directory. In Cowork the plugin folder is a read-only mount and the working directory
+  is the outputs folder, so the deliverables surface as downloadable files.
+- **All five skills**: descriptions rewritten third person with the phrases engineers type, so
+  the skills trigger from plain language in Cowork, which has no `/piping-toolset:` prefix.
+  Skill names are unchanged.
+- `stress-screening`, `load-case-builder`, `pressure-design`: SKILL.md bodies trimmed under
+  3,000 words; the detail moved verbatim into each skill's `references/` folder and is linked
+  from the body. Nothing was removed from the pack.
+- `iso-to-pcf`: the PDF-reading reference leads with the tools expected in the Cowork
+  sandbox (pdfplumber, pypdf, poppler) and keeps PyMuPDF as the optional faster route.
+- `pressure-design`: the PowerShell here-string example replaced by shell-neutral wording.
+- Packaging: `tools/package_plugin.py` builds `piping-toolset.plugin` (the Cowork install
+  file) reproducibly; CI uploads it on every run and attaches it to the GitHub Release on a
+  `v*` tag. README gains a Cowork install path, a requirements line and plain-language usage.
+- `tests/e2e/PROMPTS.md` gains a Cowork form of every prompt; `tests/e2e/COWORK-CHECKLIST.md`
+  is the manual acceptance script for a Cowork session.
+- `docs/cowork-readiness-audit-2026-10-26.md` records the audit behind this release.
+
 ## [0.3.2] — 2026-10-26
 
 - **UNCONSERVATIVE-FIX** `pipe-support`: WT (tee) arm flexure was always evaluated on

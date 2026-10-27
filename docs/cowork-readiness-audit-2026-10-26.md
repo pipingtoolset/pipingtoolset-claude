@@ -31,7 +31,7 @@ mounted plugins. Treat that note as stale until a live run confirms the current 
 
 ## Status (same day)
 
-Fixes 1, 2 and 5 applied on branch `claude/kai-cowork-usability-audit-03c2b9` (five SKILL.md files, 354 tests green, validator clean; three description tests pin exact phrases such as "formal analysis exemption", "schedule check" and a 400-character ceiling, so future rewrites must keep them). Fixes 3, 4, 6, 7, 8 and the live Cowork test remain.
+Fixes 1, 2 and 5 applied on branch `claude/kai-cowork-usability-audit-03c2b9` (five SKILL.md files, 354 tests green, validator clean; three description tests pin exact phrases such as "formal analysis exemption", "schedule check" and a 400-character ceiling, so future rewrites must keep them). Fixes 3, 4, 6, 7 and 8 followed the same day via a nine-agent workflow (seven edits, a verify pass, a diff review whose findings were applied); version bumped to 0.4.0. Only the live Cowork test remains: `tests/e2e/COWORK-CHECKLIST.md`.
 
 ## Must fix (blocks a Cowork user)
 

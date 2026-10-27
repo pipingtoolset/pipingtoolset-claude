@@ -32,7 +32,20 @@ own Claude environment; what you type goes to Claude under your own Anthropic ac
 
 ## Install
 
-Requires Claude Code (or Cowork) with Python 3 available on the machine that runs the skills.
+### In Claude Cowork
+
+1. Download `piping-toolset.plugin` from the
+   [latest GitHub Release](https://github.com/pipingtoolset/pipingtoolset-claude/releases/latest)
+   of pipingtoolset/pipingtoolset-claude.
+2. Drag the file into a Cowork chat. A preview card appears; press **Accept**.
+
+Or, in the app's plugin settings, add the marketplace `pipingtoolset/pipingtoolset-claude`.
+
+To update, install the new `.plugin` from the latest release. An installed copy keeps any defect it
+shipped with until you update it, so **UNCONSERVATIVE-FIX** releases (see
+[`CHANGELOG.md`](CHANGELOG.md)) are the recall channel.
+
+### In Claude Code
 
 ```
 /plugin marketplace add pipingtoolset/pipingtoolset-claude
@@ -41,12 +54,26 @@ Requires Claude Code (or Cowork) with Python 3 available on the machine that run
 
 For a local checkout: `/plugin marketplace add <path-to-this-checkout>`.
 
-Invoke a skill by name, because other installed skills on the same topics would otherwise compete:
-`/piping-toolset:pressure-design`, `/piping-toolset:stress-screening`, `/piping-toolset:load-case-builder`,
-`/piping-toolset:iso-to-pcf`, `/piping-toolset:pipe-support`. The plugin shows as **PipingToolset** in the plugin list; its id (and the
-command prefix) stays `piping-toolset` so existing installs keep working.
+### Requirements
+
+Python 3.9 or newer wherever the skills run: your own machine for Claude Code; Cowork's built-in
+sandbox is expected to provide it (`tests/e2e/COWORK-CHECKLIST.md` is the live check). There is
+nothing else to install, and nothing is sent to PipingToolset.
+
+### Invoking a skill
+
+In Cowork, pick the skill from the skills menu or name it in plain words, for example "use the pipe
+support skill to check PS-201" or "use the pressure design skill: B31.3-2022, NPS 6 ...". Naming it
+matters, because other installed skills on the same topics would otherwise compete.
+
+In Claude Code, use the slash form: `/piping-toolset:pressure-design`, `/piping-toolset:stress-screening`,
+`/piping-toolset:load-case-builder`, `/piping-toolset:iso-to-pcf`, `/piping-toolset:pipe-support`. The
+plugin shows as **PipingToolset** in the plugin list; its id (and the command prefix) stays
+`piping-toolset` so existing installs keep working.
 
 ## Try it in twenty seconds
+
+In Cowork, drop the leading slash and say "use the pressure design skill:" instead.
 
 ```
 /piping-toolset:pressure-design B31.3-2022, normal fluid service. NPS 6 seamless pipe, OD 6.625 in,
@@ -88,6 +115,7 @@ python -m unittest discover -s tests -v
 CRLF, kept byte-exact by `.gitattributes`) for the worked examples. A change to case order,
 combination strings or QC text must be a deliberate golden update, reviewed by the engineer of record.
 `tools/sync_fixtures.py --check` confirms the vendored calc-core fixture snapshot is current.
+`python tools/package_plugin.py` builds `piping-toolset.plugin` for a release.
 
 See [`ROADMAP.md`](ROADMAP.md) for the plan and [`CHANGELOG.md`](CHANGELOG.md) for releases.
 A release labelled **UNCONSERVATIVE-FIX** corrects a result that could have been less conservative
