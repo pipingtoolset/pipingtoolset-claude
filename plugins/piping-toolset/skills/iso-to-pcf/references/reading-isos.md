@@ -5,18 +5,44 @@
 Isogen-plotted PDFs usually carry a real text layer. When they do, the fastest reliable route
 is positioned text extraction plus targeted image zooms, not OCR.
 
+**Quick check first.** `pdftotext -layout -f N -l N iso.pdf -` (poppler) prints sheet N with
+the drawing layout kept. If it prints nothing, the sheet has no text layer (see the rendering
+fallback below). `pdftotext -layout` is also a usable alternative to the positioned routes.
+
+**Positioned words with pdfplumber.** pdfplumber, pypdf and poppler are expected in the Cowork
+sandbox and are common in Python setups, so this route usually needs no install:
+
 ```python
-import pymupdf                                  # pip install pymupdf (the user's environment)
+import pdfplumber
+with pdfplumber.open(path) as pdf:
+    words = pdf.pages[i].extract_words()        # dicts with x0, top, x1, bottom, text
+```
+
+Group words into lines by `round(top)` (a small tolerance, a point or two) and sort by
+`(top, x0)`. That gives every callout, coordinate, dimension and BOM row with its position on
+the sheet, which is enough to tie a dimension to the run it annotates.
+
+**Optional faster route, when pymupdf is already installed.** Do not try to install it if pip
+or the network is unavailable; use the pdfplumber route above instead.
+
+```python
+import pymupdf                                  # optional: only when already installed
 doc = pymupdf.open(path)
 words = doc[i].get_text("words")                # (x0, y0, x1, y1, word, block, line, word_no)
 ```
 
 Group words by `(block, line)` and sort by `(y, x)`. That gives every callout, coordinate,
 dimension and BOM row with its position on the sheet, which is enough to tie a dimension to
-the run it annotates. `pdftotext -layout` is a usable alternative.
+the run it annotates.
 
 Some sheets will have **no** text layer (vector-only plots). Detect that (a page that returns
-no words) and fall back to rendering:
+no words) and fall back to rendering. With no install at all, use poppler's `pdftoppm`; if
+pymupdf is already installed, `get_pixmap` does the same job:
+
+```bash
+pdftoppm -r 300 -f N -l N -png iso.pdf sheet     # poppler, no install; page N only
+pdftoppm -r 200 -f N -l N -png iso.pdf sheet     # whole sheet, for orientation
+```
 
 ```python
 pix = doc[i].get_pixmap(dpi=200)                # whole sheet, for orientation
