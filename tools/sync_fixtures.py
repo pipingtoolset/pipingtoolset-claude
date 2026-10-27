@@ -45,12 +45,35 @@ MODULES = {
     "structural.fillet-weld": "pipe-support",
     "structural.baseplate-anchorage": "pipe-support",
     "structural.pier-soil": "pipe-support",
+    "connections.nozzle-load-check": "nozzle-load",
+    "connections.nema-sm23": "nozzle-load",
+    "connections.api610-annexf": "nozzle-load",
+    "connections.flange-equivalent-pressure": "bolted-flange",
+    "aux.app2-flange-integral": "bolted-flange",
 }
+
+
+# Engine cases the plugin deliberately does not ship, by module: (input key, value, reason).
+# The VIII-2 Table 4.16.5 curve-fit option ("fit-4165") carries ~60 coefficients transcribed
+# from a licensed table; the plugin ships only the closed-form series with user overrides.
+EXCLUDE = {
+    "aux.app2-flange-integral": [("hubFactorMethod", "fit-4165",
+                                  "Table 4.16.5 curve fits are tabulated code data; not shipped")],
+}
+
+
+def _excluded(module: str, case: dict):
+    for key, value, reason in EXCLUDE.get(module, []):
+        if case.get("input", {}).get(key) == value:
+            return reason
+    return None
 
 
 def sanitize(fx: dict) -> dict:
     cases = []
     for c in fx["cases"]:
+        if _excluded(fx["module"], c):
+            continue
         keep = {"input": c["input"]}
         for k in ("expect", "status", "tol"):
             if k in c:
@@ -96,16 +119,23 @@ def main() -> int:
                                 text=True, check=True).stdout.strip()
     except (OSError, subprocess.CalledProcessError):
         commit = "unknown"
+    sys.path.insert(0, os.path.join(ROOT, "tests"))
+    from parity import fixture_filename  # one Windows-safe naming rule for writer and reader
+
     os.makedirs(DEST, exist_ok=True)
     manifest = {"source": "pipecalcpro packages/calc-core/fixtures", "calc_core_commit": commit,
                 "modules": {}}
     for module, (fname, fx, h) in sorted(found.items()):
         clean = sanitize(fx)
-        with open(os.path.join(DEST, f"{module}.json"), "w", encoding="utf-8", newline="\n") as fh:
+        with open(os.path.join(DEST, fixture_filename(module)), "w", encoding="utf-8", newline="\n") as fh:
             json.dump(clean, fh, indent=2)
             fh.write("\n")
         manifest["modules"][module] = {"skill": MODULES[module], "source_file": fname,
                                        "source_sha256": h, "cases": len(clean["cases"])}
+        dropped = sorted({r for c in fx["cases"] for r in [_excluded(module, c)] if r})
+        if dropped:
+            manifest["modules"][module]["excluded_cases"] = len(fx["cases"]) - len(clean["cases"])
+            manifest["modules"][module]["excluded_reason"] = "; ".join(dropped)
     with open(MANIFEST, "w", encoding="utf-8", newline="\n") as fh:
         json.dump(manifest, fh, indent=2)
         fh.write("\n")

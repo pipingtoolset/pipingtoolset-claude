@@ -84,7 +84,7 @@ class ManifestParity(unittest.TestCase):
 class SkillCompatibility(unittest.TestCase):
 
     def test_every_skill_declares_the_python_floor(self):
-        self.assertEqual(len(SKILLS), 5, SKILLS)
+        self.assertEqual(len(SKILLS), 7, SKILLS)
         for path in SKILLS:
             fm = frontmatter(path)
             self.assertEqual(list(fm), ["name", "description", "compatibility"], path)

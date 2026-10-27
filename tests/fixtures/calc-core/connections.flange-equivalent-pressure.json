@@ -1,0 +1,37 @@
+{
+  "module": "connections.flange-equivalent-pressure",
+  "cases": [
+    {
+      "input": {
+        "P": 500,
+        "F": 2000,
+        "M": 50000,
+        "G": 6,
+        "ratedPressure": 1975
+      },
+      "expect": {
+        "momentTerm": 1178.926,
+        "forceTerm": 70.736,
+        "Pe": 1749.661,
+        "utilization": 0.8859
+      },
+      "status": "pass",
+      "tol": 0.001
+    },
+    {
+      "input": {
+        "P": 500,
+        "F": 2000,
+        "M": 50000,
+        "G": 6,
+        "ratedPressure": 1500
+      },
+      "expect": {
+        "Pe": 1749.661,
+        "utilization": 1.1664
+      },
+      "status": "fail",
+      "tol": 0.001
+    }
+  ]
+}

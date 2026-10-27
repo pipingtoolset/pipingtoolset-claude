@@ -1,0 +1,29 @@
+{
+  "module": "connections.nema-sm23",
+  "cases": [
+    {
+      "input": {
+        "NPS": 12,
+        "applied": {
+          "Fx": 600,
+          "Fy": 600,
+          "Fz": 600,
+          "Mx": 1000,
+          "My": 1000,
+          "Mz": 300
+        },
+        "coefficient": 927
+      },
+      "expect": {
+        "De": 9.33333,
+        "Fr": 1039.23048,
+        "Mr": 1445.68323,
+        "index": 4563.37468,
+        "allowable": 8652,
+        "ratio": 0.5274
+      },
+      "status": "pass",
+      "tol": 0.0001
+    }
+  ]
+}

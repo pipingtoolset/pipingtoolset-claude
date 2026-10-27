@@ -3,7 +3,7 @@
 **B31 calcs you can reproduce and defend in review, with Claude.**
 Claude does the interview. A script does the math. You read the table.
 
-Five piping engineering skills for Claude Code and Cowork, and for any assistant that reads
+Seven piping engineering skills for Claude Code and Cowork, and for any assistant that reads
 the Agent Skills format (OpenAI Codex and ChatGPT, Cursor, GitHub Copilot and others), from the
 people who build the free calculators at [pipingtoolset.com](https://pipingtoolset.com).
 Written and maintained by a practicing piping engineer at Flexible Piping Solutions LLC.
@@ -15,6 +15,8 @@ Written and maintained by a practicing piping engineer at Flexible Piping Soluti
 | `load-case-builder` | Complete B31.1 / B31.3 static load case sets for CAESAR II and AutoPIPE, generated symbolically so references never go stale, with a QC gate and a report extraction matrix |
 | `pipe-support` | Pipe support assemblies (arm, column, welds, bolts, base plate, anchors, pier) checked for CAESAR II restraint loads: ASCE 7-22 combinations, AISC 360-22, ACI 318-19 Chapter 17 and AWS D1.1 detailing, with a PE-style review, ranked code-passing alternatives (lighter, less field work, stocked sizes) and an engineer-ready calc report. The pipingtoolset.com PiperSTR engine, verified against a published PiperSTR report value for value |
 | `iso-to-pcf` | PDF stress isometrics to a clean CAESAR II PCF: Claude transcribes the drawing, a script builds the geometry in exact fractions (bend tangents, branches, sloped profiles) and a validator catches orphan nodes, zero-length elements and off-line supports before import |
+| `nozzle-load` | Piping forces and moments on equipment nozzles, checked the way the vendor will: API 610 Table 5 and Annex F for pumps, the API 617 / 611 / 612 and NEMA SM-23 combined form for compressors and turbines, API 660 / 661 / 560 per-component and header-sum checks for exchangers and heaters, API 650 Annex P ordinates for tank shells, and the PVP2011-57100 method as the default for a pressure vessel with no API allowable. The user reads every table row; the script applies the scaling rules and the ratios. PIP RECE002 design-stage margins as an owner practice |
+| `bolted-flange` | Piping loads on a bolted flanged joint in a fixed order: the pressure-equivalent screen first, always, against the B16.5 rating the user reads, then the BPVC Section VIII Division 2 Part 4.16 analysis (the Appendix 2 method) for integral and loose flanges, with bolt area, hub, radial and tangential stresses and rigidity. Flange dimensions, gasket factors, ratings and allowables all come from the user's copies |
 
 ## How it works
 
@@ -76,8 +78,8 @@ Where the skills land after a CLI install:
 | Project (default) | `.agents/skills/<skill-name>/` in the current repository |
 | User (`--global` / `-g`) | `~/.agents/skills/<skill-name>/` |
 
-Hosts without a `/piping-toolset:` prefix see the five skills by name (`pressure-design`,
-`stress-screening`, `load-case-builder`, `pipe-support`, `iso-to-pcf`); name the one you want in
+Hosts without a `/piping-toolset:` prefix see the seven skills by name (`pressure-design`,
+`stress-screening`, `load-case-builder`, `pipe-support`, `iso-to-pcf`, `nozzle-load`, `bolted-flange`); name the one you want in
 plain words, as in Cowork. Each skill's frontmatter states its only requirement, Python 3.9+ with
 the standard library, so a host can check it before running a script.
 
@@ -94,7 +96,8 @@ support skill to check PS-201" or "use the pressure design skill: B31.3-2022, NP
 matters, because other installed skills on the same topics would otherwise compete.
 
 In Claude Code, use the slash form: `/piping-toolset:pressure-design`, `/piping-toolset:stress-screening`,
-`/piping-toolset:load-case-builder`, `/piping-toolset:iso-to-pcf`, `/piping-toolset:pipe-support`. The
+`/piping-toolset:load-case-builder`, `/piping-toolset:iso-to-pcf`, `/piping-toolset:pipe-support`,
+`/piping-toolset:nozzle-load`, `/piping-toolset:bolted-flange`. The
 plugin shows as **PipingToolset** in the plugin list; its id (and the command prefix) stays
 `piping-toolset` so existing installs keep working.
 

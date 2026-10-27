@@ -1,7 +1,39 @@
 {
   "source": "pipecalcpro packages/calc-core/fixtures",
-  "calc_core_commit": "6eab3e155aee42d821f257bb3faaeebdd5a763c2",
+  "calc_core_commit": "ba271e822d3abd759fc13b2bdbd8e27fa4908d97",
   "modules": {
+    "aux.app2-flange-integral": {
+      "skill": "bolted-flange",
+      "source_file": "app2-flange-integral.json",
+      "source_sha256": "ae2268bda8fe32fc733a33ff4a1332ad5389ab58511fa3c59cd9052c1d715b13",
+      "cases": 4,
+      "excluded_cases": 2,
+      "excluded_reason": "Table 4.16.5 curve fits are tabulated code data; not shipped"
+    },
+    "connections.api610-annexf": {
+      "skill": "nozzle-load",
+      "source_file": "api610-annexf.json",
+      "source_sha256": "692b69c44c475fd43f6bf4c714602d740157cbaa104961cef3ad7a6afd2d04dd",
+      "cases": 4
+    },
+    "connections.flange-equivalent-pressure": {
+      "skill": "bolted-flange",
+      "source_file": "flange-equivalent-pressure.json",
+      "source_sha256": "32c830c03bdc872816ee3ff18daa2a356f976e1672f5ea6c64118ecee147533d",
+      "cases": 2
+    },
+    "connections.nema-sm23": {
+      "skill": "nozzle-load",
+      "source_file": "nema-sm23.json",
+      "source_sha256": "c87dbc4d3ad4981abeced25e8f55c25514c429e93c5f33af7716661b1e058147",
+      "cases": 1
+    },
+    "connections.nozzle-load-check": {
+      "skill": "nozzle-load",
+      "source_file": "nozzle-load-check.json",
+      "source_sha256": "fcc6c8bff73010ffd8f1e6700f953edd754f018d2b2a6c63997eb87ea0a2b5f8",
+      "cases": 2
+    },
     "noncode.pipe-section": {
       "skill": "stress-screening",
       "source_file": "pipe-section.json",

@@ -8,19 +8,50 @@ keep a defect until the plugin is updated, so each such entry names the skill, t
 affected inputs and the release that fixed it. GitHub Releases carry the same
 label and are the recall channel.
 
-## [Unreleased]
+## [0.5.0] — 2026-10-27
 
-Distribution to assistants other than Claude. No calculation, script-engine, fixture, golden or
-skill-body change; every number the skills produce is identical to 0.4.0.
+Two new skills, and distribution to assistants other than Claude. No change to any existing
+skill's calculations, scripts, fixtures or golden files; every number the five earlier skills
+produce is identical to 0.4.0.
 
+- **New `nozzle-load`**: piping forces and moments on equipment nozzles against the allowables
+  for that equipment type. Ported from the pipingtoolset.com calculation engine, fixture-locked
+  (`tests/fixtures/calc-core`): `connections.nozzle-load-check` (six-component ratios, resultants,
+  governing component), `connections.nema-sm23` (the 3F + M ≤ coefficient · De combined form used
+  by API 617 Annex E, API 611 Annex I, API 612 Annex D and NEMA SM-23; the coefficient is a
+  required input), `connections.api610-annexf` (API 610 Annex F, horizontal F.1 to F.5 and
+  vertical in-line F.6 to F.11). New, hand-checked: `equipment.pvp2011-allowables` (the method of
+  ASME PVP2011-57100 "Establishing Allowable Nozzle Loads" as the default for pressure vessels
+  with no API or vendor allowable: thickness square-law extrapolation, the 18,800 / 17,100 psi
+  material ratio capped at 1.0, force-with-d and moment-with-d² interpolation, owner factor; the
+  user reads the Table 1A / 1B / 2 row), `equipment.nozzle-load-sum` (API 661 7.1.10.2 header
+  sum and the 7.1.10.3 bay multiple), `equipment.api650-annexp-ordinates` (API 650 Annex P.2.7
+  nomogram ordinates; the user reads the boundary). PIP RECE002 design-stage margins and
+  resolution points are an optional owner-practice basis item. No API, NEMA or paper table value
+  is embedded.
+- **New `bolted-flange`**: piping loads on bolted flanged joints. The pressure-equivalent screen
+  (`connections.flange-equivalent-pressure`, ported, fixture-locked) runs first and is always
+  reported; the BPVC Section VIII Division 2 Part 4.16 analysis (`aux.app2-flange-integral`,
+  ported, fixture-locked, integral and loose, hub and shape factors, bolt loads, SH / SR / ST,
+  2-8(a) cap, bolt-spacing correction, rigidity J) follows. The closed-form hub factors F, V, f
+  are a reconstruction that matches AutoPIPE to four digits, stated as such in the script and the
+  references, and may be overridden with values read from the Code figures. New:
+  `connections.flange-derive` (N, b₀, b, G, bolt root area, g₀ / g₁ / h from user-read raw values).
+  UG-44(b) / 4.16.12, ASME III NC-3658.3 and EN 1591-1 are named as the next rungs, not computed.
+  B16.5 dimensions and ratings, B16.20 gasket dimensions, Table 4.16.1 gasket factors and every
+  allowable stress are user-supplied.
+- Pack: `tools/sync_fixtures.py` vendors five more engine modules (22 modules, 74 cases). The
+  engine's two Table 4.16.5 curve-fit cases are excluded by rule, with the reason in `MANIFEST.json`,
+  and a fixture whose name is a Windows device name (`aux.*`) is vendored with a leading underscore;
+  `tests/test_skill_references.py` asserts seven skills; README, ROADMAP and the prompt set
+  (`tests/e2e/PROMPTS.md`) cover the new skills; plugin and marketplace manifests at 0.5.0.
 - `plugins/piping-toolset/plugin.json`: an Agent Plugins 1.0 manifest (agent-plugins.org) next
   to the unchanged `.claude-plugin/plugin.json`, so the same folder installs in OpenAI Codex and
   any other Agent Plugins host. `tests/test_manifests.py` fails if the two manifests disagree on
   name, version or description, or if either marketplace drifts from them.
 - `.agents/plugins/marketplace.json`: the Codex marketplace file for
-  `codex plugin marketplace add pipingtoolset/pipingtoolset-claude`. `.claude-plugin/marketplace.json`
-  is unchanged.
-- **All five skills**: frontmatter gains the Agent Skills `compatibility` field,
+  `codex plugin marketplace add pipingtoolset/pipingtoolset-claude`.
+- **All seven skills**: frontmatter gains the Agent Skills `compatibility` field,
   `Requires Python 3.9+ (standard library only)`. Nothing else in the skills changed.
 - Packaging: `tools/package_plugin.py` also builds `piping-toolset-skills.zip` (only `skills/`,
   for ChatGPT, Manus and Perplexity uploads), reproducibly; CI uploads it and attaches it to the
