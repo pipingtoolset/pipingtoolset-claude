@@ -1,0 +1,4 @@
+# language=en p=0.99
+[   2.2 -   10.2] Now the part that matters in review, I asked for the allowable stressed and I said just give me the number.
+[  10.2 -   20.2] It won't. It tells me which table, which row, which two columns, and offers to interpolate once I've actually read them.
+[  20.2 -   27.2] The plugin contains no as-me table values. That's deliberate and it's a pain test.

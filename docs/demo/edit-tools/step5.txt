@@ -1,0 +1,3 @@
+# language=en p=0.98
+[   4.2 -   19.1] Seven skills including bolted flange, ISO to PCF, the load case builder, nozzle load,
+[  19.1 -   28.3] type support, pressure design, and stress screening.

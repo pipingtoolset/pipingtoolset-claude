@@ -5,3 +5,7 @@ dist/
 *.skill
 *.zip
 *.plugin
+
+# demo recordings and the rendered cut live in the main checkout only (650 MB); the edit script and transcripts are tracked
+docs/demo/*.mp4
+docs/demo/edit-work/

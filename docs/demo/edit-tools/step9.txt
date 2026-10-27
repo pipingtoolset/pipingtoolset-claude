@@ -1,0 +1,8 @@
+# language=en p=0.99
+[  12.2 -   17.8] The type support skill takes ACs or two restraint loads straight off the restraint summary,
+[  17.8 -   23.8] states how it mapped them, dead thermal wind, seismic, etc, and asks you to confirm
+[  24.4 -   32.2] because that is where the support checks go wrong. Then ASCE 722 combinations, AISC
+[  32.9 -   44.7] 36022 for the arm, the column, the welds in the base plate, ACI 318 318 chapter 17 for the anchors,
+[  45.3 -   51.0] 23 combinations in total. Governing check is the base metal at the arm-to-column
+[  51.5 -   63.4] at 0.88. It passes, so it optimizes a W8x10 arm on a 5 inch standard pipe column 0.764
+[  64.1 -   67.8] and a list of what to confirm before issue.

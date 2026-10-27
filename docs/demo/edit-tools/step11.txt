@@ -1,0 +1,9 @@
+# language=en p=0.98
+[   4.1 -    8.9] Everything runs in your own cloud environment.
+[   8.9 -   15.4] Scripts are plain Python, open source under Apache 2, and verified against the same fixture
+[  15.4 -   22.8] case as the three calculators on the site.
+[  22.8 -   29.5] PipingToolSet.com When a release corrects an unconservative result, it is labeled
+[  29.5 -   50.2] and the change log is the recall members.
+[  50.2 -   56.8] Free at PipingToolSet.com slash Claude.
+[  56.8 -   59.8] Link in the description.
+[  59.8 -   63.1] You still need your own copy of the code, and you should have it.
