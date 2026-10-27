@@ -7617,7 +7617,7 @@
     "status": "pass",
     "warnings": [
      "Section has slender compression elements — Chapter E7 effective area applied; verify against the Manual for the governing edition.",
-     "Tee flexure assumes the stem in tension. With the stem in compression F9 caps Mn at My — confirm the orientation.",
+     "Tee flexure assumes the stem in tension (no orientation supplied). With the stem in compression F9 caps Mn at My, B goes negative in F9-5 and stem local buckling (F9.4) applies — supply stemInCompression.",
      "Cb = 1.0 assumed (uniform moment). A computed Cb from the segment's quarter-point moments will usually increase the LTB capacity.",
      "No deflection supplied — serviceability was not checked. Pipe-support spans are frequently deflection-governed."
     ]
@@ -7759,7 +7759,7 @@
     "status": "pass",
     "warnings": [
      "Section has slender compression elements — Chapter E7 effective area applied; verify against the Manual for the governing edition.",
-     "Tee flexure assumes the stem in tension. With the stem in compression F9 caps Mn at My — confirm the orientation.",
+     "Tee flexure assumes the stem in tension (no orientation supplied). With the stem in compression F9 caps Mn at My, B goes negative in F9-5 and stem local buckling (F9.4) applies — supply stemInCompression.",
      "No deflection supplied — serviceability was not checked. Pipe-support spans are frequently deflection-governed."
     ]
    }
@@ -7898,7 +7898,7 @@
     "status": "pass",
     "warnings": [
      "Section has slender compression elements — Chapter E7 effective area applied; verify against the Manual for the governing edition.",
-     "Tee flexure assumes the stem in tension. With the stem in compression F9 caps Mn at My — confirm the orientation.",
+     "Tee flexure assumes the stem in tension (no orientation supplied). With the stem in compression F9 caps Mn at My, B goes negative in F9-5 and stem local buckling (F9.4) applies — supply stemInCompression.",
      "Cb = 1.0 assumed (uniform moment). A computed Cb from the segment's quarter-point moments will usually increase the LTB capacity.",
      "No deflection supplied — serviceability was not checked. Pipe-support spans are frequently deflection-governed."
     ]
@@ -8037,7 +8037,7 @@
     },
     "status": "pass",
     "warnings": [
-     "Tee flexure assumes the stem in tension. With the stem in compression F9 caps Mn at My — confirm the orientation.",
+     "Tee flexure assumes the stem in tension (no orientation supplied). With the stem in compression F9 caps Mn at My, B goes negative in F9-5 and stem local buckling (F9.4) applies — supply stemInCompression.",
      "Cb = 1.0 assumed (uniform moment). A computed Cb from the segment's quarter-point moments will usually increase the LTB capacity.",
      "No deflection supplied — serviceability was not checked. Pipe-support spans are frequently deflection-governed."
     ]
@@ -8177,7 +8177,7 @@
     "status": "pass",
     "warnings": [
      "Section has slender compression elements — Chapter E7 effective area applied; verify against the Manual for the governing edition.",
-     "Tee flexure assumes the stem in tension. With the stem in compression F9 caps Mn at My — confirm the orientation.",
+     "Tee flexure assumes the stem in tension (no orientation supplied). With the stem in compression F9 caps Mn at My, B goes negative in F9-5 and stem local buckling (F9.4) applies — supply stemInCompression.",
      "Cb = 1.0 assumed (uniform moment). A computed Cb from the segment's quarter-point moments will usually increase the LTB capacity.",
      "No deflection supplied — serviceability was not checked. Pipe-support spans are frequently deflection-governed."
     ]
@@ -8308,7 +8308,1111 @@
     "status": "pass",
     "warnings": [
      "Section has slender compression elements — Chapter E7 effective area applied; verify against the Manual for the governing edition.",
-     "Tee flexure assumes the stem in tension. With the stem in compression F9 caps Mn at My — confirm the orientation.",
+     "Tee flexure assumes the stem in tension (no orientation supplied). With the stem in compression F9 caps Mn at My, B goes negative in F9-5 and stem local buckling (F9.4) applies — supply stemInCompression.",
+     "Cb = 1.0 assumed (uniform moment). A computed Cb from the segment's quarter-point moments will usually increase the LTB capacity.",
+     "No deflection supplied — serviceability was not checked. Pipe-support spans are frequently deflection-governed."
+    ]
+   }
+  },
+  {
+   "name": "WT5X11 A36 stem in compression Lb 24",
+   "input": {
+    "section": {
+     "label": "WT5X11",
+     "kind": "T",
+     "A": 3.24,
+     "d": 5.09,
+     "bf": 5.75,
+     "tw": 0.24,
+     "tf": 0.36,
+     "kdes": 0.66,
+     "bf2tf": 7.99,
+     "Ix": 6.88,
+     "Zx": 3.02,
+     "Sx": 1.72,
+     "rx": 1.46,
+     "Iy": 5.71,
+     "Zy": 3.05,
+     "Sy": 1.99,
+     "ry": 1.33,
+     "J": 0.119,
+     "Cw": 0.107,
+     "ro": 2.16,
+     "H": 0.83
+    },
+    "material": {
+     "Fy": 36,
+     "Fu": 58
+    },
+    "method": "LRFD",
+    "Lx": 24,
+    "Ly": 24,
+    "Lb": 24,
+    "Kx": 2.1,
+    "Ky": 2.1,
+    "stemInCompression": true,
+    "demand": {
+     "Mx": 40,
+     "Vx": 2
+    }
+   },
+   "output": {
+    "module": "structural.aisc-member",
+    "output": {
+     "label": "WT5X11",
+     "method": "LRFD",
+     "classification": {
+      "flexure": "compact",
+      "axial": "nonslender",
+      "flangeLambda": 7.99,
+      "flangeLambdaP": 10.7853,
+      "flangeLambdaR": 28.3823,
+      "webLambda": 21.2083,
+      "webLambdaP": 23.8411,
+      "webLambdaR": 43.1411
+     },
+     "capacity": {
+      "tension": 104.976,
+      "compression": 87.3462,
+      "momentX": 55.728,
+      "momentY": 98.82,
+      "shearX": 23.7479,
+      "shearY": 80.4816
+     },
+     "slenderness": {
+      "x": 34.5205,
+      "y": 37.8947,
+      "governing": 37.8947,
+      "limit": 200
+     },
+     "checks": [
+      {
+       "label": "Axial compression",
+       "demand": 0,
+       "capacity": 87.3462,
+       "ratio": 0,
+       "clause": "E4-3 (flexural-torsional buckling); E3-2 inelastic",
+       "status": "na"
+      },
+      {
+       "label": "Flexure, major axis",
+       "demand": 40,
+       "capacity": 55.728,
+       "ratio": 0.7178,
+       "clause": "F9-4 (yielding, stem in compression: Mp = My)",
+       "status": "pass"
+      },
+      {
+       "label": "Flexure, minor axis",
+       "demand": 0,
+       "capacity": 98.82,
+       "ratio": 0,
+       "clause": "F6-1 (yielding)",
+       "status": "na"
+      },
+      {
+       "label": "Shear, major axis",
+       "demand": 2,
+       "capacity": 23.7479,
+       "ratio": 0.0842,
+       "clause": "G2-1 (web shear)",
+       "status": "pass"
+      },
+      {
+       "label": "Shear, minor axis",
+       "demand": 0,
+       "capacity": 80.4816,
+       "ratio": 0,
+       "clause": "G7 (flange shear, weak axis)",
+       "status": "na"
+      },
+      {
+       "label": "Slenderness KL/r (E2 advisory)",
+       "demand": 37.8947,
+       "capacity": 200,
+       "ratio": 0.1895,
+       "clause": "E2 recommended limit 200",
+       "status": "pass",
+       "advisory": true
+      }
+     ],
+     "interaction": 0.7178,
+     "interactionEquation": "H1-1b",
+     "governingRatio": 0.7178,
+     "governingCheck": "Flexure, major axis"
+    },
+    "status": "pass",
+    "warnings": [
+     "Tee stem in flexural compression: F9 uses Mp = My, B < 0 in the LTB term and the F9.4 stem local-buckling limit.",
+     "Cb = 1.0 assumed (uniform moment). A computed Cb from the segment's quarter-point moments will usually increase the LTB capacity.",
+     "No deflection supplied — serviceability was not checked. Pipe-support spans are frequently deflection-governed."
+    ]
+   }
+  },
+  {
+   "name": "WT5X11 A36 stem in tension explicit",
+   "input": {
+    "section": {
+     "label": "WT5X11",
+     "kind": "T",
+     "A": 3.24,
+     "d": 5.09,
+     "bf": 5.75,
+     "tw": 0.24,
+     "tf": 0.36,
+     "kdes": 0.66,
+     "bf2tf": 7.99,
+     "Ix": 6.88,
+     "Zx": 3.02,
+     "Sx": 1.72,
+     "rx": 1.46,
+     "Iy": 5.71,
+     "Zy": 3.05,
+     "Sy": 1.99,
+     "ry": 1.33,
+     "J": 0.119,
+     "Cw": 0.107,
+     "ro": 2.16,
+     "H": 0.83
+    },
+    "material": {
+     "Fy": 36,
+     "Fu": 58
+    },
+    "method": "LRFD",
+    "Lx": 24,
+    "Lb": 24,
+    "stemInCompression": false,
+    "demand": {
+     "Mx": 40,
+     "Vx": 2
+    }
+   },
+   "output": {
+    "module": "structural.aisc-member",
+    "output": {
+     "label": "WT5X11",
+     "method": "LRFD",
+     "classification": {
+      "flexure": "compact",
+      "axial": "nonslender",
+      "flangeLambda": 7.99,
+      "flangeLambdaP": 10.7853,
+      "flangeLambdaR": 28.3823,
+      "webLambda": 21.2083,
+      "webLambdaP": 23.8411,
+      "webLambdaR": 43.1411
+     },
+     "capacity": {
+      "tension": 104.976,
+      "compression": 88.7839,
+      "momentX": 89.1648,
+      "momentY": 98.82,
+      "shearX": 23.7479,
+      "shearY": 80.4816
+     },
+     "slenderness": {
+      "x": 16.4384,
+      "y": 18.0451,
+      "governing": 18.0451,
+      "limit": 200
+     },
+     "checks": [
+      {
+       "label": "Axial compression",
+       "demand": 0,
+       "capacity": 88.7839,
+       "ratio": 0,
+       "clause": "E4-3 (flexural-torsional buckling); E3-2 inelastic",
+       "status": "na"
+      },
+      {
+       "label": "Flexure, major axis",
+       "demand": 40,
+       "capacity": 89.1648,
+       "ratio": 0.4486,
+       "clause": "F9-1 (yielding)",
+       "status": "pass"
+      },
+      {
+       "label": "Flexure, minor axis",
+       "demand": 0,
+       "capacity": 98.82,
+       "ratio": 0,
+       "clause": "F6-1 (yielding)",
+       "status": "na"
+      },
+      {
+       "label": "Shear, major axis",
+       "demand": 2,
+       "capacity": 23.7479,
+       "ratio": 0.0842,
+       "clause": "G2-1 (web shear)",
+       "status": "pass"
+      },
+      {
+       "label": "Shear, minor axis",
+       "demand": 0,
+       "capacity": 80.4816,
+       "ratio": 0,
+       "clause": "G7 (flange shear, weak axis)",
+       "status": "na"
+      },
+      {
+       "label": "Slenderness KL/r (E2 advisory)",
+       "demand": 18.0451,
+       "capacity": 200,
+       "ratio": 0.0902,
+       "clause": "E2 recommended limit 200",
+       "status": "pass",
+       "advisory": true
+      }
+     ],
+     "interaction": 0.4486,
+     "interactionEquation": "H1-1b",
+     "governingRatio": 0.4486,
+     "governingCheck": "Flexure, major axis"
+    },
+    "status": "pass",
+    "warnings": [
+     "Tee stem in flexural tension: F9 yielding Mp <= 1.6·My with B > 0 in the LTB term.",
+     "Cb = 1.0 assumed (uniform moment). A computed Cb from the segment's quarter-point moments will usually increase the LTB capacity.",
+     "No deflection supplied — serviceability was not checked. Pipe-support spans are frequently deflection-governed."
+    ]
+   }
+  },
+  {
+   "name": "WT5X11 A36 stem compression long Lb ASD",
+   "input": {
+    "section": {
+     "label": "WT5X11",
+     "kind": "T",
+     "A": 3.24,
+     "d": 5.09,
+     "bf": 5.75,
+     "tw": 0.24,
+     "tf": 0.36,
+     "kdes": 0.66,
+     "bf2tf": 7.99,
+     "Ix": 6.88,
+     "Zx": 3.02,
+     "Sx": 1.72,
+     "rx": 1.46,
+     "Iy": 5.71,
+     "Zy": 3.05,
+     "Sy": 1.99,
+     "ry": 1.33,
+     "J": 0.119,
+     "Cw": 0.107,
+     "ro": 2.16,
+     "H": 0.83
+    },
+    "material": {
+     "Fy": 36,
+     "Fu": 58
+    },
+    "method": "ASD",
+    "Lx": 240,
+    "Lb": 240,
+    "stemInCompression": true,
+    "demand": {
+     "Mx": 20,
+     "P": 2
+    }
+   },
+   "output": {
+    "module": "structural.aisc-member",
+    "output": {
+     "label": "WT5X11",
+     "method": "ASD",
+     "classification": {
+      "flexure": "compact",
+      "axial": "nonslender",
+      "flangeLambda": 7.99,
+      "flangeLambdaP": 10.7853,
+      "flangeLambdaR": 28.3823,
+      "webLambda": 21.2083,
+      "webLambdaP": 23.8411,
+      "webLambdaR": 43.1411
+     },
+     "capacity": {
+      "tension": 69.8443,
+      "compression": 14.6849,
+      "momentX": 37.0778,
+      "momentY": 65.7485,
+      "shearX": 15.8003,
+      "shearY": 53.5473
+     },
+     "slenderness": {
+      "x": 164.3836,
+      "y": 180.4511,
+      "governing": 180.4511,
+      "limit": 200
+     },
+     "checks": [
+      {
+       "label": "Axial compression",
+       "demand": 2,
+       "capacity": 14.6849,
+       "ratio": 0.1362,
+       "clause": "E4-3 (flexural-torsional buckling); E3-3 elastic",
+       "status": "pass"
+      },
+      {
+       "label": "Flexure, major axis",
+       "demand": 20,
+       "capacity": 37.0778,
+       "ratio": 0.5394,
+       "clause": "F9-4 (yielding, stem in compression: Mp = My)",
+       "status": "pass"
+      },
+      {
+       "label": "Flexure, minor axis",
+       "demand": 0,
+       "capacity": 65.7485,
+       "ratio": 0,
+       "clause": "F6-1 (yielding)",
+       "status": "na"
+      },
+      {
+       "label": "Shear, major axis",
+       "demand": 0,
+       "capacity": 15.8003,
+       "ratio": 0,
+       "clause": "G2-1 (web shear)",
+       "status": "na"
+      },
+      {
+       "label": "Shear, minor axis",
+       "demand": 0,
+       "capacity": 53.5473,
+       "ratio": 0,
+       "clause": "G7 (flange shear, weak axis)",
+       "status": "na"
+      },
+      {
+       "label": "Combined axial + flexure",
+       "demand": 0.6075,
+       "capacity": 1,
+       "ratio": 0.6075,
+       "clause": "H1-1b (Pr/Pc = 0.136)",
+       "status": "pass"
+      },
+      {
+       "label": "Slenderness KL/r (E2 advisory)",
+       "demand": 180.4511,
+       "capacity": 200,
+       "ratio": 0.9023,
+       "clause": "E2 recommended limit 200",
+       "status": "pass",
+       "advisory": true
+      }
+     ],
+     "interaction": 0.6075,
+     "interactionEquation": "H1-1b",
+     "governingRatio": 0.6075,
+     "governingCheck": "Combined axial + flexure"
+    },
+    "status": "pass",
+    "warnings": [
+     "Tee stem in flexural compression: F9 uses Mp = My, B < 0 in the LTB term and the F9.4 stem local-buckling limit.",
+     "Cb = 1.0 assumed (uniform moment). A computed Cb from the segment's quarter-point moments will usually increase the LTB capacity.",
+     "No deflection supplied — serviceability was not checked. Pipe-support spans are frequently deflection-governed."
+    ]
+   }
+  },
+  {
+   "name": "WT6X20 A992 stem compression F9-18 branch",
+   "input": {
+    "section": {
+     "label": "WT6X20",
+     "kind": "T",
+     "A": 5.84,
+     "d": 5.97,
+     "bf": 8.01,
+     "tw": 0.295,
+     "tf": 0.515,
+     "kdes": 1.02,
+     "bf2tf": 7.77,
+     "Ix": 14.4,
+     "Zx": 5.28,
+     "Sx": 2.95,
+     "rx": 1.57,
+     "Iy": 22,
+     "Zy": 8.38,
+     "Sy": 5.5,
+     "ry": 1.94,
+     "J": 0.452,
+     "Cw": 0.62,
+     "ro": 2.63,
+     "H": 0.901
+    },
+    "material": {
+     "Fy": 50,
+     "Fu": 65
+    },
+    "method": "LRFD",
+    "Lx": 60,
+    "Lb": 60,
+    "stemInCompression": true,
+    "demand": {
+     "P": 30,
+     "Mx": 100,
+     "Vx": 5
+    }
+   },
+   "output": {
+    "module": "structural.aisc-member",
+    "output": {
+     "label": "WT6X20",
+     "method": "LRFD",
+     "classification": {
+      "flexure": "noncompact",
+      "axial": "slender",
+      "flangeLambda": 7.77,
+      "flangeLambdaP": 9.1516,
+      "flangeLambdaR": 24.0832,
+      "webLambda": 20.2373,
+      "webLambdaP": 20.2299,
+      "webLambdaR": 36.6064
+     },
+     "capacity": {
+      "tension": 262.8,
+      "compression": 220.354,
+      "momentX": 108.0773,
+      "momentY": 377.1,
+      "shearX": 47.5511,
+      "shearY": 222.7581
+     },
+     "slenderness": {
+      "x": 38.2166,
+      "y": 30.9278,
+      "governing": 38.2166,
+      "limit": 200
+     },
+     "checks": [
+      {
+       "label": "Axial compression",
+       "demand": 30,
+       "capacity": 220.354,
+       "ratio": 0.1361,
+       "clause": "E4-3 (flexural-torsional buckling); E3-2 inelastic; E7 effective area",
+       "status": "pass"
+      },
+      {
+       "label": "Flexure, major axis",
+       "demand": 100,
+       "capacity": 108.0773,
+       "ratio": 0.9253,
+       "clause": "F9-16 (stem local buckling)",
+       "status": "pass"
+      },
+      {
+       "label": "Flexure, minor axis",
+       "demand": 0,
+       "capacity": 377.1,
+       "ratio": 0,
+       "clause": "F6-1 (yielding)",
+       "status": "na"
+      },
+      {
+       "label": "Shear, major axis",
+       "demand": 5,
+       "capacity": 47.5511,
+       "ratio": 0.1052,
+       "clause": "G2-1 (web shear)",
+       "status": "pass"
+      },
+      {
+       "label": "Shear, minor axis",
+       "demand": 0,
+       "capacity": 222.7581,
+       "ratio": 0,
+       "clause": "G7 (flange shear, weak axis)",
+       "status": "na"
+      },
+      {
+       "label": "Combined axial + flexure",
+       "demand": 0.9933,
+       "capacity": 1,
+       "ratio": 0.9933,
+       "clause": "H1-1b (Pr/Pc = 0.136)",
+       "status": "pass"
+      },
+      {
+       "label": "Slenderness KL/r (E2 advisory)",
+       "demand": 38.2166,
+       "capacity": 200,
+       "ratio": 0.1911,
+       "clause": "E2 recommended limit 200",
+       "status": "pass",
+       "advisory": true
+      }
+     ],
+     "interaction": 0.9933,
+     "interactionEquation": "H1-1b",
+     "governingRatio": 0.9933,
+     "governingCheck": "Combined axial + flexure"
+    },
+    "status": "pass",
+    "warnings": [
+     "Section has slender compression elements — Chapter E7 effective area applied; verify against the Manual for the governing edition.",
+     "Tee stem in flexural compression: F9 uses Mp = My, B < 0 in the LTB term and the F9.4 stem local-buckling limit.",
+     "Cb = 1.0 assumed (uniform moment). A computed Cb from the segment's quarter-point moments will usually increase the LTB capacity.",
+     "No deflection supplied — serviceability was not checked. Pipe-support spans are frequently deflection-governed."
+    ]
+   }
+  },
+  {
+   "name": "WT6X20 thin stem F9-19 branch",
+   "input": {
+    "section": {
+     "label": "WT6X20",
+     "kind": "T",
+     "A": 5.84,
+     "d": 5.97,
+     "bf": 8.01,
+     "tw": 0.12,
+     "tf": 0.515,
+     "kdes": 1.02,
+     "bf2tf": 7.77,
+     "Ix": 14.4,
+     "Zx": 5.28,
+     "Sx": 2.95,
+     "rx": 1.57,
+     "Iy": 22,
+     "Zy": 8.38,
+     "Sy": 5.5,
+     "ry": 1.94,
+     "J": 0.452,
+     "Cw": 0.62,
+     "ro": 2.63,
+     "H": 0.901
+    },
+    "material": {
+     "Fy": 50,
+     "Fu": 65
+    },
+    "method": "LRFD",
+    "Lx": 60,
+    "Lb": 60,
+    "stemInCompression": true,
+    "demand": {
+     "Mx": 60
+    }
+   },
+   "output": {
+    "module": "structural.aisc-member",
+    "output": {
+     "label": "WT6X20",
+     "method": "LRFD",
+     "classification": {
+      "flexure": "slender",
+      "axial": "slender",
+      "flangeLambda": 7.77,
+      "flangeLambdaP": 9.1516,
+      "flangeLambdaR": 24.0832,
+      "webLambda": 49.75,
+      "webLambdaP": 20.2299,
+      "webLambdaR": 36.6064
+     },
+     "capacity": {
+      "tension": 262.8,
+      "compression": 217.1622,
+      "momentX": 47.2846,
+      "momentY": 377.1,
+      "shearX": 19.3428,
+      "shearY": 222.7581
+     },
+     "slenderness": {
+      "x": 38.2166,
+      "y": 30.9278,
+      "governing": 38.2166,
+      "limit": 200
+     },
+     "checks": [
+      {
+       "label": "Axial compression",
+       "demand": 0,
+       "capacity": 217.1622,
+       "ratio": 0,
+       "clause": "E4-3 (flexural-torsional buckling); E3-2 inelastic; E7 effective area",
+       "status": "na"
+      },
+      {
+       "label": "Flexure, major axis",
+       "demand": 60,
+       "capacity": 47.2846,
+       "ratio": 1.2689,
+       "clause": "F9-16 (stem local buckling)",
+       "status": "fail"
+      },
+      {
+       "label": "Flexure, minor axis",
+       "demand": 0,
+       "capacity": 377.1,
+       "ratio": 0,
+       "clause": "F6-1 (yielding)",
+       "status": "na"
+      },
+      {
+       "label": "Shear, major axis",
+       "demand": 0,
+       "capacity": 19.3428,
+       "ratio": 0,
+       "clause": "G2-1 (web shear)",
+       "status": "na"
+      },
+      {
+       "label": "Shear, minor axis",
+       "demand": 0,
+       "capacity": 222.7581,
+       "ratio": 0,
+       "clause": "G7 (flange shear, weak axis)",
+       "status": "na"
+      },
+      {
+       "label": "Slenderness KL/r (E2 advisory)",
+       "demand": 38.2166,
+       "capacity": 200,
+       "ratio": 0.1911,
+       "clause": "E2 recommended limit 200",
+       "status": "pass",
+       "advisory": true
+      }
+     ],
+     "interaction": 1.2689,
+     "interactionEquation": "H1-1b",
+     "governingRatio": 1.2689,
+     "governingCheck": "Flexure, major axis"
+    },
+    "status": "fail",
+    "warnings": [
+     "Section has slender compression elements — Chapter E7 effective area applied; verify against the Manual for the governing edition.",
+     "Tee stem in flexural compression: F9 uses Mp = My, B < 0 in the LTB term and the F9.4 stem local-buckling limit.",
+     "Cb = 1.0 assumed (uniform moment). A computed Cb from the segment's quarter-point moments will usually increase the LTB capacity.",
+     "No deflection supplied — serviceability was not checked. Pipe-support spans are frequently deflection-governed."
+    ]
+   }
+  },
+  {
+   "name": "WT22X184 slender stem compression",
+   "input": {
+    "section": {
+     "label": "WT22X184",
+     "kind": "T",
+     "A": 54,
+     "d": 22.2,
+     "bf": 16,
+     "tw": 1.1,
+     "tf": 1.97,
+     "kdes": 2.76,
+     "bf2tf": 4.06,
+     "Ix": 2380,
+     "Zx": 255,
+     "Sx": 143,
+     "rx": 6.64,
+     "Iy": 675,
+     "Zy": 132,
+     "Sy": 84.4,
+     "ry": 3.54,
+     "J": 49.9,
+     "Cw": 570,
+     "ro": 8.81,
+     "H": 0.729
+    },
+    "material": {
+     "Fy": 50,
+     "Fu": 65
+    },
+    "method": "LRFD",
+    "Lx": 200,
+    "Lb": 200,
+    "stemInCompression": true,
+    "demand": {
+     "P": 100,
+     "Mx": 800
+    }
+   },
+   "output": {
+    "module": "structural.aisc-member",
+    "output": {
+     "label": "WT22X184",
+     "method": "LRFD",
+     "classification": {
+      "flexure": "compact",
+      "axial": "slender",
+      "flangeLambda": 4.06,
+      "flangeLambdaP": 9.1516,
+      "flangeLambdaR": 24.0832,
+      "webLambda": 20.1818,
+      "webLambdaP": 20.2299,
+      "webLambdaR": 36.6064
+     },
+     "capacity": {
+      "tension": 2430,
+      "compression": 1798.0749,
+      "momentX": 6435,
+      "momentY": 5940,
+      "shearX": 659.34,
+      "shearY": 1702.08
+     },
+     "slenderness": {
+      "x": 30.1205,
+      "y": 56.4972,
+      "governing": 56.4972,
+      "limit": 200
+     },
+     "checks": [
+      {
+       "label": "Axial compression",
+       "demand": 100,
+       "capacity": 1798.0749,
+       "ratio": 0.0556,
+       "clause": "E4-3 (flexural-torsional buckling); E3-2 inelastic; E7 effective area",
+       "status": "pass"
+      },
+      {
+       "label": "Flexure, major axis",
+       "demand": 800,
+       "capacity": 6435,
+       "ratio": 0.1243,
+       "clause": "F9-4 (yielding, stem in compression: Mp = My)",
+       "status": "pass"
+      },
+      {
+       "label": "Flexure, minor axis",
+       "demand": 0,
+       "capacity": 5940,
+       "ratio": 0,
+       "clause": "F6-1 (yielding)",
+       "status": "na"
+      },
+      {
+       "label": "Shear, major axis",
+       "demand": 0,
+       "capacity": 659.34,
+       "ratio": 0,
+       "clause": "G2-1 (web shear)",
+       "status": "na"
+      },
+      {
+       "label": "Shear, minor axis",
+       "demand": 0,
+       "capacity": 1702.08,
+       "ratio": 0,
+       "clause": "G7 (flange shear, weak axis)",
+       "status": "na"
+      },
+      {
+       "label": "Combined axial + flexure",
+       "demand": 0.1521,
+       "capacity": 1,
+       "ratio": 0.1521,
+       "clause": "H1-1b (Pr/Pc = 0.056)",
+       "status": "pass"
+      },
+      {
+       "label": "Slenderness KL/r (E2 advisory)",
+       "demand": 56.4972,
+       "capacity": 200,
+       "ratio": 0.2825,
+       "clause": "E2 recommended limit 200",
+       "status": "pass",
+       "advisory": true
+      }
+     ],
+     "interaction": 0.1521,
+     "interactionEquation": "H1-1b",
+     "governingRatio": 0.1521,
+     "governingCheck": "Combined axial + flexure"
+    },
+    "status": "pass",
+    "warnings": [
+     "Section has slender compression elements — Chapter E7 effective area applied; verify against the Manual for the governing edition.",
+     "Tee stem in flexural compression: F9 uses Mp = My, B < 0 in the LTB term and the F9.4 stem local-buckling limit.",
+     "Cb = 1.0 assumed (uniform moment). A computed Cb from the segment's quarter-point moments will usually increase the LTB capacity.",
+     "No deflection supplied — serviceability was not checked. Pipe-support spans are frequently deflection-governed."
+    ]
+   }
+  },
+  {
+   "name": "WT4X5 noncompact flange, stem compression",
+   "input": {
+    "section": {
+     "label": "WT4X5",
+     "kind": "T",
+     "A": 1.48,
+     "d": 3.95,
+     "bf": 3.94,
+     "tw": 0.17,
+     "tf": 0.205,
+     "kdes": 0.505,
+     "bf2tf": 9.61,
+     "Ix": 2.15,
+     "Zx": 1.27,
+     "Sx": 0.717,
+     "rx": 1.2,
+     "Iy": 1.05,
+     "Zy": 0.826,
+     "Sy": 0.531,
+     "ry": 0.84,
+     "J": 0.0212,
+     "Cw": 0.0114,
+     "ro": 1.7,
+     "H": 0.749
+    },
+    "material": {
+     "Fy": 50,
+     "Fu": 65
+    },
+    "method": "LRFD",
+    "Lx": 48,
+    "Lb": 48,
+    "stemInCompression": true,
+    "demand": {
+     "P": 3,
+     "Mx": 20
+    }
+   },
+   "output": {
+    "module": "structural.aisc-member",
+    "output": {
+     "label": "WT4X5",
+     "method": "LRFD",
+     "classification": {
+      "flexure": "noncompact",
+      "axial": "slender",
+      "flangeLambda": 9.61,
+      "flangeLambdaP": 9.1516,
+      "flangeLambdaR": 24.0832,
+      "webLambda": 23.2353,
+      "webLambdaP": 20.2299,
+      "webLambdaR": 36.6064
+     },
+     "capacity": {
+      "tension": 66.6,
+      "compression": 41.5705,
+      "momentX": 22.8944,
+      "momentY": 36.5424,
+      "shearX": 18.1305,
+      "shearY": 43.6158
+     },
+     "slenderness": {
+      "x": 40,
+      "y": 57.1429,
+      "governing": 57.1429,
+      "limit": 200
+     },
+     "checks": [
+      {
+       "label": "Axial compression",
+       "demand": 3,
+       "capacity": 41.5705,
+       "ratio": 0.0722,
+       "clause": "E4-3 (flexural-torsional buckling); E3-2 inelastic; E7 effective area",
+       "status": "pass"
+      },
+      {
+       "label": "Flexure, major axis",
+       "demand": 20,
+       "capacity": 22.8944,
+       "ratio": 0.8736,
+       "clause": "F9-16 (stem local buckling)",
+       "status": "pass"
+      },
+      {
+       "label": "Flexure, minor axis",
+       "demand": 0,
+       "capacity": 36.5424,
+       "ratio": 0,
+       "clause": "F6-2 (noncompact flange)",
+       "status": "na"
+      },
+      {
+       "label": "Shear, major axis",
+       "demand": 0,
+       "capacity": 18.1305,
+       "ratio": 0,
+       "clause": "G2-1 (web shear)",
+       "status": "na"
+      },
+      {
+       "label": "Shear, minor axis",
+       "demand": 0,
+       "capacity": 43.6158,
+       "ratio": 0,
+       "clause": "G7 (flange shear, weak axis)",
+       "status": "na"
+      },
+      {
+       "label": "Combined axial + flexure",
+       "demand": 0.9097,
+       "capacity": 1,
+       "ratio": 0.9097,
+       "clause": "H1-1b (Pr/Pc = 0.072)",
+       "status": "pass"
+      },
+      {
+       "label": "Slenderness KL/r (E2 advisory)",
+       "demand": 57.1429,
+       "capacity": 200,
+       "ratio": 0.2857,
+       "clause": "E2 recommended limit 200",
+       "status": "pass",
+       "advisory": true
+      }
+     ],
+     "interaction": 0.9097,
+     "interactionEquation": "H1-1b",
+     "governingRatio": 0.9097,
+     "governingCheck": "Combined axial + flexure"
+    },
+    "status": "pass",
+    "warnings": [
+     "Section has slender compression elements — Chapter E7 effective area applied; verify against the Manual for the governing edition.",
+     "Tee stem in flexural compression: F9 uses Mp = My, B < 0 in the LTB term and the F9.4 stem local-buckling limit.",
+     "Cb = 1.0 assumed (uniform moment). A computed Cb from the segment's quarter-point moments will usually increase the LTB capacity.",
+     "No deflection supplied — serviceability was not checked. Pipe-support spans are frequently deflection-governed."
+    ]
+   }
+  },
+  {
+   "name": "WT4X5 noncompact flange, stem tension explicit ASD",
+   "input": {
+    "section": {
+     "label": "WT4X5",
+     "kind": "T",
+     "A": 1.48,
+     "d": 3.95,
+     "bf": 3.94,
+     "tw": 0.17,
+     "tf": 0.205,
+     "kdes": 0.505,
+     "bf2tf": 9.61,
+     "Ix": 2.15,
+     "Zx": 1.27,
+     "Sx": 0.717,
+     "rx": 1.2,
+     "Iy": 1.05,
+     "Zy": 0.826,
+     "Sy": 0.531,
+     "ry": 0.84,
+     "J": 0.0212,
+     "Cw": 0.0114,
+     "ro": 1.7,
+     "H": 0.749
+    },
+    "material": {
+     "Fy": 50,
+     "Fu": 65
+    },
+    "method": "ASD",
+    "Lx": 48,
+    "Lb": 48,
+    "stemInCompression": false,
+    "demand": {
+     "P": 3,
+     "Mx": 20
+    }
+   },
+   "output": {
+    "module": "structural.aisc-member",
+    "output": {
+     "label": "WT4X5",
+     "method": "ASD",
+     "classification": {
+      "flexure": "noncompact",
+      "axial": "slender",
+      "flangeLambda": 9.61,
+      "flangeLambdaP": 9.1516,
+      "flangeLambdaR": 24.0832,
+      "webLambda": 23.2353,
+      "webLambdaP": 20.2299,
+      "webLambdaR": 36.6064
+     },
+     "capacity": {
+      "tension": 44.3114,
+      "compression": 27.6584,
+      "momentX": 33.7542,
+      "momentY": 24.313,
+      "shearX": 12.0629,
+      "shearY": 29.0192
+     },
+     "slenderness": {
+      "x": 40,
+      "y": 57.1429,
+      "governing": 57.1429,
+      "limit": 200
+     },
+     "checks": [
+      {
+       "label": "Axial compression",
+       "demand": 3,
+       "capacity": 27.6584,
+       "ratio": 0.1085,
+       "clause": "E4-3 (flexural-torsional buckling); E3-2 inelastic; E7 effective area",
+       "status": "pass"
+      },
+      {
+       "label": "Flexure, major axis",
+       "demand": 20,
+       "capacity": 33.7542,
+       "ratio": 0.5925,
+       "clause": "F9 (flange local buckling)",
+       "status": "pass"
+      },
+      {
+       "label": "Flexure, minor axis",
+       "demand": 0,
+       "capacity": 24.313,
+       "ratio": 0,
+       "clause": "F6-2 (noncompact flange)",
+       "status": "na"
+      },
+      {
+       "label": "Shear, major axis",
+       "demand": 0,
+       "capacity": 12.0629,
+       "ratio": 0,
+       "clause": "G2-1 (web shear)",
+       "status": "na"
+      },
+      {
+       "label": "Shear, minor axis",
+       "demand": 0,
+       "capacity": 29.0192,
+       "ratio": 0,
+       "clause": "G7 (flange shear, weak axis)",
+       "status": "na"
+      },
+      {
+       "label": "Combined axial + flexure",
+       "demand": 0.6468,
+       "capacity": 1,
+       "ratio": 0.6468,
+       "clause": "H1-1b (Pr/Pc = 0.108)",
+       "status": "pass"
+      },
+      {
+       "label": "Slenderness KL/r (E2 advisory)",
+       "demand": 57.1429,
+       "capacity": 200,
+       "ratio": 0.2857,
+       "clause": "E2 recommended limit 200",
+       "status": "pass",
+       "advisory": true
+      }
+     ],
+     "interaction": 0.6468,
+     "interactionEquation": "H1-1b",
+     "governingRatio": 0.6468,
+     "governingCheck": "Combined axial + flexure"
+    },
+    "status": "pass",
+    "warnings": [
+     "Section has slender compression elements — Chapter E7 effective area applied; verify against the Manual for the governing edition.",
+     "Tee stem in flexural tension: F9 yielding Mp <= 1.6·My with B > 0 in the LTB term.",
      "Cb = 1.0 assumed (uniform moment). A computed Cb from the segment's quarter-point moments will usually increase the LTB capacity.",
      "No deflection supplied — serviceability was not checked. Pipe-support spans are frequently deflection-governed."
     ]

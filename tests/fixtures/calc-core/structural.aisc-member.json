@@ -686,6 +686,58 @@
       },
       "status": "fail",
       "tol": 0.0001
+    },
+    {
+      "input": {
+        "section": {
+          "label": "WT5X11",
+          "kind": "T",
+          "A": 3.24,
+          "d": 5.09,
+          "bf": 5.75,
+          "tw": 0.24,
+          "tf": 0.36,
+          "kdes": 0.66,
+          "bf2tf": 7.99,
+          "Ix": 6.88,
+          "Zx": 3.02,
+          "Sx": 1.72,
+          "rx": 1.46,
+          "Iy": 5.71,
+          "Zy": 3.05,
+          "Sy": 1.99,
+          "ry": 1.33,
+          "J": 0.119,
+          "Cw": 0.107,
+          "ro": 2.16,
+          "H": 0.83
+        },
+        "material": {
+          "Fy": 36,
+          "Fu": 58
+        },
+        "method": "LRFD",
+        "Lx": 24,
+        "Ly": 24,
+        "Lb": 24,
+        "Kx": 2.1,
+        "Ky": 2.1,
+        "stemInCompression": true,
+        "demand": {
+          "Mx": 40,
+          "Vx": 2
+        }
+      },
+      "expect": {
+        "label": "WT5X11",
+        "method": "LRFD",
+        "interaction": 0.7178,
+        "interactionEquation": "H1-1b",
+        "governingRatio": 0.7178,
+        "governingCheck": "Flexure, major axis"
+      },
+      "status": "pass",
+      "tol": 0.0001
     }
   ]
 }

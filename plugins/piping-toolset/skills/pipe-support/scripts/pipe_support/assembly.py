@@ -35,7 +35,7 @@ from typing import Any, Callable, Dict, List, Optional
 from .aisc import aisc_member_design, find_shape, section_from_row
 from .baseplate import base_plate_anchorage
 from .common import InputError, result, round_half_up
-from .jsmath import div, js_num, nn
+from .jsmath import div, jmax, jmin, js_num, nn, truthy
 from .pier import pier_soil
 from .weld import _design, fillet_weld
 
@@ -120,6 +120,47 @@ def _is_open(sec: Dict[str, Any]) -> bool:
     return sec.get("kind") in ("I", "C", "T", "L")
 
 
+def simple_span_point_loads(loads: List[Dict[str, float]], L: float, EI: float) -> Dict[str, float]:
+    """Simple-span statics for point loads ``[{"a", "P"}]`` - the goalpost / trapeze header
+    (port of simpleSpanPointLoads). Reactions by moments about each support; Mmax under a
+    load; deflection by superposition at every load point and at midspan. kip, kip*in, in."""
+    if L <= 0:
+        raise InputError("span must be positive")
+    pts = [{"a": jmin(jmax(abs(l["a"]), 0), L), "P": l["P"]} for l in loads]
+    RB = 0.0
+    for l in pts:
+        RB += (l["P"] * l["a"]) / L
+    tot = 0.0
+    for l in pts:
+        tot += l["P"]
+    RA = tot - RB
+    Mmax, xM = 0.0, 0.0
+    for pt in pts:
+        x = pt["a"]
+        s = 0.0
+        for l in pts:
+            if l["a"] < x:
+                s += l["P"] * (x - l["a"])
+        Mv = RA * x - s
+        if Mv > Mmax:
+            Mmax, xM = Mv, x
+
+    def defl_at(x: float) -> float:
+        s = 0.0
+        for pt in pts:
+            a, P = pt["a"], pt["P"]
+            b = L - a
+            if x <= a:
+                d = (P * b * x * (L * L - b * b - x * x)) / (6 * EI * L)
+            else:
+                d = (P * a * (L - x) * (L * L - a * a - (L - x) * (L - x))) / (6 * EI * L)
+            s += d
+        return s
+
+    delta = jmax(0.0, *[defl_at(x) for x in [L / 2] + [pt["a"] for pt in pts]]) if EI > 0 else 0.0
+    return {"RA": RA, "RB": RB, "Mmax": Mmax, "xM": xM, "Vmax": jmax(RA, RB), "delta": delta}
+
+
 def _weld_checks(res: Dict[str, Any], t_note: str) -> List[Dict[str, Any]]:
     """A weld stage's checks: the fillet itself (J2-4) and, when the base metal is defined, its J4
     limit states split by direction (port of weldChecks)."""
@@ -179,10 +220,11 @@ def analyze_assembly(inp: Dict[str, Any],
 
     # Goalpost and trapeze share the load between two columns.
     column_share = 0.5 if typ in ("goalpost", "trapeze") else 1.0
-    if column_share == 0.5 and not inp.get("columnSpacing"):
+    spacing = inp.get("columnSpacing")
+    if column_share == 0.5 and not (truthy(spacing) and spacing > 0):
         warnings.append(
             f"{typ} configuration without a column spacing — the header span could not be checked; "
-            "only the two columns and their bases were analysed.")
+            "only the arms as cantilevers, the two columns and their bases were analysed.")
 
     # --- accumulators for the column -----------------------------------------
     axial = _num(inp, "columnSelfWeight", 0)
@@ -233,15 +275,62 @@ def analyze_assembly(inp: Dict[str, Any],
             num = p["vertical"] * a * a * (3 * projection - a)
             deflection += div(num, 6 * E * Ix) if Ix is not None else NAN
 
-        arm_res = aisc_member_design({
+        # WT arms: a cantilever hogs at the column face (top fibres in tension), so a flange-up tee
+        # (stem "down", the default) has its STEM IN COMPRESSION there (port of 2026-10-26 ruling).
+        is_tee = sec.get("kind") == "T"
+        stem_down = nn(arm, "stemOrientation", "down") == "down"
+        if is_tee and arm.get("stemOrientation") is None:
+            warnings.append(
+                f'Arm {i + 1}: WT stem orientation not given — "down" (flange up, pipes on the flange) assumed, '
+                "which puts the stem in compression at the column face. Set stemOrientation if the tee is inverted.")
+        arm_in = {
             "section": sec, "material": material, "method": method,
             "Lx": projection, "Ly": projection, "Lb": projection,
             "Kx": 2.1, "Ky": 2.1,  # cantilever
             "demand": {"P": Talong, "Mx": M, "My": Macross, "Vx": V, "Vy": Lacross, "deflection": deflection},
             "span": projection,
             "deflectionLimit": _num(arm, "deflectionLimit", 240),
-        })
+        }
+        if is_tee:
+            arm_in["stemInCompression"] = stem_down
+        arm_res = aisc_member_design(arm_in)
         stages.append(_stage_from(arm_label, "arm", arm_res, arm_res["output"]["checks"]))
+
+        # Goalpost / trapeze: the same member also SPANS between the two columns as a header - a
+        # simple span with the pipes as point loads at their offsets from column A, unbraced over
+        # the full span, pinned ends (K = 1). Sagging puts the top in compression, so a stem-up tee
+        # is the stem-in-compression case here - the reverse of the arm.
+        span = nn(inp, "columnSpacing", 0)
+        if column_share == 0.5 and span > 0:
+            EI = E * Ix
+            pipes = arm.get("pipes") or []
+            vert = simple_span_point_loads([{"a": p["offset"], "P": p["vertical"]} for p in pipes], span, EI)
+            across = simple_span_point_loads(
+                [{"a": p["offset"], "P": abs(_num(p, "longitudinal", 0))} for p in pipes], span,
+                E * nn(sec, "Iy", Ix))
+            hdr_in = {
+                "section": sec, "material": material, "method": method,
+                "Lx": span, "Ly": span, "Lb": span, "Kx": 1.0, "Ky": 1.0,
+                "demand": {"P": Talong, "Mx": vert["Mmax"], "My": across["Mmax"],
+                           "Vx": vert["Vmax"], "Vy": across["Vmax"], "deflection": vert["delta"]},
+                "span": span, "deflectionLimit": _num(arm, "deflectionLimit", 240),
+            }
+            if is_tee:
+                hdr_in["stemInCompression"] = not stem_down
+            hdr_res = aisc_member_design(hdr_in)
+            hdr_res["warnings"].append(
+                f"Header statics: simple span {js_num(span)} in between column centrelines, reactions "
+                f"A = {js_num(round_half_up(vert['RA'], 3))} kip / B = {js_num(round_half_up(vert['RB'], 3))} kip, "
+                f"Mmax = {js_num(round_half_up(vert['Mmax'], 2))} kip-in at x = {js_num(round_half_up(vert['xM'], 2))} in; "
+                "deflection evaluated at the load points and midspan.")
+            total = vert["RA"] + vert["RB"]
+            if total > 0 and max(vert["RA"], vert["RB"]) / total > 0.55:
+                hdr_res["warnings"].append(
+                    f"Header reactions are unequal — column {'A' if vert['RA'] >= vert['RB'] else 'B'} receives "
+                    f"{js_num(round_half_up((100 * max(vert['RA'], vert['RB'])) / total, 1))} % of the vertical load, "
+                    "while the column stages below assume an even 50 % share. Check that column at the higher reaction.")
+            stages.append(_stage_from(f'Header @ EL {js_num(elevation)}" — {arm["shape"]}, {js_num(span)}" span',
+                                      "header", hdr_res, hdr_res["output"]["checks"]))
 
         # Arm-to-column weld: two parallel fillets down the arm depth. The two horizontal components ride
         # as one parallel shear resultant - that forgoes any J2.4(b) directional increase on them, which is
@@ -294,10 +383,18 @@ def analyze_assembly(inp: Dict[str, Any],
                 Rn = 6.25 * material["Fy"] * col_flange * col_flange * (0.5 if near_end else 1)
                 cap = _design(Rn, method, _PHI_FLB, _OMEGA_FLB)
                 ratio = round_half_up(T / cap, 4) if cap > 0 else math.inf
+                # Loaded width: the two web/leg fillets' footprint (tw + 2w) for an open shape. If the
+                # arm FLANGES are welded too the width is bf and the check must be re-run with that
+                # detail (P.E. ruling 2026-10-26: keep tw + 2w; say what it assumes).
+                if _is_open(sec):
+                    width_note = (f"loaded width tw + 2w = {js_num(round_half_up(loaded_width, 3))} in, web fillets only "
+                                  "— bf if the arm flanges are also welded")
+                else:
+                    width_note = f"loaded width {js_num(round_half_up(loaded_width, 3))} in (arm wall to wall)"
                 arm_checks.append({
                     "label": "Column flange local bending", "demand": round_half_up(T, 4), "capacity": round_half_up(cap, 4),
                     "ratio": ratio,
-                    "clause": f"AISC J10-1 (6.25·Fy·tf², tf = {js_num(col_flange)} in"
+                    "clause": f"AISC J10-1 (6.25·Fy·tf², tf = {js_num(col_flange)} in; {width_note}"
                               f"{'; ×0.5 within 10·tf of the column top' if near_end else ''})",
                     "status": "pass" if ratio <= 1.0 else "fail",
                 })

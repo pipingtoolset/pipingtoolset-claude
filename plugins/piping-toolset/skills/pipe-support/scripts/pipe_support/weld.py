@@ -148,7 +148,9 @@ def fillet_weld(input):
             baseTensionYieldPerInch = _design(baseFy * tJ4, method, _PHI_TENSION_YIELD, _OMEGA_TENSION_YIELD)
             ratios.append(over(normalPerInch, baseTensionYieldPerInch))
         baseMetalRatio = jmax(*ratios)
-        if baseMetalRatio > ratio:
+        # Said only when it matters (P.E. ruling 2026-10-26): the J4 rows are always in the
+        # table, so the warning is reserved for a joint using at least half its base metal.
+        if baseMetalRatio > ratio and baseMetalRatio >= 0.5:
             warnings.append("Base metal governs over the weld metal (AISC J4) — the connected part, not the fillet, sets this joint's strength.")
 
     if M != 0 and pattern == "single":

@@ -40,11 +40,11 @@ are counted twice.
 | `method` | `"LRFD"` or `"ASD"` |
 | `type` | `t-post`, `multi-tier`, `cantilever`, `goalpost`, `trapeze` |
 | `columnShape`, `columnHeight`, `columnK` | AISC label; height from top of base plate (in); K (default 2.1, fixed-free) |
-| `columnSpacing` | Goalpost / trapeze |
-| `arms` | `[{shape, elevation, projection, pipes, weldSize?, deflectionLimit? (default 240)}]` |
+| `columnSpacing` | Goalpost / trapeze: column centreline spacing (in). When given, each arm is also checked as a **header** spanning it (simple span, pipes as point loads at their `offset` from column A, Lb = span, K = 1). Without it the header is not checked and the engine warns. |
+| `arms` | `[{shape, elevation, projection, pipes, weldSize?, deflectionLimit? (default 240), stemOrientation? ("down" \| "up", WT arms only; default "down" = flange up, pipes on the flange — stem in compression on a cantilever arm, in tension on a header)}]` |
 | `material` | `{Fy, Fu, E?}` |
 | `weldSize`, `weldFEXX` | Default fillet (in), electrode (ksi) |
-| `baseplate` | `{plateLength, plateWidth, plateThickness, plateFy, fc, pierLength, pierWidth, anchorType ("cast-in" \| "post-installed-adhesive" \| "post-installed-mechanical"), anchorCount, anchorDiameter, anchorEmbedment, anchorFuta, anchorSpacingLength, anchorSpacingWidth, anchorEdgeDistance, bondStrength (psi, ESR), ...}` |
+| `baseplate` | `{plateLength, plateWidth, plateThickness, plateFy, fc, pierLength, pierWidth, anchorType ("cast-in" \| "post-installed-adhesive" \| "post-installed-mechanical"), anchorCount, anchorDiameter, anchorEmbedment, anchorFuta, anchorSpacingLength, anchorSpacingWidth, anchorEdgeDistance, bondStrength (psi, ESR), cracked? (default true — cracked concrete at service load), cac? (in, ESR critical edge distance for ACI 17.6.2.6 psi_cp,N; post-installed anchors in uncracked concrete only; omitted = Table 17.9.5 default 2·hef adhesive / 4·hef mechanical, with a warning), ...}` |
 | `pier` | `{pierLength, pierWidth, pierHeight, fc, restraint ("anchored" \| "gravity"), footingLength, footingWidth, footingThickness, allowableBearing (ksf), frictionCoefficient, ...}` |
 
 Factored mode: put `{tag, offset, vertical (+ down), transverse, longitudinal}` (kip) on

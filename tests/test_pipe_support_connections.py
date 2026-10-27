@@ -98,7 +98,7 @@ class CalcCoreFixtures(unittest.TestCase):
         self._run("structural.pier-soil")
 
     def test_case_counts(self):
-        for module, n in (("structural.fillet-weld", 6), ("structural.baseplate-anchorage", 4),
+        for module, n in (("structural.fillet-weld", 6), ("structural.baseplate-anchorage", 6),  # +2 psi_cp,N cases (0.3.2)
                           ("structural.pier-soil", 3)):
             self.assertEqual(len(parity.load(module)["cases"]), n)
 

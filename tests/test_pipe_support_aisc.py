@@ -85,7 +85,7 @@ class CalcCoreFixture(unittest.TestCase):
         self.assertEqual(fails, [], "\n".join(fails))
 
     def test_case_count(self):
-        self.assertEqual(len(parity.load("structural.aisc-member")["cases"]), 14)
+        self.assertEqual(len(parity.load("structural.aisc-member")["cases"]), 15)  # +1 WT5X11 stem-in-compression (0.3.2)
 
 
 class Goldens(unittest.TestCase):
