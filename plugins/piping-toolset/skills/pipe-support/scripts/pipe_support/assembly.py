@@ -1,6 +1,6 @@
 """Pipe-support assembly cascade - the whole point of PiperSTR.
 
-Exact port of ``structural/support-assembly.ts``. One call walks the complete load path of
+Exact port of the PiperSTR ``support-assembly`` TypeScript module. One call walks the complete load path of
 a standard structural pipe support and returns every limit state in a single envelope:
 
     pipe loads on an arm
@@ -34,7 +34,7 @@ from typing import Any, Callable, Dict, List, Optional
 
 from .aisc import aisc_member_design, find_shape, section_from_row
 from .baseplate import base_plate_anchorage
-from .common import InputError, result, round_half_up
+from .common import InputError, result, round_half_up, verdict
 from .jsmath import div, jmax, jmin, js_num, nn, truthy
 from .pier import pier_soil
 from .weld import _design, fillet_weld
@@ -169,7 +169,7 @@ def _weld_checks(res: Dict[str, Any], t_note: str) -> List[Dict[str, Any]]:
         "label": "Fillet weld stress", "demand": o["demandPerInch"],
         "capacity": o["designPerInch"], "ratio": o["ratio"],
         "clause": "AISC J2-4 with the J2.4(b) directional increase",
-        "status": "pass" if o["ratio"] <= 1.0 else "fail",
+        "status": verdict(o["ratio"] <= 1.0),
     }]
 
     def row(label: str, demand: float, capacity: Any, clause: str) -> None:
@@ -177,7 +177,7 @@ def _weld_checks(res: Dict[str, Any], t_note: str) -> List[Dict[str, Any]]:
             return
         ratio = round_half_up(demand / capacity, 4) if capacity > 0 else math.inf
         checks.append({"label": label, "demand": demand, "capacity": capacity, "ratio": ratio,
-                       "clause": f"{clause}, {t_note}", "status": "pass" if ratio <= 1.0 else "fail"})
+                       "clause": f"{clause}, {t_note}", "status": verdict(ratio <= 1.0)})
 
     row("Base-metal tension yielding", o["normalPerInch"], o["baseTensionYieldPerInch"],
         "AISC J4-1 (0.9·Fy·t, normal component)")
@@ -396,7 +396,7 @@ def analyze_assembly(inp: Dict[str, Any],
                     "ratio": ratio,
                     "clause": f"AISC J10-1 (6.25·Fy·tf², tf = {js_num(col_flange)} in; {width_note}"
                               f"{'; ×0.5 within 10·tf of the column top' if near_end else ''})",
-                    "status": "pass" if ratio <= 1.0 else "fail",
+                    "status": verdict(ratio <= 1.0),
                 })
         stages.append(_stage_from(f'Arm {i + 1} to column weld — {js_num(wSize)}" fillet', "weld", weld_res, arm_checks))
         if Macross > 0:

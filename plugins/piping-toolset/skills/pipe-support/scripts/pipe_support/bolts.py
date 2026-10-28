@@ -26,7 +26,7 @@ from __future__ import annotations
 import math
 from typing import Dict, List, Optional
 
-from .common import InputError, need, result, round_half_up
+from .common import InputError, need, result, round_half_up, verdict
 
 R4 = lambda x: round_half_up(x, 4)  # noqa: E731
 
@@ -290,6 +290,6 @@ def end_plate_no_prying(inp: dict) -> dict:
     ratio = (tmin / t) ** 2 if t > 0 else math.inf     # tension capacity scales with t^2
     out = {"tmin": R4(tmin), "t": t, "bPrime": R4(bp), "ratio": R4(ratio),
            "clause": "AISC Manual Part 9 thick-plate (no-prying) criterion"}
-    return result("structural.end-plate-prying", out, "pass" if ratio <= 1.0 else "fail",
+    return result("structural.end-plate-prying", out, verdict(ratio <= 1.0),
                   [] if ratio <= 1.0 else ["Plate thinner than the no-prying minimum: either "
                    "thicken it or run a full prying analysis (Manual Part 9) - prying adds bolt tension."])

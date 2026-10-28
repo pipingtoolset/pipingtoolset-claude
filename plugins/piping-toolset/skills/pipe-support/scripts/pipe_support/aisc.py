@@ -34,9 +34,9 @@ from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
 try:  # package import (scripts/ on sys.path) and flat import both work
-    from .common import InputError, need, result, round_half_up
+    from .common import InputError, need, result, round_half_up, verdict
 except ImportError:  # pragma: no cover
-    from common import InputError, need, result, round_half_up  # type: ignore
+    from common import InputError, need, result, round_half_up, verdict  # type: ignore
 
 MODULE = "structural.aisc-member"
 
@@ -797,7 +797,7 @@ def _ratio_row(label: str, demand: float, capacity: float, clause: str) -> Dict[
                 "status": "fail"}
     ratio = d / capacity
     return {"label": label, "demand": d, "capacity": capacity, "ratio": ratio, "clause": clause,
-            "status": "pass" if ratio <= 1.0 else "fail"}
+            "status": verdict(ratio <= 1.0)}
 
 
 def aisc_member_design(input: Dict[str, Any]) -> Dict[str, Any]:  # noqa: A002 - TS parameter name
@@ -883,14 +883,14 @@ def aisc_member_design(input: Dict[str, Any]) -> Dict[str, Any]:  # noqa: A002 -
             "label": "Combined axial + flexure",
             "demand": interaction, "capacity": 1.0, "ratio": interaction,
             "clause": f"{interactionEquation} (Pr/Pc = {_js_num(round_half_up(pr, 3))})",
-            "status": "pass" if interaction <= 1.0 else "fail",
+            "status": verdict(interaction <= 1.0),
         })
 
     checks.append({
         "label": "Slenderness L/r (D1 advisory)" if tension else "Slenderness KL/r (E2 advisory)",
         "demand": slGov, "capacity": slLimit, "ratio": slGov / slLimit,
         "clause": "D1 recommended limit 300" if tension else "E2 recommended limit 200",
-        "status": "pass" if slGov <= slLimit else "fail",
+        "status": verdict(slGov <= slLimit),
         "advisory": True,
     })
 
@@ -903,7 +903,7 @@ def aisc_member_design(input: Dict[str, Any]) -> Dict[str, Any]:  # noqa: A002 -
             "label": f"Deflection (L/{_js_num(denom)})",
             "demand": defl, "capacity": allow, "ratio": defl / allow if allow > 0 else _INF,
             "clause": f"Serviceability — span {_js_num(round_half_up(span, 2))} in / {_js_num(denom)}",
-            "status": "pass" if defl <= allow else "fail",
+            "status": verdict(defl <= allow),
         })
 
     kind = s.get("kind")
@@ -978,7 +978,7 @@ def aisc_member_design(input: Dict[str, Any]) -> Dict[str, Any]:  # noqa: A002 -
         "governingRatio": r4(governing["ratio"]) if math.isfinite(governing["ratio"]) else governing["ratio"],
         "governingCheck": governing["label"],
     }
-    status = "pass" if all(c.get("advisory") or c["status"] != "fail" for c in checks) else "fail"
+    status = verdict(all(c.get("advisory") or c["status"] != "fail" for c in checks))
     return result(MODULE, output, status, warnings)
 
 

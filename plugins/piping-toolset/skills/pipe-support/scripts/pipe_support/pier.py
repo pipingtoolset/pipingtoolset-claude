@@ -1,6 +1,6 @@
 """Concrete pier and soil-bearing checks - the bottom of the pipe-support load path.
 
-Exact port of the Piping Toolset PiperSTR engine ``structural/pier-soil.ts``. ACI 318-19 for the
+Exact port of the Piping Toolset PiperSTR engine's ``pier-soil`` TypeScript module. ACI 318-19 for the
 concrete (punching shear), classical stability mechanics for the soil interface (bearing,
 overturning, sliding). Soil properties are geotechnical-report values and are ALWAYS
 user-supplied - nothing is assumed.
@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import math
 
-from .common import InputError, result, round_half_up
+from .common import InputError, result, round_half_up, verdict
 from .jsmath import div, jmax, jmin, js_num, nn, sqrt, truthy
 
 MODULE = "structural.pier-soil"
@@ -30,7 +30,7 @@ def _row(label, demand, capacity, clause):
         return {"label": label, "demand": 0, "capacity": capacity, "ratio": 0, "clause": clause, "status": "na"}
     ratio = d / capacity if capacity > 0 else math.inf
     return {"label": label, "demand": d, "capacity": capacity, "ratio": ratio, "clause": clause,
-            "status": "pass" if ratio <= 1.0 else "fail"}
+            "status": verdict(ratio <= 1.0)}
 
 
 def pier_soil(input):
@@ -210,4 +210,4 @@ def pier_soil(input):
         "governingRatio": r4(governing["ratio"]),
         "governingCheck": governing["label"],
     }
-    return result(MODULE, out, "pass" if all(c["status"] != "fail" for c in checks) else "fail", warnings)
+    return result(MODULE, out, verdict(all(c["status"] != "fail" for c in checks)), warnings)

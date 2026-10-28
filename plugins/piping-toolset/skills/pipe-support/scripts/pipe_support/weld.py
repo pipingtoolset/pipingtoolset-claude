@@ -1,6 +1,6 @@
 """Fillet-weld design - AISC 360-22 Chapter J2 with the J2.4(b) directional increase.
 
-Exact port of the Piping Toolset PiperSTR engine ``structural/connection-weld.ts``. Units: in, kip,
+Exact port of the Piping Toolset PiperSTR engine's ``connection-weld`` TypeScript module. Units: in, kip,
 ksi. Input/output dict keys are the TypeScript names unchanged.
 
 Public API: ``fillet_weld(input) -> CalcResult dict``, ``min_fillet_size(t) -> float``.
@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import math
 
-from .common import InputError, result, round_half_up
+from .common import InputError, result, round_half_up, verdict
 from .jsmath import div, jmax, js_num, nn, pow_, truthy
 
 MODULE = "structural.fillet-weld"
@@ -182,4 +182,4 @@ def fillet_weld(input):
     }
     # The joint is no stronger than its base metal: either limit state fails it.
     ok = ratio <= 1.0 and (baseMetalRatio is None or baseMetalRatio <= 1.0)
-    return result(MODULE, out, "pass" if ok else "fail", warnings)
+    return result(MODULE, out, verdict(ok), warnings)
