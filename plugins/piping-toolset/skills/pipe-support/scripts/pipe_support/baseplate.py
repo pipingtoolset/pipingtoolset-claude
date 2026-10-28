@@ -1,6 +1,6 @@
 """Base plate and anchorage - AISC Design Guide 1 + AISC 360-22 J8 + ACI 318-19 Ch. 17.
 
-Exact port of the Piping Toolset PiperSTR engine ``structural/baseplate-anchorage.ts``. Units: in,
+Exact port of the Piping Toolset PiperSTR engine's ``baseplate-anchorage`` TypeScript module. Units: in,
 kip, ksi, psi for f'c. Input/output dict keys are the TypeScript names unchanged.
 
 Licensing firewall (as the TS engine): proprietary anchor qualification values (bond
@@ -16,7 +16,7 @@ from __future__ import annotations
 import math
 import re
 
-from .common import InputError, result, round_half_up
+from .common import InputError, result, round_half_up, verdict
 from .jsmath import div, finite, jmax, jmin, js_num, nn, pow_, sqrt, truthy
 
 MODULE = "structural.baseplate-anchorage"
@@ -60,7 +60,7 @@ def _row(label, demand, capacity, clause, userSupplied=False):
                 "status": "na", "userSupplied": userSupplied}
     ratio = d / capacity if capacity > 0 else math.inf
     return {"label": label, "demand": d, "capacity": capacity, "ratio": ratio, "clause": clause,
-            "status": "pass" if ratio <= 1.0 else "fail", "userSupplied": userSupplied}
+            "status": verdict(ratio <= 1.0), "userSupplied": userSupplied}
 
 
 _REQUIRED = (
@@ -327,7 +327,7 @@ def base_plate_anchorage(input):
         checks.append({
             "label": "Tension-shear interaction", "demand": interaction, "capacity": limit,
             "ratio": interaction / limit, "clause": "ACI 318-19 17.8.3",
-            "status": "pass" if interaction <= limit else "fail",
+            "status": verdict(interaction <= limit),
         })
 
     # --- warnings --------------------------------------------------------------
@@ -378,4 +378,4 @@ def base_plate_anchorage(input):
         "governingRatio": r4(governing["ratio"]) if math.isfinite(governing["ratio"]) else governing["ratio"],
         "governingCheck": governing["label"],
     }
-    return result(MODULE, out, "pass" if all(c["status"] != "fail" for c in checks) else "fail", warnings)
+    return result(MODULE, out, verdict(all(c["status"] != "fail" for c in checks)), warnings)

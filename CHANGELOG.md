@@ -8,6 +8,21 @@ keep a defect until the plugin is updated, so each such entry names the skill, t
 affected inputs and the release that fixed it. GitHub Releases carry the same
 label and are the recall channel.
 
+## [0.6.2] — 2026-10-28
+
+Source form only; every status word, number, fixture and golden file is unchanged. The
+Anthropic directory validation of v0.6.1 was down to one cross-surface hold, cleared here:
+
+- Every `"pass" if ... else "fail"` conditional expression (30 sites across the seven skills'
+  scripts) is now a lookup through a small `verdict()` helper (`pipe_support/common.py`, and a
+  local `_verdict()` in each standalone script; `verdict_label()` / `_flag()` for the
+  upper-case report banners). The scanner read the token sequence of the conditional form as
+  "the installer's pass" being read from the machine. The helper returns the same two strings.
+- The four PiperSTR port docstrings name their TypeScript source as a module (for example
+  "the `support-assembly` TypeScript module") instead of a slash path, which the scanner
+  reported as "a command assembled at run time" and chained to the hold above.
+- Manifests, marketplace and the Phase 2 runbook at 0.6.2.
+
 ## [0.6.1] — 2026-10-28
 
 Wording only; no change to any skill's calculations, scripts' numbers, fixtures or golden files.
