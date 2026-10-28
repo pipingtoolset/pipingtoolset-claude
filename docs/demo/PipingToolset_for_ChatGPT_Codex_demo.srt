@@ -1,0 +1,143 @@
+1
+00:00:05,300 --> 00:00:12,000
+ChatGPT desktop app on Windows. One plugin, two assistants: the same seven skills that ship for Claude
+
+2
+00:00:12,300 --> 00:00:17,000
+Plugins  ›  Add  ›  Add a marketplace
+
+3
+00:00:17,300 --> 00:00:25,000
+pipingtoolset.com/openai: the install route, and what runs where, side by side with Claude
+
+4
+00:00:25,300 --> 00:00:31,000
+Source: github.com/pipingtoolset/pipingtoolset-claude, ref main. Add marketplace.
+
+5
+00:00:31,000 --> 00:00:35,500
+Marketplace added. PipingToolset appears under Personal; open it and press Install plugin
+
+6
+00:00:35,500 --> 00:00:39,000
+Installed. The listing carries the PipingToolset mark, the publisher and three starter prompts
+
+7
+00:00:39,300 --> 00:00:46,000
+Settings  ›  Plugin settings  ›  PipingToolset: seven skills, each with the description the skill declares
+
+8
+00:00:46,000 --> 00:00:51,000
+No account, no API key, no telemetry. Nothing you type reaches PipingToolset.
+
+9
+00:00:51,300 --> 00:00:59,000
+Prompt 1 ($piping-toolset:pressure-design): B31.3-2022, NPS 6 seamless, OD 6.625 in, 750 psig at 600 F,
+c = 0.0625 in, 12.5 % mill tolerance, S = 17,900 psi from my copy, E = W = 1.0, Y = 0.4. Does 0.280 in nominal work?
+
+10
+00:00:59,300 --> 00:01:06,000
+The skill loads pressure-design, writes job.json and runs pressure_design.py with your inputs
+
+11
+00:01:06,000 --> 00:01:13,800
+Two minutes of checking: the script run, a second python pass over the thin-wall limits, the clause lookup
+
+12
+00:01:14,175 --> 00:01:23,875
+t = 0.13650 in   ·   tm = t + c = 0.19900 in   ·   order 0.22743 in with 12.5 % under-tolerance
+0.280 in nominal: allowable 1,008 psi against 750 psig, no warnings; t < D/6 and P/(SE) = 0.0419, below 0.385
+
+13
+00:01:23,875 --> 00:01:32,875
+Basis and review items: S, E, W, Y echoed as user-supplied; the material grade and the Table A-1 line
+were not given, so they are flagged ASSUMED or unverified before issue
+
+14
+00:01:33,175 --> 00:01:41,875
+Prompt 2: What is the allowable stress for A106 Grade B at 650 F under B31.3? Just give me the number.
+
+15
+00:01:45,875 --> 00:01:54,875
+No number. It names B31.3 Appendix A, Table A-1 (through 2022) or A-1C (2024), the A106 Grade B row
+and 650 F. You read the value from your licensed copy; the plugin embeds no table.
+
+16
+00:01:55,175 --> 00:01:58,875
+Type /piping to filter the picker to the seven PipingToolset skills
+
+17
+00:01:59,175 --> 00:02:06,875
+Prompt 3 ($piping-toolset:pipe-support): PS-201, CSA type 1 t-post, W6X15 column and arm, two 6 in lines,
+CAESAR II restraint loads SUS / OPE / WIN / EQ, SDS 0.5, LRFD, 4 x 3/4 in adhesive anchors, tau 800 psi. Then optimize it.
+
+18
+00:02:07,175 --> 00:02:11,875
+Reads the pipe-support skill, the spec format and the code basis, then maps the loads
+
+19
+00:02:11,875 --> 00:02:17,575
+D = SUS,   T = OPE − SUS,   W = WIN,   Eh = EQ,   Ev = 0.2 · SDS · D   ·   LRFD, T = 1.0, SDS = 0.5
+
+20
+00:02:17,925 --> 00:02:29,625
+The skill asks for what it is missing: steel grade, weld, plate and anchor layout, concrete, the ESR data.
+Reply: proceed. Missing inputs are screened with the CSA Type 1 defaults and marked ASSUMED
+
+21
+00:02:30,625 --> 00:02:38,625
+support_calc.py runs 23 ASCE 7-22 LRFD combinations: a nominal pass,
+governed by the arm-to-column weld base metal at UR 0.888
+
+22
+00:02:38,925 --> 00:02:47,225
+The reviewer pass: anchor layout, bond strength, edge distances, what the ESR must confirm
+
+23
+00:02:47,675 --> 00:02:55,275
+Optimizer re-run with every ratio capped at 0.85; the spec files are written with the assumptions in them
+
+24
+00:02:55,675 --> 00:03:03,375
+Every assumed input is written into the spec as ASSUMED: steel, welds, plate, anchors, cracked concrete, offsets
+
+25
+00:03:03,675 --> 00:03:16,375
+The calc report: PS-201, T-post, AISC 360-22 / ACI 318-19 / ASCE 7-22, LRFD
+ENGINE PASS (screening only), governing Arm 1 to column weld UR 0.888; reviewer HOLD until the findings are resolved
+
+26
+00:03:16,675 --> 00:03:19,875
+The ASCE 7-22 combinations with their factors, then the reactions at the base plate
+
+27
+00:03:19,875 --> 00:03:23,575
+Limit-state results enveloped over every combination, with demand, capacity, ratio and clause:
+Arm 1 W6X15 max UR 0.153, arm-to-column weld 0.888, base plate 0.583, anchorage 0.586
+
+28
+00:03:23,575 --> 00:03:28,375
+Compliance matrix by code area: AISC members, welds, base plate, ACI anchorage and pier all pass;
+AWS D1.1 prequalified joints left for the engineer to confirm
+
+29
+00:03:28,675 --> 00:03:32,175
+Reviewer findings: two critical (arm-to-column load path incomplete, column torsion not checked)
+and the majors: ESR qualification, seismic overstrength, the J10.1 weld detail, the material basis
+
+30
+00:03:32,175 --> 00:03:37,375
+Optimized alternatives, ranked by weight, field work and standard sizes, every one passing at or under 0.85
+
+31
+00:03:37,675 --> 00:03:47,375
+#1: a W8X10 arm on a PIPE5 STD column, 3/16 in fillet, 1 in plate, 5/8 in anchors, 170 lb of steel, UR 0.764
+
+32
+00:03:47,675 --> 00:03:56,875
+The chat summary: the governing ratios, what was assumed, what must be confirmed before issue
+
+33
+00:03:56,875 --> 00:04:03,375
+Four files in the working folder: the calc report, the reviewed and raw result JSON, the input spec
+
