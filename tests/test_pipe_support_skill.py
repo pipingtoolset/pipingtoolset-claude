@@ -344,10 +344,35 @@ class SkillContent(unittest.TestCase):
             self.assertIn(s, self.text)
 
     def test_shapes_attribution(self):
-        with open(os.path.join(SCRIPTS, "pipe_support", "data", "aisc_shapes.json"), encoding="utf-8") as fh:
+        # The dataset is an index plus family-group parts, each under 256 KiB: the Anthropic
+        # plugin directory inspects a file only up to that size and held 0.5.1 for review
+        # because the single 454 KB file exceeded it (pre-submission report, 2026-10-28).
+        data = os.path.join(SCRIPTS, "pipe_support", "data")
+        with open(os.path.join(data, "aisc_shapes.json"), encoding="utf-8") as fh:
             d = json.load(fh)
         self.assertIn("AISC Shapes Database v16.0", d["attribution"])
-        self.assertGreater(len(d["rows"]), 1000)
+        self.assertNotIn("rows", d, "rows belong in the parts, not the index")
+        total = 0
+        for rel in d["parts"]:
+            path = os.path.join(data, *rel.split("/"))
+            self.assertLess(os.path.getsize(path), 256 * 1024, rel)
+            with open(path, encoding="utf-8") as fh:
+                part = json.load(fh)
+            self.assertIn("AISC Shapes Database v16.0", part["attribution"], rel)
+            self.assertTrue(all(r["family"] in part["families"] for r in part["rows"]), rel)
+            total += len(part["rows"])
+        self.assertEqual(total, d["row_count"])
+        self.assertGreater(total, 1000)
+        for name in os.listdir(os.path.join(data, "aisc_shapes")):
+            self.assertIn("aisc_shapes/" + name, d["parts"], "a part file the index does not list")
+
+    def test_shapes_load_in_original_order(self):
+        from pipe_support import aisc
+        rows = aisc.load_shapes()
+        self.assertEqual(len(rows), 1506)
+        self.assertEqual(rows[0]["label"], "W44X408")
+        self.assertEqual([r["family"] for r in rows[:1]] + [rows[-1]["family"]], ["W", "BJ"])
+        self.assertEqual(aisc.find_shape("w6x15")["label"], "W6X15")
 
     def test_no_personal_or_employer_material(self):
         content_guard.assert_clean(self, SKILL)

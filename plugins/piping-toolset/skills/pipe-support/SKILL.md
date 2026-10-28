@@ -30,7 +30,7 @@ capacity, ratio or alternative itself.** Every number in a response comes from a
 |---|---|
 | `scripts/support_calc.py` | One spec in → envelope, review findings, optimizer, Markdown report, JSON |
 | `scripts/pipe_support/` | Engine: `aisc` (D/E/F/G/H), `weld`, `bolts` (J3/J4), `detailing` (J2 + D1.1 items), `baseplate` (DG1 + ACI 17), `pier`, `assembly` (cascade), `loads` (ASCE 7-22), `optimizer`, `review`, `report` |
-| `scripts/pipe_support/data/aisc_shapes.json` | 1,506 AISC shapes (AISC Shapes Database v16 + computed L/HSS/Pipe), with attribution |
+| `scripts/pipe_support/data/aisc_shapes.json` | Index of the 1,506 AISC shapes (AISC Shapes Database v16 + computed L/HSS/Pipe), with attribution; the rows are in four family-group parts under `data/aisc_shapes/` |
 | `scripts/examples/ps-201-caesar.json` | CAESAR II-mode example (SUS/OPE/WIN/EQ, optimizer on) |
 | `scripts/examples/ps-101-factored.json` | Factored-mode example; reproduces the PS-101 PiperSTR report |
 | `references/spec-format.md` | Every spec key |

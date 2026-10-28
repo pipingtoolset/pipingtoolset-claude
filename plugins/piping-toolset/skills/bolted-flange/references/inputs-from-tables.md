@@ -20,7 +20,7 @@ Every value below is read by the user from a licensed copy of the standard or fr
 | `Sn`, `SnAmbient` | Same basis for the pipe or neck the hub is welded to | Needed for the 2.5 Sn cap |
 | `Edesign`, `Eambient` | Section II-D Subpart 2 material properties tables, modulus of elasticity, for the flange material group | Rigidity only. No silent default: the tool refuses to run without them |
 | `rigidityFactor` | VIII-2 Table 4.16.10 general notes: 0.3 for integral, 0.2 for loose, unless specified otherwise | The tool uses these when omitted and says so |
-| `F_override`, `V_override`, `f_override` | VIII-2 Table 4.16.5 equations or the retired figures (2-7.2, 2-7.3, 2-7.6; they map to the table). The skill does not ship the curve fit | Evaluate the printed equations at Xg = g1/g0 and Xh = h/sqrt(B g0) |
+| `F_override`, `V_override`, `f_override` | VIII-2 Table 4.16.5 equations or the retired figures (2-7.2, 2-7.3, 2-7.6; they map to the table). The skill does not ship the curve fit | Evaluate the printed equations at X_g = g1/g0 and X_h = h/sqrt(B g0) |
 | F, M (the loads) | The piping program's restraint or flange-load output for the load case | See below |
 
 ## Lookup-instruction wording

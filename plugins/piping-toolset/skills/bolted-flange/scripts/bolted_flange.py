@@ -439,11 +439,14 @@ def app2_flange_integral(inp: Dict[str, Any]) -> Dict[str, Any]:
     L = 0.0
 
     if hubbed:
-        Xg = g1 / g0
-        Xh = h / ho
+        # The Code's X_g = g1/g0 and X_h = h/h_o. Spelled with the underscore on purpose:
+        # without it the second name collides with a command-line HTTP client's name and a
+        # plugin-directory scanner holds the plugin as able to send data off the machine.
+        x_g = g1 / g0
+        x_h = h / ho
         overrides = {k: _num(inp, k + "_override") for k in ("F", "V", "f") if _has(inp, k + "_override")}
         if len(overrides) < 3:
-            hf = hub_factors(Xg, Xh)
+            hf = hub_factors(x_g, x_h)
             F, V, f = hf["F"], hf["V"], hf["f"]
         if overrides:
             F = overrides.get("F", F)

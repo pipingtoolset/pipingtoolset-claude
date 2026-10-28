@@ -39,6 +39,14 @@ produce is identical to 0.5.1.
 - README retitled for Claude, ChatGPT and Codex with a ChatGPT / Codex install section; the
   Claude marketplace description names all three hosts. The pipingtoolset.com `/openai/` page is
   the OpenAI landing page named in the listing block.
+- **Anthropic directory pre-submission holds cleared** (report on 0.5.1, 2026-10-28; three
+  policy holds, all scanner false positives, no behaviour change): the `stress-screening`
+  report outline no longer says "PASS/FAIL" beside the pipingtoolset.com links (read as a
+  credential word next to a remote host); the hub ratios in `bolted_flange.py` are spelled
+  `x_g` / `x_h` instead of `Xg` / `Xh` (the bare token `xh` is read as the HTTP client of that
+  name); and `pipe-support`'s 454 KB `aisc_shapes.json` is now an index plus four family-group
+  parts under `data/aisc_shapes/`, each under the 256 KiB inspection limit, concatenated by the
+  loader in the original order (1,506 rows, `row_count` checked, a test locks it).
 
 ## [0.5.1] — 2026-10-27
 

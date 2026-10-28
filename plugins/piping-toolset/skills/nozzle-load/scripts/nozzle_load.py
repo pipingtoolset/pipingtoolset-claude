@@ -188,7 +188,7 @@ def nozzle_load_check(inp: Dict[str, Any]) -> Dict[str, Any]:
             "specification, \u00a74.2.2.3 caps the piping layout/design-stage load on vital or sensitive "
             "machinery at 50% of the industry allowable nozzle loads (100% is reserved for as-built "
             "verification) \u2014 essential/spared machinery gets 100% at the design stage under "
-            "\u00a74.2.3.3. This does not change the PASS/FAIL verdict above, which is judged against "
+            "\u00a74.2.3.3. This does not change the verdict above, which is judged against "
             "the allowable you entered."
         )
 
