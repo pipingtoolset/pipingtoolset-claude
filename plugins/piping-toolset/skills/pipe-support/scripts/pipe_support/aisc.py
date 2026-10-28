@@ -12,8 +12,10 @@ with a pipingtoolset.com PiperSTR run is possible. Units: in, in^2, in^3, in^4, 
 kip*in.
 
 Licensing firewall (same as the TypeScript engine): the EQUATIONS live here; section
-property VALUES arrive as inputs - from data/aisc_shapes.json (AISC's free Shapes
-Database v16.0 plus computed L/HSS/PIPE rows) or user-entered.
+property VALUES arrive as inputs - from data/aisc_shapes.json, an index whose
+``parts`` are family-group files under data/aisc_shapes/ (AISC's free Shapes Database
+v16.0 plus computed L/HSS/PIPE rows; each part stays under 256 KiB so plugin
+directories inspect every row) - or user-entered.
 
 JavaScript semantics are mirrored on purpose: ``??`` defaults only replace None,
 ``x || y`` / ``!x`` treat 0 as falsy, Math.sqrt of a negative is NaN, division by zero is
@@ -326,7 +328,8 @@ def section_from_row(row: Dict[str, Any]) -> Dict[str, Any]:
 
 
 # --------------------------------------------------------------------------- #
-# Shape lookup (data/aisc_shapes.json; port of code-data-service findShape etc.)
+# Shape lookup (data/aisc_shapes.json index + data/aisc_shapes/*.json parts; port of
+# code-data-service findShape etc.)
 # --------------------------------------------------------------------------- #
 
 _SHAPES_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "aisc_shapes.json")
@@ -338,10 +341,24 @@ def _norm_label(label: str) -> str:
 
 
 def load_shapes() -> List[Dict[str, Any]]:
-    """All rows of the vendored AISC shapes dataset (cached)."""
+    """All rows of the vendored AISC shapes dataset (cached).
+
+    ``aisc_shapes.json`` is an index: metadata plus ``parts``, the family-group files
+    under ``data/aisc_shapes/`` in the original row order. Concatenating them in that
+    order reproduces the single-file dataset row for row (``row_count`` is checked).
+    A single-file dataset with ``rows`` at the top level is still accepted.
+    """
     if "rows" not in _SHAPES_CACHE:
         with open(_SHAPES_PATH, "r", encoding="utf-8") as fh:
-            rows = json.load(fh)["rows"]
+            index = json.load(fh)
+        rows: List[Dict[str, Any]] = list(index.get("rows", []))
+        base = os.path.dirname(_SHAPES_PATH)
+        for rel in index.get("parts", []):
+            with open(os.path.join(base, *rel.split("/")), "r", encoding="utf-8") as fh:
+                rows.extend(json.load(fh)["rows"])
+        expected = index.get("row_count")
+        if expected is not None and expected != len(rows):
+            raise InputError(f"aisc_shapes.json lists {expected} rows but its parts hold {len(rows)}")
         _SHAPES_CACHE["rows"] = rows
         _SHAPES_CACHE["by_label"] = {_norm_label(r["label"]): r for r in rows}  # last wins, like Map
     return _SHAPES_CACHE["rows"]

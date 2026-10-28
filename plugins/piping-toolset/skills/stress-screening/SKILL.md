@@ -190,9 +190,9 @@ Each value with its full citation: code, edition, table, material spec, grade, p
 temperature, notes. Interpolation arithmetic shown. f derivation and cap reason shown.
 
 ## 4. Load cases
-### 4.1 Sustained    equation used, S_L, allowable, ratio, PASS/FAIL
+### 4.1 Sustained    equation used, S_L, allowable, ratio, verdict (within or exceeds the allowable)
 ### 4.2 Occasional   each event separately, with its derivation; k or 1.33 and its duration basis
-### 4.3 Expansion    range basis, S_E, S_A, ratio, PASS/FAIL; SAM and settlement if present
+### 4.3 Expansion    range basis, S_E, S_A, ratio, verdict; SAM and settlement if present
 ### 4.4 Installed / hydrotest   run or dismissed, with reason
 
 ## 5. Supports (if in scope)

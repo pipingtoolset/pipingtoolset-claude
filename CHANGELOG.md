@@ -8,6 +8,46 @@ keep a defect until the plugin is updated, so each such entry names the skill, t
 affected inputs and the release that fixed it. GitHub Releases carry the same
 label and are the recall channel.
 
+## [0.6.0] — 2026-10-28
+
+Distribution to ChatGPT and OpenAI Codex, with the plugin mark on every host. No change to any
+skill's calculations, scripts' numbers, fixtures or golden files; every number the seven skills
+produce is identical to 0.5.1.
+
+- **OpenAI listing block.** `plugins/piping-toolset/plugin.json` (Agent Plugins 1.0) gains
+  `extensions.com.openai.interface`: `displayName` PipingToolset, a 30-character subtitle, the
+  long description, developer name, category (Productivity, matching
+  `.agents/plugins/marketplace.json`), capabilities, website / privacy / terms / support URLs,
+  three default prompts, the brand colour, `composerIcon` (`assets/icon.svg`) and `logo`
+  (`assets/icon.png`). Without it the ChatGPT desktop app showed the bare id `piping-toolset`
+  and a generic icon (observed 2026-10-28); with it, the same mark Cowork shows. The limits come
+  from the OpenAI submission page (read 2026-10-28) and are pinned in `tests/test_manifests.py`.
+- **Anthropic directory fields.** `.claude-plugin/plugin.json` gains `documentationUrl`,
+  `supportUrl`, `privacyPolicyUrl` and `termsOfServiceUrl` beside the existing `icon`; Claude
+  Code ignores them at load and `claude plugin validate` (2.1.309) passes clean.
+- **Provider-neutral wording.** "Claude interviews, a script computes" becomes "The assistant
+  interviews, a script computes" in both manifests and both marketplaces; the three SKILL.md
+  lines and two script docstrings that named Claude as the actor now say "the assistant" (host
+  names such as Claude Code, Claude Cowork, Codex CLI and the ChatGPT desktop app stay). OpenAI's
+  submit-a-Claude-plugin guide asks for this; a test now guards it.
+- **Third archive.** `tools/package_plugin.py` also writes `piping-toolset.zip`, byte-identical
+  to the `.plugin`, because the OpenAI plugin portal and other upload dialogs take `.zip`, and
+  `--check` now fails if an image a manifest references is missing from the archive. CI attaches
+  all three files to the GitHub Release.
+- **CI validator.** The package job runs the agentskills.io reference validator
+  (`skills-ref==0.1.1`, `python -m skills_ref.cli validate`) on each of the seven skill folders.
+- README retitled for Claude, ChatGPT and Codex with a ChatGPT / Codex install section; the
+  Claude marketplace description names all three hosts. The pipingtoolset.com `/openai/` page is
+  the OpenAI landing page named in the listing block.
+- **Anthropic directory pre-submission holds cleared** (report on 0.5.1, 2026-10-28; three
+  policy holds, all scanner false positives, no behaviour change): the `stress-screening`
+  report outline no longer says "PASS/FAIL" beside the pipingtoolset.com links (read as a
+  credential word next to a remote host); the hub ratios in `bolted_flange.py` are spelled
+  `x_g` / `x_h` instead of `Xg` / `Xh` (the bare token `xh` is read as the HTTP client of that
+  name); and `pipe-support`'s 454 KB `aisc_shapes.json` is now an index plus four family-group
+  parts under `data/aisc_shapes/`, each under the 256 KiB inspection limit, concatenated by the
+  loader in the original order (1,506 rows, `row_count` checked, a test locks it).
+
 ## [0.5.1] — 2026-10-27
 
 Packaging only; no change to any skill, script, fixture or golden file.

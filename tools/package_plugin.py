@@ -1,15 +1,22 @@
 #!/usr/bin/env python3
-"""Build the two distributable archives of the ``piping-toolset`` plugin.
+"""Build the three distributable archives of the ``piping-toolset`` plugin.
 
 ``piping-toolset.plugin`` is the Cowork install file: a ZIP whose root holds
 ``.claude-plugin/plugin.json`` directly (no wrapping folder) plus everything else in
-``plugins/piping-toolset``, including the Agent Plugins root ``plugin.json``, so the same
-archive serves any Agent Plugins 1.0 host.
+``plugins/piping-toolset``, including the Agent Plugins root ``plugin.json`` (with the
+``extensions.com.openai.interface`` listing block) and ``assets/`` (the logo both
+directories show), so the same archive serves any Agent Plugins 1.0 host.
+
+``piping-toolset.zip`` is that same archive, byte for byte, under the ``.zip`` extension the
+OpenAI plugin submission portal (platform.openai.com/plugins, "Create plugin") and other
+upload dialogs expect. Its ``.claude-plugin/plugin.json`` at the archive root is what the
+portal's submit-a-Claude-plugin route keys on.
 
 ``piping-toolset-skills.zip`` holds only ``skills/`` (``skills/<name>/...`` at the root),
-for hosts that take a bare Agent Skills upload: ChatGPT, Manus, Perplexity and the like.
+for hosts that take a bare Agent Skills upload: Manus, Perplexity and the like. It carries
+no manifest and no logo, so it is not the file to submit to a plugin directory.
 
-Both are built reproducibly: sorted entries, a fixed 1980-01-01 timestamp, fixed
+All three are built reproducibly: sorted entries, a fixed 1980-01-01 timestamp, fixed
 permissions, so a rebuild of the same tree is byte-identical.
 
 Usage:
@@ -22,6 +29,7 @@ import argparse
 import fnmatch
 import json
 import re
+import shutil
 import sys
 import zipfile
 from pathlib import Path
@@ -29,6 +37,7 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parent.parent
 PLUGIN_DIR = REPO_ROOT / "plugins" / "piping-toolset"
 MANIFEST_REL = ".claude-plugin/plugin.json"
+AGENT_MANIFEST_REL = "plugin.json"
 SKILLS_REL = "skills"
 FIXED_DATE = (1980, 1, 1, 0, 0, 0)
 EXCLUDE_DIRS = {"__pycache__"}
@@ -97,6 +106,23 @@ def _names(out_file: Path):
         return zf.namelist()
 
 
+def _image_refs(out_file: Path):
+    """Every image path the two manifests point at, as archive entry names."""
+    refs = []
+    with zipfile.ZipFile(out_file) as zf:
+        claude = json.loads(zf.read(MANIFEST_REL).decode("utf-8"))
+        agent = json.loads(zf.read(AGENT_MANIFEST_REL).decode("utf-8"))
+    if claude.get("icon"):
+        refs.append(("icon", claude["icon"]))
+    ui = agent.get("extensions", {}).get("com.openai", {}).get("interface", {})
+    for key in ("logo", "composerIcon"):
+        if ui.get(key):
+            refs.append((key, ui[key]))
+    for shot in ui.get("screenshots", []):
+        refs.append(("screenshot", shot))
+    return [(key, re.sub(r"^\./", "", rel)) for key, rel in refs]
+
+
 def check(out_file: Path) -> bool:
     names = _names(out_file)
     if names is None:
@@ -105,7 +131,7 @@ def check(out_file: Path) -> bool:
     if MANIFEST_REL not in names:
         print("check failed: %s not at archive root" % MANIFEST_REL, file=sys.stderr)
         ok = False
-    if "plugin.json" not in names:
+    if AGENT_MANIFEST_REL not in names:
         print("check failed: Agent Plugins plugin.json not at archive root", file=sys.stderr)
         ok = False
     skills = [n for n in names if re.fullmatch(r"skills/[^/]+/SKILL\.md", n)]
@@ -113,7 +139,15 @@ def check(out_file: Path) -> bool:
         print("check failed: no skills/*/SKILL.md at archive root", file=sys.stderr)
         ok = False
     if ok:
-        print("check ok: %s, plugin.json and %d SKILL.md file(s) at root" % (MANIFEST_REL, len(skills)))
+        # The logo the Cowork and OpenAI listings show must travel inside the archive: a
+        # manifest that points at a file the upload does not carry fails the portal's checks.
+        for key, rel in _image_refs(out_file):
+            if rel not in names:
+                print("check failed: manifest %s -> %s is not in the archive" % (key, rel), file=sys.stderr)
+                ok = False
+    if ok:
+        print("check ok: %s, plugin.json, manifest images and %d SKILL.md file(s) at root"
+              % (MANIFEST_REL, len(skills)))
     return ok
 
 
@@ -137,7 +171,8 @@ def check_skills(out_file: Path) -> bool:
 
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(
-        description="Package piping-toolset.plugin (Cowork / Agent Plugins) and piping-toolset-skills.zip.")
+        description="Package piping-toolset.plugin (Cowork / Agent Plugins), piping-toolset.zip "
+                    "(the same archive for the OpenAI plugin portal) and piping-toolset-skills.zip.")
     parser.add_argument("--out", default=str(REPO_ROOT), help="output directory (default: repo root)")
     parser.add_argument("--check", action="store_true", help="verify the produced archive layouts")
     args = parser.parse_args(argv)
@@ -147,12 +182,15 @@ def main(argv=None) -> int:
         return 2
     out_dir = Path(args.out).resolve()
     plugin_file = out_dir / (name + ".plugin")
+    zip_file = out_dir / (name + ".zip")
     skills_file = out_dir / (name + "-skills.zip")
     count = build(PLUGIN_DIR, plugin_file)
     print("%s  entries=%d  size=%d bytes" % (plugin_file, count, plugin_file.stat().st_size))
+    shutil.copyfile(plugin_file, zip_file)
+    print("%s  (same bytes as the .plugin, for upload dialogs that require .zip)" % zip_file)
     count = build_skills(PLUGIN_DIR, skills_file)
     print("%s  entries=%d  size=%d bytes" % (skills_file, count, skills_file.stat().st_size))
-    if args.check and not (check(plugin_file) and check_skills(skills_file)):
+    if args.check and not (check(plugin_file) and check(zip_file) and check_skills(skills_file)):
         return 1
     return 0
 

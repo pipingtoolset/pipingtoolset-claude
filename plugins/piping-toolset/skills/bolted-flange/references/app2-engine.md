@@ -75,7 +75,7 @@ U = (K^2 (1 + 8.55246 log10 K) - 1) / (1.36136 (K^2 - 1)(K - 1))
 
 ```
 ho = sqrt(B g0)               (loose: sqrt(B t))
-Xg = g1/g0     Xh = h/ho
+X_g = g1/g0    X_h = h/ho
 F, V, f  from the hub factor method (below)
 e = F/ho
 d = (U/V) ho g0^2

@@ -13,7 +13,7 @@ elements between them, and someone spends an afternoon merging nodes that should
 have been separate.
 
 This skill is built on one rule: **a coordinate is computed once and reused**. It is never
-recomputed by a second route. The bundled builder enforces that, so your job and Claude's is
+recomputed by a second route. The bundled builder enforces that, so your job and the assistant's is
 to **transcribe the drawing faithfully**. The script does all of the geometry.
 
 | File | Role |
@@ -40,7 +40,7 @@ Standard-library Python 3.9+. Nothing leaves the user's machine. Script paths be
    - **The SKEYs the user's site actually emits.** Ask for one of their own Isogen PCFs and
      harvest the SKEYs from it (`references/reading-isos.md`).
    - **Drawing set and revision**, and which sheets are in scope.
-2. **Read the drawing.** In Cowork the user attaches the iso PDF to the chat and the skill reads it from the working directory; in Claude Code the user gives the path. Read in this order: title block and notes → continuation references → dimension
+2. **Read the drawing.** In a chat host (Claude Cowork, the ChatGPT desktop app) the user attaches the iso PDF and the skill reads it from the working directory; in a terminal host (Claude Code, Codex CLI) the user gives the path. Read in this order: title block and notes → continuation references → dimension
    chains → bill of materials → supports. Use the text layer and image zooms together. A dimension
    whose arrows you have not seen is a dimension you have not read.
 3. **Transcribe to a walk spec** (`references/spec-format.md`). Copy dimensions exactly as

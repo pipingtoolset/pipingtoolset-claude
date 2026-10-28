@@ -1,8 +1,8 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "piping-toolset",
-  "version": "0.5.1",
-  "description": "Seven ASME B31.1 / B31.3 piping skills by pipingtoolset.com: pressure design, stress screening, CAESAR II / AutoPIPE load cases, PDF isometric to CAESAR II PCF, pipe support checks (AISC 360-22, ACI 318-19, ASCE 7-22) with optimization, equipment nozzle loads (API 610 / 617 / 660 / 661 / 560 / 650, NEMA SM-23, PVP2011-57100) and bolted flanges (pressure-equivalent screen, then BPVC VIII-2 Part 4.16). Claude interviews, a script computes; no ASME or API table values are embedded.",
+  "version": "0.6.0",
+  "description": "Seven ASME B31.1 / B31.3 piping skills by pipingtoolset.com: pressure design, stress screening, CAESAR II / AutoPIPE load cases, PDF isometric to CAESAR II PCF, pipe support checks (AISC 360-22, ACI 318-19, ASCE 7-22) with optimization, equipment nozzle loads (API 610 / 617 / 660 / 661 / 560 / 650, NEMA SM-23, PVP2011-57100) and bolted flanges (pressure-equivalent screen, then BPVC VIII-2 Part 4.16). The assistant interviews, a script computes; no ASME or API table values are embedded.",
   "author": {
     "name": "Flexible Piping Solutions LLC",
     "url": "https://pipingtoolset.com"
@@ -29,5 +29,33 @@
     "bolted-flange",
     "equivalent-pressure",
     "bpvc-viii-2"
-  ]
+  ],
+  "extensions": {
+    "com.openai": {
+      "interface": {
+        "displayName": "PipingToolset",
+        "shortDescription": "ASME B31 piping engineering",
+        "longDescription": "PipingToolset is seven ASME B31.1 / B31.3 piping engineering skills from the people who build the free calculators at pipingtoolset.com, written and maintained by a practicing piping engineer at Flexible Piping Solutions LLC.\n\nSkills: pressure-design (wall thickness, allowable pressure, branch reinforcement, bends, miters and leak-test pressure); stress-screening (sustained, occasional and expansion hand checks, the f factor by edition, which document supplies the SIFs, the formal-analysis exemption, support spans and spring variability); load-case-builder (complete static load case sets for CAESAR II and AutoPIPE with a QC gate); pipe-support (arm, column, welds, bolts, base plate, anchors and pier checked to ASCE 7-22, AISC 360-22, ACI 318-19 Chapter 17 and AWS D1.1, with ranked code-passing alternatives and a calc report); iso-to-pcf (PDF stress isometrics to a validated CAESAR II PCF); nozzle-load (API 610, API 617 / 611 / 612, NEMA SM-23, API 660 / 661 / 560, API 650 Annex P and the PVP2011-57100 method for vessels with no vendor allowable); bolted-flange (a pressure-equivalent screen, then the BPVC Section VIII Division 2 Part 4.16 analysis).\n\nThree rules hold in every skill. The assistant never does the arithmetic: every number comes from a bundled standard-library Python script run on the inputs you supplied. The assistant never recalls a code table value: allowable stresses, SIFs, spans, flange ratings and gasket factors are read by you from your licensed copy, and a request for just the number is declined with the table, row and edition named instead. The edition is an input, never a silent default: anything you leave unanswered is marked ASSUMED on the calc sheet.\n\nIntended for piping stress and mechanical engineers who need results they can reproduce and defend in review. Requires a host that can run Python 3.9 or newer; in a host that cannot run scripts the skill stops at the interview and says so. Results are engineering aids; the engineer of record verifies them before issue. The plugin makes no network calls, carries no telemetry and needs no account. Nothing you enter reaches PipingToolset or Flexible Piping Solutions. Open source under the Apache License 2.0; source, releases and the changelog are on GitHub.",
+        "developerName": "Flexible Piping Solutions LLC",
+        "category": "Productivity",
+        "capabilities": [
+          "Read",
+          "Write",
+          "Runs bundled Python 3.9+ scripts locally; no network access"
+        ],
+        "websiteURL": "https://pipingtoolset.com/openai/",
+        "privacyPolicyURL": "https://pipingtoolset.com/legal/privacy.html",
+        "termsOfServiceURL": "https://pipingtoolset.com/legal/terms.html",
+        "supportURL": "https://github.com/pipingtoolset/pipingtoolset-claude/issues",
+        "defaultPrompt": [
+          "Use the pressure design skill. B31.3-2022, NPS 6 seamless, 750 psig at 600 F, S = 17900 psi from my copy. Minimum wall?",
+          "Use the stress screening skill. B31.3-2024 project: which document gives the SIF for a welding tee?",
+          "Use the load case builder skill. B31.1 steam line, one operating state, CAESAR II, wind +/-X +/-Z. Build the load cases."
+        ],
+        "brandColor": "#c9280e",
+        "composerIcon": "./assets/icon.svg",
+        "logo": "./assets/icon.png"
+      }
+    }
+  }
 }

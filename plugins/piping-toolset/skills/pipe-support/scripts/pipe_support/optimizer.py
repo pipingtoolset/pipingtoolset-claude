@@ -2,7 +2,7 @@
 
 Every number here comes from the engine (assembly.analyze_assembly and the modules it
 calls). The optimizer never estimates a capacity: it ENUMERATES code-checked candidates
-and ranks the ones that pass. Claude explains the ranking; it does not invent it.
+and ranks the ones that pass. The assistant explains the ranking; it does not invent it.
 
 Envelope: each design is run for every ASCE 7-22 combination (loads.combinations) and
 the worst ratio per stage is kept with the combination that produced it. With LRFD, a

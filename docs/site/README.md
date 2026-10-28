@@ -1,5 +1,12 @@
 # pipingtoolset.com drafts for the plugin launch (2026-10-27)
 
+**2026-10-28, 0.6.0:** the site gained a sibling page, `https://pipingtoolset.com/openai/`
+(`scripts/seo/openai-content.mjs` + `openaiPage()` in `build-pages.mjs`, OG image `openai`, an
+`## AI assistant plugin` section in llms.txt), a fourth hero button **For OpenAI**, and the
+launcher tier retitled **PipingToolset for AI** with tiles *Install in Claude Cowork / Code* and
+*Install in ChatGPT / Codex*. The `/openai/` URL is the `websiteURL` in the plugin's OpenAI
+listing block, so it must resolve before the directory submission. The drafts below predate it.
+
 Two drafts for the pipecalcpro site (`C:\dev\projects\pipecalcpro`). **Wired into the site on 2026-10-27** (pipecalcpro PR 145): `scripts/seo/claude-content.mjs` + `claudePage()` in `build-pages.mjs` produce `/claude/`; the homepage launcher tier, hero CTA, footer group and llms.txt section are in. These drafts are the design record; the live copy says seven skills and v0.5.0 where the drafts still say five and v0.4.0.
 
 | File | What it is | Where it lands in pipecalcpro |

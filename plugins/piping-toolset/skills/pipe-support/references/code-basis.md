@@ -17,7 +17,7 @@
   - Table J2.4 / J2.3 size limits, Table J2.5 weld strengths, Table J3.2 bolt stresses, Table J3.3 standard holes and Table J3.4 edge distances. The AISC Specification is published free by AISC.
   - The ASCE 7-22 combination factors, verified against the Standard's text.
   - ACI 318-19 Ch. 17 equations, φ factors and generic cast-in values. The engine flags these generic values when they are used.
-- **AISC shapes:** the AISC Shapes Database v16 (free from AISC) for rolled shapes. L, HSS and Pipe are computed from nominal geometry (HSS/Pipe design wall 0.93 t_nom). See the attribution in `data/aisc_shapes.json`. Confirm final selections against the Manual.
+- **AISC shapes:** the AISC Shapes Database v16 (free from AISC) for rolled shapes. L, HSS and Pipe are computed from nominal geometry (HSS/Pipe design wall 0.93 t_nom). See the attribution in `data/aisc_shapes.json` (the index) and in each part under `data/aisc_shapes/`. Confirm final selections against the Manual.
 - **Always supplied by the user:**
   - Post-installed anchor product values (bond stress τ, kc, edge and spacing limits) from the ESR.
   - Soil properties (bearing, friction, cohesion) from the geotech report.

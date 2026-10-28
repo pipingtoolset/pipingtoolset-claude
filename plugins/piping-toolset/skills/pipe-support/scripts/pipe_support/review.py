@@ -9,7 +9,7 @@ critical > major > minor > info:
   minor      advisories, constructability, overdesign worth optimising
   info       basis items the engineer must confirm
 
-Claude reads these, adds drawing/judgement findings of its own (labelled as such), and
+The assistant reads these, adds drawing/judgement findings of its own (labelled as such), and
 explains them; it does not change a ratio or a verdict.
 """
 
