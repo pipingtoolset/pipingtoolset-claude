@@ -26,7 +26,7 @@ The user's own licensed copies of the codes are the authority for every clause c
 
 ## Step 0 — The basis interview
 
-This skill is interactive. Ask these in one pass, accept a partial answer, and mark every unanswered item **ASSUMED** at the top of the output. Do not silently default.
+This skill is interactive. Ask these together, accept a partial answer, and mark every unanswered item **ASSUMED** at the top of the output. Do not silently default.
 
 **Code basis**
 1. B31.1 or B31.3? **Edition year?** The equation set depends on it: B31.1 moved its sustained and occasional equation to an SRSS form with B31J-based indices in 2020; B31.3 deleted Appendix D in 2020 and changed the f-factor equation in 2022.

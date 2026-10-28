@@ -25,7 +25,7 @@ The user's own licensed copies are the authority for every clause cited here. Wh
 
 ## Step 0 — The basis interview
 
-Ask these in one pass, accept a partial answer, and mark every unanswered item **ASSUMED** at the top of the calc sheet. Do not silently default. The standard's edition is an input, never a default.
+Ask these together, accept a partial answer, and mark every unanswered item **ASSUMED** at the top of the calc sheet. Do not silently default. The standard's edition is an input, never a default.
 
 1. **Equipment type and tag**, and the governing document: standard and **edition**, or the **vendor datasheet** (is it attached?). For a pump: OH1 / OH2 / OH3 / OH6 / BB, casing material, largest nozzle NPS.
 2. **Axis mapping, global to nozzle.** Which global direction is each nozzle axis (shaft, vertical, nozzle centreline), and the sign convention. Record it; a load set in the wrong axes passes silently. See [references/axes-and-load-cases.md](references/axes-and-load-cases.md).
