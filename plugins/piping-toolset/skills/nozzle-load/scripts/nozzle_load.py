@@ -21,10 +21,11 @@ Six checks, one function each, all registered in REGISTRY:
 
 Nothing in this file is a tabulated code value. Every allowable load, header limit, stiffness
 coefficient, figure ordinate, table row and allowable stress is an INPUT the user reads from
-a licensed copy of the standard, the paper or the vendor datasheet. Numeric constants that
-appear in running text of an equation (the 1.5 and 2 multipliers of API 610 Annex F, the
-5950 psi / 41 N/mm^2 limit, the 18,800 and 17,100 psi reference stresses of the paper) are
-carried as named constants with their source.
+a licensed copy of the standard, the paper or the vendor datasheet. That includes the method
+constants of API 610 Annex F (input `annexF`) and the coefficient of the SM-23 form
+(`coefficient`): the user reads each from the equation of the edition of record and enters
+it; none has a default. The only standard-derived numbers carried here are the 18,800 and
+17,100 psi reference stresses of the PVP2011 paper, as named constants with their source.
 
 CLI:
     python nozzle_load.py list
@@ -83,17 +84,22 @@ def round_sig(x: float, sig: int) -> float:
 
 COMPONENTS = ("Fx", "Fy", "Fz", "Mx", "My", "Mz")
 
-# API 610 Annex F, equations in running text (method constants, not table data).
-API610_COMPONENT_MULTIPLE = 2.0      # F.1.2 a): each component within 2x the Table 5 range
-API610_RESULTANT_DENOM = 1.5         # F.1 / F.2: 1.5 x the Table 5 resultants in the interaction sum
-API610_INTERACTION_LIMIT = 2.0       # F.1 / F.2: sum < 2
-API610_CENTRE_FORCE_FACTOR = 1.5     # F.3 / F.5
-API610_CENTRE_MY_FACTOR = 2.0        # F.4
-API610_SIGMA_P_LIMIT_SI = 41.0       # F.6, N/mm^2
-API610_SIGMA_P_LIMIT_USC = 5950.0    # F.9, psi
-API610_K_SIGMA = {"SI": 10200.0, "USC": 122.0}   # F.7 / F.10
-API610_K_TAU = {"SI": 5100.0, "USC": 61.0}       # F.8 / F.11
-API610_UNIT_CONV = {"SI": 1000.0, "USC": 12.0}   # F.5.1.1-3: mm to m, in to ft
+# API 610 Annex F method constants are NOT carried here: they are the user-supplied input `annexF`,
+# read from the equations of the edition of record. Name -> where in Annex F the user reads it.
+ANNEXF_POINTERS = {
+    "componentMultiple": "F.1.2 a)",
+    "resultantDenominator": "Eq. F.1 / F.2",
+    "interactionLimit": "the sum limit of Eq. F.1 / F.2",
+    "centreForceFactor": "Eq. F.3 / F.5",
+    "centreMyFactor": "Eq. F.4",
+    "sigmaPLimit": "Eq. F.6 (SI) or F.9 (USC)",
+    "kSigma": "Eq. F.7 (SI) or F.10 (USC)",
+    "kTau": "Eq. F.8 (SI) or F.11 (USC)",
+}
+ANNEXF_KEYS = tuple(ANNEXF_POINTERS)
+ANNEXF_HORIZONTAL = ANNEXF_KEYS[:5]   # F.1.2 a)-c), Eq. F.1-F.5
+ANNEXF_VERTICAL = ANNEXF_KEYS[5:]     # F.2, Eq. F.6-F.11
+API610_UNIT_CONV = {"SI": 1000.0, "USC": 12.0}   # F.5.1.1-3: mm to m, in to ft (unit arithmetic, not API content)
 
 # Paper 'Establishing Allowable Nozzle Loads' (ASME PVP2011-57100).
 PVP_TABLE_BASIS_THICKNESS = {"1A": 0.25, "1B": 0.375, "2": 0.375}   # in, from the table titles
@@ -126,6 +132,32 @@ def _num(inp: Dict[str, Any], key: str, default: Any = _REQ) -> float:
     if not math.isfinite(v):
         raise ValueError(f"{key} must be finite")
     return float(v)
+
+
+def _annexf_constants(inp: Dict[str, Any], pump_type: str) -> Dict[str, float]:
+    """The Annex F method constants the user supplied in `annexF`; required per pump type, each > 0, no default."""
+    obj = inp.get("annexF")
+    if obj is None:
+        obj = {}
+    if not isinstance(obj, dict):
+        raise ValueError("annexF must be an object of the Annex F method constants read from the edition of record")
+    needed = ANNEXF_HORIZONTAL if pump_type == "horizontal" else ANNEXF_VERTICAL
+    out: Dict[str, float] = {}
+    for key in ANNEXF_KEYS:
+        v = obj.get(key)
+        if v is None:
+            if key in needed:
+                raise ValueError(f"annexF.{key} is required (read it from {ANNEXF_POINTERS[key]} of the "
+                                 "edition of record; no default)")
+            continue
+        if isinstance(v, bool) or not isinstance(v, (int, float)):
+            raise ValueError(f"annexF.{key} must be a number")
+        if not math.isfinite(v):
+            raise ValueError(f"annexF.{key} must be finite")
+        if not v > 0:
+            raise ValueError(f"annexF.{key} must be > 0 (read it from {ANNEXF_POINTERS[key]} of the edition of record)")
+        out[key] = float(v)
+    return out
 
 
 def _six(obj: Any, label: str) -> Dict[str, float]:
@@ -274,7 +306,9 @@ def _check_row(eq_id: str, label: str, value: float, limit: float, advisory: boo
 def api610_annexf(inp: Dict[str, Any]) -> Dict[str, Any]:
     """API 610 Annex F: horizontal pumps F.1.2 a)-c) (Eq. F.1-F.5) and vertical in-line F.2 (Eq. F.6-F.11).
 
-    The Table 5 base ranges are user-supplied per nozzle; the resultants FRST4 / MRST4 are derived
+    The Table 5 base ranges are user-supplied per nozzle and the method constants are the user-supplied
+    `annexF` block (horizontal: the first five keys; vertical in-line: sigmaPLimit, kSigma, kTau, in the
+    `units` system given); the resultants FRST4 / MRST4 are derived
     from the supplied components by square root of the sum of the squares, as the engine does.
     """
     pump_type = inp.get("pumpType")
@@ -302,39 +336,46 @@ def api610_annexf(inp: Dict[str, Any]) -> Dict[str, Any]:
     warnings: List[str] = [
         "Table 5 allowables are user-supplied \u2014 this module does not embed or validate API 610 Table 5a/5b; "
         "confirm values against the certified vendor data for the actual nozzle size/rating.",
-        "Use of Annex F methods requires the purchaser's approval and does not eliminate the 2-times margin between "
+        "Use of Annex F methods requires the purchaser's approval and does not eliminate the margin between "
         "external nozzle loads and pump case design limits (6.5.6, 6.5.6.1); the pump vendor must direct how these "
         "equations apply to the system design (6.5.6.2).",
+        "The Annex F method constants are user-supplied (annexF) \u2014 this module does not embed them; confirm "
+        "each against the equation printed in the edition of record.",
     ]
+    c = _annexf_constants(inp, pump_type)
 
-    # F.1.2 a) per-component ratio vs 2x Table 5 (always computed)
+    # F.1.2 a) per-component ratio vs the multiple of Table 5. Always run for horizontal pumps (the multiple is
+    # required there); for vertical in-line it is the informational screen, run only when the user supplied it.
+    vertical = pump_type == "vertical-inline"
+    mult = c.get("componentMultiple")
     s_ratio: Dict[str, float] = {}
     d_ratio: Dict[str, float] = {}
     max_component_ratio = -1.0
     governing_component = ""
     governing_value = 0.0
     governing_limit = 0.0
-    for k in COMPONENTS:
-        rS = abs(SA[k]) / (API610_COMPONENT_MULTIPLE * ST4[k])
-        rD = abs(DA[k]) / (API610_COMPONENT_MULTIPLE * DT4[k])
-        s_ratio[k] = r5(rS)
-        d_ratio[k] = r5(rD)
-        if rS > max_component_ratio:
-            max_component_ratio = rS
-            governing_component = f"suction.{k}"
-            governing_value = abs(SA[k])
-            governing_limit = API610_COMPONENT_MULTIPLE * ST4[k]
-        if rD > max_component_ratio:
-            max_component_ratio = rD
-            governing_component = f"discharge.{k}"
-            governing_value = abs(DA[k])
-            governing_limit = API610_COMPONENT_MULTIPLE * DT4[k]
-
-    vertical = pump_type == "vertical-inline"
-    checks: List[Dict[str, Any]] = [
-        _check_row("F.1.2(a)", f"Per-component vs 2x Table 5 ({governing_component})",
-                   governing_value, governing_limit, vertical)
-    ]
+    checks: List[Dict[str, Any]] = []
+    if mult is not None:
+        for k in COMPONENTS:
+            rS = abs(SA[k]) / (mult * ST4[k])
+            rD = abs(DA[k]) / (mult * DT4[k])
+            s_ratio[k] = r5(rS)
+            d_ratio[k] = r5(rD)
+            if rS > max_component_ratio:
+                max_component_ratio = rS
+                governing_component = f"suction.{k}"
+                governing_value = abs(SA[k])
+                governing_limit = mult * ST4[k]
+            if rD > max_component_ratio:
+                max_component_ratio = rD
+                governing_component = f"discharge.{k}"
+                governing_value = abs(DA[k])
+                governing_limit = mult * DT4[k]
+        checks.append(_check_row("F.1.2(a)", f"Per-component vs {mult:g}x Table 5 ({governing_component})",
+                                 governing_value, governing_limit, vertical))
+    else:
+        warnings.append("annexF.componentMultiple was not supplied, so the informational per-component screen "
+                        "against a multiple of Table 5 was not run; the F.2 principal-stress check is unaffected.")
 
     branch: Dict[str, Any] = {}
 
@@ -352,10 +393,10 @@ def api610_annexf(inp: Dict[str, Any]) -> Dict[str, Any]:
         FRST4, MRST4 = _force_res(ST4), _moment_res(ST4)
         FRDT4, MRDT4 = _force_res(DT4), _moment_res(DT4)
 
-        f1 = FRSA / (API610_RESULTANT_DENOM * FRST4) + MRSA / (API610_RESULTANT_DENOM * MRST4)   # (F.1)
-        f2 = FRDA / (API610_RESULTANT_DENOM * FRDT4) + MRDA / (API610_RESULTANT_DENOM * MRDT4)   # (F.2)
-        checks.append(_check_row("F.1", "Suction resultant interaction", f1, API610_INTERACTION_LIMIT))
-        checks.append(_check_row("F.2", "Discharge resultant interaction", f2, API610_INTERACTION_LIMIT))
+        f1 = FRSA / (c["resultantDenominator"] * FRST4) + MRSA / (c["resultantDenominator"] * MRST4)   # (F.1)
+        f2 = FRDA / (c["resultantDenominator"] * FRDT4) + MRDA / (c["resultantDenominator"] * MRDT4)   # (F.2)
+        checks.append(_check_row("F.1", "Suction resultant interaction", f1, c["interactionLimit"]))
+        checks.append(_check_row("F.2", "Discharge resultant interaction", f2, c["interactionLimit"]))
 
         FXCA = SA["Fx"] + DA["Fx"]   # (F.3.1.1)-(F.3.1.3)
         FYCA = SA["Fy"] + DA["Fy"]
@@ -368,17 +409,17 @@ def api610_annexf(inp: Dict[str, Any]) -> Dict[str, Any]:
         MZCA = SA["Mz"] + DA["Mz"] - ((SA["Fx"] * yS + DA["Fx"] * yD) - (SA["Fy"] * xS + DA["Fy"] * xD)) / k
         MRCA = math.hypot(MXCA, MYCA, MZCA)   # (F.5.1)
 
-        limit_f3 = API610_CENTRE_FORCE_FACTOR * (FRST4 + FRDT4)
-        limit_f4 = API610_CENTRE_MY_FACTOR * (ST4["My"] + DT4["My"])
-        limit_f5 = API610_CENTRE_FORCE_FACTOR * (MRST4 + MRDT4)
+        limit_f3 = c["centreForceFactor"] * (FRST4 + FRDT4)
+        limit_f4 = c["centreMyFactor"] * (ST4["My"] + DT4["My"])
+        limit_f5 = c["centreForceFactor"] * (MRST4 + MRDT4)
         checks.append(_check_row("F.3", "Resultant force at pump center", FRCA, limit_f3))
         checks.append(_check_row("F.4", "Resultant MY at pump center", abs(MYCA), limit_f4))
         checks.append(_check_row("F.5", "Resultant moment at pump center", MRCA, limit_f5))
 
         branch = {
             "FRSA": r4(FRSA), "MRSA": r4(MRSA), "FRDA": r4(FRDA), "MRDA": r4(MRDA),
-            "eqF1Value": r5(f1), "eqF1Ratio": r5(f1 / API610_INTERACTION_LIMIT),
-            "eqF2Value": r5(f2), "eqF2Ratio": r5(f2 / API610_INTERACTION_LIMIT),
+            "eqF1Value": r5(f1), "eqF1Ratio": r5(f1 / c["interactionLimit"]),
+            "eqF2Value": r5(f2), "eqF2Ratio": r5(f2 / c["interactionLimit"]),
             "FXCA": r4(FXCA), "FYCA": r4(FYCA), "FZCA": r4(FZCA), "FRCA": r4(FRCA),
             "MXCA": r4(MXCA), "MYCA": r4(MYCA), "MZCA": r4(MZCA), "MRCA": r4(MRCA),
             "eqF3Ratio": r5(FRCA / limit_f3),
@@ -386,7 +427,7 @@ def api610_annexf(inp: Dict[str, Any]) -> Dict[str, Any]:
             "eqF5Ratio": r5(MRCA / limit_f5),
         }
 
-        if max_component_ratio <= 0.5:
+        if max_component_ratio <= 1.0 / mult:
             warnings.append("All applied component loads are within the base Table 5 range (F.1.1) \u2014 "
                             "Annex F qualification is not required for this case.")
     else:
@@ -400,9 +441,9 @@ def api610_annexf(inp: Dict[str, Any]) -> Dict[str, Any]:
         if not (DoS > DiS and DiS > 0) or not (DoD > DiD and DiD > 0):
             raise ValueError("nozzle bore requires Do > Di > 0 (Schedule 40 pipe OD/ID for the nozzle's nominal size)")
 
-        k_sigma = API610_K_SIGMA[units]   # (F.7) vs (F.10)
-        k_tau = API610_K_TAU[units]       # (F.8) vs (F.11)
-        limit = API610_SIGMA_P_LIMIT_SI if units == "SI" else API610_SIGMA_P_LIMIT_USC   # (F.6) vs (F.9)
+        k_sigma = c["kSigma"]     # (F.7) vs (F.10), in the units given
+        k_tau = c["kTau"]         # (F.8) vs (F.11)
+        limit = c["sigmaPLimit"]  # (F.6) vs (F.9)
         eq_id = "F.6" if units == "SI" else "F.9"
 
         def principal(L: Dict[str, float], Do: float, Di: float) -> Tuple[float, float, float]:
@@ -429,7 +470,7 @@ def api610_annexf(inp: Dict[str, Any]) -> Dict[str, Any]:
                         "\u2014 confirm this pump's support condition before relying on this result.")
         warnings.append("Do/Di must be Schedule 40 pipe section properties for the nozzle's nominal size (F.2) \u2014 "
                         "supplied by the caller, not derived by this module.")
-        warnings.append("The per-component vs-2x-Table-5 screen is informational only for vertical in-line pumps: F.2 "
+        warnings.append("The per-component multiple-of-Table-5 screen is informational only for vertical in-line pumps: F.2 "
                         "permits exceeding it provided the principal-stress check (F.6-F.11) passes.")
 
     if any(c["status"] == "fail" and not c["advisory"] for c in checks):
@@ -455,14 +496,14 @@ def api610_annexf(inp: Dict[str, Any]) -> Dict[str, Any]:
             "status": c["status"], "advisory": c["advisory"],
         })
 
-    output: Dict[str, Any] = {
-        "pumpType": pump_type,
-        "units": units,
-        "suctionComponentRatio": s_ratio,
-        "dischargeComponentRatio": d_ratio,
-        "maxComponentRatio": r5(max_component_ratio),
-        "governingComponent": governing_component,
-    }
+    output: Dict[str, Any] = {"pumpType": pump_type, "units": units}
+    if mult is not None:
+        output.update({
+            "suctionComponentRatio": s_ratio,
+            "dischargeComponentRatio": d_ratio,
+            "maxComponentRatio": r5(max_component_ratio),
+            "governingComponent": governing_component,
+        })
     output.update(branch)
     output["checks"] = out_checks
     output["governingRatio"] = r5(governing["ratio"]) if math.isfinite(governing["ratio"]) else governing["ratio"]
@@ -830,8 +871,8 @@ REGISTRY: Dict[str, Callable[[Dict[str, Any]], Dict[str, Any]]] = {
 
 CITATIONS = {
     "connections.nozzle-load-check": "Per-component unity check of applied piping loads against allowables the user reads from the governing equipment standard or vendor datasheet (for example API 610 Table 5a/5b, API 660 Table 2, API 661 Table 4, API 560 Tables 7-10). PIP RECE002 design-stage factors are an owner practice and do not change the verdict.",
-    "connections.nema-sm23": "NEMA SM-23 combined form 3*Fr + Mr <= a*De. The coefficient a is read from the equation of the standard that governs: 927 in API 617 Part 2 Annex E (E.1b); 500 in API 611 Annex I (I.1b) and API 612 Annex D (D.1b). De = NPS for NPS 8 and under, otherwise (NPS + 16)/3.",
-    "connections.api610-annexf": "API 610 Annex F: F.1.2 a)-c) with Eq. (F.1)-(F.5) for horizontal pumps; F.2 with Eq. (F.6)-(F.11) for vertical in-line pumps; F.1.3 for loads beyond F.1.2. Table 5 ranges are user-supplied; confirm the edition of record.",
+    "connections.nema-sm23": "NEMA SM-23 combined form 3*Fr + Mr <= a*De. The coefficient a is read by the user from the equation of the governing standard (API 617 Part 2 Annex E, API 611 Annex I, API 612 Annex D, or the owner's SM-23 copy). De = NPS for NPS 8 and under, otherwise (NPS + 16)/3.",
+    "connections.api610-annexf": "API 610 Annex F: F.1.2 a)-c) with Eq. (F.1)-(F.5) for horizontal pumps; F.2 with Eq. (F.6)-(F.11) for vertical in-line pumps; F.1.3 for loads beyond F.1.2. Table 5 ranges and the Annex F method constants (annexF) are user-supplied; confirm the edition of record.",
     "equipment.nozzle-load-sum": "API 661 7.1.10.2 (sum of all nozzle loadings on a single header against the header limits for all six components) and 7.1.10.3 (total on one multi-bundle bay not above three times the single-header allowance). The same sum-and-compare form serves an owner header or bay rule; the limits and multiplier are user-supplied.",
     "equipment.api650-annexp-ordinates": "API 650 Annex P, P.2.7.1 and P.2.7.2: lambda = a/(Rt)^0.5, FP = pi*a^2*P (P.2.3); ordinates (lambda/2YF)(FR/FP), (lambda/aYL)(ML/FP), (lambda/aYC)(MC/FP). Acceptance is read from Figures P.3a/b and P.5a/b (P.2.7.2.4); YF, YL, YC from Figures P.4a/b.",
     "equipment.pvp2011-allowables": "Koves, Upitis, Cullotta and Latif, 'Establishing Allowable Nozzle Loads', ASME PVP2011-57100: size scaling Eq. (1) force ~ d and Eq. (2) moment ~ d^2; thickness extrapolation Eq. (4); material ratio against 18,800 psi (shell) and 17,100 psi (neck). Tables 1A, 1B and 2 are read by the user, not embedded.",
@@ -841,7 +882,7 @@ CITATIONS = {
 USER_SUPPLIED = {
     "connections.nozzle-load-check": ["allowable"],
     "connections.nema-sm23": ["coefficient"],
-    "connections.api610-annexf": ["suctionAllowable", "dischargeAllowable", "suctionBore", "dischargeBore"],
+    "connections.api610-annexf": ["annexF", "suctionAllowable", "dischargeAllowable", "suctionBore", "dischargeBore"],
     "equipment.nozzle-load-sum": ["limits", "multiplier"],
     "equipment.api650-annexp-ordinates": ["YF", "YL", "YC"],
     "equipment.pvp2011-allowables": ["table", "row", "lowerRow", "upperRow", "S_vessel", "S_nozzle"],
@@ -878,6 +919,11 @@ FIELDS: Dict[str, List[tuple]] = {
         ("units", "text", True, "'USC' (lbf, ft-lbf, in) or 'SI' (N, N*m, mm)"),
         ("suctionApplied", "per units", True, "Applied loads at the suction flange " + _SET_DESC),
         ("dischargeApplied", "per units", True, "Applied loads at the discharge flange " + _SET_DESC),
+        ("annexF", "per units", True, "Annex F method constants {componentMultiple (F.1.2 a), resultantDenominator (F.1/F.2), "
+                                      "interactionLimit (F.1/F.2 sum limit), centreForceFactor (F.3/F.5), centreMyFactor (F.4), "
+                                      "sigmaPLimit (F.6 or F.9), kSigma (F.7 or F.10), kTau (F.8 or F.11)}, each read by the user "
+                                      "from that equation of the edition of record, in the units given; no default, each > 0. "
+                                      "Horizontal needs the first five; vertical-inline needs sigmaPLimit, kSigma, kTau"),
         ("suctionAllowable", "per units", True, "Table 5 base range, suction, read by the user; each > 0"),
         ("dischargeAllowable", "per units", True, "Table 5 base range, discharge, read by the user; each > 0"),
         ("suctionPosition", "in or mm", False, "{x,y,z} of the suction flange from pump centre C (required for horizontal)"),
@@ -934,6 +980,7 @@ NESTED_KEYS: Dict[str, Dict[str, Tuple[str, ...]]] = {
         "suctionAllowable": COMPONENTS, "dischargeAllowable": COMPONENTS,
         "suctionPosition": ("x", "y", "z"), "dischargePosition": ("x", "y", "z"),
         "suctionBore": ("Do", "Di"), "dischargeBore": ("Do", "Di"),
+        "annexF": ANNEXF_KEYS,
     },
     "equipment.nozzle-load-sum": {"limits": COMPONENTS},
     "equipment.pvp2011-allowables": {"row": COMPONENTS, "lowerRow": COMPONENTS, "upperRow": COMPONENTS},
@@ -1013,16 +1060,13 @@ def validate(module: str, inputs: Any) -> List[str]:
         coef = _val(inputs, "coefficient")
         if coef is not None:
             _need(coef > 0, "coefficient must be > 0")
-            if not any(abs(coef - c) < 1e-9 for c in (927, 500)):
-                warnings.append(f"coefficient {coef:g} is neither 927 (API 617 Part 2 E.1b) nor 500 (API 611 I.1b, API 612 D.1b); "
-                                "confirm it against the equation printed in your edition of the governing standard.")
     elif module == "connections.api610-annexf":
         pt = inputs.get("pumpType")
         _need(pt in ("horizontal", "vertical-inline"), 'pumpType must be "horizontal" or "vertical-inline"')
         _need(inputs.get("units") in ("USC", "SI"), 'units must be "USC" or "SI"')
         if pt == "vertical-inline" and owner is not None:
             _need(owner == 1, "ownerFactor is not supported for pumpType vertical-inline: the factor would scale only the "
-                              "Table 5 ranges, not the F.6 to F.11 principal-stress limit (5950 psi / 41 N/mm2) that sets the "
+                              "Table 5 ranges, not the F.6 to F.11 principal-stress limit that sets the "
                               "status, so the verdict would be unfactored. Omit ownerFactor and judge the F.2 result against "
                               "the owner's practice separately")
     elif module == "equipment.nozzle-load-sum":

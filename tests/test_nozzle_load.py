@@ -40,6 +40,30 @@ PORTED = ("connections.nozzle-load-check", "connections.nema-sm23", "connections
 NEW = ("equipment.nozzle-load-sum", "equipment.api650-annexp-ordinates", "equipment.pvp2011-allowables")
 
 
+# Test-side values for fixture parity; not shipped. The calc-core fixture cases for
+# connections.api610-annexf were computed with these Annex F constants, but the fixture inputs do
+# not carry them (the skill takes them as the user-supplied `annexF` block), so the tests inject them.
+_ANNEXF_COMMON = dict(componentMultiple=2.0, resultantDenominator=1.5, interactionLimit=2.0,
+                      centreForceFactor=1.5, centreMyFactor=2.0)
+ANNEXF_TEST = {
+    "USC": dict(_ANNEXF_COMMON, sigmaPLimit=5950.0, kSigma=122.0, kTau=61.0),
+    "SI": dict(_ANNEXF_COMMON, sigmaPLimit=41.0, kSigma=10200.0, kTau=5100.0),
+}
+ANNEXF_MODULE = "connections.api610-annexf"
+
+
+def annexf(units: str = "USC") -> dict:
+    return dict(ANNEXF_TEST[units])
+
+
+def fixture_input(module: str, case: dict) -> dict:
+    """A fixture case's input, with the test-side annexF block added for the Annex F module."""
+    inp = dict(case["input"])
+    if module == ANNEXF_MODULE:
+        inp["annexF"] = annexf(inp["units"])
+    return inp
+
+
 def six(fx=0, fy=0, fz=0, mx=0, my=0, mz=0) -> dict:
     return {"Fx": fx, "Fy": fy, "Fz": fz, "Mx": mx, "My": my, "Mz": mz}
 
@@ -61,7 +85,20 @@ class Parity(unittest.TestCase):
 
     def _check(self, module: str) -> None:
         self.assertIn(module, nl.REGISTRY)
-        self.assertEqual(parity.run_fixture(nl.REGISTRY, module), [])
+        registry = dict(nl.REGISTRY)
+        if module == ANNEXF_MODULE:
+            # Per-module input hook: wrap the function so each fixture case gets the test-side annexF block.
+            engine = nl.REGISTRY[module]
+            registry[module] = lambda inp: engine(dict(inp, annexF=annexf(inp["units"])))
+        self.assertEqual(parity.run_fixture(registry, module), [])
+
+    def test_annexf_fixture_inputs_carry_no_constants(self):
+        # The vendored inputs come from the engine and must stay untouched: the constants are not in them,
+        # and without the injected block the module refuses to run.
+        for case in parity.load(ANNEXF_MODULE)["cases"]:
+            self.assertNotIn("annexF", case["input"])
+            with self.assertRaisesRegex(ValueError, r"annexF\.(componentMultiple|sigmaPLimit) is required"):
+                nl.REGISTRY[ANNEXF_MODULE](dict(case["input"]))
 
     def test_manifest_modules_are_registered(self):
         manifest = parity.modules_for("nozzle-load")
@@ -97,7 +134,7 @@ class Metadata(unittest.TestCase):
     def test_result_envelope_shape_for_ported_modules(self):
         for module in PORTED:
             fx = parity.load(module)
-            res = run(module, fx["cases"][0]["input"])
+            res = run(module, fixture_input(module, fx["cases"][0]))
             self.assertEqual(set(res), {"module", "output", "status", "warnings"})
             self.assertEqual(res["module"], module)
             self.assertIn(res["status"], {"pass", "fail", "na"})
@@ -116,8 +153,8 @@ class Metadata(unittest.TestCase):
     def test_named_constants_are_the_cited_numbers(self):
         self.assertEqual((nl.PVP_REF_STRESS_VESSEL, nl.PVP_REF_STRESS_NOZZLE), (18800.0, 17100.0))
         self.assertEqual(nl.PVP_TABLE_BASIS_THICKNESS, {"1A": 0.25, "1B": 0.375, "2": 0.375})
-        self.assertEqual((nl.API610_SIGMA_P_LIMIT_USC, nl.API610_SIGMA_P_LIMIT_SI), (5950.0, 41.0))
-        self.assertEqual(nl.API610_COMPONENT_MULTIPLE, 2.0)
+        self.assertFalse([n for n in dir(nl) if n.startswith("API610_") and n != "API610_UNIT_CONV"])
+        self.assertEqual(nl.API610_UNIT_CONV, {"SI": 1000.0, "USC": 12.0})
 
 
 class HandDerivedPorted(unittest.TestCase):
@@ -174,7 +211,8 @@ class HandDerivedPorted(unittest.TestCase):
     def _f(self, **kw) -> dict:
         base = dict(pumpType="horizontal", units="USC", suctionApplied=self.ZERO, dischargeApplied=self.ZERO,
                     suctionAllowable=flat(1000), dischargeAllowable=flat(1000),
-                    suctionPosition=dict(x=0, y=0, z=0), dischargePosition=dict(x=0, y=0, z=0))
+                    suctionPosition=dict(x=0, y=0, z=0), dischargePosition=dict(x=0, y=0, z=0),
+                    annexF=annexf(kw.get("units", "USC")))
         base.update(kw)
         return run("connections.api610-annexf", base)
 
@@ -205,6 +243,22 @@ class HandDerivedPorted(unittest.TestCase):
         self.assertEqual(out["dischargeSigmaP"], 0.0)
         self.assertEqual(out["governingEquation"], "F.9")
         self.assertEqual(res["status"], "pass")
+
+    def test_annexf_constants_drive_the_result(self):
+        # Changing a user-supplied constant changes the verdict: nothing is baked in.
+        loose = self._f(suctionApplied=six(0, 2500, 0, 0, 0, 0), annexF=dict(annexf(), componentMultiple=3.0))
+        self.assertEqual(loose["output"]["maxComponentRatio"], round(2500 / 3000, 5))
+        self.assertEqual(loose["output"]["checks"][0]["limit"], 3000.0)
+        self.assertIn("3x Table 5", loose["output"]["checks"][0]["label"])
+
+    def test_annexf_vertical_needs_only_its_three_constants(self):
+        keys = ("sigmaPLimit", "kSigma", "kTau")
+        res = self._f(pumpType="vertical-inline", suctionApplied=six(0, 1000, 0, 0, 0, 0),
+                      suctionBore=dict(Do=4, Di=3), dischargeBore=dict(Do=4, Di=3),
+                      annexF={k: annexf()[k] for k in keys})
+        self.assertNotIn("maxComponentRatio", res["output"])
+        self.assertEqual(res["status"], "pass")
+        self.assertTrue(any("componentMultiple was not supplied" in w for w in res["warnings"]))
 
     def test_annexf_vertical_component_screen_is_advisory(self):
         # 3x the table range on Fy fails F.1.2(a) but F.2 permits it, so the verdict rests on the stress check
@@ -532,7 +586,7 @@ class OwnerFactorOnPortedModules(unittest.TestCase):
 
     def test_annexf_table5_ranges_are_scaled(self):
         inp = dict(pumpType="horizontal", units="USC", suctionApplied=six(0, 1000, 0, 0, 0, 0), dischargeApplied=six(),
-                   suctionAllowable=flat(1000), dischargeAllowable=flat(1000),
+                   suctionAllowable=flat(1000), dischargeAllowable=flat(1000), annexF=annexf(),
                    suctionPosition=dict(x=0, y=0, z=0), dischargePosition=dict(x=0, y=0, z=0))
         self.assertEqual(cli_run("connections.api610-annexf", inp)["output"]["maxComponentRatio"], 0.5)
         self.assertEqual(cli_run("connections.api610-annexf", dict(inp, ownerFactor=0.5))["output"]["maxComponentRatio"], 1.0)
@@ -568,7 +622,7 @@ class EngineErrors(unittest.TestCase):
                      "allowable.My must be > 0 (supply it from the governing standard/vendor)")
 
     def test_nema_sm23(self):
-        base = dict(NPS=6, applied=flat(1), coefficient=927)
+        base = dict(NPS=6, applied=flat(1), coefficient=700)
         self._raises("connections.nema-sm23", dict(base, NPS=0), "NPS must be > 0")
         self._raises("connections.nema-sm23", dict(base, NPS=-12), "NPS must be > 0")
         self._raises("connections.nema-sm23", dict(base, coefficient=0), "coefficient must be > 0")
@@ -579,7 +633,7 @@ class EngineErrors(unittest.TestCase):
 
     def test_annexf(self):
         base = dict(pumpType="horizontal", units="USC", suctionApplied=six(), dischargeApplied=six(),
-                    suctionAllowable=flat(1000), dischargeAllowable=flat(1000))
+                    suctionAllowable=flat(1000), dischargeAllowable=flat(1000), annexF=annexf())
         self._raises("connections.api610-annexf", dict(base, suctionAllowable=dict(flat(1000), Fz=0)),
                      "suctionAllowable.Fz must be > 0 (supply the Table 5 base range for this nozzle/component)")
         self._raises("connections.api610-annexf", dict(base, pumpType="axial"),
@@ -594,6 +648,62 @@ class EngineErrors(unittest.TestCase):
         self._raises("connections.api610-annexf",
                      dict(base, pumpType="vertical-inline", suctionBore=dict(Do=3, Di=4), dischargeBore=dict(Do=4, Di=3)),
                      "nozzle bore requires Do > Di > 0 (Schedule 40 pipe OD/ID for the nozzle's nominal size)")
+
+    HORIZONTAL_KEYS = ("componentMultiple", "resultantDenominator", "interactionLimit", "centreForceFactor", "centreMyFactor")
+    VERTICAL_KEYS = ("sigmaPLimit", "kSigma", "kTau")
+
+    def _annexf_base(self, pump_type: str) -> dict:
+        base = dict(pumpType=pump_type, units="USC", suctionApplied=six(), dischargeApplied=six(),
+                    suctionAllowable=flat(1000), dischargeAllowable=flat(1000), annexF=annexf())
+        if pump_type == "horizontal":
+            base.update(suctionPosition=dict(x=0, y=0, z=0), dischargePosition=dict(x=0, y=0, z=0))
+        else:
+            base.update(suctionBore=dict(Do=4, Di=3), dischargeBore=dict(Do=4, Di=3))
+        return base
+
+    def test_annexf_missing_block_names_the_first_key(self):
+        base = self._annexf_base("horizontal")
+        del base["annexF"]
+        self._raises(ANNEXF_MODULE, base, "annexF.componentMultiple is required (read it from F.1.2 a) of the "
+                                          "edition of record; no default)")
+        vbase = self._annexf_base("vertical-inline")
+        del vbase["annexF"]
+        self._raises(ANNEXF_MODULE, vbase, "annexF.sigmaPLimit is required (read it from Eq. F.6 (SI) or F.9 (USC) "
+                                           "of the edition of record; no default)")
+
+    def test_annexf_each_required_key_is_enforced_per_pump_type(self):
+        for pump_type, keys in (("horizontal", self.HORIZONTAL_KEYS), ("vertical-inline", self.VERTICAL_KEYS)):
+            for key in keys:
+                base = self._annexf_base(pump_type)
+                del base["annexF"][key]
+                with self.assertRaises(ValueError, msg=f"{pump_type} {key}") as cm:
+                    run(ANNEXF_MODULE, base)
+                self.assertTrue(str(cm.exception).startswith(f"annexF.{key} is required"), str(cm.exception))
+                self.assertTrue(str(cm.exception).endswith("no default)"), str(cm.exception))
+
+    def test_annexf_keys_of_the_other_pump_type_are_not_required(self):
+        base = self._annexf_base("horizontal")
+        base["annexF"] = {k: annexf()[k] for k in self.HORIZONTAL_KEYS}
+        run(ANNEXF_MODULE, base)
+        vbase = self._annexf_base("vertical-inline")
+        vbase["annexF"] = {k: annexf()[k] for k in self.VERTICAL_KEYS}
+        run(ANNEXF_MODULE, vbase)
+
+    def test_annexf_non_positive_or_non_numeric_constant_is_rejected(self):
+        for pump_type, keys in (("horizontal", self.HORIZONTAL_KEYS), ("vertical-inline", self.VERTICAL_KEYS)):
+            for key in keys:
+                for bad in (0, -1.5):
+                    base = self._annexf_base(pump_type)
+                    base["annexF"][key] = bad
+                    with self.assertRaises(ValueError, msg=f"{key}={bad}") as cm:
+                        run(ANNEXF_MODULE, base)
+                    self.assertTrue(str(cm.exception).startswith(f"annexF.{key} must be > 0"), str(cm.exception))
+                base = self._annexf_base(pump_type)
+                base["annexF"][key] = "2"
+                self._raises(ANNEXF_MODULE, base, f"annexF.{key} must be a number")
+        base = self._annexf_base("horizontal")
+        base["annexF"] = [1, 2]
+        self._raises(ANNEXF_MODULE, base, "annexF must be an object of the Annex F method constants read from the edition of record")
 
     def test_missing_and_non_numeric_components(self):
         with self.assertRaisesRegex(ValueError, r"applied.Fz is required"):
@@ -620,7 +730,7 @@ class Validate(unittest.TestCase):
 
     def test_unknown_top_level_field(self):
         self._bad("connections.nozzle-load-check", dict(self.CHECK, alowable=flat(1)), "unknown input field(s) 'alowable'")
-        self._bad("connections.nema-sm23", dict(HandDerivedPorted.SM23, Coefficient=927), "unknown input field(s) 'Coefficient'")
+        self._bad("connections.nema-sm23", dict(HandDerivedPorted.SM23, Coefficient=700), "unknown input field(s) 'Coefficient'")
         self._bad("equipment.pvp2011-allowables", dict(HandDerivedPvp.BASE, t=0.25), "unknown input field(s) 't'")
 
     def test_unknown_key_inside_a_load_set(self):
@@ -629,6 +739,8 @@ class Validate(unittest.TestCase):
                   "unknown key(s) 'Z' in suctionPosition")
         self._bad("equipment.nozzle-load-sum", dict(standard="x", nozzles=[dict(flat(1), Mq=2)], limits=flat(1)),
                   "unknown key(s) 'Mq' in nozzles[0]")
+        self._bad(ANNEXF_MODULE, dict(pumpType="horizontal", units="USC", annexF=dict(annexf(), kSigmaa=1)),
+                  "unknown key(s) 'kSigmaa' in annexF")
 
     def test_unknown_module(self):
         self._bad("connections.nozzle-load", {}, "unknown module")
@@ -640,12 +752,13 @@ class Validate(unittest.TestCase):
     def test_negative_or_zero_size(self):
         self._bad("connections.nema-sm23", dict(HandDerivedPorted.SM23, NPS=-6), "NPS must be > 0")
         self._bad("connections.nema-sm23", dict(HandDerivedPorted.SM23, NPS=0), "NPS must be > 0")
-        self._bad("connections.nema-sm23", dict(HandDerivedPorted.SM23, coefficient=-927), "coefficient must be > 0")
+        self._bad("connections.nema-sm23", dict(HandDerivedPorted.SM23, coefficient=-700), "coefficient must be > 0")
+        self._bad("connections.nema-sm23", dict(HandDerivedPorted.SM23, coefficient=0), "coefficient must be > 0")
 
-    def test_sm23_unusual_coefficient_warns(self):
-        w = nl.validate("connections.nema-sm23", dict(HandDerivedPorted.SM23, coefficient=700))
-        self.assertTrue(any("neither 927" in x for x in w))
-        self.assertEqual(nl.validate("connections.nema-sm23", dict(HandDerivedPorted.SM23, coefficient=927)), [])
+    def test_sm23_coefficient_is_not_judged_against_a_set_of_values(self):
+        # The coefficient is whatever the user read from the governing equation; any positive value is accepted silently.
+        for coef in (350, 700, 1234.5):
+            self.assertEqual(nl.validate("connections.nema-sm23", dict(HandDerivedPorted.SM23, coefficient=coef)), [])
 
     def test_owner_factor_range(self):
         self._bad("connections.nozzle-load-check", dict(self.CHECK, ownerFactor=1.1), "ownerFactor must be in (0, 1]")
@@ -680,7 +793,7 @@ class CommandLine(unittest.TestCase):
 
     def test_vertical_inline_rejects_owner_factor(self):
         inp = dict(pumpType="vertical-inline", units="USC", suctionApplied=six(), dischargeApplied=six(),
-                   suctionAllowable=flat(1000), dischargeAllowable=flat(1000),
+                   suctionAllowable=flat(1000), dischargeAllowable=flat(1000), annexF=annexf(),
                    suctionBore=dict(Do=6.625, Di=6.065), dischargeBore=dict(Do=4.5, Di=4.026))
         r = self._run("connections.api610-annexf", "--input", json.dumps(dict(inp, ownerFactor=0.5)))
         self.assertEqual(r.returncode, 2, r.stderr)
@@ -688,9 +801,38 @@ class CommandLine(unittest.TestCase):
         r = self._run("connections.api610-annexf", "--input", json.dumps(dict(inp, ownerFactor=1)))
         self.assertEqual(r.returncode, 0, r.stderr)
 
+    def test_missing_annexf_exits_2_naming_the_key(self):
+        inp = dict(pumpType="horizontal", units="USC", suctionApplied=six(), dischargeApplied=six(),
+                   suctionAllowable=flat(1000), dischargeAllowable=flat(1000),
+                   suctionPosition=dict(x=0, y=0, z=0), dischargePosition=dict(x=0, y=0, z=0))
+        r = self._run(ANNEXF_MODULE, "--input", json.dumps(inp))
+        self.assertEqual(r.returncode, 2, r.stderr)
+        self.assertNotIn("Traceback", r.stderr)
+        self.assertIn("annexF.componentMultiple is required", r.stderr)
+        self.assertEqual(len(r.stderr.strip().splitlines()), 1)
+        bad = dict(inp, annexF=dict(annexf(), centreMyFactor=0))
+        r = self._run(ANNEXF_MODULE, "--input", json.dumps(bad))
+        self.assertEqual(r.returncode, 2, r.stderr)
+        self.assertIn("annexF.centreMyFactor must be > 0", r.stderr)
+
+    def test_sm23_zero_coefficient_exits_2(self):
+        r = self._run("connections.nema-sm23", "--input", json.dumps(dict(HandDerivedPorted.SM23, coefficient=0)))
+        self.assertEqual(r.returncode, 2, r.stderr)
+        self.assertIn("coefficient must be > 0", r.stderr)
+
+    def test_annexf_constants_are_echoed_as_user_supplied(self):
+        inp = dict(pumpType="horizontal", units="USC", suctionApplied=six(), dischargeApplied=six(),
+                   suctionAllowable=flat(1000), dischargeAllowable=flat(1000), annexF=annexf(),
+                   suctionPosition=dict(x=0, y=0, z=0), dischargePosition=dict(x=0, y=0, z=0))
+        env = cli_run(ANNEXF_MODULE, inp)
+        self.assertIn("annexF", env["user_supplied"])
+        self.assertEqual(env["inputs"]["annexF"], annexf())
+        self.assertIn("annexF", nl.USER_SUPPLIED[ANNEXF_MODULE])
+        self.assertTrue(any("annexF" in w for w in env["warnings"]))
+
     def test_horizontal_factor_reword_of_base_range_note(self):
         inp = dict(pumpType="horizontal", units="USC", suctionApplied=six(0, 100, 0, 0, 0, 0), dischargeApplied=six(),
-                   suctionAllowable=flat(1000), dischargeAllowable=flat(1000),
+                   suctionAllowable=flat(1000), dischargeAllowable=flat(1000), annexF=annexf(),
                    suctionPosition=dict(x=0, y=0, z=0), dischargePosition=dict(x=0, y=0, z=0), ownerFactor=0.5)
         env = cli_run("connections.api610-annexf", inp)
         self.assertFalse(any("within the base Table 5 range" in w for w in env["warnings"]))
@@ -714,7 +856,7 @@ class CommandLine(unittest.TestCase):
     def test_run_each_fixture_case_through_the_cli(self):
         for module in PORTED:
             case = parity.load(module)["cases"][0]
-            inp = dict(case["input"])
+            inp = fixture_input(module, case)
             if module == "connections.nozzle-load-check":
                 self.assertIn("standard", inp)
             r = self._run(module, "--input", json.dumps(inp))
@@ -764,7 +906,7 @@ class CommandLine(unittest.TestCase):
         self.assertTrue(any("ownerFactor 0.5 applied" in w for w in env["warnings"]))
 
     def test_unknown_field_exits_2(self):
-        bad = dict(HandDerivedPorted.SM23, Coefficient=927)
+        bad = dict(HandDerivedPorted.SM23, Coefficient=700)
         r = self._run("connections.nema-sm23", "--input", json.dumps(bad))
         self.assertEqual(r.returncode, 2)
         self.assertEqual(r.stdout, "")
@@ -849,9 +991,23 @@ class SkillContent(unittest.TestCase):
         self.assertGreaterEqual(len(items), 14)
 
     def test_sm23_coefficients_are_named_with_their_equations(self):
-        for fragment in ("927", "500", "API 617", "API 611", "API 612"):
+        for fragment in ("E.1b", "I.1b", "D.1b", "API 617", "API 611", "API 612"):
             self.assertIn(fragment, self.text, fragment)
         self.assertIn("coefficient", self.text)
+
+    def test_annexf_constants_are_documented_as_inputs(self):
+        for key in ("componentMultiple", "resultantDenominator", "interactionLimit", "centreForceFactor",
+                    "centreMyFactor", "sigmaPLimit", "kSigma", "kTau"):
+            self.assertIn(key, self.text, key)
+            self.assertIn(key, self.refs["tool-reference.md"], key)
+        self.assertIn("User-supplied values table", self.text)
+
+    def test_no_api_method_constant_ships_in_the_skill(self):
+        # API 610 Annex F constants and the API 617 / 611 / 612 coefficients are user-supplied inputs.
+        banned = re.compile(r"\b927\b|\b5950\b|\b10,?200\b|\b5,?100\b|API610_(?!UNIT_CONV)")
+        for label, text in [("SKILL.md", self.text), ("nozzle_load.py", self.script)] + sorted(self.refs.items()):
+            for ln in text.splitlines():
+                self.assertIsNone(banned.search(ln), f"{label}: {ln.strip()[:120]}")
 
     def test_calc_sheet_template_and_run_rules(self):
         self.assertIn("# Nozzle Load Evaluation", self.text)

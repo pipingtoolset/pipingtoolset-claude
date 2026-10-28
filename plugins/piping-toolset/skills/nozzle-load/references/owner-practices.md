@@ -56,7 +56,7 @@ The design-stage factors are the optional `ownerFactor` input (0 < f ≤ 1):
 
 Use it with a stated basis: "ownerFactor 0.5, PIP RECE002 4.2.2.3, vital machinery, layout stage". The verdict against the unfactored allowable is a second run with the factor omitted; report both when the machinery is vital or sensitive. The tool does not classify machinery, and the default is no factor.
 
-For pumps, the factor scales the Table 5 base ranges entered to `connections.api610-annexf`, so every Annex F limit (the 2x component screen, the 1.5x interaction terms, the pump-centre limits) scales with it. The practice's 100% value for essential machinery is stated as calculated without a multiplier, as in Annex F; whether that means Table 5 at 1x or the Annex F limits is a reading to confirm with the owner and record. For compressors and turbines the factor scales the SM-23 coefficient; the vendor-sheet combined resultants are not computed by the tool.
+For pumps, the factor scales the Table 5 base ranges entered to `connections.api610-annexf`, so every Annex F limit (the component screen, the interaction terms, the pump-centre limits) scales with it. The practice's 100% value for essential machinery is stated as calculated without a multiplier, as in Annex F; whether that means Table 5 at 1x or the Annex F limits is a reading to confirm with the owner and record. For compressors and turbines the factor scales the SM-23 coefficient; the vendor-sheet combined resultants are not computed by the tool.
 
 The existing note in `connections.nozzle-load-check` (the warning when the maximum ratio exceeds 0.5) points to 4.2.2.3 and 4.2.3.3; it does not change the verdict.
 
