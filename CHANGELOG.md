@@ -8,6 +8,13 @@ keep a defect until the plugin is updated, so each such entry names the skill, t
 affected inputs and the release that fixed it. GitHub Releases carry the same
 label and are the recall channel.
 
+## [0.6.3] — 2026-10-28
+
+- `nozzle-load`: API 610 Annex F method constants and the SM-23-form coefficient are now user-supplied inputs (read from the edition of record); no API-derived numeric constant ships in code or prose. No change to results when the same constants are entered (fixture parity green).
+  - `connections.api610-annexf` requires an `annexF` object (`componentMultiple`, `resultantDenominator`, `interactionLimit`, `centreForceFactor`, `centreMyFactor` for horizontal pumps; `sigmaPLimit`, `kSigma`, `kTau`, in the `units` system given, for vertical in-line pumps). A missing or non-positive constant stops the run (exit 2) and names the key. Existing job files need the block added.
+  - `connections.nema-sm23` no longer warns on a coefficient outside a fixed set of values; the coefficient must be above zero. The SKILL.md, the references and the calc-sheet template ask for the equation and edition behind each value.
+  - Manifests, marketplace and the Phase 2 runbook at 0.6.3.
+
 ## [0.6.2] — 2026-10-28
 
 Source form only; every status word, number, fixture and golden file is unchanged. The
