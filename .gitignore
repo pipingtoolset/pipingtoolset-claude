@@ -10,3 +10,4 @@ dist/
 docs/demo/*.mp4
 docs/demo/edit-work/
 docs/demo/edit-work-codex/
+docs/demo/edit-work-claude-silent/
