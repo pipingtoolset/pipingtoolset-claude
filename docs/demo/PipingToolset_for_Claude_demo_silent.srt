@@ -1,0 +1,129 @@
+1
+00:00:05,500 --> 00:00:13,000
+pipingtoolset.com: the free calculators, and a launcher tier for the plugin that runs the same engine inside Claude
+
+2
+00:00:13,000 --> 00:00:20,000
+Seven free skills for Claude Code and Claude Cowork, from a practicing, licensed piping engineer
+
+3
+00:00:20,600 --> 00:00:28,300
+pipingtoolset.com/claude: what a run looks like, the seven skills, the three rules
+
+4
+00:00:28,300 --> 00:00:34,300
+It never quotes a code table value. You read those from your licensed copy.
+
+5
+00:00:34,300 --> 00:00:41,800
+Where your data goes: nothing reaches PipingToolset. The scripts run in your own Claude environment.
+
+6
+00:00:42,530 --> 00:00:54,030
+Install: press Download for Cowork (.plugin). One file from the GitHub release, about 400 KB.
+
+7
+00:00:54,030 --> 00:01:06,030
+No account, no API key, no telemetry.
+
+8
+00:01:08,530 --> 00:01:24,030
+Claude desktop app  ›  Settings  ›  Plugins  ›  Add  ›  Upload plugin
+(or drag the file into a Cowork chat and press Accept)
+
+9
+00:01:28,030 --> 00:01:36,030
+PipingToolset by Flexible Piping Solutions LLC, 7 skills: installed and ready to use
+
+10
+00:01:37,430 --> 00:01:54,430
+Plugins  ›  PipingToolset: bolted-flange, iso-to-pcf, load-case-builder, nozzle-load,
+pipe-support, pressure-design, stress-screening. Hover a skill for what it does.
+
+11
+00:01:54,730 --> 00:02:00,630
+Point the chat at a working folder, C:\demo\PS-201. Output files land there.
+
+12
+00:02:01,230 --> 00:02:14,730
+Prompt 1: B31.3-2022, NPS 6 seamless, OD 6.625 in, 750 psig at 600 F, c = 0.0625 in, 12.5 % mill tolerance,
+S = 17,900 psi from my copy, E = 1.0, W = 1.0, Y = 0.4. Does 0.280 in nominal wall work?
+
+13
+00:02:15,030 --> 00:02:18,480
+Skill loaded: pressure-design. It lists the modules, writes a job file and runs pressure_design.py
+
+14
+00:02:21,480 --> 00:02:32,480
+Ran 2 commands: wall thickness and MAWP checks. Yes, 0.280 in works.
+t = PD/[2(SEW + PY)] = 0.1365 in   ·   tm = t + c = 0.1990 in   ·   tOrder = tm/(1 − 0.125) = 0.2274 in
+
+15
+00:02:32,480 --> 00:02:45,480
+0.280 in gives 0.1825 in for pressure after mill tolerance and corrosion: 1,008.4 psig allowable, 34 % above design.
+Validity by hand: t/D = 0.0206 under the D/6 limit, P/(SE) = 0.042 under 0.385, so Eq. (3a) applies.
+
+16
+00:02:45,480 --> 00:03:00,480
+Gaps a reviewer will flag: no material listed behind S = 17,900 psi (the Table A-1 line), W = 1.0 and Y = 0.4
+table lines, the mill tolerance from the purchase spec, and the edition. Each one is written on the calc sheet.
+
+17
+00:03:00,980 --> 00:03:07,480
+Prompt 2: What is the allowable stress for A106 Grade B at 650 F under B31.3? Just give me the number.
+
+18
+00:03:07,980 --> 00:03:24,480
+No number. It names B31.3-2022 Table A-1 (A-1C in the 2024 edition), the A106 Grade B seamless line
+and the 650 F column, and offers to interpolate once you have read both values.
+
+19
+00:03:24,980 --> 00:03:32,480
+Prompt 3: PS-201, CSA type 1 t-post, W6X15 column and arm, two 6 in lines, CAESAR II restraint loads
+SUS / OPE / WIN / EQ, SDS 0.5, LRFD, 4 x 3/4 in adhesive anchors, tau 800 psi from the ESR. Then optimize it.
+
+20
+00:03:32,780 --> 00:03:37,280
+Skill loaded: pipe-support. Reads the spec format and the CSA type 1 preset, builds the spec, runs support_calc.py
+
+21
+00:03:37,280 --> 00:03:42,080
+Then the plate-geometry sensitivity, the optimizer at a 0.85 cap, the anchor bond check for the smaller bolts,
+and the deliverables staged for your folder
+
+22
+00:03:42,605 --> 00:03:48,105
+PS-201 passes as drawn: all 23 LRFD combinations. Governing: arm-to-column weld base metal, 0.888 under 1.4D + T.
+Load mapping stated: D = SUS, T = OPE − SUS, W = WIN, Eh = EQ, Ev = 0.2 · SDS · D
+
+23
+00:03:48,105 --> 00:03:54,105
+Things to fix before issue: the preset anchor pattern does not fit the plate, the inputs it took from the preset,
+and column torsion is outside the engine. Then the optimizer pick: W8X10 arm, 7/8 in plate, 5/8 in anchors, 0.834
+
+24
+00:03:54,105 --> 00:03:57,405
+Four files saved to the PS-201 folder: the as-drawn calc, the optimized calc, the spec and the result JSON
+
+25
+00:03:57,775 --> 00:04:04,475
+The working folder: PS-201_calc_as-drawn.md, PS-201_calc_optimized-0.85.md, PS-201_spec.json, PS-201_result.json
+
+26
+00:04:04,475 --> 00:04:19,475
+The calc report: design basis and resistance factors, materials, assembly geometry, the ASCE 7-22 combinations,
+every limit state with demand, capacity, ratio and clause, the compliance matrix and the review findings
+
+27
+00:04:19,975 --> 00:04:31,475
+Open source, Apache-2.0. Every script reproduces the pipingtoolset.com fixture cases; a red parity test blocks a release.
+
+28
+00:04:31,475 --> 00:04:43,475
+The site's calculation changelog, and the plugin's: an UNCONSERVATIVE-FIX release names the skill,
+the affected inputs and the fix. Update when you see one.
+
+29
+00:04:43,475 --> 00:04:55,475
+pipingtoolset.com/claude   ·   github.com/pipingtoolset/pipingtoolset-claude   ·   the same plugin ships for ChatGPT and Codex
+
