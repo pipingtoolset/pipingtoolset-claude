@@ -22,7 +22,7 @@ breakout check). This skill closes all three:
 
 The engine is the pipingtoolset.com **PiperSTR** engine, ported to standard-library Python and
 locked to it by parity tests. That includes a value-for-value reproduction of a published
-PiperSTR Design Summary Report (`tests/test_pipe_support_ps101.py`). **Claude never computes a
+PiperSTR Design Summary Report (`tests/test_pipe_support_ps101.py`). **The assistant never computes a
 capacity, ratio or alternative itself.** Every number in a response comes from a
 `support_calc.py` run.
 

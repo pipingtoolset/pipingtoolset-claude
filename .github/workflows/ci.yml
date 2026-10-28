@@ -35,13 +35,24 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Build .plugin and skills zip
+      - name: Agent Skills reference validator on every skill folder
+        # skills-ref is the agentskills.io reference implementation (PyPI, needs Python 3.11+).
+        # Pinned; its validate command exits 1 on the first skill that fails the spec. The
+        # module form is used because the 0.1.1 wheel names its console script differently
+        # from the repository (agentskills vs skills-ref).
+        run: |
+          python -m pip install --quiet "skills-ref==0.1.1"
+          for d in plugins/piping-toolset/skills/*/; do
+            python -m skills_ref.cli validate "$d"
+          done
+      - name: Build .plugin, .zip and skills zip
         run: python tools/package_plugin.py --out dist --check
       - uses: actions/upload-artifact@v4
         with:
           name: piping-toolset-plugin
           path: |
             dist/piping-toolset.plugin
+            dist/piping-toolset.zip
             dist/piping-toolset-skills.zip
           if-no-files-found: error
 
@@ -67,7 +78,7 @@ jobs:
           v = json.load(open('plugins/piping-toolset/.claude-plugin/plugin.json'))['version']
           sys.exit(0 if os.environ['TAG'] == 'v' + v else f"tag {os.environ['TAG']} != plugin version {v}")
           PY
-      - name: Attach .plugin and skills zip to the GitHub Release
+      - name: Attach .plugin, .zip and skills zip to the GitHub Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG: ${{ github.ref_name }}
@@ -75,4 +86,4 @@ jobs:
           if ! gh release view "$TAG" >/dev/null 2>&1; then
             gh release create "$TAG" --verify-tag --generate-notes
           fi
-          gh release upload "$TAG" dist/piping-toolset.plugin dist/piping-toolset-skills.zip --clobber
+          gh release upload "$TAG" dist/piping-toolset.plugin dist/piping-toolset.zip dist/piping-toolset-skills.zip --clobber

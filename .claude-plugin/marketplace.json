@@ -5,15 +5,15 @@
     "url": "https://pipingtoolset.com"
   },
   "metadata": {
-    "description": "Piping engineering skills for Claude from PipingToolset."
+    "description": "Piping engineering skills from PipingToolset for Claude, ChatGPT, Codex and any Agent Skills host."
   },
   "plugins": [
     {
       "name": "piping-toolset",
       "displayName": "PipingToolset",
       "source": "./plugins/piping-toolset",
-      "description": "Seven ASME B31.1 / B31.3 piping skills by pipingtoolset.com: pressure design, stress screening, CAESAR II / AutoPIPE load cases, PDF isometric to CAESAR II PCF, pipe support checks (AISC 360-22, ACI 318-19, ASCE 7-22) with optimization, equipment nozzle loads (API 610 / 617 / 660 / 661 / 560 / 650, NEMA SM-23, PVP2011-57100) and bolted flanges (pressure-equivalent screen, then BPVC VIII-2 Part 4.16). Claude interviews, a script computes; no ASME or API table values are embedded.",
-      "version": "0.5.1"
+      "description": "Seven ASME B31.1 / B31.3 piping skills by pipingtoolset.com: pressure design, stress screening, CAESAR II / AutoPIPE load cases, PDF isometric to CAESAR II PCF, pipe support checks (AISC 360-22, ACI 318-19, ASCE 7-22) with optimization, equipment nozzle loads (API 610 / 617 / 660 / 661 / 560 / 650, NEMA SM-23, PVP2011-57100) and bolted flanges (pressure-equivalent screen, then BPVC VIII-2 Part 4.16). The assistant interviews, a script computes; no ASME or API table values are embedded.",
+      "version": "0.6.0"
     }
   ]
 }

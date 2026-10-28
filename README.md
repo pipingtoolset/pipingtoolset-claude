@@ -1,12 +1,21 @@
-# PipingToolset for Claude
+# PipingToolset for Claude, ChatGPT and Codex
 
-**B31 calcs you can reproduce and defend in review, with Claude.**
-Claude does the interview. A script does the math. You read the table.
+**B31 calcs you can reproduce and defend in review, with the assistant you already use.**
+The assistant does the interview. A script does the math. You read the table.
 
-Seven piping engineering skills for Claude Code and Cowork, and for any assistant that reads
-the Agent Skills format (OpenAI Codex and ChatGPT, Cursor, GitHub Copilot and others), from the
-people who build the free calculators at [pipingtoolset.com](https://pipingtoolset.com).
-Written and maintained by a practicing piping engineer at Flexible Piping Solutions LLC.
+Seven piping engineering skills, one plugin, installable in Claude Code and Claude Cowork, in
+ChatGPT and OpenAI Codex, and in any assistant that reads the Agent Skills format (Cursor, GitHub
+Copilot, Gemini CLI and others), from the people who build the free calculators at
+[pipingtoolset.com](https://pipingtoolset.com). Written and maintained by a practicing piping
+engineer at Flexible Piping Solutions LLC. The same folder carries both a Claude manifest and an
+Agent Plugins 1.0 manifest, so the install you pick changes nothing about what the skills do.
+
+| | Claude | ChatGPT / Codex |
+|---|---|---|
+| Landing page | [pipingtoolset.com/claude/](https://pipingtoolset.com/claude/) | [pipingtoolset.com/openai/](https://pipingtoolset.com/openai/) |
+| Install file | `piping-toolset.plugin` (drag into Cowork) | `codex plugin marketplace add pipingtoolset/pipingtoolset-claude` |
+| Invoke | `/piping-toolset:pressure-design` or name it in Cowork | `$pressure-design` in Codex, name it in ChatGPT |
+| Manifest read | `.claude-plugin/plugin.json` | `plugin.json` (Agent Plugins 1.0, `extensions.com.openai`) |
 
 | Skill | What it does |
 |---|---|
@@ -20,18 +29,19 @@ Written and maintained by a practicing piping engineer at Flexible Piping Soluti
 
 ## How it works
 
-1. **Claude never does the arithmetic.** Each skill ships standard-library Python scripts. Every
-   number a skill states comes from a script run on inputs you supplied. The scripts reproduce the
-   pipingtoolset.com calculation engine's locked test cases (`tests/fixtures/calc-core`; a red
+1. **The assistant never does the arithmetic.** Each skill ships standard-library Python scripts.
+   Every number a skill states comes from a script run on inputs you supplied. The scripts reproduce
+   the pipingtoolset.com calculation engine's locked test cases (`tests/fixtures/calc-core`; a red
    parity test blocks a release).
-2. **Claude never recalls a code table value.** Allowable stresses, moduli, SIFs, spans, ASCE 7
-   coefficients: the skill names the table, row and edition and asks you to read the value from
-   your own licensed copy. Asking it for "just the number" is a pinned test, and the answer is no.
+2. **The assistant never recalls a code table value.** Allowable stresses, moduli, SIFs, spans,
+   ASCE 7 coefficients: the skill names the table, row and edition and asks you to read the value
+   from your own licensed copy. Asking it for "just the number" is a pinned test, and the answer is no.
 3. **The edition is an input, never a silent default.** Anything you leave unanswered is marked
    ASSUMED on the calc sheet.
 
 Nothing you enter is sent to PipingToolset or Flexible Piping Solutions. The scripts run in your
-own Claude environment; what you type goes to Claude under your own Anthropic account's terms.
+own assistant's environment; what you type goes to Anthropic or OpenAI under the terms of your own
+account with them.
 
 ## Install
 
@@ -57,18 +67,40 @@ shipped with until you update it, so **UNCONSERVATIVE-FIX** releases (see
 
 For a local checkout: `/plugin marketplace add <path-to-this-checkout>`.
 
+### In ChatGPT and Codex
+
+The plugin folder carries an [Agent Plugins 1.0](https://agent-plugins.org) manifest
+(`plugins/piping-toolset/plugin.json`) with the OpenAI listing block, and the repository carries
+`.agents/plugins/marketplace.json`, so OpenAI's tools read it directly.
+
+1. With the Codex CLI installed, register the marketplace:
+
+   ```
+   codex plugin marketplace add pipingtoolset/pipingtoolset-claude
+   ```
+
+2. Install **PipingToolset** from the plugin picker: `/plugins` in the Codex CLI or IDE
+   extension, or **Customize › Plugins** in the ChatGPT desktop app, where it shows with the
+   PipingToolset mark and "By Flexible Piping Solutions LLC".
+3. Invoke a skill as `$pressure-design` (or `/skills`) in Codex, or name it in plain words in
+   ChatGPT, as in Cowork. Codex runs the scripts with your machine's Python 3.9+; the ChatGPT desktop
+   app and Codex cloud run them in their own sandbox.
+
+The OpenAI plugin directory listing is submitted from the same archive (`piping-toolset.zip`, the
+`.plugin` under a `.zip` name, from the
+[latest release](https://github.com/pipingtoolset/pipingtoolset-claude/releases/latest)); until it
+is listed, the marketplace route above is the install.
+
 ### Other assistants
 
-The skills are plain [Agent Skills](https://agentskills.io) and the plugin carries an
-[Agent Plugins 1.0](https://agent-plugins.org) manifest, so the same repository installs into
-assistants other than Claude.
+The skills are plain [Agent Skills](https://agentskills.io), so the same repository installs into
+any host that reads that format.
 
 | Assistant | Command |
 |---|---|
-| OpenAI Codex (CLI, IDE, ChatGPT desktop) | `codex plugin marketplace add pipingtoolset/pipingtoolset-claude`, then install **PipingToolset** from the plugin picker |
 | Any Agent Skills host via the `skills` CLI (Cursor, Copilot, Codex, Gemini CLI and others) | `npx skills add pipingtoolset/pipingtoolset-claude` |
 | GitHub CLI | `gh skill install pipingtoolset/pipingtoolset-claude` |
-| ChatGPT, Manus, Perplexity (file upload) | Upload `piping-toolset-skills.zip` from the [latest release](https://github.com/pipingtoolset/pipingtoolset-claude/releases/latest); it holds only the `skills/` folder |
+| Manus, Perplexity and other skills-upload hosts | Upload `piping-toolset-skills.zip` from the [latest release](https://github.com/pipingtoolset/pipingtoolset-claude/releases/latest); it holds only the `skills/` folder, no manifest and no logo |
 
 Where the skills land after a CLI install:
 
@@ -144,9 +176,18 @@ python -m unittest discover -s tests -v
 CRLF, kept byte-exact by `.gitattributes`) for the worked examples. A change to case order,
 combination strings or QC text must be a deliberate golden update, reviewed by the engineer of record.
 `tools/sync_fixtures.py --check` confirms the vendored calc-core fixture snapshot is current.
-`python tools/package_plugin.py` builds `piping-toolset.plugin` (Cowork and Agent Plugins hosts) and
-`piping-toolset-skills.zip` (skills-only upload) for a release; `tests/test_manifests.py` keeps the
-Claude and Agent Plugins manifests in step.
+`python tools/package_plugin.py --check` builds `piping-toolset.plugin` (Cowork and Agent Plugins
+hosts), `piping-toolset.zip` (the same bytes, for the OpenAI plugin portal) and
+`piping-toolset-skills.zip` (skills-only upload) for a release, and checks that every image the
+manifests reference travels inside the archive. `tests/test_manifests.py` keeps the Claude and
+Agent Plugins manifests in step and holds the OpenAI listing block to the portal's limits (30-character
+display name and subtitle, 4000-character description, square icons of at least 48 px). CI also runs
+the agentskills.io reference validator, `skills-ref validate`, on each skill folder; locally:
+
+```
+python -m pip install skills-ref==0.1.1
+python -m skills_ref.cli validate plugins/piping-toolset/skills/pressure-design
+```
 
 See [`ROADMAP.md`](ROADMAP.md) for the plan and [`CHANGELOG.md`](CHANGELOG.md) for releases.
 A release labelled **UNCONSERVATIVE-FIX** corrects a result that could have been less conservative
@@ -156,4 +197,5 @@ than the code requires; update when you see one.
 
 Copyright © 2026 Flexible Piping Solutions LLC. Licensed under the
 [Apache License, Version 2.0](LICENSE). "Piping Toolset" is a name of Flexible Piping Solutions LLC;
-see [NOTICE](NOTICE).
+see [NOTICE](NOTICE). Claude is a product of Anthropic, PBC; ChatGPT and Codex are products of
+OpenAI. This plugin is not affiliated with or endorsed by either.
