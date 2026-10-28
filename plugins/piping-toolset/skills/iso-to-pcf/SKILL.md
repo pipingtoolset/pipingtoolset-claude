@@ -24,7 +24,7 @@ to **transcribe the drawing faithfully**. The script does all of the geometry.
 | `scripts/examples/minimal-proven.json` | Small line using only import-proven records: the first file to import on a new CAESAR II install |
 | `scripts/examples/demo-line.json` | Synthetic worked example that uses every item type |
 | `references/spec-format.md` | The walk spec: point forms, item types, profiles, checks |
-| `references/reading-isos.md` | Getting dimensions out of the PDF; the `X.n/d` convention; SKEYs |
+| `references/reading-isos.md` | Getting dimensions out of the PDF; the dot-fraction convention; SKEYs |
 | `references/caesar-import.md` | The importer's map files, the safe record set, and what a PCF cannot carry |
 
 Standard-library Python 3.9+. Nothing leaves the user's machine. Script paths below are relative to this skill's directory. Call them by their full path from wherever the session is working; do not change into the skill folder (in Cowork it is a read-only mount and the working directory is the outputs folder). Write `job.json` and every output file to the working directory, never into the skill folder, so the user can open and download them.

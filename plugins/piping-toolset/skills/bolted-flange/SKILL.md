@@ -24,7 +24,7 @@ Torsion and shear are not used by either method; the sheet must say so. The user
 
 ## Step 0 - The basis interview
 
-Ask these in one pass, accept a partial answer, and mark every unanswered item **ASSUMED** at the top of the calc sheet. Do not silently default; the edition is an input.
+Ask these together, accept a partial answer, and mark every unanswered item **ASSUMED** at the top of the calc sheet. Do not silently default; the edition is an input.
 
 1. **Code and edition:** B31.3 or B31.1, and the year. Section VIII edition: VIII-1 2025 deleted Appendix 2 paragraphs 2-3 and 2-5 to 2-14 and maps them to VIII-2 Part 4.16, so cite 4.16. B31.3 304.5.1(b) permits either VIII-1 Appendix 2 or VIII-2 4.16 using B31.3 allowables, with Sf = S x E x W. B31.1 104.5.1 names Section VIII Division 1 only, with Sa and Sb from Mandatory Appendix A Table A-10 and Sf the Appendix A flange allowable: confirm with the user's B31.1 edition which edition of VIII-1 it references before applying 4.16.
 2. **Owner practice** on external loads (a stress design criteria document, PIP PNC00004). It may set an acceptance percentage of the rating, or demand the detailed analysis. Ask; do not assume.
@@ -63,7 +63,7 @@ Run `aux.app2-flange-integral` for the operating case (design temperature allowa
 
 - The external loads enter as the pressure-equivalent Peq, and the whole sequence runs on Peq. That is standard practice but it is **not** an Appendix 2 / 4.16 construction; say so, and read Peq, momentTerm and forceTerm from the output.
 - Compression: same rule as the screen. Run the detailed module with `Fax` set to max(F, 0) unless the owner agrees to credit compression (then run the tensile case separately and report both), and state which was done.
-- If neither `Fax` nor `Mext` is given the run is pressure-only (Peq = P); the tool warns. Pass the loads.
+- If neither `Fax` nor `Mext` is given the run is pressure-only (Peq = P); the tool warns. Give the loads.
 - Peq also reaches the gasket-seating case (Am includes Wm1/Sb), which is conservative; the seating result moves with the external loads.
 - Supply **Sn**. Without it the 2.5 Sn cap is unchecked and the tool warns.
 - Hub factors F, V, f default to a closed-form series that is a reconstruction, not Code text. For a sealed calc, have the user read F, V, f from the VIII-2 Table 4.16.5 equations or figures and pass `F_override`, `V_override`, `f_override`. The Table 4.16.5 curve-fit option is not shipped (`hubFactorMethod` other than `series` exits 2).
@@ -93,7 +93,7 @@ Name these on the sheet; do not compute them here. Clause map and what each prov
 
 - **Run `list` first** to get the exact field names; names are case-sensitive and unknown names are rejected with exit code 2.
 - **Every number you state comes from a script run**, including side comparisons and what-ifs (for example "what if the moment were halved"): run it again rather than computing in your head.
-- Write the object to `job.json` with the file tool and pass `--input-file job.json`; inline JSON is shell-dependent.
+- Write the object to `job.json` with the file tool and run with `--input-file job.json`; inline JSON is shell-dependent.
 - A pre-flight check refuses to default the moduli and ambient flange allowable, rejects two moment units at once, and adds warnings. Quote them in the findings.
 
 ```

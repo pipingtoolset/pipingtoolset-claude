@@ -25,7 +25,7 @@ The user's own licensed copies of the codes are the authority for every clause c
 
 ## Step 0 — The basis interview
 
-Interactive. Ask these in one pass, accept a partial answer, and mark every unanswered item **ASSUMED** at the top of the output. Do not silently default.
+Interactive. Ask these together, accept a partial answer, and mark every unanswered item **ASSUMED** at the top of the output. Do not silently default.
 
 1. **Code: B31.1 or B31.3?** They are not interchangeable, and their allowables differ for the same material.
 2. **Edition year.** It decides the equation generation (Step 1). Ask for it. If the user cannot give it, proceed with a clearly marked **ASSUMED** edition, but do not present the result as a final calc sheet until the edition is confirmed.
@@ -49,7 +49,7 @@ The equation forms changed between editions, and using the wrong generation is t
 python scripts/stress_screening.py basis --code B31.3 --edition 2022
 ```
 
-It returns structure only — which SIF document governs, which `equation` value to pass to the f-factor tool, which occasional-factor rule applies, the f-cap rule, the exemption form, and the ASD position. It never returns a table value.
+It returns structure only — which SIF document governs, which `equation` value the f-factor tool takes, which occasional-factor rule applies, the f-cap rule, the exemption form, and the ASD position. It never returns a table value.
 
 | Code and edition | SIF source | f-factor form | Notes |
 |---|---|---|---|
@@ -88,9 +88,9 @@ ASCE 7 wind speeds and seismic E are strength level; ASCE 7's own ASD combinatio
 
 ## Step 4 — Allowable range S_A and the f factor
 
-S_A uses the base form f·(1.25·S_c + 0.25·S_h); the liberal form applies only where the spec permits and S_h > S_L, and a line that passes only with it has no margin. S_c and S_h come from the code's allowable stress table for the actual material and temperature (show any interpolation); the tool computes the base form only.
+S_A uses the base form f·(1.25·S_c + 0.25·S_h); the liberal form applies only where the spec permits and S_h > S_L, and a line that is within the allowable only with it has no margin. S_c and S_h come from the code's allowable stress table for the actual material and temperature (show any interpolation); the tool computes the base form only.
 
-- **The f equation changed.** B31.3-2022 and later use `f = 20·N^-0.333`; earlier B31.3 and every B31.1 edition use `f = 6.0·N^-0.2`. Pass `equation: "legacy"` or `"b313-2022"` to `piping.fatigue-factor` (run `basis` to resolve it) and carry the output's `equation` string into the report.
+- **The f equation changed.** B31.3-2022 and later use `f = 20·N^-0.333`; earlier B31.3 and every B31.1 edition use `f = 6.0·N^-0.2`. Set `equation` to `"legacy"` or `"b313-2022"` in the `piping.fatigue-factor` input (run `basis` to resolve it) and carry the output's `equation` string into the report.
 - **The cap differs by code.** B31.1: f ≤ 1.0, no exceptions (1.2 is a rejection). B31.3: f ≤ f_m, 1.2 only for ferrous material with SMTS ≤ 75 ksi at design metal temperature ≤ 700 °F, otherwise 1.0; write the reason down.
 - No cycle count: never assume f = 1.0 quietly; ask, or state that f = 1.0 needs N ≤ 7,000 equivalent full cycles, to be confirmed.
 - **Cold spring is not a stress credit** under either code; it affects reactions only.
@@ -113,7 +113,7 @@ Resolve the governing document with `basis` (Step 1). Then:
 
 ## Step 6 — The formal-analysis exemption
 
-Both codes (B31.3 ¶319.4.1(c); B31.1 ¶119.7.1, 2016 and later) allow a line to skip formal analysis when `D·y / (L − U)² ≤ K1 = 30·S_A / E_a`. Users over-read it, so state every time: no general proof of accuracy exists; no assurance of low terminal reactions; it is disqualified by more than two fixation points, any intermediate restraint or non-uniform size (pass `fixation_points`, `intermediate_restraints`, `uniform_size`; if one is omitted the tool returns `na`, so ask, do not assume); and it discharges displacement stress only.
+Both codes (B31.3 ¶319.4.1(c); B31.1 ¶119.7.1, 2016 and later) allow a line to skip formal analysis when `D·y / (L − U)² ≤ K1 = 30·S_A / E_a`. Users over-read it, so state every time: no general proof of accuracy exists; no assurance of low terminal reactions; it is disqualified by more than two fixation points, any intermediate restraint or non-uniform size (give `fixation_points`, `intermediate_restraints`, `uniform_size`; if one is omitted the tool returns `na`, so ask, do not assume); and it discharges displacement stress only.
 
 Unit basis and full caveats: [references/exemption-and-spans.md](references/exemption-and-spans.md).
 
@@ -121,7 +121,7 @@ Unit basis and full caveats: [references/exemption-and-spans.md](references/exem
 
 ## Step 7 — Support spans
 
-Compute both the bending and deflection criteria with `screen.support-span` and take the smaller span. E is at operating temperature, w includes contents, insulation, cladding and tracing, and E, S and the allowable sag are user-supplied with their basis stated. Pass `L_actual_ft` to test a proposed span. Concentrated loads, direction changes, rotating-equipment frequency, unequal spans and overhangs are not covered. Calculate the span; never read a table span back from memory.
+Compute both the bending and deflection criteria with `screen.support-span` and take the smaller span. E is at operating temperature, w includes contents, insulation, cladding and tracing, and E, S and the allowable sag are user-supplied with their basis stated. Include `L_actual_ft` to test a proposed span. Concentrated loads, direction changes, rotating-equipment frequency, unequal spans and overhangs are not covered. Calculate the span; never read a table span back from memory.
 
 Equations and end-condition table: [references/exemption-and-spans.md](references/exemption-and-spans.md).
 

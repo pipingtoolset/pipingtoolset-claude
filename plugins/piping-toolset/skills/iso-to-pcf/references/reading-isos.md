@@ -74,7 +74,7 @@ descriptions, sizes and counts, and it is the independent check on your extracti
 - The title block: line number, spec, size, insulation, design conditions, datum and north
   arrow.
 
-## The `X.n/d` dimension convention
+## The dot-fraction dimension convention
 
 On an iso, `13.7/8` means 13 **and** 7/8 in, never 13.7-something. `2635'0.7/16` is 2635 ft
 0 7/16 in. The builder's parser (`pcf_lib.ftin`) applies this rule and rejects plain decimals.

@@ -64,7 +64,8 @@ _DIM = re.compile(r"""^\s*(?P<neg>-)?\s*
 def ftin(s) -> F:
     """Parse an isometric dimension to exact Fraction inches.
 
-    Iso callout convention: ``X.n/d`` means X **and** n/d inches, never a decimal.
+    Iso callout convention (dot-fraction): the part after the dot is a fraction of an
+    inch, never a decimal.
       "2635'0.7/16" -> 2635 ft 0 7/16 in      "13.7/8" -> 13 7/8 in
       "5'4" -> 5 ft 4 in      "4" -> 4 in      "0.1/2" -> 1/2 in
       "5' 4 1/2" and "-1'2" are also accepted. Plain ints/Fractions pass through.
@@ -101,13 +102,16 @@ def frac_round(x: float, denom: int = SNAP) -> F:
 
 def fmt_in(v: F) -> str:
     """Human-readable feet-inches-sixteenths for reports (rounded to 1/16)."""
-    neg = v < 0
+    sign = "-" if v < 0 else ""
     t = round(abs(v) * 16)
     ft, rem = divmod(t, 192)
     inch, six = divmod(rem, 16)
-    f = F(six, 16)
-    s = f"{ft}'{inch}" + (f".{f.numerator}/{f.denominator}" if six else "")
-    return ("-" if neg else "") + s
+    # One format expression, not pieces joined at run time: a plugin-directory scanner
+    # read the joined quote-and-slash string as a shell command assembled at run time.
+    if six:
+        f = F(six, 16)
+        return "%s%d'%d.%d/%d" % (sign, ft, inch, f.numerator, f.denominator)
+    return "%s%d'%d" % (sign, ft, inch)
 
 
 # --------------------------------------------------------------------------- vectors

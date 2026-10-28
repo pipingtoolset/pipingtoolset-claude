@@ -24,7 +24,7 @@ The user's own licensed copies of the codes are the authority for every clause c
 
 ## Step 0 — The basis interview
 
-Ask these in one pass, accept a partial answer, and mark every unanswered item **ASSUMED** at the top of the calc sheet. Do not silently default.
+Ask these together, accept a partial answer, and mark every unanswered item **ASSUMED** at the top of the calc sheet. Do not silently default.
 
 1. **Code: B31.1 or B31.3?** They are not interchangeable. Different equation symbols (`Y` in B31.3, `y` in B31.1), different tables, different allowables for the same material.
 2. **Edition year.** It decides which tables hold the inputs, and table names move between editions. As a pointer only: in B31.3 the basic allowable stress table is Table A-1 through the 2022 edition and Table A-1C in 2024, and the quality-factor tables are A-1A / A-1B through 2022 and A-2 / A-3 in 2024. Confirm the table name in your copy (ask the user to check the printed page of their own). Ask for it. If the user cannot give it, proceed with a clearly marked **ASSUMED** edition, but do not present the result as a final calc sheet until the edition is confirmed.

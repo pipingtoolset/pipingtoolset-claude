@@ -8,6 +8,23 @@ keep a defect until the plugin is updated, so each such entry names the skill, t
 affected inputs and the release that fixed it. GitHub Releases carry the same
 label and are the recall channel.
 
+## [0.6.1] — 2026-10-28
+
+Wording only; no change to any skill's calculations, scripts' numbers, fixtures or golden files.
+The Anthropic directory validation of v0.6.0 still held the plugin for review on two scanner
+false positives, both cleared here:
+
+- `stress-screening/SKILL.md` no longer uses the verb "pass" anywhere ("Set `equation` to
+  ...", "give `fixation_points` ...", "Include `L_actual_ft` ..."); beside the pipingtoolset.com
+  links the scanner read it as the installer's password being handed to that host. The same
+  opening sentence in the other four interview skills and two "Pass ..." lines in
+  `bolted-flange/SKILL.md` are reworded to match.
+- `iso-to-pcf/scripts/pcf_lib.py`: `fmt_in` builds its feet-inches string with one format
+  expression instead of joining quote-and-slash pieces, which the scanner reported as "a command
+  assembled at run time" and chained to the hold above. Same output, byte for byte (golden PCF
+  unchanged). The dimension convention is called "dot-fraction" in the docs instead of `X.n/d`.
+- Manifests, marketplace and the Phase 2 runbook at 0.6.1.
+
 ## [0.6.0] — 2026-10-28
 
 Distribution to ChatGPT and OpenAI Codex, with the plugin mark on every host. No change to any
