@@ -11,7 +11,7 @@ result is the same result dict the TypeScript engine returns, so JSON equality
 with a pipingtoolset.com PiperSTR run is possible. Units: in, in^2, in^3, in^4, kip, ksi,
 kip*in.
 
-Licensing firewall (same as the TypeScript engine): the EQUATIONS live here; section
+Data boundary (same as the TypeScript engine): the EQUATIONS live here; section
 property VALUES arrive as inputs - from data/aisc_shapes.json, an index whose
 ``parts`` are family-group files under data/aisc_shapes/ (AISC's free Shapes Database
 v16.0 plus computed L/HSS/PIPE rows; each part stays under 256 KiB so plugin

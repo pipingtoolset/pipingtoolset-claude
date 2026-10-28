@@ -1,6 +1,6 @@
 ---
 name: nozzle-load
-description: "Evaluate piping forces and moments on an equipment nozzle against the allowables for that equipment, the way the vendor and a reviewer will. Use when the user asks for nozzle loads, allowable nozzle loads, a pump, compressor, turbine, exchanger, heater, tank or pressure vessel nozzle check, API 610 Table 5 or Annex F, API 617, 611 or 612, NEMA SM-23, API 660, API 661 or API 560, API 650 Annex P, PIP RECE002 design-stage factors, or what to do for a vessel nozzle with no vendor allowable. Allowable values come from the user's licensed copy or datasheet; no tables are embedded."
+description: "Evaluate piping forces and moments on an equipment nozzle against the allowables for that equipment, the way the vendor and a reviewer will. Use when the user asks for nozzle loads, allowable nozzle loads, a pump, compressor, turbine, exchanger, heater, tank or pressure vessel nozzle check, API 610 Table 5 or Annex F, API 617, 611 or 612, NEMA SM-23, API 660, API 661 or API 560, API 650 Annex P, PIP RECE002 design-stage factors, or what to do for a vessel nozzle with no vendor allowable. Allowable values come from the user's licensed copy or datasheet or, with the optional connector, from a cited lookup; no tables are embedded."
 compatibility: Requires Python 3.9+ (standard library only)
 ---
 
@@ -57,9 +57,9 @@ Ask these together, accept a partial answer, and mark every unanswered item **AS
 
 **NEMA SM-23 coefficient: no default.** The `coefficient` input is required, because the equations that share the form differ. The user reads the coefficient `a` of `3·Fr + Mr ≤ a·De` from the equation of the governing standard in the edition of record (API 617 Part 2 Annex E, E.1b; API 611 Annex I, I.1b; API 612 Annex D, D.1b; or the owner's SM-23 copy) and enters it. The skill states no value for any of them; ask for the equation and the edition. `De` is NPS up to NPS 8 and `(NPS + 16)/3` above, in USC. The tool is USC only for this form; the SI forms carry different coefficients, so do not convert. The combined resultant at the exhaust connection (API 611 I.5, API 612 D.5) or the largest connection (API 617 E.5), the component limits that go with it, the vertical-down exhaust allowance, and the 1.85x and 3x multipliers some datasheets quote, are separate criteria this tool does not compute. List them as **vendor-sheet items the user confirms**.
 
-**Annex F method constants: no defaults.** The `annexF` input is required for `connections.api610-annexf`. The user reads each constant from its equation in the edition of record and enters it: `componentMultiple` (F.1.2 a), `resultantDenominator` (Eq. F.1 / F.2), `interactionLimit` (the sum limit of Eq. F.1 / F.2), `centreForceFactor` (Eq. F.3 / F.5), `centreMyFactor` (Eq. F.4), `sigmaPLimit` (Eq. F.6 or F.9), `kSigma` (Eq. F.7 or F.10) and `kTau` (Eq. F.8 or F.11), the last three in the `units` system given. Horizontal pumps need the first five; vertical in-line pumps need the last three. A missing or non-positive constant stops the run (exit 2) and names the key. Ask for the equation and the edition; never fill a constant from memory.
+**Annex F method constants: no defaults.** The `annexF` input is required for `connections.api610-annexf`. The user reads each constant from its equation in the edition of record and enters it: `componentMultiple`, `resultantDenominator`, `interactionLimit`, `centreForceFactor`, `centreMyFactor`, `sigmaPLimit`, `kSigma` and `kTau`, the last three in the `units` system given. The equation for each key is in [references/tool-reference.md](references/tool-reference.md#the-annexf-block). Horizontal pumps need the first five; vertical in-line pumps need the last three. A missing or non-positive constant stops the run (exit 2) and names the key. Ask for the equation and the edition; never fill a constant from memory.
 
-**Pump facts to state every time.** Table 5 at 1x is the piping allowable. The 2x Table 5 limit of Annex F is the casing design margin (6.5.6), so Annex F use needs the purchaser's approval and the vendor's direction. Table 5 applies to steel casings and nozzles within its size range; a non-steel casing or a nozzle above NPS 24 needs vendor allowables. Table 5 loads and Annex F loads each carry a shaft displacement limit, read by the user from F.1.1 and F.1.2. The pump resolution point is the intersection of the shaft centreline and the casing transverse centreline. Exception, API 610 6.5.3: for OH3 / OH6 vertical in-line pumps whose supports are not anchored to the foundation, 6.5.3 permits 2x Table 5 on the side nozzles; F.2 then governs loads beyond that. Confirm the support condition and the vendor datasheet.
+**Pump facts to state every time.** Table 5 at 1x is the piping allowable. The 2x Table 5 limit of Annex F is the casing design margin (6.5.6), so Annex F use needs the purchaser's approval and the vendor's direction. Table 5 applies to steel casings and nozzles within its size range; a non-steel casing or a nozzle above NPS 24 needs vendor allowables. Table 5 loads and Annex F loads each carry a shaft displacement limit, read by the user from F.1.1 and F.1.2. The pump resolution point is the intersection of the shaft centreline and the casing transverse centreline. The 6.5.3 exception in Step 6 applies; F.2 then governs loads beyond it.
 
 **Vessel default.** With no API or vendor allowable, the user reads one row of the paper's table (1A: Class 150, thickness 0.25 in and up; 1B: Class 150, 0.375 in and up; 2: Class 300, 0.375 in and up) and gives the vessel thickness and the two allowable stresses at design temperature. The tool applies the thickness extrapolation, the stress ratio and the optional owner factor and logs each. Method, limits and scaling rules: [references/pvp2011-method.md](references/pvp2011-method.md). The result is a derived allowable set with status `na`; it is then fed to the per-nozzle check.
 
@@ -109,12 +109,12 @@ class, resolution point, design conditions. ASSUMED items listed first.
 Axis map (global to nozzle, signs), load cases with source run and units, corroded or new,
 how friction and cold spring were treated.
 
-## 3. Allowable basis
+## 3. Code-table values (user-supplied or connector-supplied, cited)
 Table, edition, NPS and row read by the user (or the vendor letter), every factor applied
 (thickness, stress ratio, owner factor, interpolation) with the log from the run.
 
-User-supplied values table: one row per value the user read and entered, with the equation or
-table and the edition it came from. It includes the Annex F method constants (`annexF`: the
+Values table: one row per value entered, with the equation or table and edition it came from
+and a source column (user | connector). It includes the Annex F method constants (`annexF`: the
 multiplier, the interaction denominator and limit, the pump-centre factors, the principal-stress
 limit and the two stress coefficients) and the SM-23-form `coefficient`, each with its equation
 number, alongside the Table 5 ranges, header limits and figure ordinates.
@@ -144,7 +144,23 @@ Run the checklist in [references/rejection-checklist.md](references/rejection-ch
 
 > I need the Table 5 range for your suction nozzle size and casing material. Read all six components for that row from your copy of API 610 and tell me the edition and whether it is Table 5a or 5b. If the vendor datasheet gives different values, use those and attach the datasheet.
 
-Do not ask the user to upload a standard's PDF; if the user offers an excerpt, use it only to read the specific value they need. Equations, clause numbers, symbol definitions and the reference stresses of the PVP2011 paper (18,800 and 17,100 psi) are usable as named, cited constants. The Annex F method constants and the SM-23-form coefficient are read by the user from the edition of record and entered as inputs (`annexF`, `coefficient`); the skill states none of them.
+Do not ask the user to upload a standard's PDF; if the user offers an excerpt, use it only to read the specific value they need. Equations, clause numbers, symbol definitions and the reference stresses of the PVP2011 paper (18,800 and 17,100 psi) are usable as named, cited constants. The Annex F method constants and the SM-23-form coefficient are read by the user from the edition of record and entered as inputs (`annexF`, `coefficient`); the skill states none of them. A value returned by the connector carries its citation and is recorded as connector-supplied; it is still verified against your copy before issue.
+
+---
+
+## With the Engineering Data connector
+
+The Engineering Data connector is optional and separate from this plugin; this skill works as written without it. If its tools are present, call `verify_connector` once per session. Currently every equipment table, coefficient and figure reading below is pointer-only: `get_pointer` returns where to read it (standard, edition, table, row key, columns) and never a value, so the user still reads the row from their copy or the vendor datasheet, and the pointer's citation goes beside the value they give. Only `S_vessel` and `S_nozzle` can come back as values, passed in a `code_values` block with `"source": "connector"` ([field rules](references/tool-reference.md#connector-supplied-values-code_values)). On a pointer, an account or daily-limit message, any other error, or absent tools, use the interview and step 4 above, unchanged, and quote nothing new. A call sends only the dataset, the row key and the temperature. `get_pointer` takes `standard` and `quantity`; the table's id is the `id` its result returns.
+
+| Slot | Tool and id returned | Key fields | What comes back |
+|---|---|---|---|
+| `allowable`, `suctionAllowable`, `dischargeAllowable`, `limits` | `get_pointer`: `api610-nozzle-loads`, `api660-nozzle-loads`, `api661-nozzle-loads`, `api560-terminal-loads` | 610: `table` (5a or 5b), `nozzle`, `nps`. 660: `sizeNps`, `flangeClass`. 661: `sizeNps`. 560: `table`, `sizeNps`, plus `component`, `orientation` | the location only |
+| `row`, `lowerRow`, `upperRow` | `get_pointer` (standard `PVP2011-57100`): `pvp2011-57100-table-1a`, `pvp2011-57100-table-1b`, `pvp2011-57100-table-2` | `NPS` | the location only |
+| `coefficient` | `get_pointer`: `api617-annex-e-combined-load`, `api611-annex-i-combined-load`, `api612-annex-d-combined-load`, `nema-sm23-combined-load` | `connection`, `units` | the location only |
+| `YF`, `YL`, `YC` | `get_pointer`: `api650-annex-p` | `a`, `R`, `t`, `L` | the location only |
+| `S_vessel`, `S_nozzle` | `lookup_value`: `b313-allowable-stresses-2024` or `b311-allowable-stresses-2024` | `spec`, `grade`, `T`, plus the discriminators the reply names | `S` in ksi, interpolated |
+
+The `annexF` constants have no pointer: read them as before. This skill's basis for `S_vessel` and `S_nozzle` is Section II Part D (Step 0, item 7); use a B31 table only when the user confirms it is their basis.
 
 ---
 

@@ -86,7 +86,9 @@ capacity, ratio or alternative itself.** Every number in a response comes from a
 - **Every number comes from a script run**, including "what if" comparisons. Change the
   spec and re-run.
 - **Never state a code table value from memory.** Anchor product data (bond stress, kc,
-  edge limits) comes from the user's ESR. Soil values come from the geotech report.
+  edge limits) comes from the user's ESR. Soil values come from the geotech report. A value
+  returned by the connector carries its citation and is recorded as connector-supplied; it is
+  still verified against your copy before issue.
 - **A failing result is never softened.** Report it with its clause, the combination that
   governs and the engine's remedy direction.
 - **Pipe moments.** The parametric assemblies carry pipe forces, not moments. If the
@@ -100,6 +102,19 @@ capacity, ratio or alternative itself.** Every number in a response comes from a
 - **Preset values are never silent.** Anchor and concrete values taken from a CSA preset
   are listed in the report's assumptions as not user-supplied. Replace the bond stress with
   the anchor ESR value before issue.
+
+## With the Engineering Data connector
+
+The Engineering Data connector is optional and separate from this plugin; this skill works as written without it. If its tools are present, call `verify_connector` once per session. `get_aisc_shape` returns shape properties. The other slots below are currently pointer-only: `get_pointer` says where to read the value (standard, edition, table, row key, columns) and never returns one, so the user still reads it from the AISC Specification tables, the ASCE Hazard Tool report or the anchor's ESR. Record the value the user reads in the spec's `code_values` block with `"source": "user"` and the pointer's citation ([field rules](references/spec-format.md#code_values)); a value the connector returns would carry `"source": "connector"`. A `code_values` error also exits 2, with a message and no verdict. On a pointer, an account or daily-limit message, any other error, or absent tools, use the basis interview, unchanged, and quote nothing new. In the summary, list every such value with its citation and source. A call sends only the standard, the row key and the designation. `get_pointer` takes `standard` (for example `AISC 360`) and `quantity`; the table's id is the `id` its result returns.
+
+| Slot | Tool and id returned | Key fields | What comes back |
+|---|---|---|---|
+| AISC label (`columnShape`, `arms[].shape`) | `get_aisc_shape` | `designation`, for example W8X31, HSS6X6X3/8, PIPE4STD | dimensions and section properties. The engine reads its own embedded index and never calls the connector, so this is a cross-check of the label |
+| `material.Fy`, `material.Fu` | `get_pointer`: `aisc360-22-fy-fu` | `specification`, `grade` | the location only |
+| `SDS` | `get_pointer`: `asce7-22-sds` | `latitude`, `longitude`, `siteClass`, `riskCategory` | the location only (the ASCE Hazard Tool) |
+| Anchor product values (`bondStrength`, `cac`, kc, spacing and edge limits) | `get_pointer`: `aci318-19-ch17-anchor-product` | `product`, `diameter`, `embedment`, `concrete` | the location only (the ESR) |
+
+Soil values and the slip-critical pretension have no dataset; they stay with the geotech report and the bolt specification.
 
 ## Related skills in this pack
 

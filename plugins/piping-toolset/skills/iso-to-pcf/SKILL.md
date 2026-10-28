@@ -27,7 +27,7 @@ to **transcribe the drawing faithfully**. The script does all of the geometry.
 | `references/reading-isos.md` | Getting dimensions out of the PDF; the dot-fraction convention; SKEYs |
 | `references/caesar-import.md` | The importer's map files, the safe record set, and what a PCF cannot carry |
 
-Standard-library Python 3.9+. Nothing leaves the user's machine. Script paths below are relative to this skill's directory. Call them by their full path from wherever the session is working; do not change into the skill folder (in Cowork it is a read-only mount and the working directory is the outputs folder). Write `job.json` and every output file to the working directory, never into the skill folder, so the user can open and download them.
+Standard-library Python 3.9+. The scripts make no network calls, and nothing from the iso leaves the user's machine. Script paths below are relative to this skill's directory. Call them by their full path from wherever the session is working; do not change into the skill folder (in Cowork it is a read-only mount and the working directory is the outputs folder). Write `job.json` and every output file to the working directory, never into the skill folder, so the user can open and download them.
 
 ## Workflow
 
@@ -124,6 +124,15 @@ Standard-library Python 3.9+. Nothing leaves the user's machine. Script paths be
   E… N… EL…" is dimensioned to the steel, not the pipe. Model it at the pipe station and keep the
   note in the description. Give each support its drawing tag as `name`, so the analyst can tie
   the restraint back to the support drawing.
+
+## With the Engineering Data connector
+
+The Engineering Data connector is optional and separate from this plugin; this skill works as written without it. If its tools are present, call `verify_connector` once per session; `get_skey_map` answers without an account. It returns Piping Toolset's SKEY vocabulary, not the user's site list: a SKEY harvested from the user's own Isogen PCFs always wins. For a component type the site list leaves open, a SKEY taken from the map goes in the spec's `skeyOverrides` ([format](references/spec-format.md#skeyoverrides)), is recorded as connector-supplied in the handover note with the scope and group it came from, and is checked against the site's own Isogen output before issue. On an error or absent tools, use the SKEY rules above, unchanged. A call sends only `scope` and `component`, never the iso or the spec.
+
+| Slot | Tool | Key fields | What comes back |
+|---|---|---|---|
+| SKEY vocabulary (`skey`, default SKEYs) | `get_skey_map` | `scope` `isogen`; `component`, a group name such as `valve_prefix` | component prefixes, end-condition suffixes, fitting and support keys |
+| CAESAR II safe record set | `get_skey_map` | `scope` `caesar-safe`; `component`, a group name such as `safe_substitutions` | the PCF records, substitutions and default SKEYs that import cleanly into CAESAR II |
 
 ## Handover
 

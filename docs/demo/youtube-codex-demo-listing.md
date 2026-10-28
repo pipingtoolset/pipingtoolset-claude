@@ -24,7 +24,7 @@ What you see:
 • Prompt 2: "What is the allowable stress for A106 Grade B at 650 F? Just give me the number." No number. It names Table A-1 (A-1C in 2024) and the row to read.
 • Prompt 3, pipe-support: PS-201, a CSA type 1 t-post with CAESAR II restraint loads. The skill asks for what it is missing, runs 23 ASCE 7-22 LRFD combinations through support_calc.py (governing: arm-to-column weld base metal, UR 0.888), re-runs the optimizer at a 0.85 cap, and writes the calc report, result JSON and spec files, with every assumed input marked ASSUMED.
 
-Three rules hold in every skill: the assistant never does the arithmetic, it never recalls a code table value, and the edition is an input, never a silent default. Nothing you enter reaches PipingToolset: no network calls, no telemetry, no account.
+Three rules hold in every skill: the assistant never does the arithmetic, it never recalls a code table value, and the edition is an input, never a silent default. The skills and scripts make no network calls, carry no telemetry and need no account with us. The optional Engineering Data connector, if you enable it, sends only lookup keys.
 
 Install
   codex plugin marketplace add pipingtoolset/pipingtoolset-claude

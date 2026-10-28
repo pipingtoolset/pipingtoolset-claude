@@ -111,6 +111,6 @@
 - CONFLICT: U2 carries snow, so no vector remains for Ev. 'Uniform Load in G's' is a GLOBAL flag, so a snow vector entered in lb/ft while it is on is read as g's. Dedicate U2 to Ev and carry snow as weight, or run snow and seismic as separate sets.
 - OK: Maximum Occasional envelope covers every occasional kind present.
 - ALLOWABLE: B31.3 302.3.6(a) - sustained + occasional <= 1.33*Sh (flat); Chapter IX high-pressure piping uses 1.20 (K302.3.6(a)).
-- ASD: no 0.6W / 0.7E reduction applied (strength level). This matches B31.1-2024 and the conservative reading of B31.3, and differs from the CAESAR II help topic on ASCE 7 load combinations. State the position and who approved it.
+- ASD: no 0.6W / 0.7E reduction applied (strength level). This matches B31.1-2024 and the conservative reading of B31.3, and differs from the CAESAR II help topic on ASCE 7 load combinations. State the position and who accepted it.
 
 Total cases: 87

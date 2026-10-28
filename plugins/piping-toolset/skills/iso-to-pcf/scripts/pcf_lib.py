@@ -35,6 +35,23 @@ SAFE_MAP = {"FLANGE-BLIND": "FLANGE", "CAP": "PIPE", "MISC-COMPONENT": "VALVE",
             "COUPLING": "PIPE", "REDUCER-ECCENTRIC": "REDUCER-CONCENTRIC"}
 SUPPORT_DIRECTIONS = ("UP", "DOWN", "NORTH", "SOUTH", "EAST", "WEST")
 
+# "skeyOverrides" in a spec replaces the builder's default SKEY per component. A key is an item
+# `type` as written in the spec ("flange", "blind", "valve", "tee", "elbow", ...; "reducer"
+# covers the concentric and the eccentric record) or the builder's own record name (the BOM
+# names, before safe-set mapping, in upper case). A SKEY is one token of 2 to 8 upper-case
+# letters and digits starting with a letter, as Isogen writes it; null omits the SKEY line.
+# Supports carry the direction logic of the import-proven SKEYs, so the SUPPORT override must
+# be one of those four and cannot be null.
+SKEY_COMPONENTS = ("ELBOW", "BEND", "TEE", "OLET", "FLANGE", "FLANGE-BLIND", "GASKET", "VALVE", "CAP",
+                   "MISC-COMPONENT", "COUPLING", "REDUCER-CONCENTRIC", "REDUCER-ECCENTRIC", "SUPPORT")
+SKEY_ITEM_TYPES = {"flange": ("FLANGE",), "blind": ("FLANGE-BLIND",), "gasket": ("GASKET",),
+                   "valve": ("VALVE",), "cap": ("CAP",), "misc": ("MISC-COMPONENT",),
+                   "coupling": ("COUPLING",), "reducer": ("REDUCER-CONCENTRIC", "REDUCER-ECCENTRIC"),
+                   "elbow": ("ELBOW",), "bend": ("BEND",), "tee": ("TEE",), "olet": ("OLET",),
+                   "support": ("SUPPORT",)}
+SUPPORT_SKEY_VOCAB = ("ANCH", "SKID", "GUID", "SPRG")
+_SKEY_TOKEN = re.compile(r"^[A-Z][A-Z0-9]{1,7}$")
+
 AXES = {
     # name: (description, mapper (E, N, EL) -> (X, Y, Z))
     "Z-up": ("X=E, Y=N, Z=EL (Z vertical)", lambda p: (p[0], p[1], p[2])),
@@ -50,6 +67,62 @@ DIRS: Dict[str, Point] = {
 
 class PCFError(ValueError):
     """A geometry or input defect that must be fixed at the source, not in the file."""
+
+
+class CodeValuesError(PCFError):
+    """A code_values entry handed to a script that has no code-table input."""
+
+
+def check_code_values(raw) -> None:
+    """PCF building has no code-table input: absent, null or empty is fine, any entry is refused
+    (a value is never dropped silently)."""
+    if raw is None or raw == {}:
+        return
+    if not isinstance(raw, dict):
+        raise CodeValuesError("code_values must be an object (build_pcf.py has no code-table inputs)")
+    raise CodeValuesError(f"code_values.{next(iter(raw))} is not an input of build_pcf.py "
+                          "(PCF building has no code-table inputs)")
+
+
+def check_skey_overrides(raw) -> Tuple[Dict[str, Optional[str]], Dict[str, Optional[str]], Dict[str, Tuple[str, ...]]]:
+    """Validate a spec's "skeyOverrides" map and resolve it to record names.
+
+    Returns (by_component, given, groups): by_component maps each builder record name to its
+    SKEY (or None to omit it); given echoes the map as the spec wrote the keys, with the SKEYs
+    upper-cased; groups maps each given key to the record names it covers. An unknown key, a
+    SKEY that is not one upper-case token (letters and digits, 2 to 8, starting with a letter),
+    a SUPPORT SKEY outside the import-proven four, or two keys that give one record different
+    SKEYs raise PCFError.
+    """
+    if not isinstance(raw, dict):
+        raise PCFError("skeyOverrides must be an object mapping an item type to a SKEY")
+    by_component: Dict[str, Optional[str]] = {}
+    given: Dict[str, Optional[str]] = {}
+    groups: Dict[str, Tuple[str, ...]] = {}
+    for key, skey in raw.items():
+        label = str(key).strip()
+        comps = SKEY_ITEM_TYPES.get(label.lower()) or ((label.upper(),) if label.upper() in SKEY_COMPONENTS else None)
+        if comps is None:
+            raise PCFError(f"skeyOverrides: unknown item type {key!r} (valid: {', '.join(SKEY_ITEM_TYPES)}, "
+                           f"or a record name: {', '.join(SKEY_COMPONENTS)})")
+        if skey is None:
+            if "SUPPORT" in comps:
+                raise PCFError("skeyOverrides: support needs a SKEY (a support record always carries one)")
+            token = None
+        else:
+            token = skey.strip().upper() if isinstance(skey, str) else None
+            if token is None or not _SKEY_TOKEN.match(token):
+                raise PCFError(f"skeyOverrides: {label} SKEY {skey!r} is not one token of 2 to 8 letters and digits "
+                               "starting with a letter (null omits the SKEY)")
+            if "SUPPORT" in comps and token not in SUPPORT_SKEY_VOCAB:
+                raise PCFError(f"skeyOverrides: support SKEY {token} is outside {', '.join(SUPPORT_SKEY_VOCAB)}")
+        for comp in comps:
+            if comp in by_component and by_component[comp] != token:
+                raise PCFError(f"skeyOverrides: {comp} is given two different SKEYs")
+            by_component[comp] = token
+        given[label] = token
+        groups[label] = comps
+    return by_component, given, groups
 
 
 # --------------------------------------------------------------------------- dimensions

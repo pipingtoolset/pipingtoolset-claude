@@ -4,8 +4,10 @@
 ``piping-toolset.plugin`` is the Cowork install file: a ZIP whose root holds
 ``.claude-plugin/plugin.json`` directly (no wrapping folder) plus everything else in
 ``plugins/piping-toolset``, including the Agent Plugins root ``plugin.json`` (with the
-``extensions.com.openai.interface`` listing block) and ``assets/`` (the logo both
-directories show), so the same archive serves any Agent Plugins 1.0 host.
+``extensions.com.openai.interface`` listing block), the two declarations of the optional
+Engineering Data connector (``.mcp.json`` for Claude hosts, ``mcp.json`` for Agent Plugins hosts)
+and ``assets/`` (the logo both directories show), so the same archive serves any Agent
+Plugins 1.0 host.
 
 ``piping-toolset.zip`` is that same archive, byte for byte, under the ``.zip`` extension the
 OpenAI plugin submission portal (platform.openai.com/plugins, "Create plugin") and other
@@ -14,7 +16,8 @@ portal's submit-a-Claude-plugin route keys on.
 
 ``piping-toolset-skills.zip`` holds only ``skills/`` (``skills/<name>/...`` at the root),
 for hosts that take a bare Agent Skills upload: Manus, Perplexity and the like. It carries
-no manifest and no logo, so it is not the file to submit to a plugin directory.
+no manifest, no connector declaration and no logo, so it is not the file to submit to a plugin
+directory, and installing it adds no remote server.
 
 All three are built reproducibly: sorted entries, a fixed 1980-01-01 timestamp, fixed
 permissions, so a rebuild of the same tree is byte-identical.
@@ -38,6 +41,9 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 PLUGIN_DIR = REPO_ROOT / "plugins" / "piping-toolset"
 MANIFEST_REL = ".claude-plugin/plugin.json"
 AGENT_MANIFEST_REL = "plugin.json"
+CLAUDE_CONNECTOR_REL = ".mcp.json"
+AGENT_CONNECTOR_REL = "mcp.json"
+CONNECTOR_RELS = (CLAUDE_CONNECTOR_REL, AGENT_CONNECTOR_REL)
 SKILLS_REL = "skills"
 FIXED_DATE = (1980, 1, 1, 0, 0, 0)
 EXCLUDE_DIRS = {"__pycache__"}
@@ -123,6 +129,32 @@ def _image_refs(out_file: Path):
     return [(key, re.sub(r"^\./", "", rel)) for key, rel in refs]
 
 
+def _connector_problems(out_file: Path):
+    """Why the two connector declarations in a plugin archive are not usable, as strings."""
+    urls = []
+    problems = []
+    with zipfile.ZipFile(out_file) as zf:
+        for rel in CONNECTOR_RELS:
+            try:
+                data = json.loads(zf.read(rel).decode("utf-8"))
+            except (KeyError, ValueError) as exc:
+                problems.append("%s is missing or not JSON: %s" % (rel, exc))
+                continue
+            servers = data.get("mcpServers") if isinstance(data, dict) else None
+            if not isinstance(servers, dict) or len(servers) != 1:
+                problems.append("%s must declare exactly one server under mcpServers" % rel)
+                continue
+            (server,) = servers.values()
+            url = server.get("url") if isinstance(server, dict) else None
+            if not isinstance(url, str) or not url.startswith("https://"):
+                problems.append("%s: the server url must be an https:// URL" % rel)
+                continue
+            urls.append(url)
+    if len(urls) == len(CONNECTOR_RELS) and len(set(urls)) != 1:
+        problems.append("the two connector declarations name different URLs: %s" % sorted(set(urls)))
+    return problems
+
+
 def check(out_file: Path) -> bool:
     names = _names(out_file)
     if names is None:
@@ -134,10 +166,18 @@ def check(out_file: Path) -> bool:
     if AGENT_MANIFEST_REL not in names:
         print("check failed: Agent Plugins plugin.json not at archive root", file=sys.stderr)
         ok = False
+    for rel in CONNECTOR_RELS:
+        if rel not in names:
+            print("check failed: connector declaration %s not at archive root" % rel, file=sys.stderr)
+            ok = False
     skills = [n for n in names if re.fullmatch(r"skills/[^/]+/SKILL\.md", n)]
     if not skills:
         print("check failed: no skills/*/SKILL.md at archive root", file=sys.stderr)
         ok = False
+    if ok:
+        for problem in _connector_problems(out_file):
+            print("check failed: %s" % problem, file=sys.stderr)
+            ok = False
     if ok:
         # The logo the Cowork and OpenAI listings show must travel inside the archive: a
         # manifest that points at a file the upload does not carry fails the portal's checks.
@@ -146,8 +186,8 @@ def check(out_file: Path) -> bool:
                 print("check failed: manifest %s -> %s is not in the archive" % (key, rel), file=sys.stderr)
                 ok = False
     if ok:
-        print("check ok: %s, plugin.json, manifest images and %d SKILL.md file(s) at root"
-              % (MANIFEST_REL, len(skills)))
+        print("check ok: %s, plugin.json, %s, %s, manifest images and %d SKILL.md file(s) at root"
+              % (MANIFEST_REL, CLAUDE_CONNECTOR_REL, AGENT_CONNECTOR_REL, len(skills)))
     return ok
 
 
@@ -160,12 +200,17 @@ def check_skills(out_file: Path) -> bool:
     if outside:
         print("check failed: entries outside skills/: %s" % outside[:5], file=sys.stderr)
         ok = False
+    declared = [n for n in names if n.rsplit("/", 1)[-1] in CONNECTOR_RELS]
+    if declared:
+        print("check failed: connector declaration in the skills-only archive: %s" % declared, file=sys.stderr)
+        ok = False
     skills = [n for n in names if re.fullmatch(r"skills/[^/]+/SKILL\.md", n)]
     if not skills:
         print("check failed: no skills/*/SKILL.md in the skills archive", file=sys.stderr)
         ok = False
     if ok:
-        print("check ok: %d SKILL.md file(s), nothing outside skills/" % len(skills))
+        print("check ok: %d SKILL.md file(s), nothing outside skills/, no connector declaration"
+              % len(skills))
     return ok
 
 

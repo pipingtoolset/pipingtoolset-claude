@@ -1,6 +1,6 @@
 ---
 name: bolted-flange
-description: "Evaluate piping loads on a bolted flanged joint in a fixed order: a pressure-equivalent (Kellogg-type) leakage screen against the B16.5 flange rating first, then the detailed BPVC VIII-2 Part 4.16 flange analysis (the retired VIII-1 Appendix 2 method, permitted by B31.3 304.5.1(b)) with gasket seating, bolt area, hub, radial and tangential stress, and rigidity. Use when the user asks about flange leakage, whether a flange will leak under CAESAR II or AutoPIPE nozzle loads, loads on a flange at an API 610 nozzle (the flange only: the pump allowable itself belongs to the nozzle-load skill), for the equivalent pressure method (P + 16M/(pi G^3) + 4F/(pi G^2)), axial force and bending moment against a flange rating, gasket m and y, bolt load, flange stress, or UG-44(b), PCC-1 or NC-3658 flange moment limits. The user reads the rating, dimensions, gasket factors and allowables from licensed copies; no code table values are embedded."
+description: "Evaluate piping loads on a bolted flanged joint in a fixed order: a pressure-equivalent (Kellogg-type) leakage screen against the B16.5 flange rating first, then the detailed BPVC VIII-2 Part 4.16 flange analysis (the retired VIII-1 Appendix 2 method, permitted by B31.3 304.5.1(b)) with gasket seating, bolt area, hub, radial and tangential stress, and rigidity. Use when the user asks about flange leakage, whether a flange will leak under CAESAR II or AutoPIPE nozzle loads, loads on a flange at an API 610 nozzle (the flange only: the pump allowable itself belongs to the nozzle-load skill), for the equivalent pressure method (P + 16M/(pi G^3) + 4F/(pi G^2)), axial force and bending moment against a flange rating, gasket m and y, bolt load, flange stress, or UG-44(b), PCC-1 or NC-3658 flange moment limits. The user reads the rating, dimensions, gasket factors and allowables from licensed copies or, with the optional connector, from a cited lookup; no code table values are embedded."
 compatibility: Requires Python 3.9+ (standard library only)
 ---
 
@@ -8,7 +8,7 @@ compatibility: Requires Python 3.9+ (standard library only)
 
 A flange evaluation is rarely rejected for arithmetic. It is rejected because the screen was run against the wrong rating, the moment was in the wrong unit, the gasket factors have no table line behind them, or a conservative screen was reported as if it were a stress check. The equations are short. The method order and the traceability are what a reviewer reads.
 
-So this skill does two things. It runs the loads from the piping analysis through a fixed ladder - a mandatory pressure-equivalent screen, then the detailed Section VIII flange analysis - using a deterministic script (`scripts/bolted_flange.py`), and it keeps every code-table value with the user. A screen failure is a reason to look harder, not a verdict on the joint.
+So this skill does two things. It runs the loads from the piping analysis through a fixed ladder - a mandatory pressure-equivalent screen, then the detailed Section VIII flange analysis - using a deterministic script (`scripts/bolted_flange.py`), and it embeds no code-table value: the user reads each one, or takes it from the optional connector section below with its citation. A screen failure is a reason to look harder, not a verdict on the joint.
 
 ## Scope
 
@@ -74,16 +74,7 @@ Equations in engine order, symbols and the loose/integral differences: [referenc
 
 ## Step 4 - What is not computed, and where it lives
 
-Name these on the sheet; do not compute them here. Clause map and what each proves: [references/method-ladder.md](references/method-ladder.md).
-
-| Method | Where | Conditions and notes |
-|---|---|---|
-| UG-44(b) / VIII-2 4.16.12 interaction | Standard weld-neck B16.5 flanges. B31.3 Appendix F F312.1 calls it one acceptable method | Design pressure within the rating, assembly bolt load per PCC-1 Appendix O, bolting at least SA-193 B8 Cl. 2, and a moment factor from Table UG-44-1 / 4.16.12. The user reads the interaction equation from the printed page |
-| ASME III NC-3658.3 | B16.5 flanges with high-strength bolting (S of at least 20 ksi at 100 F), service-level pressure and moment limits | Not for B31 piping unless the owner invokes it |
-| EN 1591-1 | European flange calculation | Different model; out of scope |
-| PCC-1 Appendix O | Assembly bolt stress | Needed to support the UG-44(b) route |
-| VIII-2 4.16.7.2 Step 9(b) and Moe | The shear check (0.8 Sno or Sng on lap-joint and weld shear) and the Code's own external-moment term Moe (4.16.16, Table 4.16.7) | Not computed; name both on the sheet. The tool's pressure-equivalent treatment replaces Moe |
-| B16.5 2.5.2 | Advisory: severe external loads and thermal gradients above 200 C for Class 150, above 400 C for other classes | Flag when the design temperature is in that range |
+Name these on the sheet; do not compute them here: the UG-44(b) / VIII-2 4.16.12 interaction, ASME III NC-3658.3, EN 1591-1, PCC-1 Appendix O, the VIII-2 4.16.7.2 Step 9(b) shear check with the Code's own external-moment term Moe, and the B16.5 2.5.2 advisory (flag it when the design temperature is in that range). Where each applies, its conditions, and the clause map: [references/method-ladder.md](references/method-ladder.md#what-is-not-computed).
 
 ---
 
@@ -126,9 +117,9 @@ method order, ASSUMED items first.
 Loads with units and sign convention; torsion and shear listed as not used; design P and T;
 flange type, class, size; geometry; bolting. Every assumed value flagged.
 
-## 3. Code-table values (user-supplied)
+## 3. Code-table values (user-supplied or connector-supplied, cited)
 Rating, A B C t X Y, gasket ID/OD, m, y, Sa Sb Sf SfAmbient Sn, moduli: each with value,
-table and line, edition, temperature, material, notes applied.
+table and line, edition, temperature, material, notes applied, source (user | connector).
 
 ## 4. Step 2 - Pressure-equivalent screen
 Command, Pe, rated pressure, utilization, status, warnings. State: leakage screen, not a stress check.
@@ -159,9 +150,26 @@ Run the checklist in [references/rejection-checklist.md](references/rejection-ch
 
 > I need the rating at your design temperature. That is the B16.5 pressure-temperature table for your material group (U.S. customary version), Class [x]. Read the value at the tabulated temperatures either side of yours and any notes; the standard permits linear interpolation between temperatures, not between classes. Which edition are you using?
 
-Do not ask the user to upload a standard's PDF; if the user offers an excerpt, use it only to read the specific value needed.
+Do not ask the user to upload a standard's PDF; if the user offers an excerpt, use it only to read the specific value needed. A value returned by the connector carries its citation and is recorded as connector-supplied; it is still verified against your copy before issue.
 
 Equations, clause numbers, symbol definitions and numeric constants in the running text of an equation are usable, as named and cited constants in the script. The Table 4.16.5 curve-fit coefficients are tabulated code data and are not shipped; the user reads F, V and f from the VIII-2 equations or figures and passes the overrides. Where a clause's equation could not be verified here, say so and ask the user to confirm it on the printed page.
+
+---
+
+## With the Engineering Data connector
+
+The Engineering Data connector is optional and separate from this plugin; this skill works as written without it. If its tools are present, call `verify_connector` once per session, then make one `lookup_value` call per value the job needs. Pass returned values to the script in a `code_values` block with `"source": "connector"` and the lookup's own `unit`, which the script converts ksi to psi ([field rules](references/tool-reference.md#connector-supplied-values-code_values); column-to-input map in [references/inputs-from-tables.md](references/inputs-from-tables.md#connector-datasets)), and put the citation, `rows_used` and `verify_at` line on the sheet. Use a value only when its citation names the edition and table of record. On a `mode` of `pointer`, an account or daily-limit message, any other error, or absent tools, use the interview and the lookup wording in that reference, unchanged, and quote nothing new. A call sends only the dataset, the row key and the temperature.
+
+| Slot | Tool and dataset_id | Key fields | What comes back |
+|---|---|---|---|
+| `ratedPressure` | `lookup_value`: `b165-2017-ratings` or `b165-2025-ratings` | `group`, `class`, `T` (design °F) | `rating`, interpolated in `T` only |
+| `A`, `C`, `t`, `X`, `Y`, `nBolts`, `bolt_D` | `lookup_value`: `b165-2017-dimensions` | `flangeClass`, `nps` | `odA`, `boltCircleC`, `minThk`, `hubBaseX`, `lengthThruHubY`, `nBolts`, `boltDia` |
+| `gasket_ID`, `gasket_OD` | `lookup_value`: `b1620-2017-spiral-wound` | `flangeClass`, `nps` | `gasketID`, `gasketOD` |
+| `m`, `y` | `lookup_value`: `gasket-factors-4161` | `family`, `material` | `m`, `y`, `facingSketch` |
+| `Sa` at ambient, `Sb` at design | `lookup_value`: `b313-bolting-stresses-2024` or `b311-bolting-stresses-2024` | `spec`, `grade`, `T`, plus `size`, `lineNo`, `notes`, `sizeOrDia` as asked | `S` in ksi |
+| `Sf`, `SfAmbient`, `Sn`, `SnAmbient` | `lookup_value`: `b313-allowable-stresses-2024` or `b311-allowable-stresses-2024`; B31.3 also `b313-ej-factors` or `b313-ec-factors`, and `b313-w-factors` | `spec`, `grade`, `T`, plus the discriminators the reply names | `S` in ksi. Under B31.3 304.5.1(b) `Sf` is S x E x W, a product formed by a script run |
+
+Take the rating from the dataset edition that matches the user's B16.5 edition. `B`, `Edesign`, `Eambient`, `F_override`, `V_override` and `f_override` have no dataset. Where the user's basis for `Sa` and `Sb` is Section II Part D, read them as before.
 
 ---
 
@@ -175,4 +183,4 @@ Equations, clause numbers, symbol definitions and numeric constants in the runni
 
 The free [bolted flange equivalent pressure calculator](https://pipingtoolset.com/calculators/bolted-flange-equivalent-pressure/?utm_source=claude-plugin&utm_medium=skill) runs the Step 2 screen, and the other [free calculators](https://pipingtoolset.com/calculators/?utm_source=claude-plugin&utm_medium=skill) cover related checks; mention them only when the user needs a second implementation to cross-check against.
 
-*Results are engineering aids. The engineer of record verifies every calculation against the project's code edition, owner practices, the licensed tables and the analysis software before issue.*
+*Results are engineering aids. The engineer of record verifies every calculation against the project's code edition, owner practices, the tables of record and the analysis software before issue.*

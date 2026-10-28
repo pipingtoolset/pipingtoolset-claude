@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!--
+  DRAFT for pipingtoolset.com/openai/  (revised 2026-10-28, plugin 0.7.0 with the optional
+  Engineering Data connector). Chrome copied from the generated trust pages so this file previews
+  exactly as the site would render it. Production lives in pipecalcpro as
+  scripts/seo/openai-content.mjs, built by scripts/seo/build-pages.mjs. See docs/site/README.md in this repo.
+-->
+<title>PipingToolset for ChatGPT and Codex — B31 Piping Skills for OpenAI's Assistants</title>
+<meta name="description" content="Seven free skills for ASME B31.3 / B31.1 piping work in ChatGPT and Codex. A script computes, no code tables are embedded, and an optional connector serves cited table values.">
+<link rel="canonical" href="https://pipingtoolset.com/openai/">
+<link rel="preload" href="/fonts/archivo-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="icon" href="/favicon.ico" sizes="48x48">
+<link rel="icon" type="image/svg+xml" href="/brand/favicon.svg">
+<link rel="icon" type="image/png" sizes="192x192" href="/brand/favicon-192.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/brand/apple-touch-icon.png">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://pipingtoolset.com/openai/">
+<meta property="og:title" content="PipingToolset for ChatGPT and Codex — B31 Piping Skills for OpenAI's Assistants">
+<meta property="og:description" content="Seven free skills for ASME B31.3 / B31.1 piping work in ChatGPT and Codex. A script computes, no code tables are embedded, and an optional connector serves cited table values.">
+<meta property="og:image" content="https://pipingtoolset.com/brand/og/openai.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="PipingToolset for ChatGPT and Codex — Piping Toolset">
+<meta property="og:site_name" content="Piping Toolset">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://pipingtoolset.com/brand/og/openai.png">
+<meta name="robots" content="index, follow">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","@id":"https://pipingtoolset.com/openai/#plugin","name":"PipingToolset for ChatGPT and Codex","alternateName":"piping-toolset","applicationCategory":"EngineeringApplication","applicationSubCategory":"ChatGPT desktop app / OpenAI Codex plugin","operatingSystem":"ChatGPT desktop app, Codex CLI, Codex IDE extension, Codex cloud (Python 3.9+ where the scripts run)","softwareVersion":"0.7.0","datePublished":"2026-10-26","license":"https://www.apache.org/licenses/LICENSE-2.0","isAccessibleForFree":true,"offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"downloadUrl":"https://github.com/pipingtoolset/pipingtoolset-claude/releases/latest","codeRepository":"https://github.com/pipingtoolset/pipingtoolset-claude","url":"https://pipingtoolset.com/openai/","description":"Seven ASME B31.3 / B31.1 piping engineering skills: pressure design, stress screening, CAESAR II / AutoPIPE load cases, PDF isometric to PCF, pipe support structural checks, equipment nozzle loads and bolted flanges. The plugin embeds no code table values and every number comes from a script run. An optional connector serves cited table values to signed-in paid accounts.","author":{"@id":"https://pipingtoolset.com/about/#founder"},"publisher":{"@type":"Organization","@id":"https://pipingtoolset.com/#organization","name":"Piping Toolset","legalName":"Flexible Piping Solutions LLC","url":"https://pipingtoolset.com/","email":"support@pipingtoolset.com","logo":"https://pipingtoolset.com/brand/favicon-512.png","sameAs":["https://www.youtube.com/channel/UCgSuXlXGl_iD4ZMsVkuvjew"],"founder":{"@type":"Person","@id":"https://pipingtoolset.com/about/#founder","name":"Matthew Norris, P.E.","jobTitle":"Founder — Professional Engineer (Mechanical / Piping)","sameAs":["https://www.linkedin.com/in/mattrnorris"]}}}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://pipingtoolset.com/"},{"@type":"ListItem","position":2,"name":"PipingToolset for ChatGPT and Codex"}]}</script>
+<style>
+@font-face{font-family:"Archivo";font-style:normal;font-weight:100 900;font-display:optional;src:url("/fonts/archivo-latin.woff2") format("woff2")}
+@font-face{font-family:"Archivo Fallback";src:local("Arial"),local("Helvetica"),local("Liberation Sans"),local("Arimo");size-adjust:105%;ascent-override:89%;descent-override:23%;line-gap-override:0%}
+:root{--bg:#f3f2f2;--panel:#fff;--ink:#201e1d;--muted:#605d5d;--accent:#ec3013;--accent-btn:#c9280e;--accent-deep:#ae1800;
+--pass:#217346;--fail:#ae1800;--border:rgba(32,30,29,.4);--border-soft:rgba(32,30,29,.22)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 "Archivo","Archivo Fallback",system-ui,sans-serif}
+a{color:var(--ink)}
+.topbar{background:var(--ink);color:#fff;padding:12px 22px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.topbar .brand{font-weight:800;font-size:19px;letter-spacing:-.02em;color:#fff;text-decoration:none}
+.topbar .brand span{color:var(--accent)}
+.topbar nav{display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin-left:auto}
+.topbar nav a{color:#fff;text-decoration:none;font-weight:700;font-size:14px;opacity:.85;display:inline-flex;align-items:center;min-height:44px}
+.topbar nav a:hover{opacity:1;text-decoration:underline}
+.topbar nav a.cta{background:var(--accent-btn);padding:10px 16px;opacity:1}
+main{max-width:880px;margin:0 auto;padding:30px 22px 60px}
+.crumbs{font-size:12.5px;color:var(--muted);margin-bottom:14px}
+.crumbs a{color:var(--muted);display:inline-block;padding:5px 4px;margin-left:-4px}
+h1{font-weight:800;font-size:31px;letter-spacing:-.02em;line-height:1.08;margin:.2em 0 .4em}
+h2{font-weight:800;font-size:20px;letter-spacing:-.01em;margin:1.6em 0 .5em;border-top:2px solid var(--ink);padding-top:.7em}
+h3{font-weight:800;font-size:16px;margin:1.2em 0 .4em}
+p.lede{font-size:17px;color:var(--muted)}
+p.stamp{font-size:12.5px;color:var(--muted);margin:2px 0 16px}
+.eq{font-family:ui-monospace,Consolas,monospace;font-size:14.5px;background:var(--panel);border:1px solid var(--border-soft);border-left:3px solid var(--accent);padding:9px 13px;margin:10px 0;overflow-x:auto}
+table{border-collapse:collapse;width:100%;margin:12px 0;background:var(--panel);font-size:14px}
+th,td{border:1px solid var(--border-soft);padding:7px 10px;text-align:left;vertical-align:top}
+th{background:#eae9e9;font-weight:700}
+code,pre{font-family:ui-monospace,Consolas,monospace;font-size:13.5px}
+pre{background:var(--panel);border:1px solid var(--border-soft);padding:12px 14px;overflow-x:auto;white-space:pre-wrap}
+.badge{display:inline-block;font-weight:800;font-size:12px;padding:2px 9px;color:#fff;letter-spacing:.03em}
+.badge.pass{background:var(--pass)}.badge.fail{background:var(--fail)}.badge.na{background:var(--muted)}
+.ctarow{display:flex;gap:12px;flex-wrap:wrap;margin:18px 0}
+.btn{display:inline-flex;align-items:center;min-height:44px;text-decoration:none;font-weight:800;font-size:14px;padding:11px 18px;border:2px solid var(--ink);background:none;color:var(--ink);font-family:inherit;cursor:pointer}
+.btn.primary{background:var(--accent-btn);border-color:var(--accent-btn);color:#fff}
+.btn.primary:hover{background:var(--accent-deep)}
+.btn:not(.primary):hover{background:#eae9e9}
+.scroll{overflow-x:auto}
+.cardgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px;margin:18px 0}
+.tile{background:var(--panel);border:1px solid var(--border);border-top:3px solid var(--accent);padding:14px 16px;text-decoration:none;display:block}
+.tile b{display:block;font-size:15px;margin-bottom:5px}
+.tile span{color:var(--muted);font-size:13px}
+.tile .fam{display:block;color:var(--accent-deep);font-weight:700;font-size:11.5px;letter-spacing:.05em;text-transform:uppercase;margin-bottom:6px}
+ul{padding-left:22px}
+li{margin:5px 0}
+.notice{background:#fff2ef;border:1px solid var(--accent);padding:10px 14px;font-size:13.5px;margin:16px 0}
+.workedbox{background:var(--panel);border:1px solid var(--border);border-left:4px solid var(--accent);padding:12px 16px;margin:16px 0}
+.workedbox h2{border-top:none;padding-top:0;margin:0 0 6px;font-size:17px}
+.workedbox table{font-size:13px;margin:8px 0}
+.workedbox .result{font-size:15px}
+.workedbox .result b{color:var(--accent-deep)}
+.videocard{display:block;position:relative;max-width:480px;margin:14px 0;text-decoration:none;border:1px solid var(--border);background:var(--panel)}
+.videocard .cap{display:block;padding:10px 12px;font-size:13.5px;color:var(--muted)}
+.videocard .cap b{color:var(--ink)}
+.flow{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:14px 0}
+.flow div{background:var(--panel);border:1px solid var(--border-soft);padding:10px 12px;font-size:13.5px}
+.flow div b{display:block;font-size:11.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--accent-deep);margin-bottom:4px}
+details{margin:8px 0;background:var(--panel);border:1px solid var(--border-soft);padding:8px 12px}
+summary{cursor:pointer;font-weight:700;font-size:13.5px;padding:5px 0}
+footer{border-top:2px solid var(--ink);margin-top:40px;padding:22px;font-size:13px;color:var(--muted)}
+footer .brand{max-width:880px;margin:0 auto 18px;padding-bottom:14px;display:flex;align-items:baseline;gap:6px 20px;flex-wrap:wrap;border-bottom:1px solid var(--border-soft)}
+footer .brand b{color:var(--ink);font-size:15px}
+footer .brand .op{flex:0 0 auto;margin-left:auto;white-space:nowrap}
+footer .cols{max-width:880px;margin:0 auto;display:flex;gap:32px;flex-wrap:wrap;justify-content:space-between}
+footer a{color:var(--muted);display:inline-block;padding:4px 0}
+.disc{max-width:880px;margin:14px auto 0;font-size:12px}
+@media (max-width:640px){footer .brand .op{margin-left:0;white-space:normal;flex:1 1 100%}}
+@media print{.topbar,footer,.ctarow{display:none}}
+</style>
+</head>
+<body>
+<header class="topbar"><a class="brand" href="/">Piping<span>&nbsp;</span>Toolset</a><nav>
+<a href="/calculators/">Calculators</a>
+<a href="/tools/">Tools</a>
+<a href="/trust/validation.html">Validation</a>
+<a href="/pricing/">Pricing</a>
+<a class="cta" href="/">Open the App</a></nav></header>
+<main><div class="crumbs"><a href="/">Home</a> › PipingToolset for ChatGPT and Codex</div>
+<h1>PipingToolset for ChatGPT and Codex — B31 Piping Skills for OpenAI's Assistants</h1>
+<p class="stamp">Version 0.7.0 · released 2026-10-28 · Apache-2.0 · free · Content last reviewed 2026-10-28</p>
+<p class="lede"><b>B31 calcs you can reproduce and defend in review, in ChatGPT and Codex.</b> The assistant does the interview. A script does the math. Every code-table value is cited, from your copy of the code or, if you choose, from an optional lookup. The same seven skills that ship <a href="/claude/">for Claude</a>, from the people who build the free calculators on this site, written and maintained by a practicing piping engineer.</p>
+
+<div class="ctarow">
+<a class="btn primary" href="#install">Install in ChatGPT or Codex</a>
+<a class="btn" href="https://github.com/pipingtoolset/pipingtoolset-claude/releases/latest/download/piping-toolset.zip">Download piping-toolset.zip</a>
+<a class="btn" href="#connector">About the connector</a>
+<a class="btn" href="https://github.com/pipingtoolset/pipingtoolset-claude">Source on GitHub</a>
+</div>
+
+<h2>One plugin, either assistant</h2>
+<p>The plugin folder carries two manifests side by side: the Claude one and an <a href="https://agent-plugins.org">Agent Plugins 1.0</a> one. Same skills, same scripts, same tests, same connector declaration. Pick the assistant your team already pays for.</p>
+<div class="scroll"><table>
+<tr><th></th><th>Claude</th><th>ChatGPT and Codex</th></tr>
+<tr><td>Where it runs</td><td>Claude Code, Claude Cowork</td><td>ChatGPT desktop app, Codex CLI, Codex IDE extension, Codex cloud</td></tr>
+<tr><td>Install</td><td>Drag <code>piping-toolset.plugin</code> into Cowork, or two commands in Claude Code</td><td><code>codex plugin marketplace add pipingtoolset/pipingtoolset-claude</code>, then install from the Plugins view</td></tr>
+<tr><td>Invoke</td><td><code>/piping-toolset:pressure-design</code>, or name the skill in Cowork</td><td><code>$pressure-design</code> in Codex, or name the skill in ChatGPT</td></tr>
+<tr><td>Who runs the scripts</td><td>Your machine (Claude Code) or the Cowork sandbox</td><td>Your machine (Codex CLI, IDE) or the desktop app / Codex cloud sandbox</td></tr>
+<tr><td>Your prompts go to</td><td>Anthropic, under your account</td><td>OpenAI, under your account</td></tr>
+<tr><td>What the scripts send to PipingToolset</td><td colspan="2"><b>Nothing.</b> No network calls, no telemetry, no account with us.</td></tr>
+<tr><td>Optional connector</td><td colspan="2">Same server, same tools, same tiers. Lookup keys only, and only if you enable it.</td></tr>
+<tr><td>Landing page</td><td><a href="/claude/">pipingtoolset.com/claude/</a></td><td>this page</td></tr>
+</table></div>
+<h2>Watch the demo</h2>
+<p>Four minutes, recorded in the ChatGPT desktop app on Windows, with captions and no narration: the marketplace install, a wall thickness check, the refusal to quote an allowable stress, and a pipe support checked and optimized from CAESAR II loads with the calc report opened on screen. The demo shows the plugin with the connector off.</p>
+<a class="videocard" href="https://www.youtube.com/watch?v=VHD-XIeQu2s"><span class="cap"><b>Piping Toolset for ChatGPT and Codex: B31.3 wall thickness, and a pipe support check</b> · 4:12</span></a>
+
+<div class="workedbox">
+<h2>What a run looks like</h2>
+<p style="margin:0 0 6px;font-size:13.5px;color:var(--muted)">You type (ChatGPT form; in Codex start with <code>$pressure-design</code>):</p>
+<pre>Use the pressure design skill. B31.3-2022, normal fluid service. NPS 6 seamless pipe, OD 6.625 in,
+design 750 psig at 600 F, corrosion allowance 0.0625 in, 12.5% mill tolerance. My allowable S at
+600 F is 17900 psi from my copy, E = 1.0, W = 1.0, Y = 0.4. What minimum thickness do I need and
+does 0.280 in nominal wall work?</pre>
+<p style="margin:6px 0;font-size:13.5px;color:var(--muted)">The skill writes the inputs to a job file, runs <code>pressure_design.py</code>, and reports from the script output:</p>
+<table><tr><th>Quantity</th><th>Value</th><th>Basis</th></tr>
+<tr><td>Pressure design thickness t</td><td>0.1365 in</td><td>B31.3-2022 ¶304.1.2 Eq. (3a): PD / 2(SEW + PY)</td></tr>
+<tr><td>Minimum required t<sub>m</sub></td><td>0.1990 in</td><td>t + c, c = 0.0625 in</td></tr>
+<tr><td>Nominal wall to order</td><td>0.2274 in</td><td>t<sub>m</sub> / (1 − 0.125), 12.5 % mill tolerance</td></tr>
+<tr><td>Allowable pressure at 0.280 in nominal</td><td>1,008 psig</td><td>Same equation solved for P on 0.280 × 0.875 − c</td></tr>
+</table>
+<p class="result">Verdict: <span class="badge pass">PASS</span> 0.280 in nominal works, with 0.053 in of wall and about 34 % of pressure margin. <b>S, E, W and Y are echoed as user-supplied.</b> The calc sheet names the edition, the equation, every input and anything you left to be ASSUMED, then lists what a reviewer would flag: the Table A-1 line behind S, the Table A-1A line behind E, the Table 304.1.1 row behind Y, the purchase spec behind the mill tolerance.</p>
+<p style="margin:10px 0 0;font-size:13.5px;color:var(--muted)">With the optional connector on and a plan that covers the table, S, E, W and Y can instead arrive from lookups. The calc sheet then shows each one with its citation and a <b>source</b> column that reads <code>connector</code> instead of <code>user</code>; the script's arithmetic is the same.</p>
+</div>
+
+<h2>What it does</h2>
+<p>PipingToolset is a plugin: seven skills, each a set of written instructions the assistant follows plus a standard-library Python script that performs the calculation. The assistant asks for the code basis and the inputs, writes a small specification file, runs the script by path, and reads the result back to you. The scripts reproduce the locked fixture cases of the calculation engine behind the <a href="/calculators/">free calculators</a> on this site.</p>
+<div class="scroll"><table>
+<tr><th>Skill</th><th>What it does</th><th>What you get</th></tr>
+<tr><td><b>Pressure design</b></td><td>Code-basis interview, then wall thickness, allowable pressure, branch reinforcement, bends, miters and leak-test pressure to B31.3 / B31.1</td><td>A calc sheet with the edition, the equation, every input and the ASSUMED flags</td></tr>
+<tr><td><b>Stress screening</b></td><td>Sustained, occasional and expansion hand checks; the f factor by edition; which document supplies the SIFs; the formal-analysis exemption; support spans and spring variability</td><td>A reviewer's hand check of what CAESAR II or AutoPIPE applied</td></tr>
+<tr><td><b>Load case builder</b></td><td>Complete B31.1 / B31.3 static load case sets for CAESAR II and AutoPIPE: HGR, HYD, OPE, SUS, EXP, OCC and envelopes, generated symbolically so references never go stale</td><td>The load case table, a QC gate and a report extraction matrix</td></tr>
+<tr><td><b>Pipe support</b></td><td>Support assemblies (arm, column, welds, bolts, base plate, anchors, pier) checked against CAESAR II restraint loads: ASCE 7-22 combinations, AISC 360-22, ACI 318-19 Chapter 17, AWS D1.1 detailing. The PiperSTR engine from this site</td><td>A PE-style review, ranked code-passing alternatives and an engineer-ready calc report (<code>calc.md</code>, <code>result.json</code>)</td></tr>
+<tr><td><b>Iso to PCF</b></td><td>PDF stress isometrics to a clean CAESAR II PCF: the assistant transcribes the drawing, a script builds the geometry in exact fractions, a validator catches orphan nodes, zero-length elements and off-line supports before import</td><td><code>line.pcf</code> and a report text file; live CAESAR II import confirmed</td></tr>
+<tr><td><b>Nozzle load</b></td><td>Piping forces and moments on equipment nozzles, checked the way the vendor will: API 610 Table 5 and Annex F for pumps, the API 617 / 611 / 612 and NEMA SM-23 combined form for compressors and turbines, API 660 / 661 / 560 per-component and header-sum checks, API 650 Annex P ordinates, and the PVP2011-57100 method for a vessel with no API allowable. The PiperNOZ engine from this site</td><td>Ratios and the governing component from a script run; every table row is cited, from your copy or from a connector lookup</td></tr>
+<tr><td><b>Bolted flange</b></td><td>Piping loads on a bolted flanged joint in a fixed order: the pressure-equivalent screen against the B16.5 rating, then the BPVC Section VIII Division 2 Part 4.16 analysis for integral and loose flanges with rigidity. The PiperFLG engine from this site</td><td>The screen verdict, then bolt area, hub, radial and tangential stresses and rigidity</td></tr>
+</table></div>
+
+<h2>How it works</h2>
+<div class="cardgrid">
+<div class="tile"><b>1 · You describe</b><span>The line, the code and edition, the service, the inputs you have read from your copy of the code.</span></div>
+<div class="tile"><b>2 · The assistant interviews</b><span>Anything missing is asked for. Anything you leave open is written down as ASSUMED.</span></div>
+<div class="tile"><b>3 · A script computes</b><span>Standard-library Python, called by path, no network. The assistant never does the arithmetic.</span></div>
+<div class="tile"><b>4 · You read the table</b><span>Edition, equation, inputs and where each code-table value came from, result, verdict, warnings. Output files land in your working folder.</span></div>
+</div>
+<p>Three rules hold in every skill:</p>
+<ul>
+<li><b>The assistant never does the arithmetic.</b> Every number a skill states comes from a script run on inputs you supplied or looked up. If you see a number and no script ran, treat the answer as untrusted and ask again.</li>
+<li><b>The assistant never quotes a code table value from memory.</b> Allowable stresses, moduli, SIFs, spans, ASCE 7 coefficients, anchor bond values, flange ratings, gasket factors: the skill names the table, row and edition, and the value comes from one of two places. Either you read it from your own copy, or, with the optional connector and a plan that covers the table, a lookup returns it with its citation. Asking for "just the number" with the connector off is a pinned test, and the answer is no.</li>
+<li><b>The edition is an input, never a silent default.</b> Where a rule changed between editions (for example the f-factor form before and after B31.3-2022, or Appendix D giving way to B31J from B31.3-2020), the skill asks which one governs your project.</li>
+</ul>
+
+<h2 id="connector">Optional: the Engineering Data connector</h2>
+<p>The plugin is free and every skill works without this. The connector is a separate, optional remote server (<code>pipingtoolset-data</code> at <code>https://pipingtoolset.com/mcp</code>) that ChatGPT or Codex can call for a table lookup. When it is on, the assistant asks for one value at a time and passes each answer to the script as a cited input marked <b>connector-supplied</b>. The calc sheet shows the source of every code-table value, <code>user</code> or <code>connector</code>. A script still does all the arithmetic, and you still verify each value against your own copy and edition before anything is issued.</p>
+<h3>What it serves, currently</h3>
+<div class="scroll"><table>
+<tr><th>Needs</th><th>Served</th></tr>
+<tr><td>No account</td><td>Worked examples of the data-free modules; ISOGEN SKEY and CAESAR II-safe PCF mappings; AISC shapes; pointers to where a value is printed.</td></tr>
+<tr><td>A signed-in paid pipingtoolset.com account (Pro, Pro Plus or Ultimate)</td><td>The ASME tables the account's plan covers, each cited to standard, edition, table and row.<br><b>Pro:</b> B31.3 Table A-1C and B31.1 Appendix A allowable stresses and bolting; the B31.3 E, W and Y and B31.1 E and y factor tables; B31J Table 1-1 component rows (row text only: the SIF number itself is still supplied by you or computed by a script); B31.1 Table 121.5-1 spans; BPE tables; B36.10M and B36.19M pipe dimensions.<br><b>Pro Plus</b> adds B16.5 ratings and dimensions, B16.20, UCS-66 and BPVC VIII-2 Table 4.16.1 gasket factors. A higher plan includes the tables of the lower ones.</td></tr>
+<tr><td>Pointer only, at every plan</td><td>API 610, 560, 660 and 661 tables; PVP2011-57100 tables; ASCE 7-22; AISC 360 and ACI tables; NEMA SM-23. The connector names the table, row key, column and edition and returns no value; you read it from your own copy.</td></tr>
+</table></div>
+<p>Which plan covers which table is the site's tiering today and can change, and a table's source can move between served and pointer-only. Each result states the tier it needed and whether it is a value or a pointer. The current list of datasets is on the <a href="/docs/connector/">connector page</a>; plans are on the <a href="/pricing/">pricing page</a>.</p>
+<h3>What a lookup returns</h3>
+<p>One envelope per value: the value and its unit, the column, a citation (standard, edition, table, row, column and any table notes), whether it was served or is a pointer, the tier it needed, the dataset id and version with a hash of the rows used, and, when it interpolated, the tabulated entries it interpolated between. A pointer returns the same fields with the value empty. A signed-in request your plan does not cover returns one line naming the plan it needs and the pricing page.</p>
+<div class="eq">lookup_value  dataset_id: b313-allowable-stresses-2024  key: { spec: A106, grade: B, T: 650 }  column: S</div>
+<p>The edition in the citation is the edition that was read: check it against your project's edition basis.</p>
+<h3>What is sent</h3>
+<p>Only lookup keys: the standard, the material or table row, a temperature, a size. Not your inputs, loads, drawings, prompts or results. Connecting contacts pipingtoolset.com; disconnect the server in your host and nothing is sent there. Sign-in goes through pipingtoolset.com, handled by your host, and asks you to confirm that your OpenAI account is set not to train on your conversations.</p>
+<h3>Add or remove it</h3>
+<ul>
+<li><b>Codex.</b> <code>codex mcp add pipingtoolset-data --url https://pipingtoolset.com/mcp</code>, then <code>codex mcp login pipingtoolset-data</code> when a lookup needs your plan. The plugin's <code>mcp.json</code> declares the same server for hosts that read it.</li>
+<li><b>ChatGPT.</b> Turn on developer mode in the connector settings, create a connector with the MCP server URL <code>https://pipingtoolset.com/mcp</code> and OAuth authentication, and sign in through pipingtoolset.com when asked.</li>
+</ul>
+<p>To turn it off, disconnect or disable <code>pipingtoolset-data</code> in the host's connector or MCP settings. The skills then ask you to read each table value from your own copy, exactly as before.</p>
+
+<h2>What it will not do</h2>
+<ul>
+<li><b>It will not hand you a tabulated code value from its own files.</b> The plugin contains no allowable stress, quality factor, Y coefficient, SIF, support span, catalog bond strength, B16.5 rating, gasket factor or API nozzle allowable. You read the value from your copy of the document, or the optional connector serves it with a citation. For the tables the connector currently serves as pointers (API nozzle allowables, PVP2011-57100, ASCE 7-22, AISC and ACI tables, NEMA SM-23) it returns where the value is printed and never the value, and for B31J it returns the component row text, not the SIF.</li>
+<li><b>It will not replace a flexibility analysis.</b> Stress screening is a hand check of what the program applied. CAESAR II and AutoPIPE remain the analysis tools; the load case builder and iso-to-PCF skills exist to feed them.</li>
+<li><b>It will not pick your code or edition for you.</b> Basis items you do not answer are marked ASSUMED on the calc sheet, never silently filled in.</li>
+<li><b>It will not compute in the model's head.</b> A skill that cannot run its script, for example in a chat surface with no sandbox, stops and says so instead of estimating.</li>
+<li><b>It will not seal anything.</b> Results are engineering aids. A looked-up value is still yours to verify against your own copy and edition. The engineer of record verifies the result before issue, and you remain responsible for it.</li>
+<li><b>It will not reproduce code text.</b> Paragraph numbers and equation references are cited; the wording of the standard is not included.</li>
+<li><b>It will not require an account.</b> The plugin is free and works as written without the connector. Currently the connector's code-table lookups need a signed-in Pro, Pro Plus or Ultimate account at the tier that covers the table; the skills never do, and a subscription changes nothing in the plugin.</li>
+</ul>
+
+<h2>Where your data goes</h2>
+<p>Short answer: <b>the skills and their scripts make no network calls, carry no telemetry and need no account with us.</b> The one optional connection is the Engineering Data connector above. With it off, the only contact with our infrastructure is the download, which GitHub serves. With it on, the assistant sends lookup keys and nothing else.</p>
+<div class="scroll"><table>
+<tr><th>What</th><th>Codex CLI and IDE extension</th><th>ChatGPT desktop app and Codex cloud</th></tr>
+<tr><td>Your prompt and the files you attach</td><td colspan="2">Go to OpenAI to be processed by the model, under the terms and data-handling settings of <em>your</em> OpenAI account or your employer's plan. We do not see them.</td></tr>
+<tr><td>The calculation scripts</td><td>Run on your own machine, with your own Python 3.9+</td><td>Run inside OpenAI's sandbox for that session</td></tr>
+<tr><td>Input files the skill writes (<code>job.json</code>, <code>spec.json</code>)</td><td>Your current working directory</td><td>The session's working folder</td></tr>
+<tr><td>Output files (calc reports, result JSON, PCF)</td><td>Your current working directory</td><td>The session's working folder</td></tr>
+<tr><td>Sent to pipingtoolset.com by the scripts</td><td colspan="2"><b>Nothing.</b> No network calls, no usage pings, no crash reports, no copies of inputs or results.</td></tr>
+<tr><td>Sent to pipingtoolset.com by the connector</td><td colspan="2">Only if you enable it, and only lookup keys: the standard, the material or table row, a temperature, a size. Not your inputs, loads, drawings or project data. Values it serves come back cited and are recorded as connector-supplied.</td></tr>
+<tr><td>Sign-in (paid tables only)</td><td colspan="2">Through pipingtoolset.com, handled by your host. Open tools need no account.</td></tr>
+<tr><td>Update checks</td><td colspan="2">None. You update by installing the next release; see the recall note below.</td></tr>
+</table></div>
+<div class="notice">Because your prompts are processed by OpenAI and not by us, the governing privacy terms are OpenAI's and your organization's, not this site's <a href="/legal/privacy.html">privacy policy</a>. If your project data is client-confidential, check your employer's AI-use policy and your OpenAI plan's data settings before pasting drawings or line lists into any assistant, this one included.</div>
+
+<h2 id="install">Install</h2>
+<h3>In the ChatGPT desktop app and Codex</h3>
+<ol>
+<li>With the Codex CLI installed, register the marketplace once:<pre>codex plugin marketplace add pipingtoolset/pipingtoolset-claude</pre></li>
+<li>Install <b>PipingToolset</b> from the plugin picker: <code>/plugins</code> in the Codex CLI or IDE extension, or <b>Customize › Plugins</b> in the ChatGPT desktop app. It shows with the PipingToolset mark and "By Flexible Piping Solutions LLC"; the seven skills are listed beneath it.</li>
+<li>Start a new conversation. Call a skill as <code>$pressure-design</code> (or pick it from <code>/skills</code>) in Codex, or name it in plain words in ChatGPT: "use the pipe support skill to check PS-201". Naming it matters, because other installed skills on the same topics would otherwise compete.</li>
+</ol>
+<p>To update, run <code>codex plugin marketplace upgrade pipingtoolset</code> and reinstall from the picker.</p>
+<h3>Skills only, for other assistants</h3>
+<p>The skills are plain <a href="https://agentskills.io">Agent Skills</a>, so the same repository installs into Cursor, GitHub Copilot, Gemini CLI and others with <code>npx skills add pipingtoolset/pipingtoolset-claude</code> or <code>gh skill install pipingtoolset/pipingtoolset-claude</code>. Those routes carry the skills and scripts only; add the connector by hand if you want it. For Claude Code and Claude Cowork, see <a href="/claude/#install">the Claude page</a>.</p>
+<p>PipingToolset is not in the ChatGPT plugin directory; the routes above are the installs.</p>
+<h3>The connector</h3>
+<p>The plugin's <code>mcp.json</code> declares the Engineering Data connector for hosts that read it; you choose whether to connect it. Setup lines for each host are in <a href="#connector">the connector section</a>.</p>
+<h3>Requirements</h3>
+<p>Python 3.9 or newer wherever the scripts run: your own machine for the Codex CLI and IDE extension; the ChatGPT desktop app and Codex cloud provide their own sandbox. There is nothing else to install. The connector needs no software on your side.</p>
+
+<h2>Try it in twenty seconds</h2>
+<p>Paste the worked example at the top of this page. Then ask for what the plugin will not give you on its own:</p>
+<pre>Use the pressure design skill. What's the allowable stress for A106 Grade B at 650 F under B31.3?
+Just give me the number.</pre>
+<p>Expected with the connector off, or with no paid plan signed in: no number. It names B31.3 Table A-1 (A-1C in the 2024 edition), the material row and the two temperature columns, and offers to interpolate once you have read both values. With the connector on and a plan that covers the table, the same prompt makes one lookup and shows the value with its citation, the two rows it interpolated between and a line saying where to verify it. Check that against your own copy. More prompts with pass criteria are in the repository's <a href="https://github.com/pipingtoolset/pipingtoolset-claude/blob/main/tests/e2e/PROMPTS.md">test prompt set</a>.</p>
+
+<h2>How it is verified</h2>
+<ul>
+<li><b>One calculation engine.</b> Every script that computes a code equation reproduces the locked fixture cases of this site's calculation engine, value for value. A red parity test blocks a release. The fixtures and the method are described on the <a href="/trust/validation.html">validation page</a> and listed on the <a href="/trust/coverage.html">coverage page</a>.</li>
+<li><b>Scripts stay offline.</b> A test fails the build if any script under the skills imports a network module. The connector is the only network path, and the scripts only receive its answers as a cited <code>code_values</code> input; one that disagrees with a value you typed stops the run.</li>
+<li><b>Cited, versioned values.</b> Every served value carries its standard, edition, table and row, the dataset version and a hash of the rows used, and the calc sheet shows whether you or the connector supplied it.</li>
+<li><b>Same refusals without the connector.</b> The refusal prompts give the same answer with the connector off, and the skills fall back to the interview on a pointer, an account or limit message, or any error.</li>
+<li><b>One archive.</b> The <code>.zip</code> for upload dialogs is byte for byte the <code>.plugin</code> Cowork installs, and the agentskills.io reference validator passes every skill folder in CI.</li>
+<li><b>Golden outputs.</b> The load case generator's tables and the PCF builder's output are locked byte for byte for the worked examples. A change to case order, combination strings or QC text is a deliberate, reviewed golden update.</li>
+<li><b>Content guard.</b> An automated test fails the build if any skill text or script embeds a tabulated code value or third-party proprietary material.</li>
+<li><b>Recall channel.</b> An installed copy keeps any defect it shipped with until you update it. A release labelled <b>UNCONSERVATIVE-FIX</b> in the <a href="https://github.com/pipingtoolset/pipingtoolset-claude/blob/main/CHANGELOG.md">changelog</a> and on GitHub Releases corrects a result that could have been less conservative than the code requires, and names the skill, the affected inputs and the fix. Update when you see one.</li>
+</ul>
+
+<h2>Questions</h2>
+<details><summary>Do I still need my own copy of the code?</summary><p>Yes. With the connector off, you read every table value from it. With the connector on, a served value arrives cited, but you still verify it against your copy and edition before issue, and the pointer-only tables always need your copy.</p></details>
+<details><summary>Which codes and editions?</summary><p>ASME B31.3 and B31.1 for pressure design, screening and load cases, with the edition as an explicit input wherever a rule differs between editions. Pipe support checks use ASCE 7-22, AISC 360-22, ACI 318-19 Chapter 17 and AWS D1.1. Nozzle loads follow API 610, 617 / 611 / 612, NEMA SM-23, API 660 / 661 / 560, API 650 Annex P and ASME PVP2011-57100. Flange checks follow ASME B16.5 and BPVC Section VIII Division 2 Part 4.16. The iso-to-PCF skill targets the CAESAR II PCF import.</p></details>
+<details><summary>Does the connector see my project?</summary><p>No. It receives lookup keys only: the standard, the material or table row, a temperature, a size. Your inputs, loads, drawings and results stay in your session and your working folder. Disconnect it and nothing is sent to pipingtoolset.com.</p></details>
+<details><summary>What does the connector cost?</summary><p>The open tools need no account. Currently the code-table lookups need a signed-in paid pipingtoolset.com account (Pro, Pro Plus or Ultimate) at the tier that covers the table; the tiers and the tables they cover are on the <a href="/pricing/">pricing page</a> and the <a href="/docs/connector/">connector page</a> and can change. A signed-in request your plan does not cover returns one line naming the plan it needs.</p></details>
+<details><summary>Does it work in ChatGPT on the web or on my phone?</summary><p>The tested routes are the ChatGPT desktop app and Codex. A surface that cannot run the bundled Python stops at the interview and says so.</p></details>
+<details><summary>Is it the same plugin as the Claude one?</summary><p>Yes, the same folder and the same release. It carries a Claude manifest and an Agent Plugins manifest side by side, and the skill text names no single assistant, so a calc sheet from ChatGPT and one from Claude cite the same paragraphs and show the same numbers for the same inputs.</p></details>
+<details><summary>How much does it cost?</summary><p>The plugin costs nothing. It is free and open source under the Apache License 2.0, and you pay only for your own OpenAI plan. The optional connector is described above.</p></details>
+<details><summary>How do I report a wrong result?</summary><p>Open an issue in the <a href="https://github.com/pipingtoolset/pipingtoolset-claude/issues">GitHub repository</a> with the prompt, the script command that ran and the line you dispute, or write to <a href="mailto:support@pipingtoolset.com">support@pipingtoolset.com</a>. A confirmed unconservative result ships as an UNCONSERVATIVE-FIX release.</p></details>
+
+<div class="ctarow">
+<a class="btn primary" href="#install">Install in ChatGPT or Codex</a>
+<a class="btn" href="/claude/">Use it in Claude instead</a>
+<a class="btn" href="/calculators/">Use the free calculators instead</a>
+</div>
+</main>
+<footer>
+<div class="brand"><b>Piping Toolset</b> <span>Fast, auditable piping calculation reports.</span> <span class="op">Operated by Flexible Piping Solutions LLC</span></div>
+<div class="cols">
+<div><b>Trust</b><br>
+<a href="/about/">About the engineer</a><br>
+<a href="/trust/validation.html">Validation methodology</a><br>
+<a href="/trust/coverage.html">Fixture coverage</a><br>
+<a href="/trust/changelog.html">Calculation changelog</a><br>
+<a href="/trust/sources.html">Source &amp; citation policy</a></div>
+<div><b>Browse</b><br>
+<a href="/calculators/">All calculators</a><br>
+<a href="/tools/">All tools</a><br>
+<a href="/guides/">All guides</a><br>
+<a href="/examples/">Worked examples</a><br>
+<a href="/faq/">FAQ index</a><br>
+<a href="/claude/">PipingToolset for Claude</a><br>
+<a href="/openai/">PipingToolset for ChatGPT and Codex</a><br>
+<a href="/pricing/">Pricing</a><br>
+<a href="/">Launch the app</a></div>
+<div><b>Legal</b><br>
+<a href="/legal/privacy.html">Privacy policy</a><br>
+<a href="/legal/terms.html">Terms of use</a></div>
+</div>
+<p class="disc">The plugin is an engineering aid. Results must be independently verified and reviewed by a qualified, licensed engineer before any design, fabrication or operation decision. "Piping Toolset" is a name of Flexible Piping Solutions LLC. ChatGPT and Codex are products of OpenAI; Claude is a product of Anthropic, PBC. This plugin is not affiliated with or endorsed by either.</p>
+</footer>
+</body>
+</html>

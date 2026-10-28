@@ -575,5 +575,229 @@ class SkillContent(unittest.TestCase):
             self.assertIn(module, self.text, module)
 
 
+# --------------------------------------------------------------------------- code_values
+
+SKILLS = os.path.join(ROOT, "plugins", "piping-toolset", "skills")
+HELPER_BEGIN = "# ===== BEGIN code_values helper"
+HELPER_END = "# ===== END code_values helper ====="
+# The five calculator scripts that carry the shared code_values helper block.
+HELPER_SCRIPTS = (
+    ("pressure-design", "pressure_design.py"),
+    ("stress-screening", "stress_screening.py"),
+    ("nozzle-load", "nozzle_load.py"),
+    ("bolted-flange", "bolted_flange.py"),
+    ("pipe-support", "support_calc.py"),
+)
+
+
+def cv(value, unit, source="connector", column="Placeholder column"):
+    """A code_values entry with a placeholder citation."""
+    citation = {"standard": "Placeholder standard", "edition": "0000", "table": "Placeholder table",
+                "row": "Placeholder row"}
+    if column:
+        citation["column"] = column
+    return {"value": value, "unit": unit, "citation": citation, "source": source}
+
+
+class CodeValues(unittest.TestCase):
+    """The optional top-level code_values input, the contract shared by the calculator scripts."""
+
+    MOD = "piping.b313-wall-thickness"
+    B313 = HandDerived.B313
+    ENVELOPE_KEYS = {"module", "status", "output", "warnings", "citation", "inputs", "user_supplied",
+                     "defaults_applied"}
+
+    def _cli(self, inputs: dict) -> subprocess.CompletedProcess:
+        return subprocess.run([sys.executable, CLI, self.MOD, "--input", json.dumps(inputs)],
+                              capture_output=True, text=True, encoding="utf-8")
+
+    def _split(self, module, base, names, source="connector"):
+        """(explicit inputs, the same inputs with `names` moved into code_values)."""
+        units = {f[0]: f[1] for f in pd.FIELDS[module]}
+        moved = {n: cv(base[n], None if units[n] == "-" else units[n], source) for n in names}
+        return dict(base), dict({k: v for k, v in base.items() if k not in names}, code_values=moved)
+
+    def test_every_module_filled_run_equals_the_explicit_run(self):
+        for module in pd.REGISTRY:
+            base = dict(parity.load(module)["cases"][0]["input"])
+            names = [n for n in pd.user_supplied_names(module) or ["c", "Th"]     # branch-reinforcement has none
+                     if isinstance(base.get(n), (int, float)) and not isinstance(base.get(n), bool)]
+            self.assertTrue(names, module)
+            explicit, filled = self._split(module, base, names)
+            want = pd.run_module(module, explicit)
+            got = pd.run_module(module, filled)
+            self.assertEqual(sorted(got.pop("code_value_provenance")), sorted(names), module)
+            self.assertEqual(got, want, module)
+
+    def test_each_user_supplied_input_can_be_filled_on_its_own(self):
+        for module in pd.REGISTRY:
+            base = dict(parity.load(module)["cases"][0]["input"])
+            want = pd.run_module(module, dict(base))
+            for name in pd.user_supplied_names(module):
+                if not isinstance(base.get(name), (int, float)) or isinstance(base.get(name), bool):
+                    continue
+                _, filled = self._split(module, base, [name], source="user")
+                got = pd.run_module(module, filled)
+                got.pop("code_value_provenance")
+                self.assertEqual(got, want, f"{module} {name}")
+
+    def test_provenance_is_echoed_with_unit_citation_and_source(self):
+        base = {k: v for k, v in self.B313.items() if k not in ("S", "Y")}
+        env = pd.run_module(self.MOD, dict(base, code_values={"S": cv(24800, "psi"), "Y": cv(0.4, None, "user")}))
+        self.assertEqual(list(env["code_value_provenance"]), ["S", "Y"])
+        self.assertEqual(env["code_value_provenance"]["S"],
+                         {"unit": "psi", "source": "connector", "citation": cv(0, "psi")["citation"]})
+        self.assertEqual(env["code_value_provenance"]["Y"]["source"], "user")
+        self.assertIsNone(env["code_value_provenance"]["Y"]["unit"])
+        self.assertEqual(env["user_supplied"], ["S", "E", "W", "Y"])
+        self.assertNotIn("code_values", env["inputs"])
+        self.assertEqual(env["inputs"]["S"], 24800)
+
+    def test_an_input_present_in_both_places_and_equal_is_recorded(self):
+        env = pd.run_module(self.MOD, dict(self.B313, code_values={"S": cv(24800, "psi")}))
+        self.assertEqual(sorted(env["code_value_provenance"]), ["S"])
+        want = pd.run_module(self.MOD, dict(self.B313))
+        env.pop("code_value_provenance")
+        self.assertEqual(env, want)
+
+    def test_ksi_is_converted_exactly_and_noted(self):
+        base = {k: v for k, v in self.B313.items() if k != "S"}
+        env = pd.run_module(self.MOD, dict(base, code_values={"S": cv(24.8, "ksi")}))
+        self.assertEqual(env["inputs"]["S"], 24800.0)
+        self.assertEqual(env["code_value_provenance"]["S"]["unit"], "ksi")
+        self.assertIn("code_values.S: 24.8 ksi applied as 24800 psi.", env["warnings"])
+        self.assertEqual(env["output"], pd.run_module(self.MOD, dict(self.B313))["output"])
+
+    def test_a_unit_that_cannot_be_used_is_rejected(self):
+        base = {k: v for k, v in self.B313.items() if k != "S"}
+        for unit in ("MPa", "bar", None, "in"):
+            with self.assertRaisesRegex(ValueError, "code_values.S unit .* cannot be used for an input in 'psi'"):
+                pd.run_module(self.MOD, dict(base, code_values={"S": cv(171, unit)}))
+        base = {k: v for k, v in self.B313.items() if k != "c"}
+        with self.assertRaisesRegex(ValueError, "code_values.c unit 'psi' cannot be used for an input in 'in'"):
+            pd.run_module(self.MOD, dict(base, code_values={"c": cv(0.0625, "psi")}))
+
+    def test_a_conflict_exits_2_with_the_exact_message(self):
+        r = self._cli(dict(self.B313, code_values={"S": cv(24801, "psi")}))
+        self.assertEqual((r.returncode, r.stdout), (2, ""))
+        self.assertEqual(r.stderr, "input error: code_values.S conflicts with input S\n")
+        # the same conflict reached through a unit conversion
+        r = self._cli(dict(self.B313, code_values={"S": cv(24.9, "ksi")}))
+        self.assertEqual(r.stderr, "input error: code_values.S conflicts with input S\n")
+
+    def test_an_unknown_name_exits_2(self):
+        for name in ("Q", "s", "y", "gasket.m", "S.value"):
+            r = self._cli(dict(self.B313, code_values={name: cv(1, "psi")}))
+            self.assertEqual((r.returncode, r.stdout), (2, ""), name)
+            self.assertEqual(len(r.stderr.strip().splitlines()), 1, name)
+            self.assertTrue(r.stderr.startswith(
+                f"input error: code_values.{name} is not an input of {self.MOD} (valid: "), r.stderr)
+
+    def test_a_malformed_block_or_entry_exits_2(self):
+        bad = [
+            ([1, 2], "code_values must be an object"),
+            ({"S": 24800}, "code_values.S must be an object with value, unit, citation and source"),
+            ({"S": {"value": 1, "unit": "psi", "source": "user"}}, "code_values.S.citation needs"),
+            ({"S": dict(cv(1, "psi"), citation={"standard": "x", "edition": "y", "table": "z"})},
+             "code_values.S.citation needs"),
+            ({"S": dict(cv(1, "psi"), source="vendor")}, "code_values.S.source must be"),
+            ({"S": {k: v for k, v in cv(1, "psi").items() if k != "unit"}}, "code_values.S.unit is required"),
+            ({"S": cv(True, "psi")}, "code_values.S.value must be a number or a string"),
+            ({"S": cv([1], "psi")}, "code_values.S.value must be a number or a string"),
+        ]
+        base = {k: v for k, v in self.B313.items() if k != "S"}
+        for block, fragment in bad:
+            r = self._cli(dict(base, code_values=block))
+            self.assertEqual((r.returncode, r.stdout), (2, ""), fragment)
+            self.assertIn(fragment, r.stderr)
+            self.assertEqual(len(r.stderr.strip().splitlines()), 1, fragment)
+
+    def test_an_edition_year_typed_as_a_number_is_echoed_as_text(self):
+        base = {k: v for k, v in self.B313.items() if k != "S"}
+        entry = cv(24800, "psi")
+        entry["citation"]["edition"] = 2022
+        env = pd.run_module(self.MOD, dict(base, code_values={"S": entry}))
+        self.assertEqual(env["code_value_provenance"]["S"]["citation"]["edition"], "2022")
+        self.assertIsInstance(entry["citation"]["edition"], int)        # the caller's entry is untouched
+
+    def test_a_string_value_is_passed_through_for_the_engine_to_judge(self):
+        base = {k: v for k, v in self.B313.items() if k != "S"}
+        with self.assertRaisesRegex(ValueError, "input 'S' must be a number"):
+            pd.run_module(self.MOD, dict(base, code_values={"S": cv("24800", "psi")}))
+
+    def test_absent_code_values_changes_nothing(self):
+        for module in pd.REGISTRY:
+            base = dict(parity.load(module)["cases"][0]["input"])
+            env = pd.run_module(module, dict(base))
+            self.assertEqual(set(env), self.ENVELOPE_KEYS, module)
+            self.assertNotIn("code_value_provenance", env, module)
+            self.assertEqual(env["inputs"], base, module)
+            # a null block is treated as absent
+            nulled = pd.run_module(module, dict(base, code_values=None))
+            self.assertEqual(nulled, env, module)
+
+    def test_an_empty_block_changes_nothing(self):
+        for module in pd.REGISTRY:
+            base = dict(parity.load(module)["cases"][0]["input"])
+            self.assertEqual(pd.run_module(module, dict(base, code_values={})), pd.run_module(module, dict(base)), module)
+
+    def test_the_caller_dict_is_not_modified(self):
+        base = {k: v for k, v in self.B313.items() if k != "S"}
+        job = dict(base, code_values={"S": cv(24.8, "ksi")})
+        before = json.dumps(job, sort_keys=True)
+        pd.run_module(self.MOD, job)
+        self.assertEqual(json.dumps(job, sort_keys=True), before)
+
+    def test_list_mentions_the_block(self):
+        r = subprocess.run([sys.executable, CLI, "list"], capture_output=True, text=True, encoding="utf-8")
+        self.assertIn("code_values", r.stdout)
+
+    def test_helper_block_is_identical_in_every_calculator_script(self):
+        blocks = {}
+        for skill, name in HELPER_SCRIPTS:
+            with open(os.path.join(SKILLS, skill, "scripts", name), encoding="utf-8") as fh:
+                text = fh.read()
+            self.assertEqual(text.count(HELPER_BEGIN), 1, name)
+            blocks[name] = text[text.index(HELPER_BEGIN):text.index(HELPER_END)]
+        first = blocks["pressure_design.py"]
+        for name, block in blocks.items():
+            self.assertEqual(block, first, name)
+
+
+class ExampleFile(unittest.TestCase):
+    """examples/b313-wall-thickness.json: placeholder inputs that show the code_values contract."""
+
+    PATH = os.path.join(SCRIPTS, "examples", "b313-wall-thickness.json")
+
+    def test_runs_through_the_cli_with_input_file(self):
+        r = subprocess.run([sys.executable, CLI, "b313-wall-thickness", "--input-file", self.PATH],
+                           capture_output=True, text=True, encoding="utf-8")
+        self.assertEqual(r.returncode, 0, r.stderr)
+        env = json.loads(r.stdout)
+        with open(self.PATH, encoding="utf-8") as fh:
+            job = json.load(fh)
+        self.assertEqual(job["_note"], "placeholder inputs, not code values")
+        self.assertNotIn("_note", env["inputs"])
+        # P, D, c and the mill tolerance are the E1 prompt's own inputs
+        self.assertEqual((job["P"], job["D"], job["c"], job["millTolerance"]), (750, 6.625, 0.0625, 0.125))
+        S, E, W, Y = job["code_values"]["S"]["value"] * 1000, job["E"], job["W"], job["code_values"]["Y"]["value"]
+        t = 750 * 6.625 / (2 * (S * E * W + 750 * Y))
+        self.assertAlmostEqual(env["output"]["t"], t, delta=1e-5)
+        self.assertAlmostEqual(env["output"]["tOrder"], (t + 0.0625) / 0.875, delta=1e-5)
+        self.assertEqual(sorted(env["code_value_provenance"]), ["S", "Y"])
+        self.assertEqual(env["inputs"]["S"], 12345.0)
+
+    def test_every_code_values_entry_is_a_marked_placeholder(self):
+        with open(self.PATH, encoding="utf-8") as fh:
+            job = json.load(fh)
+        for name, entry in job["code_values"].items():
+            self.assertTrue(entry["citation"]["standard"].startswith("Placeholder"), name)
+            self.assertEqual(entry["citation"]["edition"], "0000", name)
+            self.assertIn(entry["source"], ("connector", "user"), name)
+
+    def test_the_example_is_clean_under_the_content_guard(self):
+        content_guard.assert_clean(self, SKILL)
+
+
 if __name__ == "__main__":
     unittest.main()

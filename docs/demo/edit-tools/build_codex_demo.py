@@ -135,7 +135,7 @@ clip("intro_dialog", INTRO, 36, 50, caps=[
 ])
 clip("intro_settings", INTRO, 50, 62, caps=[
     cap("Settings  ›  Plugin settings  ›  PipingToolset: seven skills, each with the description the skill declares", 0.3, 7),
-    cap("No account, no API key, no telemetry. Nothing you type reaches PipingToolset.", 7, 12),
+    cap("No account, no API key, no telemetry. The scripts make no network calls.", 7, 12),
 ])
 
 # E1: wall thickness, every number from pressure_design.py

@@ -280,5 +280,53 @@ class SkillContent(unittest.TestCase):
         content_guard.assert_clean(self, SKILL)
 
 
+# ------------------------------------------------------------------ code_values
+
+class CodeValuesAreRefused(unittest.TestCase):
+    """The generator has no code-table inputs: an empty block changes nothing, an entry is refused."""
+
+    BLOCK = {
+        "Sh": {"value": 20.0, "unit": "ksi",
+               "citation": {"standard": "Placeholder standard", "edition": "0000", "table": "Placeholder table",
+                            "row": "Placeholder row"},
+               "source": "connector"},
+    }
+
+    def test_null_and_empty_blocks_change_nothing(self):
+        for block in (None, {}):
+            spec = dict(copy.deepcopy(g.EXAMPLE_SPEC), code_values=block)
+            self.assertEqual(g.render_report(build(spec)), g.render_report(build(g.EXAMPLE_SPEC)))
+
+    def test_an_entry_is_a_spec_error_naming_the_entry(self):
+        with self.assertRaises(g.SpecError) as cm:
+            build(dict(copy.deepcopy(g.EXAMPLE_SPEC), code_values=self.BLOCK))
+        self.assertIn("code_values.Sh is not an input of loadcase_gen.py", str(cm.exception))
+
+    def test_a_block_that_is_not_an_object_is_a_spec_error(self):
+        for block in ([1], "Sh", 5):
+            with self.assertRaises(g.SpecError) as cm:
+                build(dict(copy.deepcopy(g.EXAMPLE_SPEC), code_values=block))
+            self.assertIn("code_values must be an object", str(cm.exception))
+
+    def test_cli_exits_2_with_an_entry_and_is_identical_without_one(self):
+        import tempfile
+        tool = os.path.join(SCRIPTS, "loadcase_gen.py")
+        with tempfile.TemporaryDirectory() as d:
+            def run(block):
+                path = os.path.join(d, "job.json")
+                with open(path, "w", encoding="utf-8") as fh:
+                    json.dump(dict(copy.deepcopy(g.EXAMPLE_SPEC), code_values=block), fh)
+                return subprocess.run([sys.executable, tool, "--spec", path], capture_output=True, text=True,
+                                      encoding="utf-8")
+            refused, empty = run(self.BLOCK), run({})
+            plain = subprocess.run([sys.executable, tool, "--example"], capture_output=True, text=True,
+                                   encoding="utf-8")
+        self.assertEqual(refused.returncode, 2)
+        self.assertEqual(refused.stdout, "")
+        self.assertIn("code_values.Sh is not an input of loadcase_gen.py", refused.stderr)
+        self.assertEqual(empty.returncode, 0, empty.stderr)
+        self.assertEqual(empty.stdout, plain.stdout)
+
+
 if __name__ == "__main__":
     unittest.main()

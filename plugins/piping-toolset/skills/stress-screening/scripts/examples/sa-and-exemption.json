@@ -1,0 +1,32 @@
+{
+  "_note": "placeholder inputs, not code values",
+  "piping.fatigue-factor": {
+    "equation": "b313-2022",
+    "fmax": 1.1,
+    "N": 20000
+  },
+  "piping.displacement-stress": {
+    "ii": 1.5,
+    "io": 1.5,
+    "Mi": 0,
+    "Mo": 0,
+    "Mt": 0,
+    "Z": 1.0,
+    "Sc": 12345,
+    "Sh": 11111,
+    "f": 0.7392
+  },
+  "screen.flexibility-exemption": {
+    "code": "B31.3",
+    "edition": 2022,
+    "D": 4.5,
+    "y": 1.2,
+    "L": 40,
+    "U": 30,
+    "SA": 24000,
+    "Ea": 15000000,
+    "fixation_points": 2,
+    "intermediate_restraints": false,
+    "uniform_size": true
+  }
+}

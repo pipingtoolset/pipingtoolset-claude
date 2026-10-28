@@ -172,32 +172,15 @@ Details: [references/wind-seismic-and-autopipe.md](references/wind-seismic-and-a
 
 ## Step 8 — Report extraction matrix
 
-Every case set ends with a table saying which cases feed which qualification. Generate it from the resolved numbering — never copy it from another job. The generator prints it.
-
-| Purpose | Source block |
-|---|---|
-| Code stress — sustained | SUS cases, both friction variants |
-| Code stress — expansion | EXP cases |
-| Code stress — occasional | the **Maximum Occasional** envelope |
-| Code stress — hydrotest | HYD |
-| Support and hanger loads | SUS, HYD, Maximum Operating |
-| Displacements | SUS (sag — the PNC00004 limit is 16 mm / ⅝ in. where invoked), Maximum Operating (lateral) |
-| Flange loads | operating case, with friction |
-| Nozzle loads — rotating and non-rotating | operating cases, both friction variants; installation deflection from SUS with the anchor released |
+Every case set ends with a table saying which cases feed which qualification (sustained, expansion, occasional and hydrotest code stress; support and hanger loads; displacements; flange loads; nozzle loads). Generate it from the resolved numbering — never copy it from another job. The generator prints it. The source block for each purpose: [references/combination-rationale.md](references/combination-rationale.md#report-extraction-matrix).
 
 ---
 
 ## Step 9 — QC gate
 
-Run every item of the 16-point checklist; each is a defect class that appears when a template is reused on a larger job. The full list, with the reasoning for each item, is in [references/qc-gate.md](references/qc-gate.md). **Open that file before issue; the body does not repeat the items.** The generator checks five of them automatically and prints its findings:
+Run every item of the 16-point checklist; each is a defect class that appears when a template is reused on a larger job. The full list, with the reasoning for each item, is in [references/qc-gate.md](references/qc-gate.md). **Open that file before issue; the body does not repeat the items.** The generator checks five of them automatically and prints its findings: item 4 (vertical seismic present, `U2` not double-booked), item 5 (expansion completeness), item 7 (forward references), item 10 (occasional factor matches the code, edition and duration) and item 11 (ASD reduction position).
 
-- Item 4 — **Vertical seismic present?** `E_v = 0.2·S_DS·W_p` concurrent, and `U2` not double-booked with snow.
-- Item 5 — **Expansion completeness.** One EXP case per state × friction pair.
-- Item 7 — Forward references: a combination referencing a later case.
-- Item 10 — Occasional factor matches the code, edition and stated duration.
-- Item 11 — ASD reduction position stated and consistent with the code.
-
-The rest (stale cross-references, envelope completeness, direction labels, linear shortcut on a nonlinear model, suppression, friction, hangers, expansion range, wind shape factor, SAM and settlement, static seismic) need the model and are checked by hand against `references/qc-gate.md`.
+The other eleven need the model and are checked by hand against `references/qc-gate.md`.
 
 ---
 
@@ -228,9 +211,21 @@ Full discussion: [references/pn19.md](references/pn19.md).
 
 ## Copyright boundary
 
-**Never reproduce, reconstruct or "recall" tabulated values** — B31.1/B31.3 allowable stresses and modulus tables, B31J stress indices, B31E Table 1 or Table 2, B31.1 Table 121.5 spans, ASCE 7 coefficient tables or figures, PIP tables, or PN19 tables. This applies even when the user asks directly and even when a value seems widely known. Name the table, row and edition, and ask the user to read it from their licensed copy. Do not ask the user to upload a standard's PDF; if the user offers an excerpt, use it only to read the specific value they need.
+**Never reproduce, reconstruct or "recall" tabulated values** — B31.1/B31.3 allowable stresses and modulus tables, B31J stress indices, B31E Table 1 or Table 2, B31.1 Table 121.5 spans, ASCE 7 coefficient tables or figures, PIP tables, or PN19 tables. This applies even when the user asks directly and even when a value seems widely known. Name the table, row and edition, and ask the user to read it from their licensed copy. Do not ask the user to upload a standard's PDF; if the user offers an excerpt, use it only to read the specific value they need. A value returned by the connector carries its citation and is recorded as connector-supplied; it is still verified against your copy before issue.
 
 Equations, clause numbers, symbol definitions, and numeric limits stated in running text (1.33, k = 1.15/1.20, the f-factor floor of 0.15, the 60 ksi cap, 5° rod rotation, 16 mm sag) are usable.
+
+---
+
+## With the Engineering Data connector
+
+The Engineering Data connector is optional and separate from this plugin; this skill has no code-table slot and works as written without it. If its tools are present, call `verify_connector` once per session; `get_fixture_example` answers without an account.
+
+| Slot | Tool | Key fields | What comes back |
+|---|---|---|---|
+| A worked case to compare a generator run against (never job inputs) | `get_fixture_example` | `skill` `load-case-builder`; `case`, 0-based | inputs, expected outputs and status of a hand-checked case if one is linked, otherwise a one-line message |
+
+On any message, or absent tools, carry on with the interview and the generator as written. The generator has no code-table inputs and refuses a `code_values` block that has any entry, exit 2 ([format](references/spec-format.md)). A call sends only the skill name and case index.
 
 ---
 

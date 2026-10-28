@@ -883,9 +883,10 @@ class CommandLine(unittest.TestCase):
         self.assertEqual(r.returncode, 0, r.stderr)
         env = json.loads(r.stdout)
         self.assertEqual(env["status"], "na")
-        # T = 0.1875 on a 0.25 basis = 0.5625; S_vessel 14,100 / 18,800 = 0.75; owner 0.5 -> 0.2109375
-        self.assertAlmostEqual(env["output"]["totalFactor"], 0.5625 * 0.75 * 0.5, delta=1e-5)
-        self.assertEqual(env["output"]["derived"]["Fx"], round(1000 * 0.5625 * 0.75 * 0.5, 3))
+        # T = 0.1875 on a 0.25 basis = 0.5625; S_vessel (placeholder 11111) / 18,800; owner 0.5
+        stress = 11111 / 18800
+        self.assertAlmostEqual(env["output"]["totalFactor"], 0.5625 * stress * 0.5, delta=1e-5)
+        self.assertEqual(env["output"]["derived"]["Fx"], round(1000 * 0.5625 * stress * 0.5, 3))
 
     def test_input_file_with_bom(self):
         path = os.path.join(ROOT, "tests", "_nozzle_load_cli_input.json")
@@ -1000,7 +1001,7 @@ class SkillContent(unittest.TestCase):
                     "centreMyFactor", "sigmaPLimit", "kSigma", "kTau"):
             self.assertIn(key, self.text, key)
             self.assertIn(key, self.refs["tool-reference.md"], key)
-        self.assertIn("User-supplied values table", self.text)
+        self.assertIn("## 3. Code-table values (user-supplied or connector-supplied, cited)", self.text)
 
     def test_no_api_method_constant_ships_in_the_skill(self):
         # API 610 Annex F constants and the API 617 / 611 / 612 coefficients are user-supplied inputs.
@@ -1068,6 +1069,226 @@ class SkillContent(unittest.TestCase):
         for fragment in ("Establishing Allowable Nozzle Loads", "PVP2011-57100", "650", "320", "(T / basis)", "18,800", "17,100",
                          "WRC 537", "4.5.15", "50%"):
             self.assertIn(fragment, text, fragment)
+
+
+# --------------------------------------------------------------------------- code_values
+
+
+def cv(value, unit, source="connector", column="Placeholder column"):
+    """A code_values entry with a placeholder citation."""
+    citation = {"standard": "Placeholder standard", "edition": "0000", "table": "Placeholder table",
+                "row": "Placeholder row"}
+    if column:
+        citation["column"] = column
+    return {"value": value, "unit": unit, "citation": citation, "source": source}
+
+
+def _leaf(obj, path):
+    for seg in path:
+        if not isinstance(obj, dict) or obj.get(seg) is None:
+            return None
+        obj = obj[seg]
+    return obj
+
+
+def _is_number(x):
+    return isinstance(x, (int, float)) and not isinstance(x, bool)
+
+
+def _without(base, paths):
+    """A deep copy of `base` with the leaves at `paths` removed (and any emptied parent dict)."""
+    out = json.loads(json.dumps(base))
+    for path in paths:
+        node = out
+        for seg in path[:-1]:
+            node = node[seg]
+        del node[path[-1]]
+        if len(path) == 2 and not out[path[0]]:
+            del out[path[0]]
+    return out
+
+
+class CodeValues(unittest.TestCase):
+    """The optional top-level code_values input, the contract shared by the calculator scripts."""
+
+    ENVELOPE_KEYS = {"module", "status", "output", "warnings", "citation", "inputs", "user_supplied"}
+
+    def _base(self, module):
+        """A valid CLI-layer input for each module."""
+        if module in PORTED:
+            base = fixture_input(module, parity.load(module)["cases"][0])
+        elif module == "equipment.nozzle-load-sum":
+            base = dict(standard="header limits", nozzles=[HandDerivedSum.N1, HandDerivedSum.N2],
+                        limits=HandDerivedSum.LIMITS)
+        elif module == "equipment.api650-annexp-ordinates":
+            base = dict(HandDerivedAnnexP.INP)
+        else:
+            base = dict(HandDerivedPvp.BASE)
+        if module == "connections.nozzle-load-check":
+            base.setdefault("standard", "vendor datasheet")
+        return base
+
+    def _leaves(self, module, base):
+        """(dotted name, key path, unit label) of every numeric input the block can fill in `base`."""
+        out = []
+        for name, unit in nl._cv_fields(module, base.get("units")).items():
+            path = tuple(name.split("."))
+            if _is_number(_leaf(base, path)):
+                out.append((name, path, unit))
+        return out
+
+    def _moved(self, base, leaves, source="connector"):
+        moved = {name: cv(_leaf(base, path), None if unit == "-" else unit, source) for name, path, unit in leaves}
+        return dict(_without(base, [path for _, path, _ in leaves]), code_values=moved)
+
+    def _cli(self, module, inputs):
+        return subprocess.run([sys.executable, CLI, module, "--input", json.dumps(inputs)],
+                              capture_output=True, text=True, encoding="utf-8")
+
+    def test_every_module_filled_run_equals_the_explicit_run(self):
+        for module in nl.REGISTRY:
+            base = self._base(module)
+            leaves = self._leaves(module, base)
+            self.assertGreater(len(leaves), 1, module)
+            want = nl.run_module(module, json.loads(json.dumps(base)))
+            got = nl.run_module(module, self._moved(base, leaves))
+            self.assertEqual(sorted(got.pop("code_value_provenance")), sorted(n for n, _, _ in leaves), module)
+            self.assertEqual(got, want, module)
+
+    def test_each_leaf_can_be_filled_on_its_own(self):
+        for module in nl.REGISTRY:
+            base = self._base(module)
+            want = nl.run_module(module, json.loads(json.dumps(base)))
+            for leaf in self._leaves(module, base):
+                got = nl.run_module(module, self._moved(base, [leaf], source="user"))
+                got.pop("code_value_provenance")
+                self.assertEqual(got, want, f"{module} {leaf[0]}")
+
+    def test_nested_names_are_dotted(self):
+        base = dict(standard="datasheet", applied=six(100, 200, 300, 10, 20, 30), allowable=flat(1000))
+        want = nl.run_module("connections.nozzle-load-check", json.loads(json.dumps(base)))
+        job = dict(base, allowable={"Fx": 1000, "Fy": 1000, "Fz": 1000, "Mx": 1000, "My": 1000},
+                   code_values={"allowable.Mz": cv(1000, "ft-lbf", "user")})
+        env = nl.run_module("connections.nozzle-load-check", job)
+        self.assertEqual(list(env["code_value_provenance"]), ["allowable.Mz"])
+        self.assertEqual(env["inputs"]["allowable"], flat(1000))
+        self.assertEqual(env["output"], want["output"])
+        self.assertEqual(env["user_supplied"], ["allowable"])
+
+    def test_a_whole_load_set_cannot_be_named(self):
+        r = self._cli("connections.nozzle-load-check",
+                      dict(standard="d", applied=flat(1), code_values={"allowable": cv(1000, "lbf")}))
+        self.assertEqual((r.returncode, r.stdout), (2, ""))
+        self.assertTrue(r.stderr.startswith("input error: code_values.allowable is not an input of "), r.stderr)
+
+    def test_owner_factor_is_applied_to_the_filled_allowables(self):
+        base = dict(standard="datasheet", applied=six(100, 200, 300, 10, 20, 30), allowable=flat(1000), ownerFactor=0.5)
+        want = nl.run_module("connections.nozzle-load-check", json.loads(json.dumps(base)))
+        leaves = [(f"allowable.{k}", ("allowable", k), "lbf" if k.startswith("F") else "ft-lbf") for k in nl.COMPONENTS]
+        got = nl.run_module("connections.nozzle-load-check", self._moved(base, leaves))
+        got.pop("code_value_provenance")
+        self.assertEqual(got, want)
+        self.assertEqual(want["output"]["ratios"]["Fz"], 0.6)
+
+    def test_annexf_constants_can_come_from_the_block(self):
+        base = self._base(ANNEXF_MODULE)
+        leaves = [leaf for leaf in self._leaves(ANNEXF_MODULE, base) if leaf[0].startswith("annexF.")]
+        self.assertEqual(len(leaves), len(nl.ANNEXF_KEYS))
+        want = nl.run_module(ANNEXF_MODULE, json.loads(json.dumps(base)))
+        got = nl.run_module(ANNEXF_MODULE, self._moved(base, leaves))
+        got.pop("code_value_provenance")
+        self.assertEqual(got, want)
+
+    def test_ksi_stresses_are_converted_and_noted(self):
+        base = {k: v for k, v in HandDerivedPvp.BASE.items() if k not in ("S_vessel", "S_nozzle")}
+        env = nl.run_module("equipment.pvp2011-allowables",
+                            dict(base, code_values={"S_vessel": cv(18.8, "ksi"), "S_nozzle": cv(17.1, "ksi")}))
+        self.assertEqual((env["inputs"]["S_vessel"], env["inputs"]["S_nozzle"]), (18800.0, 17100.0))
+        self.assertIn("code_values.S_vessel: 18.8 ksi applied as 18800 psi.", env["warnings"])
+        self.assertEqual(env["output"], nl.run_module("equipment.pvp2011-allowables", dict(HandDerivedPvp.BASE))["output"])
+
+    def test_load_components_are_unit_checked_in_every_lbf_module(self):
+        base = _without(HandDerivedPvp.BASE, [("row", "Fx")])
+        with self.assertRaisesRegex(ValueError, "code_values.row.Fx unit 'N' cannot be used for an input in 'lbf'"):
+            nl.run_module("equipment.pvp2011-allowables", dict(base, code_values={"row.Fx": cv(1000, "N")}))
+        # nozzle-load-check declares lbf and ft-lbf, so a newton figure is rejected, not applied as lbf
+        chk = dict(standard="datasheet", applied=flat(10), allowable={k: 1000 for k in nl.COMPONENTS if k != "Fx"})
+        with self.assertRaisesRegex(ValueError, "code_values.allowable.Fx unit 'N' cannot be used for an input in 'lbf'"):
+            nl.run_module("connections.nozzle-load-check", dict(chk, code_values={"allowable.Fx": cv(5000, "N")}))
+        with self.assertRaisesRegex(ValueError, "code_values.allowable.Mz unit 'lbf' cannot be used for an input in 'ft-lbf'"):
+            nl.run_module("connections.nozzle-load-check",
+                          dict(chk, allowable={k: 1000 for k in nl.COMPONENTS if k != "Mz"},
+                               code_values={"allowable.Mz": cv(5000, "lbf")}))
+        env = nl.run_module("connections.nozzle-load-check", dict(chk, code_values={"allowable.Fx": cv(5000, "lbf")}))
+        self.assertEqual(env["inputs"]["allowable"]["Fx"], 5000)
+
+    def test_annexf_load_sets_follow_the_units_input(self):
+        base = fixture_input("connections.api610-annexf", parity.load("connections.api610-annexf")["cases"][0])
+        for units, bad, good in (("USC", "N", "lbf"), ("SI", "lbf", "N")):
+            job = dict(base, units=units)
+            job["suctionApplied"] = {k: v for k, v in job["suctionApplied"].items() if k != "Fx"}
+            fx = base["suctionApplied"]["Fx"]
+            with self.assertRaisesRegex(ValueError, "cannot be used for an input in"):
+                nl.run_module("connections.api610-annexf", dict(job, code_values={"suctionApplied.Fx": cv(fx, bad)}))
+            env = nl.run_module("connections.api610-annexf", dict(job, code_values={"suctionApplied.Fx": cv(fx, good)}))
+            self.assertEqual(env["inputs"]["suctionApplied"]["Fx"], fx)
+
+    def test_nozzle_load_sum_limits_take_the_unit_of_the_users_load_sets(self):
+        job = dict(standard="header limits", nozzles=[HandDerivedSum.N1, HandDerivedSum.N2],
+                   limits={k: v for k, v in HandDerivedSum.LIMITS.items() if k != "Fx"})
+        env = nl.run_module("equipment.nozzle-load-sum",
+                            dict(job, code_values={"limits.Fx": cv(HandDerivedSum.LIMITS["Fx"], "N")}))
+        self.assertEqual(env["inputs"]["limits"]["Fx"], HandDerivedSum.LIMITS["Fx"])
+
+    def test_a_conflict_exits_2_with_the_exact_message(self):
+        job = dict(standard="datasheet", applied=flat(10), allowable=flat(1000),
+                   code_values={"allowable.Fx": cv(999, "lbf")})
+        r = self._cli("connections.nozzle-load-check", job)
+        self.assertEqual((r.returncode, r.stdout), (2, ""))
+        self.assertEqual(r.stderr, "input error: code_values.allowable.Fx conflicts with input allowable.Fx\n")
+        r = self._cli("equipment.pvp2011-allowables", dict(HandDerivedPvp.BASE, code_values={"S_vessel": cv(18801, "psi")}))
+        self.assertEqual(r.stderr, "input error: code_values.S_vessel conflicts with input S_vessel\n")
+
+    def test_an_unknown_name_exits_2(self):
+        for name in ("Q", "allowable.Fq", "applied.fx", "row.Fx.x", "ownerFactorBasis.x"):
+            r = self._cli("connections.nozzle-load-check",
+                          dict(standard="d", applied=flat(1), allowable=flat(10), code_values={name: cv(1, "lbf")}))
+            self.assertEqual((r.returncode, r.stdout), (2, ""), name)
+            self.assertEqual(len(r.stderr.strip().splitlines()), 1, name)
+            self.assertTrue(r.stderr.startswith(
+                f"input error: code_values.{name} is not an input of connections.nozzle-load-check (valid: "), r.stderr)
+
+    def test_a_parent_that_is_not_an_object_exits_2(self):
+        r = self._cli("connections.nozzle-load-check",
+                      dict(standard="d", applied=flat(1), allowable=5, code_values={"allowable.Fx": cv(1, "lbf")}))
+        self.assertEqual((r.returncode, r.stdout), (2, ""))
+        self.assertIn("code_values.allowable.Fx: input allowable is not an object", r.stderr)
+
+    def test_absent_code_values_changes_nothing(self):
+        for module in nl.REGISTRY:
+            base = self._base(module)
+            env = nl.run_module(module, json.loads(json.dumps(base)))
+            self.assertEqual(set(env), self.ENVELOPE_KEYS, module)
+            self.assertEqual(env["inputs"], base, module)
+            self.assertEqual(nl.run_module(module, dict(json.loads(json.dumps(base)), code_values=None)), env, module)
+            self.assertEqual(nl.run_module(module, dict(json.loads(json.dumps(base)), code_values={})), env, module)
+
+    def test_the_example_file_can_be_split_into_code_values(self):
+        with open(os.path.join(SCRIPTS, "examples", "vessel-nozzle-pvp2011.json"), encoding="utf-8") as fh:
+            base = json.load(fh)
+        leaves = self._leaves("equipment.pvp2011-allowables", base)
+        names = sorted(n for n, _, _ in leaves)
+        self.assertEqual(names, sorted(["NPS", "T", "S_vessel", "S_nozzle", "ownerFactor", "D", "designTempF"]
+                                       + [f"row.{k}" for k in nl.COMPONENTS]))
+        want = nl.run_module("equipment.pvp2011-allowables", json.loads(json.dumps(base)))
+        got = nl.run_module("equipment.pvp2011-allowables", self._moved(base, leaves, source="user"))
+        got.pop("code_value_provenance")
+        self.assertEqual(got, want)
+
+    def test_list_mentions_the_block(self):
+        r = subprocess.run([sys.executable, CLI, "list"], capture_output=True, text=True, encoding="utf-8")
+        self.assertIn("code_values", r.stdout)
+        self.assertIn("allowable.Fx", r.stdout)
 
 
 if __name__ == "__main__":

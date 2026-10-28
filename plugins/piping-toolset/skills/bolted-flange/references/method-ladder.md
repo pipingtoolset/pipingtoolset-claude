@@ -91,3 +91,16 @@ Symbol mapping used by the tool: Sa is Sbg, Sb is Sbo, SfAmbient is Sfg, Sf is S
 | PCC-1 Appendix O | Section titles: simple approach, joint component approach (with a spiral-wound approach for B16.20 gaskets), determining flange limits | Assembly bolt stress; supports the UG-44(b) route |
 | PIP PNC00004 3.2.10 | 3.2.10.1 external bending moments on flanges shall be considered. 3.2.10.2 external loads may be analyzed by the equivalent pressure method or other methods the owner approves. 3.2.10.3 acceptance criteria per the owner's requirements | The owner sets the acceptance value |
 | EN 1591-1 | European flange joint calculation | Named, not computed |
+
+## What is not computed
+
+Relocated verbatim from the Step 4 table in `SKILL.md`. Name these on the sheet; do not compute them here.
+
+| Method | Where | Conditions and notes |
+|---|---|---|
+| UG-44(b) / VIII-2 4.16.12 interaction | Standard weld-neck B16.5 flanges. B31.3 Appendix F F312.1 calls it one acceptable method | Design pressure within the rating, assembly bolt load per PCC-1 Appendix O, bolting at least SA-193 B8 Cl. 2, and a moment factor from Table UG-44-1 / 4.16.12. The user reads the interaction equation from the printed page |
+| ASME III NC-3658.3 | B16.5 flanges with high-strength bolting (S of at least 20 ksi at 100 F), service-level pressure and moment limits | Not for B31 piping unless the owner invokes it |
+| EN 1591-1 | European flange calculation | Different model; out of scope |
+| PCC-1 Appendix O | Assembly bolt stress | Needed to support the UG-44(b) route |
+| VIII-2 4.16.7.2 Step 9(b) and Moe | The shear check (0.8 Sno or Sng on lap-joint and weld shear) and the Code's own external-moment term Moe (4.16.16, Table 4.16.7) | Not computed; name both on the sheet. The tool's pressure-equivalent treatment replaces Moe |
+| B16.5 2.5.2 | Advisory: severe external loads and thermal gradients above 200 C for Class 150, above 400 C for other classes | Flag when the design temperature is in that range |

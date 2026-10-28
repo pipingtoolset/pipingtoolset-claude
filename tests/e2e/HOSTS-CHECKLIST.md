@@ -1,4 +1,4 @@
-# Phase 2: host verification runbook (plugin 0.6.3)
+# Phase 2: host verification runbook (plugin 0.7.0)
 
 Copy-paste runbook for proving the same plugin installs, shows its mark, and runs its scripts in
 every host it claims. Sibling of `COWORK-CHECKLIST.md`. Fill the results table at the bottom as
@@ -20,7 +20,11 @@ Pass criteria, unchanged from `PROMPTS.md`:
   t_m = 0.19900 in; 0.280 × 0.875 = 0.245 ≥ 0.19900 → adequate; S/E/W/Y echoed as user-supplied;
   ¶304.1.2 Eq. (3a) cited; no table value volunteered.
 - **E2**: no number. Names B31.3 Table A-1 (A-1C in 2024), the material row and the two
-  temperature columns, offers to interpolate once you read both.
+  temperature columns, offers to interpolate once you read both. This is the refusal test for the
+  plugin without the connector: run it with the Engineering Data connector disconnected, or not
+  signed in to a paid plan. With the connector on and a paid pipingtoolset.com account the skill
+  may serve the cited value instead; record that under the connector rows (§2, §4, §5), not as an
+  E2 failure.
 - **E9**: `support_calc.py` ran with `--report` / `--json`; governing stage, check, combination
   and clause come from the run; optimizer table presented; `calc.md` and `result.json` written.
 
@@ -31,10 +35,10 @@ Pass criteria, unchanged from `PROMPTS.md`:
 Run in PowerShell from any folder.
 
 ```powershell
-gh release view v0.6.3 --repo pipingtoolset/pipingtoolset-claude --json tagName,assets --jq '.tagName, (.assets[].name)'
+gh release view v0.7.0 --repo pipingtoolset/pipingtoolset-claude --json tagName,assets --jq '.tagName, (.assets[].name)'
 ```
 
-Expect `v0.6.3` and three assets: `piping-toolset.plugin`, `piping-toolset.zip`,
+Expect `v0.7.0` and three assets: `piping-toolset.plugin`, `piping-toolset.zip`,
 `piping-toolset-skills.zip`. If the tag or assets are missing, stop: push the tag and let CI
 attach them.
 
@@ -43,11 +47,13 @@ curl.exe -sI https://pipingtoolset.com/openai/ | Select-String "^HTTP"
 curl.exe -sI https://pipingtoolset.com/claude/ | Select-String "^HTTP"
 curl.exe -sI https://pipingtoolset.com/legal/privacy.html | Select-String "^HTTP"
 curl.exe -sI https://pipingtoolset.com/legal/terms.html | Select-String "^HTTP"
+curl.exe -sI https://pipingtoolset.com/docs/connector/ | Select-String "^HTTP"
 ```
 
-Expect `HTTP/1.1 200` (or `HTTP/2 200`) on all four. These are the `websiteURL`,
-`privacyPolicyURL` and `termsOfServiceURL` in the OpenAI listing block; the portal checks that
-they resolve and name the same publisher.
+Expect `HTTP/1.1 200` (or `HTTP/2 200`) on all five. The first four are the `websiteURL`,
+`privacyPolicyURL` and `termsOfServiceURL` in the OpenAI listing block (the portal checks that
+they resolve and name the same publisher); the fifth is the connector setup page the README and
+the listing copy link to.
 
 ```powershell
 curl.exe -s https://pipingtoolset.com/ | Select-String "For OpenAI|PipingToolset for AI|Install in ChatGPT / Codex"
@@ -80,13 +86,21 @@ Get-ChildItem .\plugins\piping-toolset\skills -Directory | ForEach-Object { pyth
 
 Expect seven lines starting `Valid skill:`.
 
-Confirm the archive you will upload carries the manifests and the mark:
+Confirm the archive you will upload carries the manifests, the connector declarations and the
+mark:
 
 ```powershell
-python -c "import zipfile; z=zipfile.ZipFile('dist/piping-toolset.zip'); print('\n'.join(n for n in z.namelist() if n.endswith('plugin.json') or n.startswith('assets/')))"
+python -c "import zipfile; z=zipfile.ZipFile('dist/piping-toolset.zip'); print('\n'.join(n for n in z.namelist() if n.endswith('plugin.json') or n.endswith('mcp.json') or n.startswith('assets/')))"
 ```
 
-Expect `.claude-plugin/plugin.json`, `plugin.json`, `assets/icon.png`, `assets/icon.svg`.
+Expect `.claude-plugin/plugin.json`, `plugin.json`, `.mcp.json`, `mcp.json`, `assets/icon.png`,
+`assets/icon.svg`. The skills-only zip must carry neither declaration:
+
+```powershell
+python -c "import zipfile; z=zipfile.ZipFile('dist/piping-toolset-skills.zip'); print(sum(n.endswith('mcp.json') for n in z.namelist()))"
+```
+
+Expect `0`.
 
 ## 2. Claude Code (terminal)
 
@@ -96,7 +110,7 @@ claude plugin install piping-toolset@pipingtoolset
 claude plugin details piping-toolset
 ```
 
-Expect `Skills (7)` listing the seven names and version `0.6.0`. Then, headless, from any empty
+Expect `Skills (7)` listing the seven names and version `0.7.0`. Then, headless, from any empty
 folder:
 
 ```powershell
@@ -107,20 +121,32 @@ claude -p "/piping-toolset:pressure-design B31.3-2022, normal fluid service. NPS
 claude -p "/piping-toolset:pressure-design What's the allowable stress for A106 Grade B at 650 F under B31.3? Just give me the number." --model sonnet --allowedTools "Bash(python:*)" Read Glob Grep
 ```
 
-Record E1 and E2 against the pass criteria. If the marketplace was added earlier at 0.5.1,
+Record E1 and E2 against the pass criteria. If the marketplace was added at an earlier version,
 run `claude plugin marketplace update pipingtoolset` first.
+
+Connector row (Claude Code). In an interactive `claude` session open `/mcp` and find the
+`pipingtoolset-data` server that the plugin declares; record whether it shows as connected. Ask
+for a worked example of a data-free module (the assistant calls `get_fixture_example`) and for the
+`W6X15` shape (`get_aisc_shape`): both are open and need no sign-in. Then ask for an allowable
+stress; with no paid account signed in, the host must start the sign-in through pipingtoolset.com
+or the tool must return a one-line message naming the plan and the pricing page, and no value
+may appear. Disconnect the server in `/mcp` and repeat E2: the refusal must hold.
 
 ## 3. Claude Cowork (Claude desktop app, Windows)
 
-1. Download `piping-toolset.plugin` from the v0.6.3 release
-   (`https://github.com/pipingtoolset/pipingtoolset-claude/releases/download/v0.6.3/piping-toolset.plugin`).
-2. If 0.5.1 is installed, remove it first in Settings › Plugins.
+1. Download `piping-toolset.plugin` from the v0.7.0 release
+   (`https://github.com/pipingtoolset/pipingtoolset-claude/releases/download/v0.7.0/piping-toolset.plugin`).
+2. If an earlier version is installed, remove it first in Settings › Plugins.
 3. Drag the file into a new Cowork chat, press **Accept**.
 4. Check in the plugin list: the grid-elbow mark (not a generic icon), display name
    **PipingToolset**, seven skills in the skills menu.
 5. Also try Settings › Plugins › **Upload a plugin** with the same file: it must not reject the
    description (the 500-character cap is tested, but this is the live check).
 6. Run E1 and E2 in a fresh chat. Record.
+7. Connector row: in the plugin's connector or MCP list find `pipingtoolset-data`. Ask for a
+   worked example of a data-free module; it needs no sign-in. Ask for an allowable stress with no
+   paid account signed in: no value may appear. Switch the connector off and repeat E2: the
+   refusal must hold. Record whether the host showed a **Sign in** prompt.
 
 ## 4. Codex CLI (terminal)
 
@@ -158,6 +184,23 @@ $pipe-support Check support PS-201: CSA type 1 t-post, W6X15 column 8 ft, W6X15 
 
 Record E1, E2, E9. Note which Python Codex used (`python --version` in the same shell).
 
+Connector row (Codex). The plugin carries `mcp.json` (streamable-http, sign-in set to mixed). Check
+what Codex lists, then add the server by hand if it does not appear on its own:
+
+```powershell
+codex mcp list
+codex mcp add pipingtoolset-data --url https://pipingtoolset.com/mcp
+codex mcp login pipingtoolset-data
+```
+
+Record whether the plugin's `mcp.json` was picked up (a `pipingtoolset-data` entry before the
+`add`) and whether `login` opened pipingtoolset.com. Also record whether installing the plugin
+asked for a sign-in: `.agents/plugins/marketplace.json` sets `authentication` to `ON_INSTALL`, and
+the OpenAI plugin docs (read 2026-10-28) say only that this setting decides whether auth happens
+on install or first use. The connector is meant to be optional, so a sign-in prompt at install is
+a finding to settle before the OpenAI listing goes out. Ask for a worked example of a data-free module
+(open, no sign-in), then for an allowable stress while signed out (no value may appear).
+
 Upgrade path, for the next release:
 
 ```powershell
@@ -181,7 +224,12 @@ whether the listing block fixed the icon and name.
    must be visible. If the numbers appear with no command, the app did arithmetic in its head and
    the row fails (record it; that is a finding, not a defect in the plugin).
 4. New conversation, paste E2. Expect the refusal.
-5. Record, with the screenshot path, in the table.
+5. Connector row: check whether the plugin page lists `pipingtoolset-data` (from `mcp.json`). If it
+   does, ask for a worked example of a data-free module (open, no sign-in) and for an allowable
+   stress while signed out (no value may appear); if the app offers sign-in, record that it goes
+   through pipingtoolset.com. If it does not, add the server as a developer-mode connector with
+   the URL `https://pipingtoolset.com/mcp` and OAuth, and record that route instead.
+6. Record, with the screenshot path, in the table.
 
 ## 6. OpenAI plugin portal (directory submission dry run)
 
@@ -192,7 +240,8 @@ Do not press Submit in this phase; the goal is to see every automated check pass
 2. The portal converts the archive and shows a generated `.codex-plugin/plugin.json`. Confirm
    it carried the `interface` block from the root `plugin.json`: `displayName` PipingToolset,
    `shortDescription`, `developerName`, `category` Productivity, `logo` and `composerIcon`
-   pointing at `assets/`.
+   pointing at `assets/`. If the converted package shows MCP servers, confirm `pipingtoolset-data`
+   at `https://pipingtoolset.com/mcp` with the mixed sign-in setting from `mcp.json`.
 3. Check the **category** dropdown in the dashboard. If **Productivity** is not an offered
    value, note the closest one here and change `category` in both
    `plugins/piping-toolset/plugin.json` and `.agents/plugins/marketplace.json` (the test keeps
@@ -228,18 +277,22 @@ Not automated; account settings, so done by hand.
   from `.claude-plugin/plugin.json`; nothing to upload separately.
 - OpenAI directory: `logo` and `composerIcon` from the root `plugin.json`, carried inside the
   zip; nothing to upload separately.
+- Connector: both declarations (`.mcp.json`, `mcp.json`) travel inside the `.plugin` and `.zip`
+  and are absent from the skills-only zip. If a directory form asks for the remote server by
+  hand, it is `https://pipingtoolset.com/mcp`, Streamable HTTP, sign-in through pipingtoolset.com
+  (open tools need none), documented at `https://pipingtoolset.com/docs/connector/`.
 
 ## Results
 
-| Host | Version shown | Name shown | Mark shown | E1 script ran | E1 numbers | E2 refuses | E9 | Date | Notes / screenshot |
-|---|---|---|---|---|---|---|---|---|---|
-| Local validation (§1) | | n/a | n/a | n/a | n/a | n/a | n/a | | |
-| Claude Code (§2) | | | | | | | | | |
-| Claude Cowork (§3) | | | | | | | | | |
-| Codex CLI (§4) | | | | | | | | | |
-| ChatGPT desktop app (§5) | | | | | | | | | |
-| OpenAI portal dry run (§6) | | | | | | | | | category offered: |
-| Cursor / Copilot CLI (§7) | | | | | | | | | |
+| Host | Version shown | Name shown | Mark shown | E1 script ran | E1 numbers | E2 refuses | E9 | Connector: open tools, no paid value signed out, E2 holds when off | Date | Notes / screenshot |
+|---|---|---|---|---|---|---|---|---|---|---|
+| Local validation (§1) | | n/a | n/a | n/a | n/a | n/a | n/a | n/a | | |
+| Claude Code (§2) | | | | | | | | | | |
+| Claude Cowork (§3) | | | | | | | | | | |
+| Codex CLI (§4) | | | | | | | | | | |
+| ChatGPT desktop app (§5) | | | | | | | | | | |
+| OpenAI portal dry run (§6) | | | | | | | | n/a | | category offered: |
+| Cursor / Copilot CLI (§7) | | | | | | | | n/a | | |
 
 When every row you ran is filled, commit this file as the Phase 2 record and move to Phase 3
 (listings, in the order of `docs/research/cross-platform-distribution-2026-10-27.md` §7).

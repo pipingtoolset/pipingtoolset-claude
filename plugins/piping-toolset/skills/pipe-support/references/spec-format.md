@@ -14,6 +14,7 @@ Units: in, kip, ksi (f'c in psi; soil in ksf). Load blocks in CAESAR II mode may
 | `fabrication` | `{"armToColumn": "shop-weld" (default) \| "field-weld" \| "bolted"}`. Drives the field-work score. Any other value is a spec error |
 | `optimize` | `{objectives: {weight, field, standard}, families: {arm: [...], column: [...]}, maxRatio, top, includeDesigns}` (all optional, defaults: weights 1, families W/HSS-SQ/PIPE/L/C for arms and W/HSS-SQ/PIPE for columns, maxRatio 1.0, top 5); `true` for defaults; `false` to skip. Works in both load modes |
 | `assumed` | Strings copied into the report's assumptions |
+| `code_values` | Optional. Values read from a code table, a report or an ESR, with their citation, for `design.material.Fy` and the other slots listed under [`code_values`](#code_values) below |
 | `tag`, `project`, `calcBy`, `date` | Title block |
 
 ## `pipes[].loads` (CAESAR II restraint loads at the support node)
@@ -64,3 +65,27 @@ Factored mode: put `{tag, offset, vertical (+ down), transverse, longitudinal}` 
 `groove_weld()` and `pipe_support.loads.combinations()` can be called directly from a short
 Python script for a connection the parametric assemblies do not model (for example a bolted
 clip to existing steel). Their docstrings list the inputs.
+
+## `code_values`
+
+An optional top-level object (the spelling `codeValues` is accepted too; give one of them): the route for a value the Engineering Data connector returned, or a value the user read, together with its citation. Shape (a template, not a code value):
+
+```
+"code_values": {
+  "design.material.Fy": {"value": <number the user read>, "unit": "ksi",
+                         "citation": {"standard": "...", "edition": "...", "table": "...", "row": "...", "column": "Fy"},
+                         "source": "user"}
+}
+```
+
+| Field | Meaning |
+|---|---|
+| name (the key) | The spec path it fills: `design.material.Fy`, `design.material.Fu`, `design.material.E`, `design.weldFEXX`, `design.baseplate.plateFy`, `design.baseplate.anchorFuta`, `design.baseplate.bondStrength`, `design.baseplate.cac`, `design.baseplate.anchorStressArea`, or `pipes.<n>.loads.SDS` (`n` the 0-based pipe position). Short spellings are accepted for the same slots (`Fy`, `Fu`, `bondStrength`, `cac`, `material.Fy`, `baseplate.bondStrength`); `SDS` or `loads.SDS` fills every pipe at once. Any other name is rejected |
+| `value` | A number (or a string), the number as the lookup returned it or the user read it |
+| `unit` | Required. The unit of `value`. The spec's units are ksi (`Fy`, `Fu`, `E`, `weldFEXX`, `plateFy`, `anchorFuta`), psi (`bondStrength`), in (`cac`), in^2 (`anchorStressArea`) and g for `SDS` (or `null`). The script converts a unit it can convert exactly and rejects any other mismatch |
+| `citation` | `standard`, `edition`, `table` and `row` (all non-empty strings), and `column` when there is one, copied from the lookup's `citation` or from the pointer `get_pointer` returned |
+| `source` | `connector` for a returned value, `user` for a value the user read |
+
+- A key the spec leaves out is filled from `code_values[name].value`, and the value replaces the same key of a preset. A key the spec gives that disagrees stops the run, exit code 2, with `code_values.<name> conflicts with input <name>` on stderr and no verdict; a failed limit state also exits 2 but prints a verdict, so read the message. Fix the spec, do not edit one side to match.
+- `SDS` needs CAESAR II mode (a `pipes` list).
+- The result gains `code_value_provenance`, `{name: {unit, citation, source}}`, and `code_value_applied`, `{name: {value, unit}}`; the Markdown report gains a "Code-table values (user-supplied or connector-supplied, cited)" table. Every other key keeps its shape. The script makes no network calls.

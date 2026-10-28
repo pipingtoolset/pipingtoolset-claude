@@ -69,9 +69,9 @@ PNC00004 is the owner's piping stress practice. This skill does not restate it. 
    - 3.3.1: the lesser of the manufacturer's values or the listed references governs.
    - 3.3.2: rotating machinery is evaluated per PIP RECE002.
    - 3.3.4: air-cooled exchangers per API 661 or the vendor's values.
-   - 3.3.5: vessels and exchangers are evaluated by WRC 107 / 297, or by an owner-approved local method outside their limits, with no extrapolation of the curves. When PNC00004 is invoked, the PVP2011-57100 derivation in this skill is a layout-stage estimate only and 3.3.5 governs the vessel check.
+   - 3.3.5: vessels and exchangers are evaluated by WRC 107 / 297, or by a local method the owner accepts in writing outside their limits, with no extrapolation of the curves. When PNC00004 is invoked, the PVP2011-57100 derivation in this skill is a layout-stage estimate only and 3.3.5 governs the vessel check.
    - 3.3.6: tank nozzle loads per the owner's requirements.
-   - 3.2.14.3: no cold spring on rotating-machinery piping unless the owner approves.
+   - 3.2.14.3: no cold spring on rotating-machinery piping unless the owner permits it in writing.
 3. **Load cases.** Its load case list (friction runs, extra mandatory cases) governs the cases fed to this skill: see `load-case-builder`.
 
 Record in the calc sheet which owner practice was invoked, with its edition, and which paragraph set each factor. If the project does not invoke one, write "No owner practice invoked" in the Basis section; silence is the defect.

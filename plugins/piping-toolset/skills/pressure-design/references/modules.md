@@ -46,7 +46,7 @@ P  = 2·S·E·Mf·tp / ( D − 2·y·tp )
 Workflow for a schedule check:
 
 1. Section 1 or 2 gives tOrder.
-2. Ask the user to read the nominal wall of the candidate standard wall (ASME B36.10M / B36.19M, or the mill's data) for this NPS. **Do not supply it.**
+2. Ask the user to read the nominal wall of the candidate standard wall (ASME B36.10M / B36.19M, or the mill's data) for this NPS. **Do not supply it.** With the connector it comes from `get_pipe_dimensions` and is recorded as connector-supplied.
 3. Check nominal ≥ tOrder. Then run this module with the selected nominal wall to report the actual allowable pressure and compare to design pressure. The margin is the finding.
 
 The coefficient field is named `y` in this module for both codes: enter Y (B31.3, Table 304.1.1) or y (B31.1, Table 104.1.2(A)) there and say which on the sheet. `Mf` is the B31.12 hydrogen material performance factor; use 1.0 for every other code. Enter the weld joint strength reduction factor `W` (B31.3 Table 302.3.5-1 / B31.1 Table 102.4.7-1; confirm the table name in your copy) whenever the pipe is welded and W can be below 1.0 — it multiplies `S·E` exactly as in the thickness equation. It defaults to 1.0, which is also the value for codes with no W term (B31.9, B31.12); say on the sheet when the default was used. If no thickness remains after tolerance and allowances the module returns `fail` with allowable pressure 0.
@@ -125,3 +125,31 @@ Points to state on the sheet:
 - `pneumaticMaxFactor` is optional; if supplied and exceeded, a warning cites 345.5.4. The second 345.5.4 limit (90 % of the 345.2.1(a) pressure) is not evaluated.
 - The result is the **piping minimum**. Flange, valve and equipment test limits must be checked separately; the script always prints that warning.
 - For a system of mixed materials, run each and state which ratio governs.
+
+## Connector-supplied values (`code_values`)
+
+Every module accepts an optional top-level `code_values` block: the route for a value the Engineering Data connector returned, or a value the user read, together with its citation. Shape (a template, not a code value):
+
+```
+"code_values": {
+  "S": {"value": <number from the lookup>, "unit": "ksi",
+        "citation": {"standard": "...", "edition": "...", "table": "...", "row": "...", "column": "S"},
+        "source": "connector"}
+}
+```
+
+| Field | Meaning |
+|---|---|
+| name (the key) | The module input it fills, spelled exactly as `list` prints it (`S`, `ST`, `E`, `W`, `Y`, `y`, `t`). A name the module does not declare stops the run (exit code 2) |
+| `value` | A number (or a string), the number as the lookup returned it |
+| `unit` | Required. The unit the lookup returned, so ksi stays `"ksi"`; `null` for a dimensionless value. The script converts a unit it can convert exactly (ksi to psi) and says so in `warnings`; any other mismatch is rejected |
+| `citation` | `standard`, `edition`, `table` and `row` (all non-empty strings), and `column` when there is one, copied from the lookup's `citation` |
+| `source` | `connector` for a returned value, `user` for a value the user read |
+
+Rules:
+
+- An input missing from the main inputs is filled from `code_values[name].value`. An input present in both places with different values stops the run, exit code 2, with `code_values.<name> conflicts with input <name>`; fix the job file, do not edit one side to match.
+- The envelope gains `code_value_provenance`, `{name: {unit, citation, source}}`, for every entry. `inputs` shows the values used, and `user_supplied` lists a filled input as it lists a typed one. Quote any unit-conversion note in `warnings`, and copy the provenance into section 3 of the calc sheet with its source column.
+- Put only the entries the module being run declares in that job file; an entry for another module's input is an error. The script makes no network calls.
+- `S` and `ST` come back from the connector in ksi and the modules take psi: pass `"unit": "ksi"` and let the script convert. `E`, `W`, `Y` and `y` are dimensionless (`"unit": null`). `t` (`piping.b31-allowable-pressure`) is in inches, as `get_pipe_dimensions` returns it.
+- `piping.b31-allowable-pressure` takes the coefficient as `y` for both codes: fill it from the `Y` or `y` lookup and say which on the sheet.

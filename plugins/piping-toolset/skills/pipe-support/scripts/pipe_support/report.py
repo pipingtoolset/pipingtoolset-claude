@@ -138,6 +138,16 @@ def markdown(doc: dict) -> str:
     L += ["G2.1(a): rolled I-shapes with h/tw <= 2.24 sqrt(E/Fy) take phi_v = 1.00 / Omega_v = 1.50.", ""]
     L += _table(["Material", "Value"], [["Steel Fy (ksi)", mat["Fy"]], ["Steel Fu (ksi)", mat["Fu"]],
                                          ["E (ksi)", mat.get("E", 29000)], ["Electrode FEXX (ksi)", d["weldFEXX"]]]) + [""]
+    if doc.get("code_value_provenance"):
+        applied = doc.get("code_value_applied") or {}
+        rows = []
+        for name, p in doc["code_value_provenance"].items():
+            c = p["citation"]
+            ref = f"{c['standard']} {c['edition']}, {c['table']}, {c['row']}" + (f", {c['column']}" if c.get("column") else "")
+            used = applied.get(name) or {}
+            rows.append([name, _n(used.get("value")), used.get("unit") or "-", p["source"], ref])
+        L += ["## Code-table values (user-supplied or connector-supplied, cited)", ""]
+        L += _table(["Input", "Value", "Unit", "Source", "Citation"], rows) + [""]
 
     L += ["## Assembly geometry", ""]
     g = []
