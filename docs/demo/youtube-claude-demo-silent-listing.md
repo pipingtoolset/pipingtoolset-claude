@@ -2,12 +2,9 @@
 
 Built by `edit-tools/build_claude_demo_silent.py` from the step recordings (2026-10-28). It
 replaces the narrated 2026-10-27 cut (40lcLzIzHEg) in the same format as the ChatGPT / Codex demo
-(VHD-XIeQu2s): no voice, captions burned in, the same captions in the `.srt`. Upload
-`PipingToolset_for_Claude_demo_silent.mp4` (1920x1080, 30 fps, 5:05, silent) with
-`PipingToolset_for_Claude_demo_silent.srt` as the English subtitle track, then put the new id into
-`VIDEO.id` in `scripts/seo/claude-content.mjs` (pipecalcpro); the `/claude/` page and the
-`/openai/` fallback both read it. Keep or unlist the narrated video as you prefer; the site
-only embeds the id in `VIDEO`.
+(VHD-XIeQu2s): no voice, captions burned in, the same captions in the `.srt`. Published 2026-10-28 as
+h7A6Fq1cbHs and embedded on `/claude/` (`VIDEO.id` in `scripts/seo/claude-content.mjs`, pipecalcpro
+PR 149). The narrated video is no longer embedded anywhere on the site.
 
 ## Title
 
