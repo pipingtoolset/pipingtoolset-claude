@@ -439,5 +439,182 @@ class SkillContent(unittest.TestCase):
         content_guard.assert_clean(self, SKILL)
 
 
+# ------------------------------------------------------------------ skeyOverrides and code_values
+
+def _skeys(text: str, kind: str):
+    """The SKEY of every record of one kind, in file order (None where the record has no SKEY)."""
+    return [(r[1].get("SKEY") or [[None]])[0][0] for r in records(text) if r[0] == kind]
+
+
+class SkeyOverrides(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        cls.base = build(demo())
+        cls.base_text = cls.base.pcf.text()
+
+    def _run(self, overrides, spec=None):
+        spec = copy.deepcopy(spec or demo())
+        spec["skeyOverrides"] = overrides
+        b = build(spec)
+        return b, b.pcf.text()
+
+    def test_an_override_replaces_the_default_and_nothing_else_changes(self):
+        defaults = _skeys(self.base_text, "FLANGE")
+        self.assertIn("FLWN", defaults)
+        b, text = self._run({"flange": "FLSW"})
+        self.assertEqual(_skeys(text, "FLANGE").count("FLWN"), 0)
+        self.assertEqual(_skeys(text, "FLANGE").count("FLSW"), defaults.count("FLWN"))
+        self.assertEqual(text.replace("SKEY FLSW", "SKEY FLWN"), self.base_text)   # geometry untouched
+
+    def test_item_types_and_record_names_are_both_accepted_and_agree(self):
+        by_type = self._run({"tee": "TERF", "olet": "SKSW", "elbow": "ELBW", "blind": "FLBX", "reducer": "RECC"})[1]
+        by_name = self._run({"TEE": "TERF", "OLET": "SKSW", "ELBOW": "ELBW", "FLANGE-BLIND": "FLBX",
+                             "REDUCER-CONCENTRIC": "RECC"})[1]
+        self.assertEqual(by_type, by_name)
+        self.assertEqual(set(_skeys(by_type, "TEE")), {"TERF"})
+        self.assertEqual(set(_skeys(by_type, "OLET")), {"SKSW"})
+        self.assertEqual(set(_skeys(by_type, "BEND")), {"ELBW"})
+        self.assertEqual(set(_skeys(by_type, "REDUCER-CONCENTRIC")), {"RECC"})
+        self.assertIn("FLBX", _skeys(by_type, "FLANGE"))                  # the blind is a FLANGE record in the safe set
+
+    def test_reducer_covers_the_concentric_and_the_eccentric_record(self):
+        b, _ = self._run({"reducer": "RCXX"})
+        self.assertEqual(b.skey_overrides, {"REDUCER-CONCENTRIC": "RCXX", "REDUCER-ECCENTRIC": "RCXX"})
+        self.assertEqual(b.skey_given, {"reducer": "RCXX"})
+
+    def test_an_items_own_skey_wins_over_the_override(self):
+        spec = demo()
+        spec["items"].insert(1, {"type": "support", "name": "S2", "desc": "no skey given"})
+        _, text = self._run({"support": "SPRG"}, spec)
+        supports = _skeys(text, "SUPPORT")
+        self.assertEqual(supports.count("SPRG"), 1)                # only the item with no skey
+        self.assertTrue({"ANCH", "SKID", "GUID"} <= set(supports))  # the demo's own skeys stand
+
+    def test_support_override_keeps_the_direction_defaults_of_its_skey(self):
+        spec = {"pipeline": {"reference": "T"}, "axes": "Z-up", "units": "MM",
+                "start": {"at": {"E": "0", "N": "0", "EL": "0"}, "dir": "N", "bore": 6},
+                "items": [{"type": "pipe", "to": {"len": "10'0"}},
+                          {"type": "support", "desc": "rest"}]}
+        b, text = self._run({"support": "SPRG"}, spec)
+        rec = [r for r in records(text) if r[0] == "SUPPORT"][0][1]
+        self.assertEqual((rec["SKEY"], rec["SUPPORT-DIRECTION"]), ([["SPRG"]], [["UP"]]))
+
+    def test_null_omits_the_skey_line(self):
+        defaults = _skeys(self.base_text, "FLANGE")
+        _, text = self._run({"flange": None})
+        got = _skeys(text, "FLANGE")
+        self.assertEqual(got.count(None), defaults.count("FLWN"))        # the plain flanges lose the line
+        self.assertEqual(got.count("FLBL"), defaults.count("FLBL"))      # the blind keeps its own default
+
+    def test_the_report_echoes_the_map_and_names_the_unused_keys(self):
+        b, _ = self._run({"flange": "flsw", "Coupling": "CPLG"})
+        r = build_pcf.report(b, b.bom_check())
+        self.assertEqual(r["skey_overrides"], {"flange": "FLSW", "Coupling": "CPLG"})
+        self.assertEqual(r["skey_overrides_unused"], ["Coupling"])
+        self.assertTrue(r["ok"])
+        text = build_pcf.render(r)
+        self.assertIn("SKEY overrides applied over the defaults:", text)
+        self.assertIn("not used by any item: Coupling", text)
+        self.assertEqual(json.loads(json.dumps(r))["skey_overrides"], r["skey_overrides"])
+
+    def test_no_overrides_means_an_unchanged_report_and_file(self):
+        r = build_pcf.report(self.base, self.base.bom_check())
+        self.assertNotIn("skey_overrides", r)
+        self.assertNotIn("skey_overrides_unused", r)
+        self.assertNotIn("SKEY overrides", build_pcf.render(r))
+        b, text = self._run({})                                    # an empty map is also a no-op
+        self.assertEqual(text, self.base_text)
+        r = build_pcf.report(b, b.bom_check())
+        self.assertEqual((r["skey_overrides"], r["skey_overrides_unused"]), ({}, []))
+        self.assertNotIn("SKEY overrides", build_pcf.render(r))
+
+    def test_the_overridden_file_still_validates_against_a_site_list(self):
+        b, text = self._run({"flange": "FLSW"})
+        v = V.validate(text, skeys=SITE_SKEYS | {"FLSW"})
+        self.assertEqual((v["errors"], v["warnings"]), ([], []))
+        v = V.validate(text, skeys=SITE_SKEYS)                     # FLSW is not on this site list: flagged
+        self.assertTrue(any("FLSW" in w for w in v["warnings"]))
+
+    def test_bad_overrides_are_spec_errors(self):
+        bad = [
+            ({"widget": "FLWN"}, "unknown item type 'widget'"),
+            ({"pipe": "FLWN"}, "unknown item type 'pipe'"),
+            ({"flange": "F"}, "not one token of 2 to 8 letters and digits"),
+            ({"flange": "FL WN"}, "not one token"),
+            ({"flange": "1FLWN"}, "not one token"),
+            ({"flange": "FLWNFLWNX"}, "not one token"),
+            ({"flange": 5}, "not one token"),
+            ({"flange": ["FLWN"]}, "not one token"),
+            ({"support": "ZZZZ"}, "support SKEY ZZZZ is outside ANCH, SKID, GUID, SPRG"),
+            ({"support": None}, "support needs a SKEY"),
+            ({"flange": "FLWN", "FLANGE": "FLSW"}, "FLANGE is given two different SKEYs"),
+            ([["flange", "FLWN"]], "skeyOverrides must be an object"),
+            ("FLWN", "skeyOverrides must be an object"),
+        ]
+        for overrides, fragment in bad:
+            spec = demo()
+            spec["skeyOverrides"] = overrides
+            with self.assertRaises(L.PCFError, msg=fragment) as cm:
+                build_pcf.Builder(spec)
+            self.assertIn(fragment, str(cm.exception))
+
+    def test_cli_exit_code_and_message_for_a_bad_override(self):
+        spec = demo()
+        spec["skeyOverrides"] = {"widget": "FLWN"}
+        with tempfile.TemporaryDirectory() as d:
+            path, out = os.path.join(d, "bad.json"), os.path.join(d, "x.pcf")
+            with open(path, "w", encoding="utf-8") as fh:
+                json.dump(spec, fh)
+            err = io.StringIO()
+            with redirect_stdout(io.StringIO()), redirect_stderr(err):
+                self.assertEqual(build_pcf.main([path, "-o", out]), 1)
+            self.assertFalse(os.path.exists(out))
+        self.assertTrue(err.getvalue().startswith("SPEC ERROR: skeyOverrides: unknown item type 'widget'"))
+
+    def test_the_vocabulary_matches_the_builder(self):
+        self.assertEqual(L.SUPPORT_SKEY_VOCAB, tuple(build_pcf.SUPPORT_SKEYS))
+        for comps in L.SKEY_ITEM_TYPES.values():
+            self.assertTrue(set(comps) <= set(L.SKEY_COMPONENTS), comps)
+        # every item type with a SKEY has a key, and every default the builder uses is a legal SKEY token
+        for t in L.SKEY_ITEM_TYPES:
+            self.assertTrue(hasattr(build_pcf.Builder, "do_" + t) or t in build_pcf.INLINE_TYPES, t)
+        defaults = [v for v in build_pcf.DEFAULT_SKEY.values() if v] + ["BEBW", "TEBW", "WTBW", "RCBW", "RECC"]
+        defaults += list(build_pcf.SUPPORT_SKEYS)
+        for skey in defaults:
+            self.assertTrue(L._SKEY_TOKEN.match(skey), skey)
+        self.assertTrue(set(build_pcf.DEFAULT_SKEY) <= set(L.SKEY_COMPONENTS))
+
+    def test_an_empty_code_values_block_changes_nothing(self):
+        for block in (None, {}):
+            spec = demo()
+            spec["code_values"] = block
+            self.assertEqual(build(spec).pcf.text(), self.base_text)
+
+    def test_a_code_values_entry_is_refused_not_dropped(self):
+        spec = demo()
+        spec["code_values"] = {"S": {"value": 1, "unit": "psi", "source": "user"}}
+        with self.assertRaisesRegex(L.CodeValuesError, "code_values.S is not an input of build_pcf.py"):
+            build(spec)
+        spec["code_values"] = [1]
+        with self.assertRaisesRegex(L.CodeValuesError, "code_values must be an object"):
+            build(spec)
+
+    def test_cli_exits_2_with_an_entry_and_writes_no_pcf(self):
+        import subprocess
+        import tempfile
+        tool = os.path.join(ROOT, "plugins", "piping-toolset", "skills", "iso-to-pcf", "scripts", "build_pcf.py")
+        with tempfile.TemporaryDirectory() as d:
+            spec = demo()
+            spec["code_values"] = {"S": {"value": 1, "unit": "psi", "source": "user"}}
+            sp, out = os.path.join(d, "s.json"), os.path.join(d, "o.pcf")
+            with open(sp, "w", encoding="utf-8") as fh:
+                json.dump(spec, fh)
+            r = subprocess.run([sys.executable, tool, sp, "-o", out], capture_output=True, text=True, encoding="utf-8")
+            self.assertEqual(r.returncode, 2)
+            self.assertIn("input error: code_values.S is not an input of build_pcf.py", r.stderr)
+            self.assertFalse(os.path.exists(out))
+
+
 if __name__ == "__main__":
     unittest.main()

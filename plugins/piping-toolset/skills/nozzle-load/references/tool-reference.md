@@ -93,3 +93,31 @@ with `check.json` holding `"standard": "PVP2011-57100 Table 1A, derived"`, the `
 ## What the tool does not do
 
 It does not read tables, does not know any equipment's allowables, does not resolve loads to a point except for pump Annex F, does not check movements, does not draw the API 650 nomograms, and does not decide who must approve a load beyond a standard's limit. Every allowable, limit, figure reading and stress comes from the user's licensed copy.
+
+## Connector-supplied values (`code_values`)
+
+Every module accepts an optional top-level `code_values` block: the route for a value the Engineering Data connector returned, or a value the user read, together with its citation. Shape (a template, not a code value):
+
+```
+"code_values": {
+  "S_vessel": {"value": <number from the lookup>, "unit": "ksi",
+               "citation": {"standard": "...", "edition": "...", "table": "...", "row": "...", "column": "S"},
+               "source": "connector"}
+}
+```
+
+| Field | Meaning |
+|---|---|
+| name (the key) | The module input it fills, spelled exactly as `list` prints it. A nested input uses a dotted name: `applied.Fx`, `allowable.Mz`, `limits.Fy`, `row.Fx`, `lowerRow.Mx`, `upperRow.My`, `annexF.kSigma`, `suctionBore.Do`, `dischargePosition.x`. A name the module does not declare stops the run (exit code 2) |
+| `value` | A number (or a string), the number as the lookup returned it |
+| `unit` | Required. The unit the lookup returned, so ksi stays `"ksi"`; `null` for a dimensionless value. The script converts a unit it can convert exactly (ksi to psi) and says so in `warnings`; any other mismatch is rejected |
+| `citation` | `standard`, `edition`, `table` and `row` (all non-empty strings), and `column` when there is one, copied from the lookup's `citation` |
+| `source` | `connector` for a returned value, `user` for a value the user read |
+
+Rules:
+
+- An input missing from the main inputs is filled from `code_values[name].value`. An input present in both places with different values stops the run, exit code 2, with `code_values.<name> conflicts with input <name>`; fix the job file, do not edit one side to match.
+- The envelope gains `code_value_provenance`, `{name: {unit, citation, source}}`, for every entry. `inputs` shows the values used, and `user_supplied` lists a filled input as it lists a typed one. Quote any unit-conversion note in `warnings`, and copy the provenance into section 3 of the calc sheet with its source column.
+- Put only the entries the module being run declares in that job file; an entry for another module's input is an error. The script makes no network calls.
+- `S_vessel` and `S_nozzle` (`equipment.pvp2011-allowables`) are the only values the connector returns for this skill. It returns them in ksi: pass `"unit": "ksi"` and let the script convert.
+- Every table row, coefficient, constant and figure reading is pointer-only today: the user reads it, and it is entered as an ordinary input or as a `code_values` entry with `"source": "user"` and the pointer's standard, edition and table in `citation` (the force and moment components of a load set are unit-checked: lbf and ft-lbf, or N and N-m for the `api610-annexf` sets when `units` is `SI`; `nozzle-load-sum` limits take the unit of your load sets and are not checked). An `ownerFactor` is applied after the fill, to the values as filled.

@@ -23,7 +23,7 @@ What you see:
 • Prompt 3, pipe-support: PS-201, a CSA type 1 t-post with CAESAR II restraint loads. support_calc.py runs 23 ASCE 7-22 LRFD combinations (governing: arm-to-column weld base metal, UR 0.888), the optimizer re-runs at a 0.85 cap (W8X10 arm, 7/8 in plate, 5/8 in anchors, 0.834), and four files land in the working folder.
 • The calc report opened in Notepad, and the changelog that is the recall channel.
 
-Three rules hold in every skill: Claude never does the arithmetic, it never recalls a code table value, and the edition is an input, never a silent default. Nothing you enter reaches PipingToolset: no network calls, no telemetry, no account.
+Three rules hold in every skill: Claude never does the arithmetic, it never recalls a code table value, and the edition is an input, never a silent default. The skills and scripts make no network calls, carry no telemetry and need no account with us. The optional Engineering Data connector, if you enable it, sends only lookup keys.
 
 Install
   Cowork: download piping-toolset.plugin from the latest GitHub release, drag it into a chat, press Accept.

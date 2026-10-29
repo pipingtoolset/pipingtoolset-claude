@@ -29,6 +29,11 @@ USAGE
 
     Exit status: 0 = built, 2 = spec error (unknown or forward reference, bad field).
 
+    A spec key "code_values" (the optional block the other PipingToolset calculators take,
+    {input name: {value, unit, citation, source}}) may be absent, null or empty. This generator
+    has no code-table inputs, so a block with any entry exits 2 with
+    "code_values.<name> is not an input of loadcase_gen.py": a value is never dropped silently.
+
 UNITS / CONVENTIONS
     Y is vertical (CAESAR II default). Friction values are CAESAR II FRICTION
     MULTIPLIERS on the modelled mu, not mu itself.
@@ -118,6 +123,12 @@ class LoadCaseSet:
 
     def __init__(self, spec: dict[str, Any]) -> None:
         self.spec = spec
+        cv = spec.get("code_values")                            # no code-table slots here: absent, null or empty only
+        if cv is not None and not isinstance(cv, dict):
+            raise SpecError("code_values must be an object (this generator has no code-table inputs)")
+        if cv:
+            raise SpecError(f"code_values.{next(iter(cv))} is not an input of loadcase_gen.py "
+                            "(this generator has no code-table inputs)")
         try:
             self.code: str = spec["code"]                       # "B31.1" | "B31.3"
             self.states = [ThermalState(**s) for s in spec["thermal_states"]]
@@ -409,7 +420,7 @@ class LoadCaseSet:
             f.append("ASD: no 0.6W / 0.7E reduction applied (strength level). This matches "
                      "B31.1-2024 and the conservative reading of B31.3, and differs from the "
                      "CAESAR II help topic on ASCE 7 load combinations. State the position "
-                     "and who approved it.")
+                     "and who accepted it.")
 
         # Expansion completeness
         n_exp = sum(1 for c in self.cases if c.block == "EXP" and c.key.startswith("exp:"))

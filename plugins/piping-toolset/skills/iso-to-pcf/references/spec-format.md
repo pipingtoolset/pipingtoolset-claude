@@ -20,6 +20,8 @@ printed: `"13.7/8"` (13⅞ in), `"2635'0.7/16"`, `"5'4"`, `"7/16"`. A true decim
 | `annotate` | | Default `true` (import-proven): writes `ITEM-DESCRIPTION` from `desc`, `WEIGHT` from `weight` and support `NAME`. `false` gives the bare form |
 | `profiles` | | Elevation profiles for sloped runs (below) |
 | `assumed` | | Strings: everything not readable on the drawing. Copied into the report |
+| `skeyOverrides` | | Object `{item type: SKEY}` that replaces the default SKEY per component type (see [`skeyOverrides`](#skeyoverrides) below) |
+| `code_values` | | Absent, `null` or `{}` only: this skill has no code-table input, so a block with any entry exits 2 with `input error: code_values.<name> is not an input of build_pcf.py` and no PCF is written. SKEY choices go in `skeyOverrides` |
 | `bom` | | Counts to reconcile (see *BOM keys* below): `{"ELBOW": 4, "FLANGE": 2, "PIPE-LENGTH:6": "145'0", ...}` |
 | `full_vocabulary` | | `true` writes native `ELBOW`, `FLANGE-BLIND`, `CAP`, `MISC-COMPONENT` and `REDUCER-ECCENTRIC` records instead of the CAESAR II safe set. Use it only for an importer known to accept them |
 
@@ -103,3 +105,18 @@ their own `branch` list.
 Walk each sheet in its own spec, or chain them in one. Either way, put the `CONT. ON`
 coordinate in as a `check` at each hand-off, so both sheets are tied to the same stated
 point.
+
+## `skeyOverrides`
+
+An optional top-level object `{"<item type>": "<SKEY>"}` applied over the Default SKEYs table. Precedence, highest first: the item's own `skey`, then `skeyOverrides`, then the builder default.
+
+- **Keys** are the item `type` names (`flange`, `blind`, `gasket`, `valve`, `cap`, `misc`, `coupling`, `reducer`, `elbow`, `bend`, `tee`, `olet`, `support`; `reducer` covers the concentric and the eccentric record) or the builder's record names (`ELBOW`, `BEND`, `TEE`, `OLET`, `FLANGE`, `FLANGE-BLIND`, `GASKET`, `VALVE`, `CAP`, `MISC-COMPONENT`, `COUPLING`, `REDUCER-CONCENTRIC`, `REDUCER-ECCENTRIC`, `SUPPORT`).
+- **A SKEY** is one token of 2 to 8 upper-case letters and digits starting with a letter; `null` omits the SKEY. A support takes `ANCH`, `SKID`, `GUID` or `SPRG` only. Anything else is a spec error (exit 1).
+- The build report gains `skey_overrides` (the map as given, SKEYs upper-cased) and `skey_overrides_unused` (keys no item of the line used). A spec without the key builds the same file and report as before.
+
+Where the SKEYs come from, in order of preference:
+
+1. The user's own Isogen PCFs (see `reading-isos.md`). These are the only confirmed SKEYs for a site.
+2. When the site list has no SKEY for a type, the Engineering Data connector's `get_skey_map` (`scope` `isogen` for the vocabulary, `caesar-safe` for the records that import cleanly into CAESAR II). That map is Piping Toolset's vocabulary, not the site's. Record each SKEY taken from it in `assumed` and in the handover note as a substitution, with the scope and group, and check it against the site's own Isogen output before issue.
+
+The map never changes geometry, and a SKEY is not a code-table value, so no citation block is attached. `code_values` is refused when it has any entry (exit 2): PCF building has no code-table inputs. The script makes no network calls.

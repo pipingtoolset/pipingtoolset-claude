@@ -3,7 +3,7 @@
 Exact port of the Piping Toolset PiperSTR engine's ``baseplate-anchorage`` TypeScript module. Units: in,
 kip, ksi, psi for f'c. Input/output dict keys are the TypeScript names unchanged.
 
-Licensing firewall (as the TS engine): proprietary anchor qualification values (bond
+Data boundary (as the TS engine): proprietary anchor qualification values (bond
 stress tau_cr, manufacturer Np, product kc) are NEVER embedded; they arrive as inputs
 from the user's ESR / ICC evaluation report. The generic cast-in defaults are ACI
 318-19's own values and the output flags them.

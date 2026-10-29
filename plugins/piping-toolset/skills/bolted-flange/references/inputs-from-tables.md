@@ -59,3 +59,20 @@ For a ring joint the tool applies the same b0 test: G is the mean of the contact
 - **Units:** the single most common error. Programs report in lbf and ft-lbf, lbf and in-lbf, N and N-m, or kN and kN-m. Convert to lbf and in-lbf, or give the screen `M_ft_lbf`. `aux.app2-flange-integral` takes `Mext` in **ft-lbf**; use `Mext_in_lbf` for in-lbf.
 - **Which case:** run the screen per load case, with that case's pressure. Sustained plus pressure, operating, and occasional cases give different F and M. An envelope of the worst F and the worst M from different cases is conservative; say so if you use it.
 - **Torsion and shear:** neither method uses them. List them as reported and not used.
+
+## Connector datasets
+
+With the Engineering Data connector, the inputs below can come back as cited values (`lookup_value`, one row per call, passed through `code_values` as in [tool-reference.md](tool-reference.md#connector-supplied-values-code_values)). Every other input in the map above has no dataset and is read by the user as before. Use a returned value only when its `citation` names the edition and table of record; otherwise use the lookup wording above.
+
+| Input | dataset_id | Key fields | Column | Notes |
+|---|---|---|---|---|
+| `ratedPressure` | `b165-2017-ratings`, `b165-2025-ratings` | `group` (material group), `class`, `T` (design metal temperature, °F) | `rating` | Linear interpolation between the two bracketing tabulated temperatures only; never extrapolated, never between classes. The citation notes list the group's materials. An owner percentage is still applied by the user |
+| `A`, `C`, `t` | `b165-2017-dimensions` | `flangeClass`, `nps` | `odA`, `boltCircleC`, `minThk` | `minThk` is the minimum flange thickness. The dataset has no flange-type key: check the returned `table` and `row` against the flange type in the joint |
+| `X`, `Y` | `b165-2017-dimensions` | `flangeClass`, `nps` | `hubBaseX`, `lengthThruHubY` | Weld-neck hub dimensions. `B` and `pipe_OD` are not served |
+| `nBolts`, `bolt_D` | `b165-2017-dimensions` | `flangeClass`, `nps` | `nBolts`, `boltDia` | Threads per inch still come from the bolt specification |
+| `gasket_ID`, `gasket_OD` | `b1620-2017-spiral-wound` | `flangeClass`, `nps` | `gasketID`, `gasketOD` | Sealing-element ID and OD of a spiral-wound gasket. The user still confirms the contact width against the gasket sheet and the effective-width table |
+| `m`, `y` | `gasket-factors-4161` | `family`, `material` | `m`, `y`, `facingSketch` | VIII-2 Table 4.16.1 suggested values. Values agreed under 4.16.5.1 stay with the user |
+| `Sa`, `Sb` | `b313-bolting-stresses-2024` (B31.3), `b311-bolting-stresses-2024` (B31.1) | `spec`, `grade`, `T`; `size`, `lineNo` (B31.3) or `notes`, `sizeOrDia` (B31.1) when the reply asks | `S` | Two lookups: `T` at ambient for `Sa`, at design temperature for `Sb`. Check the returned `table` against the basis in Step 0. Where the basis is Section II Part D, read it as before |
+| `Sf`, `SfAmbient`, `Sn`, `SnAmbient` | `b313-allowable-stresses-2024` (B31.3), `b311-allowable-stresses-2024` (B31.1) | `spec`, `grade`, `T`, plus as asked: B31.3 `productForm`, `classCond`, `size`, `lineNo`, `uns`; B31.1 `productForm`, `typeClass`, `sizeOrDia`, `table`, `notes` | `S` | B31.3 only: also `b313-ej-factors` (`no`; `seamType`, `examination` as asked; column `ej`) or `b313-ec-factors` (`examination`; column `ec`), and `b313-w-factors` (`steelGroup`, `T`; column `W`), because Sf is S x E x W. B31.1 `Sf` is the allowable alone, and the returned `S` already includes the `E` or `F` named in `eOrF` |
+
+Not served, read by the user as before: `B`, `pipe_OD`, `Edesign`, `Eambient`, `rigidityFactor` and the `F_override`, `V_override` and `f_override` readings.

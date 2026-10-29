@@ -26,6 +26,12 @@ CLAUDE_MANIFEST = os.path.join(PLUGIN, ".claude-plugin", "plugin.json")
 AGENT_MANIFEST = os.path.join(PLUGIN, "plugin.json")
 CLAUDE_MARKET = os.path.join(ROOT, ".claude-plugin", "marketplace.json")
 CODEX_MARKET = os.path.join(ROOT, ".agents", "plugins", "marketplace.json")
+HOSTS_CHECKLIST = os.path.join(ROOT, "tests", "e2e", "HOSTS-CHECKLIST.md")
+# The optional Engineering Data connector: Claude hosts read .mcp.json, Agent Plugins hosts read
+# mcp.json, both at the plugin root (tests/test_connector_manifest.py pins their contents).
+CLAUDE_CONNECTOR = os.path.join(PLUGIN, ".mcp.json")
+AGENT_CONNECTOR = os.path.join(PLUGIN, "mcp.json")
+SEMVER = re.compile(r"^\d+\.\d+\.\d+$")
 SKILLS = sorted(glob.glob(os.path.join(PLUGIN, "skills", "*", "SKILL.md")))
 
 AGENT_PLUGINS_SCHEMA = "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json"
@@ -91,6 +97,26 @@ class ManifestParity(unittest.TestCase):
     def test_name_version_description_agree(self):
         for key in ("name", "version", "description"):
             self.assertEqual(self.claude[key], self.agent[key], key)
+
+    def test_version_is_semver_and_the_runbook_names_it(self):
+        version = self.claude["version"]
+        self.assertRegex(version, SEMVER)
+        self.assertEqual(self.agent["version"], version)
+        self.assertEqual(self.claude_market["plugins"][0]["version"], version)
+        with open(HOSTS_CHECKLIST, encoding="utf-8") as fh:
+            text = fh.read()
+        # The Phase 2 runbook is copy-paste: its title and every release tag or download URL
+        # must name the version being shipped, or a host run verifies the wrong archive.
+        self.assertIn("(plugin %s)" % version, text.splitlines()[0])
+        self.assertEqual(set(re.findall(r"\bv\d+\.\d+\.\d+\b", text)), {"v" + version})
+
+    def test_connector_declarations_sit_next_to_the_manifests(self):
+        for path in (CLAUDE_CONNECTOR, AGENT_CONNECTOR):
+            self.assertTrue(os.path.isfile(path), path)
+        # Each manifest is discovered by file name, so the Claude manifest keeps its field set
+        # (no mcpServers key) and the Agent Plugins manifest points at nothing extra.
+        self.assertNotIn("mcpServers", self.claude)
+        self.assertNotIn("mcpServers", self.agent)
 
     def test_description_fits_the_cowork_upload_validator(self):
         # Cowork's Settings > Plugins > Upload rejects a plugin.json whose description

@@ -1,10 +1,10 @@
 1
 00:00:05,500 --> 00:00:13,000
-pipingtoolset.com: the free calculators, and a launcher tier for the plugin that runs the same engine inside Claude
+pipingtoolset.com: the free calculators, and a launcher tier for the plugin that runs inside Claude
 
 2
 00:00:13,000 --> 00:00:20,000
-Seven free skills for Claude Code and Claude Cowork, from a practicing, licensed piping engineer
+Seven free skills for Claude Code and Claude Cowork, from a practicing piping engineer
 
 3
 00:00:20,600 --> 00:00:28,300
@@ -16,7 +16,7 @@ It never quotes a code table value. You read those from your licensed copy.
 
 5
 00:00:34,300 --> 00:00:41,800
-Where your data goes: nothing reaches PipingToolset. The scripts run in your own Claude environment.
+Where your data goes: the scripts make no network calls. The optional connector sends lookup keys only.
 
 6
 00:00:42,530 --> 00:00:54,030
@@ -24,7 +24,7 @@ Install: press Download for Cowork (.plugin). One file from the GitHub release, 
 
 7
 00:00:54,030 --> 00:01:06,030
-No account, no API key, no telemetry.
+The plugin needs no account or API key, and has no telemetry.
 
 8
 00:01:08,530 --> 00:01:24,030

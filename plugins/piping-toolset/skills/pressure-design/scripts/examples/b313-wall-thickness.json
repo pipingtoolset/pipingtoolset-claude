@@ -1,0 +1,35 @@
+{
+  "_note": "placeholder inputs, not code values",
+  "P": 750,
+  "D": 6.625,
+  "E": 0.77,
+  "W": 0.88,
+  "c": 0.0625,
+  "millTolerance": 0.125,
+  "code_values": {
+    "S": {
+      "value": 12.345,
+      "unit": "ksi",
+      "citation": {
+        "standard": "Placeholder standard",
+        "edition": "0000",
+        "table": "Placeholder table",
+        "row": "Placeholder row",
+        "column": "Placeholder column"
+      },
+      "source": "user"
+    },
+    "Y": {
+      "value": 0.35,
+      "unit": null,
+      "citation": {
+        "standard": "Placeholder standard",
+        "edition": "0000",
+        "table": "Placeholder table",
+        "row": "Placeholder row",
+        "column": "Placeholder column"
+      },
+      "source": "user"
+    }
+  }
+}

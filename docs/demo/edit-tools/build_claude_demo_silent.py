@@ -116,17 +116,17 @@ card("title", 5, [
 ], sub="pipingtoolset.com/claude  ·  free  ·  open source  ·  Apache-2.0  ·  the same plugin ships for ChatGPT and Codex")
 
 clip("step1", S("step1.mp4"), caps=[
-    cap("pipingtoolset.com: the free calculators, and a launcher tier for the plugin that runs the same engine inside Claude", 0.5, 8),
-    cap("Seven free skills for Claude Code and Claude Cowork, from a practicing, licensed piping engineer", 8, 15),
+    cap("pipingtoolset.com: the free calculators, and a launcher tier for the plugin that runs inside Claude", 0.5, 8),
+    cap("Seven free skills for Claude Code and Claude Cowork, from a practicing piping engineer", 8, 15),
 ])
 clip("step2", S("step2.mp4"), caps=[
     cap("pipingtoolset.com/claude: what a run looks like, the seven skills, the three rules", 0.3, 8),
     cap("It never quotes a code table value. You read those from your licensed copy.", 8, 14),
-    cap("Where your data goes: nothing reaches PipingToolset. The scripts run in your own Claude environment.", 14, 21.5),
+    cap("Where your data goes: the scripts make no network calls. The optional connector sends lookup keys only.", 14, 21.5),
 ])
 clip("step3", S("step3.mp4"), end=26, caps=[
     cap("Install: press Download for Cowork (.plugin). One file from the GitHub release, about 400 KB.", 0.5, 12),
-    cap("No account, no API key, no telemetry.", 12, 24),
+    cap("The plugin needs no account or API key, and has no telemetry.", 12, 24),
 ])
 clip("step4", S("step4_modified.mp4"), caps=[
     cap("Claude desktop app  ›  Settings  ›  Plugins  ›  Add  ›  Upload plugin\n(or drag the file into a Cowork chat and press Accept)", 0.5, 16, size=34),

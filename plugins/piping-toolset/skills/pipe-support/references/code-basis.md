@@ -23,6 +23,7 @@
   - Soil properties (bearing, friction, cohesion) from the geotech report.
   - SDS.
   - Slip-critical pretension Tb (Table J3.1) and slip class.
+  - With the Engineering Data connector, `get_pointer` names where `Fy`, `Fu`, `SDS` and the anchor product values are read (a location, never a value); the user still reads them, and the spec records them in `code_values` with `"source": "user"`.
 - **Not reproduced:** AWS D1.1 tables and figures.
 
 ## Verification

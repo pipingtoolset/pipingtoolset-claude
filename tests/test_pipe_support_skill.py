@@ -378,5 +378,225 @@ class SkillContent(unittest.TestCase):
         content_guard.assert_clean(self, SKILL)
 
 
+# ------------------------------------------------------------------ code_values
+
+def cv(value, unit, source="connector", column="Placeholder column"):
+    """A code_values entry with a placeholder citation."""
+    citation = {"standard": "Placeholder standard", "edition": "0000", "table": "Placeholder table",
+                "row": "Placeholder row"}
+    if column:
+        citation["column"] = column
+    return {"value": value, "unit": unit, "citation": citation, "source": source}
+
+
+class CodeValues(unittest.TestCase):
+    """The optional code_values block of the spec (the spelling codeValues is accepted too)."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.spec = load("ps-201-caesar.json")
+        cls.want = support_calc.run(copy.deepcopy(cls.spec), optimize=False)
+
+    def _without(self, *paths):
+        spec = copy.deepcopy(self.spec)
+        for path in paths:
+            node = spec
+            for seg in path[:-1]:
+                node = node[seg]
+            del node[path[-1]]
+        return spec
+
+    def _same_as_explicit(self, doc, ignore=("spec", "notes")):
+        for key in self.want:
+            if key in ignore:
+                continue
+            self.assertEqual(doc[key], self.want[key], key)
+
+    def _main(self, spec, *extra):
+        with tempfile.TemporaryDirectory() as d:
+            path = os.path.join(d, "spec.json")
+            with open(path, "w", encoding="utf-8") as fh:
+                json.dump(spec, fh)
+            out, err = io.StringIO(), io.StringIO()
+            with redirect_stdout(out), redirect_stderr(err):
+                code = support_calc.main([path, "--no-optimize", *extra])
+        return code, out.getvalue(), err.getvalue()
+
+    def test_full_paths_fill_the_spec_and_the_result_equals_the_explicit_run(self):
+        spec = self._without(("design", "material", "Fy"), ("design", "material", "Fu"),
+                             ("pipes", 0, "loads", "SDS"), ("pipes", 1, "loads", "SDS"))
+        spec["code_values"] = {
+            "design.material.Fy": cv(36, "ksi"), "design.material.Fu": cv(58, "ksi", "user"),
+            "pipes.0.loads.SDS": cv(0.5, "g", "user"), "pipes.1.loads.SDS": cv(0.5, "g", "user")}
+        doc = support_calc.run(spec, optimize=False)
+        self._same_as_explicit(doc, ignore=("spec", "notes", "code_value_provenance", "code_value_applied"))
+        self.assertEqual(list(doc["code_value_provenance"]),
+                         ["design.material.Fy", "design.material.Fu", "pipes.0.loads.SDS", "pipes.1.loads.SDS"])
+        self.assertEqual(doc["code_value_provenance"]["design.material.Fu"],
+                         {"unit": "ksi", "source": "user", "citation": cv(0, "ksi")["citation"]})
+        self.assertEqual(doc["code_value_applied"]["pipes.1.loads.SDS"], {"value": 0.5, "unit": "-"})
+        self.assertNotIn("code_values", doc["spec"])
+
+    def test_short_names_fill_every_pipe_and_both_spellings_of_the_key_work(self):
+        for key in ("code_values", "codeValues"):
+            spec = self._without(("design", "material", "Fy"), ("pipes", 0, "loads", "SDS"),
+                                 ("pipes", 1, "loads", "SDS"))
+            spec[key] = {"Fy": cv(36, "ksi"), "SDS": cv(0.5, None, "user")}
+            doc = support_calc.run(spec, optimize=False)
+            self._same_as_explicit(doc, ignore=("spec", "notes", "code_value_provenance", "code_value_applied"))
+            self.assertEqual(list(doc["code_value_provenance"]), ["Fy", "SDS"], key)
+            self.assertEqual([p["loads"]["SDS"] for p in doc["spec"]["pipes"]], [0.5, 0.5], key)
+            self.assertEqual(doc["code_value_applied"]["Fy"], {"value": 36, "unit": "ksi"}, key)
+
+    def test_a_value_replaces_the_preset_and_the_preset_note_goes_away(self):
+        spec = copy.deepcopy(self.spec)
+        self.assertIn("bondStrength = 800 taken from the csa-type-1 preset", " ".join(self.want["assumed"]))
+        spec["code_values"] = {"bondStrength": cv(0.9, "ksi", "user")}
+        doc = support_calc.run(spec, optimize=False)
+        self.assertEqual(doc["design"]["baseplate"]["bondStrength"], 900.0)
+        self.assertNotIn("bondStrength = 800", " ".join(doc["assumed"]))
+        self.assertIn("code_values.bondStrength: 0.9 ksi applied as 900 psi.", doc["notes"])
+        self.assertEqual(doc["code_value_applied"]["bondStrength"], {"value": 900.0, "unit": "psi"})
+
+    def test_anchor_values_by_their_full_and_short_names(self):
+        for name in ("design.baseplate.bondStrength", "baseplate.bondStrength", "bondStrength"):
+            spec = copy.deepcopy(self.spec)
+            spec["code_values"] = {name: cv(800, "psi", "user")}
+            doc = support_calc.run(spec, optimize=False)
+            self.assertEqual(doc["design"]["baseplate"]["bondStrength"], 800, name)
+            self._same_as_explicit(doc, ignore=("spec", "notes", "assumed", "code_value_provenance",
+                                                "code_value_applied"))
+        spec = copy.deepcopy(self.spec)
+        spec["code_values"] = {"anchorFuta": cv(58, "ksi"), "plateFy": cv(36, "ksi"), "cac": cv(12, "in", "user")}
+        doc = support_calc.run(spec, optimize=False)
+        bp = doc["design"]["baseplate"]
+        self.assertEqual((bp["anchorFuta"], bp["plateFy"], bp["cac"]), (58, 36, 12))
+
+    def test_a_conflict_exits_2_with_the_exact_message_and_no_verdict(self):
+        spec = copy.deepcopy(self.spec)
+        spec["code_values"] = {"design.material.Fy": cv(50, "ksi")}
+        code, out, err = self._main(spec, "--quiet")
+        self.assertEqual((code, out), (2, ""))
+        self.assertEqual(err, "input error: code_values.design.material.Fy conflicts with input design.material.Fy\n")
+        spec["code_values"] = {"Fy": cv(50, "ksi")}
+        code, out, err = self._main(spec, "--quiet")
+        self.assertEqual((code, out, err), (2, "", "input error: code_values.Fy conflicts with input Fy\n"))
+
+    def test_a_conflict_on_one_pipe_names_that_pipe(self):
+        spec = copy.deepcopy(self.spec)
+        spec["pipes"][1]["loads"]["SDS"] = 0.6
+        spec["code_values"] = {"SDS": cv(0.5, None, "user")}
+        code, out, err = self._main(spec, "--quiet")
+        self.assertEqual((code, out), (2, ""))
+        self.assertEqual(err, "input error: code_values.SDS conflicts with input SDS (pipes[1].loads.SDS)\n")
+
+    def test_an_equal_value_is_recorded_as_matching(self):
+        spec = copy.deepcopy(self.spec)
+        spec["code_values"] = {"Fy": cv(36, "ksi"), "Fu": cv(58, "ksi")}
+        doc = support_calc.run(spec, optimize=False)
+        self.assertEqual(list(doc["code_value_provenance"]), ["Fy", "Fu"])
+        self._same_as_explicit(doc, ignore=("spec", "notes", "code_value_provenance", "code_value_applied"))
+
+    def test_an_unknown_name_exits_2(self):
+        for name in ("fy", "Q", "design.material.Q", "pipes.0.loads.D", "arms.0.shape", "design"):
+            spec = copy.deepcopy(self.spec)
+            spec["code_values"] = {name: cv(1, "ksi")}
+            code, out, err = self._main(spec, "--quiet")
+            self.assertEqual((code, out), (2, ""), name)
+            self.assertEqual(len(err.strip().splitlines()), 1, name)
+            self.assertTrue(err.startswith(f"input error: code_values.{name} is not an input of the support spec (valid: "),
+                            err)
+
+    def test_a_unit_that_cannot_be_used_exits_2(self):
+        spec = self._without(("design", "material", "Fy"))
+        spec["code_values"] = {"Fy": cv(248, "MPa")}
+        code, out, err = self._main(spec, "--quiet")
+        self.assertEqual((code, out), (2, ""))
+        self.assertEqual(err, "input error: code_values.Fy unit 'MPa' cannot be used for an input in 'ksi'\n")
+
+    def test_a_malformed_block_exits_2(self):
+        for block, fragment in (([1], "code_values must be an object"),
+                                ({"Fy": 36}, "code_values.Fy must be an object"),
+                                ({"Fy": dict(cv(36, "ksi"), source="x")}, "code_values.Fy.source must be")):
+            spec = self._without(("design", "material", "Fy"))
+            spec["code_values"] = block
+            code, out, err = self._main(spec, "--quiet")
+            self.assertEqual((code, out), (2, ""), fragment)
+            self.assertIn(fragment, err)
+
+    def test_the_key_given_in_both_spellings_exits_2(self):
+        spec = copy.deepcopy(self.spec)
+        spec["code_values"] = {"Fy": cv(36, "ksi")}
+        spec["codeValues"] = {"Fu": cv(58, "ksi")}
+        code, out, err = self._main(spec, "--quiet")
+        self.assertEqual((code, out), (2, ""))
+        self.assertIn("give code_values once, not as both code_values and codeValues", err)
+
+    def test_sds_needs_caesar_mode(self):
+        spec = load("ps-101-factored.json")
+        spec["code_values"] = {"SDS": cv(0.5, None, "user")}
+        code, out, err = self._main(spec, "--quiet")
+        self.assertEqual((code, out), (2, ""))
+        self.assertIn("code_values.SDS: nothing to fill, pipes is not a non-empty list", err)
+
+    def test_the_factored_example_with_its_material_moved_into_the_block(self):
+        base = load("ps-101-factored.json")
+        want = support_calc.run(copy.deepcopy(base), optimize=False)
+        spec = copy.deepcopy(base)
+        del spec["design"]["material"]
+        spec["code_values"] = {"Fy": cv(36, "ksi"), "Fu": cv(58, "ksi")}
+        doc = support_calc.run(spec, optimize=False)
+        self.assertEqual(doc["envelope"]["governingRatio"], want["envelope"]["governingRatio"])
+        self.assertAlmostEqual(doc["envelope"]["governingRatio"], 0.8314, places=4)
+
+    def test_absent_block_changes_nothing(self):
+        for doc in (self.want, support_calc.run(load("ps-101-factored.json"), optimize=False)):
+            self.assertNotIn("code_value_provenance", doc)
+            self.assertNotIn("code_value_applied", doc)
+            self.assertNotIn("Code-table values", support_calc.R.markdown(doc))
+            self.assertNotIn("code_value", support_calc.R.to_json(doc))
+        spec = copy.deepcopy(self.spec)
+        spec["code_values"] = None
+        doc = support_calc.run(spec, optimize=False)
+        self.assertNotIn("code_value_provenance", doc)
+        self._same_as_explicit(doc)
+        spec["code_values"] = {}                               # an empty block is the same as none
+        doc = support_calc.run(spec, optimize=False)
+        self.assertNotIn("code_value_provenance", doc)
+        self.assertNotIn("code_value_applied", doc)
+        self._same_as_explicit(doc)
+
+    def test_provenance_reaches_the_json_and_the_markdown_report(self):
+        spec = self._without(("design", "material", "Fy"), ("design", "material", "Fu"))
+        spec["code_values"] = {"Fy": cv(36, "ksi"), "Fu": cv(58, "ksi", "user")}
+        with tempfile.TemporaryDirectory() as d:
+            path, jpath, mpath = (os.path.join(d, n) for n in ("spec.json", "out.json", "calc.md"))
+            with open(path, "w", encoding="utf-8") as fh:
+                json.dump(spec, fh)
+            with redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()):
+                code = support_calc.main([path, "--no-optimize", "--json", jpath, "--report", mpath, "--quiet"])
+            with open(jpath, encoding="utf-8") as fh:
+                data = json.load(fh)
+            with open(mpath, encoding="utf-8") as fh:
+                md = fh.read()
+        self.assertEqual(code, 3 if self.want["criticalFindings"] else 0)
+        self.assertEqual(list(data["code_value_provenance"]), ["Fy", "Fu"])
+        self.assertEqual(data["code_value_provenance"]["Fy"]["source"], "connector")
+        self.assertEqual(data["code_value_applied"]["Fu"], {"value": 58, "unit": "ksi"})
+        self.assertIn("## Code-table values (user-supplied or connector-supplied, cited)", md)
+        self.assertIn("| Input | Value | Unit | Source | Citation |", md)
+        self.assertIn("| Fy | 36 | ksi | connector | Placeholder standard 0000, Placeholder table, Placeholder row, "
+                      "Placeholder column |", md)
+        self.assertIn("| Fu | 58 | ksi | user |", md)
+
+    def test_the_caller_spec_is_not_modified(self):
+        spec = self._without(("design", "material", "Fy"))
+        spec["code_values"] = {"Fy": cv(0.036, "Msi")}
+        before = json.dumps(spec, sort_keys=True)
+        doc = support_calc.run(spec, optimize=False)
+        self.assertEqual(json.dumps(spec, sort_keys=True), before)
+        self.assertEqual(doc["design"]["material"]["Fy"], 36.0)
+
+
 if __name__ == "__main__":
     unittest.main()

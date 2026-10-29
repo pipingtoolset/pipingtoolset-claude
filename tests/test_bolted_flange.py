@@ -742,7 +742,7 @@ class SkillContent(unittest.TestCase):
                 mods.update(a.name.split(".")[0] for a in node.names)
             elif isinstance(node, ast.ImportFrom):
                 mods.add((node.module or "").split(".")[0])
-        self.assertLessEqual(mods, {"__future__", "argparse", "json", "math", "sys", "decimal", "typing"})
+        self.assertLessEqual(mods, {"__future__", "argparse", "copy", "json", "math", "sys", "decimal", "typing"})
 
     def test_script_header_states_the_hub_factor_provenance(self):
         header = " ".join(self.code.split('"""', 2)[1].split())
@@ -876,6 +876,174 @@ class SkillContent(unittest.TestCase):
             ex = json.load(fh)
         declared = {f[0] for f in bf.FIELDS["aux.app2-flange-integral"]}
         self.assertTrue(set(ex) <= declared)
+
+
+# --------------------------------------------------------------------------- code_values
+
+
+def cv(value, unit, source="connector", column="Placeholder column"):
+    """A code_values entry with a placeholder citation."""
+    citation = {"standard": "Placeholder standard", "edition": "0000", "table": "Placeholder table",
+                "row": "Placeholder row"}
+    if column:
+        citation["column"] = column
+    return {"value": value, "unit": unit, "citation": citation, "source": source}
+
+
+def _is_number(x):
+    return isinstance(x, (int, float)) and not isinstance(x, bool)
+
+
+class CodeValues(unittest.TestCase):
+    """The optional top-level code_values input, the contract shared by the calculator scripts."""
+
+    ENVELOPE_KEYS = {"module", "status", "output", "warnings", "citation", "inputs", "user_supplied"}
+    SCREEN = dict(P=500, F=2000, M_in_lbf=50000, G=6.0, ratedPressure=1975)
+    GEOMETRY = dict(gasket_ID=10.0, gasket_OD=11.0, facing="flat", bolt_D=1.0, bolt_tpi=8, nBolts=12)
+
+    def _example(self):
+        with open(EXAMPLE, encoding="utf-8") as fh:
+            return json.load(fh)
+
+    def _base(self, module):
+        if module == "connections.flange-equivalent-pressure":
+            return dict(self.SCREEN)
+        if module == "aux.app2-flange-integral":
+            return self._example()
+        return dict(self.GEOMETRY)
+
+    def _names(self, module, base):
+        return [n for n in bf.USER_SUPPLIED[module] if _is_number(base.get(n))]
+
+    def _moved(self, module, base, names, source="connector", **extra):
+        units = {f[0]: f[1] for f in bf.FIELDS[module]}
+        moved = {n: cv(base[n], None if units[n] == "-" else units[n], source) for n in names}
+        job = {k: v for k, v in base.items() if k not in names}
+        job.update(extra)
+        return dict(job, code_values=moved)
+
+    def _cli(self, module, inputs):
+        return subprocess.run([sys.executable, TOOL, module, "--input", json.dumps(inputs)],
+                              capture_output=True, text=True, encoding="utf-8")
+
+    def test_every_module_filled_run_equals_the_explicit_run(self):
+        for module in bf.REGISTRY:
+            base = self._base(module)
+            names = self._names(module, base)
+            self.assertGreater(len(names), 0, module)
+            want = bf.run_module(module, dict(base))
+            got = bf.run_module(module, self._moved(module, base, names))
+            self.assertEqual(sorted(got.pop("code_value_provenance")), sorted(names), module)
+            self.assertEqual(got, want, module)
+
+    def test_each_input_can_be_filled_on_its_own(self):
+        for module in bf.REGISTRY:
+            base = self._base(module)
+            want = bf.run_module(module, dict(base))
+            for name in self._names(module, base):
+                got = bf.run_module(module, self._moved(module, base, [name], source="user"))
+                got.pop("code_value_provenance")
+                self.assertEqual(got, want, f"{module} {name}")
+
+    def test_the_rating_in_psig_fills_the_screen_and_is_echoed(self):
+        base = {k: v for k, v in self.SCREEN.items() if k != "ratedPressure"}
+        env = bf.run_module("connections.flange-equivalent-pressure",
+                            dict(base, code_values={"ratedPressure": cv(1975, "psig")}))
+        self.assertEqual(env["code_value_provenance"]["ratedPressure"],
+                         {"unit": "psig", "source": "connector", "citation": cv(0, "psig")["citation"]})
+        self.assertEqual(env["user_supplied"], ["ratedPressure"])
+        self.assertEqual(env["inputs"]["ratedPressure"], 1975)
+        want = bf.run_module("connections.flange-equivalent-pressure", dict(self.SCREEN))
+        self.assertEqual(env["output"], want["output"])
+        self.assertEqual(env["status"], want["status"])
+        self.assertEqual(env["output"]["utilization"], 0.8859)
+
+    def test_gasket_factors_have_a_dotted_spelling(self):
+        base = {k: v for k, v in self._example().items() if k not in ("m", "y")}
+        want = bf.run_module("aux.app2-flange-integral", self._example())
+        env = bf.run_module("aux.app2-flange-integral",
+                            dict(base, code_values={"gasket.m": cv(1.234, None), "gasket.y": cv(1234, "psi")}))
+        self.assertEqual(list(env["code_value_provenance"]), ["gasket.m", "gasket.y"])
+        self.assertEqual((env["inputs"]["m"], env["inputs"]["y"]), (1.234, 1234))
+        env.pop("code_value_provenance")
+        self.assertEqual(env, want)
+        # the plain names and the dotted names address one input: a different value under the other spelling conflicts
+        r = self._cli("aux.app2-flange-integral",
+                      dict(self._example(), code_values={"gasket.m": cv(3.0, None)}))
+        self.assertEqual(r.stderr, "input error: code_values.gasket.m conflicts with input gasket.m\n")
+        both = dict(base, code_values={"m": cv(1.234, None), "gasket.m": cv(2.75, None), "y": cv(1234, "psi")})
+        r = self._cli("aux.app2-flange-integral", both)
+        self.assertEqual(r.returncode, 2)
+        self.assertIn("code_values.gasket.m conflicts with input gasket.m", r.stderr)
+
+    def test_the_dotted_gasket_names_are_only_for_the_module_that_has_the_inputs(self):
+        r = self._cli("connections.flange-equivalent-pressure",
+                      dict(self.SCREEN, code_values={"gasket.m": cv(2.5, None)}))
+        self.assertEqual((r.returncode, r.stdout), (2, ""))
+        self.assertIn("code_values.gasket.m is not an input of connections.flange-equivalent-pressure", r.stderr)
+
+    def test_ksi_allowables_are_converted_exactly_and_noted(self):
+        base = {k: v for k, v in self._example().items() if k not in ("Sa", "Sb", "Sf")}
+        env = bf.run_module("aux.app2-flange-integral",
+                            dict(base, code_values={"Sa": cv(22.222, "ksi"), "Sb": cv(22.222, "ksi"), "Sf": cv(11.111, "ksi")}))
+        self.assertEqual((env["inputs"]["Sa"], env["inputs"]["Sb"], env["inputs"]["Sf"]), (22222.0, 22222.0, 11111.0))
+        self.assertIn("code_values.Sa: 22.222 ksi applied as 22222 psi.", env["warnings"])
+        want = bf.run_module("aux.app2-flange-integral", self._example())
+        self.assertEqual(env["output"], want["output"])
+
+    def test_a_unit_that_cannot_be_used_is_rejected(self):
+        base = {k: v for k, v in self.SCREEN.items() if k != "ratedPressure"}
+        for unit in ("bar", "MPa", None):
+            with self.assertRaisesRegex(ValueError, "code_values.ratedPressure unit .* cannot be used for an input in 'psi'"):
+                bf.run_module("connections.flange-equivalent-pressure",
+                              dict(base, code_values={"ratedPressure": cv(100, unit)}))
+
+    def test_a_conflict_exits_2_with_the_exact_message(self):
+        r = self._cli("connections.flange-equivalent-pressure",
+                      dict(self.SCREEN, code_values={"ratedPressure": cv(1976, "psig")}))
+        self.assertEqual((r.returncode, r.stdout), (2, ""))
+        self.assertEqual(r.stderr, "input error: code_values.ratedPressure conflicts with input ratedPressure\n")
+
+    def test_an_unknown_name_exits_2(self):
+        for name in ("Q", "rating", "RatedPressure", "gasket.b", "M.x"):
+            r = self._cli("connections.flange-equivalent-pressure", dict(self.SCREEN, code_values={name: cv(1, "psi")}))
+            self.assertEqual((r.returncode, r.stdout), (2, ""), name)
+            self.assertEqual(len(r.stderr.strip().splitlines()), 1, name)
+            self.assertTrue(r.stderr.startswith(
+                f"input error: code_values.{name} is not an input of connections.flange-equivalent-pressure (valid: "),
+                r.stderr)
+
+    def test_a_malformed_block_exits_2(self):
+        base = {k: v for k, v in self.SCREEN.items() if k != "ratedPressure"}
+        for block, fragment in (("x", "code_values must be an object"),
+                                ({"ratedPressure": dict(cv(1, "psig"), source="")}, "code_values.ratedPressure.source must be"),
+                                ({"ratedPressure": {"value": 1, "unit": "psig", "source": "user"}},
+                                 "code_values.ratedPressure.citation needs")):
+            r = self._cli("connections.flange-equivalent-pressure", dict(base, code_values=block))
+            self.assertEqual((r.returncode, r.stdout), (2, ""), fragment)
+            self.assertIn(fragment, r.stderr)
+
+    def test_absent_code_values_changes_nothing(self):
+        for module in bf.REGISTRY:
+            base = self._base(module)
+            env = bf.run_module(module, dict(base))
+            self.assertEqual(set(env), self.ENVELOPE_KEYS, module)
+            self.assertEqual(env["inputs"], base, module)
+            self.assertEqual(bf.run_module(module, dict(base, code_values=None)), env, module)
+            self.assertEqual(bf.run_module(module, dict(base, code_values={})), env, module)
+
+    def test_the_screen_keeps_its_compression_handling_with_a_filled_rating(self):
+        base = {k: v for k, v in self.SCREEN.items() if k not in ("ratedPressure", "F")}
+        env = bf.run_module("connections.flange-equivalent-pressure",
+                            dict(base, F=-500, code_values={"ratedPressure": cv(1975, "psig")}))
+        want = bf.run_module("connections.flange-equivalent-pressure", dict(self.SCREEN, F=-500))
+        env.pop("code_value_provenance")
+        self.assertEqual(env, want)
+        self.assertTrue(any("Compressive axial force taken as F = 0" in w for w in env["warnings"]))
+
+    def test_list_mentions_the_block(self):
+        r = subprocess.run([sys.executable, TOOL, "list"], capture_output=True, text=True, encoding="utf-8")
+        self.assertIn("code_values", r.stdout)
 
 
 if __name__ == "__main__":

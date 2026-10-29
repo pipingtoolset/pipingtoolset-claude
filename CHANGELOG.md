@@ -8,6 +8,83 @@ keep a defect until the plugin is updated, so each such entry names the skill, t
 affected inputs and the release that fixed it. GitHub Releases carry the same
 label and are the recall channel.
 
+## [0.7.0] — 2026-10-28
+
+An optional Engineering Data connector, and the listing copy re-scoped around it. The plugin stays
+free, every skill works without the connector, and the refusal prompts give the same answer with it
+off. With the same inputs entered, the fixtures, golden files and every number the seven skills
+produce are unchanged from 0.6.3; nothing here corrects a result.
+
+- **Connector declaration.** `plugins/piping-toolset/.mcp.json` (Claude Code, Cowork) and
+  `plugins/piping-toolset/mcp.json` (Agent Plugins hosts) each declare one remote server,
+  `pipingtoolset-data`, at `https://pipingtoolset.com/mcp` (Streamable HTTP, stateless): transport
+  `http` in the first, `streamable-http` in the second, https only, no headers and no stored
+  credentials. `mcp.json` follows the portable format on developers.openai.com/plugins/build/plugins
+  (read 2026-10-28): the `agent-plugins.org` MCP schema, `mcpServers`, and the sign-in setting under
+  `extensions["com.openai"].auth`, set to `mixed` (open tools need no account, the rest sign in
+  through pipingtoolset.com) with dynamic client registration. Those docs name root `mcp.json`, do
+  not say the Claude-style `.mcp.json` is read as well, and warn against renaming one to the other,
+  so both files ship. The manifests do not repeat the declaration; each host finds its file by name.
+- **What the connector serves, currently.** With no account: worked examples of the data-free
+  modules, SKEY and PCF mappings, AISC shapes and pointers. With a signed-in paid pipingtoolset.com
+  account, at the site's tier: Pro serves B31.3 Table A-1C and B31.1 Appendix A allowable stresses
+  and bolting, the B31.3 E, W and Y and B31.1 E and y factor tables, B31J Table 1-1 component rows
+  (row text only; the SIF number is still user-supplied or computed by a script), B31.1 Table
+  121.5-1 spans, BPE tables and B36.10M / B36.19M dimensions; Pro Plus adds B16.5 ratings and
+  dimensions, B16.20, UCS-66 and BPVC VIII-2 Table 4.16.1 gasket factors. API 610 / 560 / 660 / 661,
+  PVP2011-57100, ASCE 7-22, AISC 360, ACI and NEMA SM-23 tables are pointers (table, row key,
+  column, edition) with no value. Every served value carries its citation, and the SKILL.md files
+  and the README tell the user to verify it against their own copy.
+- **SKILL.md connector branches.** Each skill that reads a code-table value gains a section on the
+  connector. When its tools are present, the assistant makes one `lookup_value` call per value the
+  job needs (never a sweep of a table), hands each result to the script as a cited `code_values`
+  entry marked `"source": "connector"`, and puts the citation, the rows used and the verify line on
+  the calc sheet. On a pointer, a one-line account or limit message, any other error, or no
+  connector at all, the skill runs its interview and the instruction to read the value from the
+  user's own copy, unchanged.
+- **`code_values` input.** Every skill script accepts an optional top-level `code_values` object
+  mapping an input name to `{value, unit, citation{standard, edition, table, row, column?},
+  source}` with `source` `connector` or `user`. A named input absent from the main inputs is filled
+  from its entry; if both are present and differ, the run stops with exit code 2 and the line
+  `code_values.<name> conflicts with input <name>`. The result gains `code_value_provenance` (unit,
+  citation and source per name); `user_supplied` and every other key keep their shape. The scripts
+  make no network calls, and a test fails on any mention of an HTTP or socket module under
+  `skills/*/scripts`. Calc-sheet section 3 is retitled "Code-table values (user-supplied or
+  connector-supplied, cited)" and every row carries a source column (user or connector).
+- **Re-scoped copy.** The line that nothing the user enters is sent to PipingToolset is replaced in
+  the README, the OpenAI long description and the capabilities list by what is true now: the skills
+  and their scripts make no network calls; the connector, when enabled, sends only lookup keys
+  (standard, material, temperature, size), never full inputs; what is open and what needs a paid
+  account at the site's tier, with "currently" wherever a tier or source could change; API tables
+  pointer-only for now; sign-in through pipingtoolset.com asks for a confirmation that the
+  assistant account is set not to train on conversations; values arrive cited and are still
+  verified against the user's copy. The `capabilities` entry that said "no network access" now says
+  the scripts make no network calls and names the optional connector. The `.claude-plugin/plugin.json`
+  description names the connector and stays under the 500-character Cowork cap (488). The README
+  gains an "Engineering Data connector" section with the install lines for a claude.ai custom
+  connector, Claude Code, a ChatGPT developer-mode connector and Codex.
+- **Packaging.** `tools/package_plugin.py --check` now fails unless `.mcp.json` and `mcp.json` sit
+  at the root of the `.plugin` and the `.zip`, each declares exactly one https server, and both
+  name the same URL; it also fails if either appears in the skills-only zip. The three archives
+  remain byte-reproducible.
+- **Tests.** `tests/test_connector_manifest.py` (new) pins both declarations (one server, one
+  https URL, matching transports, no headers or credentials), the packaging facts above, the rule
+  that no skill script mentions a network module, and the wording rules for the listing copy.
+  `tests/test_manifests.py` also checks that the version is the same in all four places and that
+  the Phase 2 runbook names it. Manifests, both marketplaces and the Phase 2 runbook
+  (`tests/e2e/HOSTS-CHECKLIST.md`, now with a connector row per host) are at 0.7.0.
+- **`code_values` edge cases (review fixes).** An empty `code_values` object is now the same as none
+  (no `code_value_provenance` key). In `nozzle-load` the force and moment components of
+  `connections.nozzle-load-check` and the `api610-annexf` load sets are unit-checked like the other
+  load sets (lbf and ft-lbf, or N and N-m when `units` is `SI`), so a newton figure is rejected
+  rather than applied as lbf. `load-case-builder` and `iso-to-pcf` have no code-table input and now
+  exit 2 on a `code_values` entry instead of dropping it silently. A conflict on a name that fans out
+  over a list reads `code_values.<name> conflicts with input <name> (<path>)`. Calc-sheet section 3
+  carries the contract title in all four calculators; `get_pointer` and `get_skey_map` argument
+  names are stated as the server takes them; the allowable-stress key fields are listed per code;
+  example JSON files use obviously artificial numbers. Words the board's copy rules ban are out
+  of the skills, their references and the load-case finding text.
+
 ## [0.6.3] — 2026-10-28
 
 - `nozzle-load`: API 610 Annex F method constants and the SM-23-form coefficient are now user-supplied inputs (read from the edition of record); no API-derived numeric constant ships in code or prose. No change to results when the same constants are entered (fixture parity green).

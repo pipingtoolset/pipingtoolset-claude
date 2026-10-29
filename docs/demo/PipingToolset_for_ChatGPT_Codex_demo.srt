@@ -28,7 +28,7 @@ Settings  ›  Plugin settings  ›  PipingToolset: seven skills, each with the 
 
 8
 00:00:46,000 --> 00:00:51,000
-No account, no API key, no telemetry. Nothing you type reaches PipingToolset.
+No account, no API key, no telemetry. The scripts make no network calls.
 
 9
 00:00:51,300 --> 00:00:59,000

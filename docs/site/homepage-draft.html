@@ -125,7 +125,7 @@ a.new{background:var(--new-bg)}
     </p>
     <p class="shell-hero-sub">
       Open a toolset below, run a calculation, and add the result to a project report with a titleblock,
-      a captured-calculation list, and print-to-PDF output. <span class="new" style="outline-offset:2px;padding:0 3px">The same engine now runs inside Claude Code and Claude Cowork as a free plugin; see PipingToolset for Claude below.</span>
+      a captured-calculation list, and print-to-PDF output. <span class="new" style="outline-offset:2px;padding:0 3px">The calculators' fixture-verified scripts now run inside Claude Code and Claude Cowork as a free plugin; see PipingToolset for Claude below.</span>
     </p>
   </div>
 </header>
@@ -156,13 +156,13 @@ a.new{background:var(--new-bg)}
   <div class="new-block" id="claude">
     <div class="tier-heading" style="margin-top:14px">PipingToolset for Claude — free · open source · Apache-2.0</div>
     <div class="tiles plugin-tiles">
-      <a class="tile" href="#claude-page"><div class="tile-head"><svg viewBox="0 0 24 24"><path d="M12 3v12M8 11l4 4 4-4M4 17v3h16v-3"/></svg>Install in Claude Cowork<span class="sub">Download the .plugin, drag it into a chat, press Accept</span></div><div class="tile-body">Five skills appear under PipingToolset in the skills menu. Python is provided by the Cowork sandbox; nothing else to install.</div></a>
+      <a class="tile" href="#claude-page"><div class="tile-head"><svg viewBox="0 0 24 24"><path d="M12 3v12M8 11l4 4 4-4M4 17v3h16v-3"/></svg>Install in Claude Cowork<span class="sub">Download the .plugin, drag it into a chat, press Accept</span></div><div class="tile-body">Seven skills appear under PipingToolset in the skills menu. Python is provided by the Cowork sandbox; nothing else to install.</div></a>
       <a class="tile" href="#claude-page"><div class="tile-head"><svg viewBox="0 0 24 24"><path d="M4 5l6 7-6 7M12 19h8"/></svg>Install in Claude Code<span class="sub">Two commands in the terminal</span></div><div class="tile-body"><code>/plugin marketplace add pipingtoolset/pipingtoolset-claude</code> then <code>/plugin install piping-toolset@pipingtoolset</code>. Needs Python 3.9+ on your machine.</div></a>
-      <a class="tile" href="#claude-page"><div class="tile-head"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>What it does, what it will not do, where data goes<span class="sub">pipingtoolset.com/claude/</span></div><div class="tile-body">Pressure design, stress screening, load case builder, pipe support, iso to PCF. Claude interviews, a script computes, no code table values are embedded, nothing you enter reaches us.</div></a>
+      <a class="tile" href="#claude-page"><div class="tile-head"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>What it does, what it will not do, where data goes<span class="sub">pipingtoolset.com/claude/</span></div><div class="tile-body">Pressure design, stress screening, load case builder, pipe support, iso to PCF, nozzle load, bolted flange. Claude interviews, a script computes, no code table values are embedded, and an optional connector serves cited table values.</div></a>
     </div>
     <div class="plugin-note">
-      <span class="pill">v0.4.0</span>
-      <span>Built on the same fixture-verified engine as the calculators above.</span>
+      <span class="pill">v0.7.0</span>
+      <span>Checked against the same locked fixtures as the calculators above.</span>
       <a href="#claude-page">Read the page →</a>
       <a href="https://github.com/pipingtoolset/pipingtoolset-claude">Source on GitHub →</a>
     </div>
@@ -212,5 +212,5 @@ a.new{background:var(--new-bg)}
     <div class="sitefooter-col"><b>Trust</b><a href="#">About the engineer</a><a href="#">Validation methodology</a><a href="#">Fixture coverage</a><a href="#">Calculation changelog</a><a href="#">Source &amp; citation policy</a><b class="gap">For AI assistants</b><a class="new" href="#claude-page">PipingToolset for Claude</a><a href="https://github.com/pipingtoolset/pipingtoolset-claude">Plugin source (GitHub)</a><a href="#">llms.txt</a></div>
     <div class="sitefooter-col"><b>Legal</b><a href="#">Privacy policy</a><a href="#">Terms of use</a><b class="gap">Connect</b><a href="#">support@pipingtoolset.com</a><a href="#">YouTube</a><a href="#">LinkedIn</a></div>
   </nav>
-  <p class="sitefooter-disc">Free calculators run entirely in your browser and never transmit their inputs; server-backed paid features say so where you use them. The Claude plugin runs in your own Claude environment and sends nothing to Piping Toolset.</p>
+  <p class="sitefooter-disc">Free calculators run entirely in your browser and never transmit their inputs; server-backed paid features say so where you use them. The AI plugin's scripts run in your own assistant environment and make no network calls; its optional connector sends lookup keys only.</p>
 </div></footer>

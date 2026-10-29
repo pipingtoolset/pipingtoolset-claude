@@ -55,7 +55,7 @@ Compression: pass `Fax` = max(F, 0) to follow VIII-2 4.16.13 (FA is the tensile 
 { "module", "status", "output", "warnings", "citation", "inputs", "user_supplied" }
 ```
 
-`user_supplied` lists the inputs present in the call that are code, table or project values the user must be able to cite. `status` `na` means a value with no pass/fail. Exit code 2 with a one-line `input error: ...` message means bad input; fix it, never retry with guessed values.
+`user_supplied` lists the inputs present in the call that are code, table or project values the user must be able to cite. When the call carried `code_values`, the envelope also has `code_value_provenance` (below). `status` `na` means a value with no pass/fail. Exit code 2 with a one-line `input error: ...` message means bad input; fix it, never retry with guessed values.
 
 ## Pre-flight (before the engine)
 
@@ -89,3 +89,32 @@ python scripts/bolted_flange.py aux.app2-flange-integral --input-file scripts/ex
 ```
 
 A screen `job.json` looks like `{"P": 300, "F": 4000, "M_in_lbf": 120000, "G": 17.29, "ratedPressure": 500}`. Quoting inline JSON on a command line is shell-dependent (PowerShell in particular mangles it), so write `job.json` to the working directory with the file tool and pass `--input-file`.
+
+## Connector-supplied values (`code_values`)
+
+Every module accepts an optional top-level `code_values` block: the route for a value the Engineering Data connector returned, or a value the user read, together with its citation. Shape (a template, not a code value):
+
+```
+"code_values": {
+  "ratedPressure": {"value": <number from the lookup>, "unit": "psig",
+                    "citation": {"standard": "...", "edition": "...", "table": "...", "row": "...", "column": "rating"},
+                    "source": "connector"}
+}
+```
+
+| Field | Meaning |
+|---|---|
+| name (the key) | The module input it fills, spelled exactly as `list` prints it; this skill has no nested inputs, and `gasket.m` and `gasket.y` are accepted spellings of `m` and `y`. A name the module does not declare stops the run (exit code 2) |
+| `value` | A number (or a string), the number as the lookup returned it |
+| `unit` | Required. The unit the lookup returned, so ksi stays `"ksi"`; `null` for a dimensionless value. The script converts a unit it can convert exactly (ksi to psi) and says so in `warnings`; any other mismatch is rejected |
+| `citation` | `standard`, `edition`, `table` and `row` (all non-empty strings), and `column` when there is one, copied from the lookup's `citation` |
+| `source` | `connector` for a returned value, `user` for a value the user read |
+
+Rules:
+
+- An input missing from the main inputs is filled from `code_values[name].value`. An input present in both places with different values stops the run, exit code 2, with `code_values.<name> conflicts with input <name>`; fix the job file, do not edit one side to match.
+- The envelope gains `code_value_provenance`, `{name: {unit, citation, source}}`, for every entry. `inputs` shows the values used, and `user_supplied` lists a filled input as it lists a typed one. Quote any unit-conversion note in `warnings`, and copy the provenance into section 3 of the calc sheet with its source column.
+- Put only the entries the module being run declares in that job file; an entry for another module's input is an error. The script makes no network calls.
+- The entries each module declares: `ratedPressure` for `connections.flange-equivalent-pressure`; `A`, `C`, `t`, `m`, `y`, `nBolts`, `Sa`, `Sb`, `Sf`, `SfAmbient`, `Sn`, `SnAmbient` for `aux.app2-flange-integral`; `gasket_ID`, `gasket_OD`, `bolt_D`, `nBolts`, `X`, `Y`, `t` for `connections.flange-derive`.
+- The connector returns allowables in ksi and ratings in psig: pass the unit as returned and the script converts ksi to psi. Dimensions are in inches; `m` is dimensionless (`"unit": null`).
+- `Sf` under B31.3 is S x E x W: form the product by a script run, enter it with `"unit": "ksi"`, cite the `S` line in `citation`, list the `E` and `W` lines in `row`, and show the three lookups and the product on the sheet.

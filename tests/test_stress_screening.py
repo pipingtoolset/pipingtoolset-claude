@@ -686,5 +686,222 @@ class SkillContent(unittest.TestCase):
             self.assertIsNone(pat.search(blob), label)
 
 
+# --------------------------------------------------------------------------- code_values
+
+
+def cv(value, unit, source="connector", column="Placeholder column"):
+    """A code_values entry with a placeholder citation."""
+    citation = {"standard": "Placeholder standard", "edition": "0000", "table": "Placeholder table",
+                "row": "Placeholder row"}
+    if column:
+        citation["column"] = column
+    return {"value": value, "unit": unit, "citation": citation, "source": source}
+
+
+def _is_number(x):
+    return isinstance(x, (int, float)) and not isinstance(x, bool)
+
+
+class CodeValues(unittest.TestCase):
+    """The optional top-level code_values input, the contract shared by the calculator scripts."""
+
+    ENVELOPE_KEYS = {"module", "status", "output", "warnings", "citation", "inputs", "user_supplied"}
+    DISP = dict(ii=2.0, io=1.5, Mi=1000, Mo=500, Mt=0, Z=8.0, Sc=20000, Sh=17000, f=1)
+
+    def _base(self, module):
+        """A valid input for each module: the calc-core fixture, or the hand case for the new checks."""
+        if module == "screen.support-span":
+            return dict(SupportSpan.BASE)
+        if module == "screen.flexibility-exemption":
+            return dict(FlexibilityExemption.BASE)
+        base = dict(parity.load(module)["cases"][0]["input"])
+        if module == "piping.fatigue-factor":
+            base.setdefault("equation", "legacy")        # the CLI layer requires it; the engine defaults it
+        return base
+
+    def _cli(self, module, inputs):
+        return subprocess.run([sys.executable, TOOL, module, "--input", json.dumps(inputs)],
+                              capture_output=True, text=True, encoding="utf-8")
+
+    def _moved(self, module, base, names, source="connector"):
+        units = {f[0]: f[1] for f in ss.FIELDS[module]}
+        moved = {n: cv(base[n], None if units[n] == "-" else units[n], source) for n in names}
+        return dict({k: v for k, v in base.items() if k not in names}, code_values=moved)
+
+    def _names(self, module, base):
+        names = [n for n in ss.USER_SUPPLIED[module] if _is_number(base.get(n))]
+        return names or [n for n, *_ in ss.FIELDS[module] if _is_number(base.get(n))][:2]
+
+    def test_every_module_filled_run_equals_the_explicit_run(self):
+        for module in ss.REGISTRY:
+            base = self._base(module)
+            names = self._names(module, base)
+            self.assertTrue(names, module)
+            want = ss.run_module(module, dict(base))
+            got = ss.run_module(module, self._moved(module, base, names))
+            self.assertEqual(sorted(got.pop("code_value_provenance")), sorted(names), module)
+            self.assertEqual(got, want, module)
+
+    def test_each_input_can_be_filled_on_its_own(self):
+        for module in ss.REGISTRY:
+            base = self._base(module)
+            want = ss.run_module(module, dict(base))
+            for name in self._names(module, base):
+                got = ss.run_module(module, self._moved(module, base, [name], source="user"))
+                got.pop("code_value_provenance")
+                self.assertEqual(got, want, f"{module} {name}")
+
+    def test_provenance_is_echoed_with_unit_citation_and_source(self):
+        base = {k: v for k, v in self.DISP.items() if k not in ("Sc", "Sh")}
+        env = ss.run_module("piping.displacement-stress",
+                            dict(base, code_values={"Sc": cv(20000, "psi"), "Sh": cv(17000, "psi", "user")}))
+        self.assertEqual(list(env["code_value_provenance"]), ["Sc", "Sh"])
+        self.assertEqual(env["code_value_provenance"]["Sc"],
+                         {"unit": "psi", "source": "connector", "citation": cv(0, "psi")["citation"]})
+        self.assertEqual(env["code_value_provenance"]["Sh"]["source"], "user")
+        self.assertEqual(env["user_supplied"], ["ii", "io", "Sc", "Sh", "f"])
+        self.assertNotIn("code_values", env["inputs"])
+        self.assertEqual(env["output"], ss.run_module("piping.displacement-stress", dict(self.DISP))["output"])
+
+    def test_an_input_present_in_both_places_and_equal_is_recorded(self):
+        env = ss.run_module("piping.displacement-stress", dict(self.DISP, code_values={"Sc": cv(20000, "psi")}))
+        self.assertEqual(sorted(env["code_value_provenance"]), ["Sc"])
+
+    def test_ksi_allowables_are_converted_exactly_and_noted(self):
+        base = {k: v for k, v in self.DISP.items() if k not in ("Sc", "Sh")}
+        env = ss.run_module("piping.displacement-stress",
+                            dict(base, code_values={"Sc": cv(20.0, "ksi"), "Sh": cv(17.0, "ksi")}))
+        self.assertEqual((env["inputs"]["Sc"], env["inputs"]["Sh"]), (20000.0, 17000.0))
+        self.assertIn("code_values.Sc: 20 ksi applied as 20000 psi.", env["warnings"])
+        self.assertEqual(env["output"], ss.run_module("piping.displacement-stress", dict(self.DISP))["output"])
+
+    def test_a_unit_that_cannot_be_used_is_rejected(self):
+        base = {k: v for k, v in self.DISP.items() if k != "Sc"}
+        with self.assertRaisesRegex(ValueError, "code_values.Sc unit 'MPa' cannot be used for an input in 'psi'"):
+            ss.run_module("piping.displacement-stress", dict(base, code_values={"Sc": cv(138, "MPa")}))
+
+    def test_a_conflict_exits_2_with_the_exact_message(self):
+        r = self._cli("piping.displacement-stress", dict(self.DISP, code_values={"Sc": cv(20001, "psi")}))
+        self.assertEqual((r.returncode, r.stdout), (2, ""))
+        self.assertEqual(r.stderr, "input error: code_values.Sc conflicts with input Sc\n")
+
+    def test_an_unknown_name_exits_2(self):
+        for name in ("Q", "sc", "SA", "allowable.Fx"):
+            r = self._cli("piping.displacement-stress", dict(self.DISP, code_values={name: cv(1, "psi")}))
+            self.assertEqual((r.returncode, r.stdout), (2, ""), name)
+            self.assertEqual(len(r.stderr.strip().splitlines()), 1, name)
+            self.assertTrue(r.stderr.startswith(
+                f"input error: code_values.{name} is not an input of piping.displacement-stress (valid: "), r.stderr)
+
+    def test_list_and_text_inputs_are_not_fillable_but_text_and_count_inputs_are(self):
+        base = dict(parity.load("piping.fatigue-factor")["cases"][0]["input"])
+        base.pop("sets", None)
+        base.pop("N", None)
+        base.setdefault("equation", "legacy")
+        base["fmax"] = base.get("fmax", 1)
+        r = self._cli("piping.fatigue-factor", dict(base, code_values={"sets": cv(1, None)}))
+        self.assertEqual(r.returncode, 2)
+        self.assertIn("code_values.sets is not an input", r.stderr)
+        env = ss.run_module("piping.fatigue-factor", dict(base, code_values={"N": cv(5000, "cycles")}))
+        self.assertEqual(env["output"], ss.run_module("piping.fatigue-factor", dict(base, N=5000))["output"])
+
+    def test_a_malformed_entry_exits_2(self):
+        base = {k: v for k, v in self.DISP.items() if k != "Sc"}
+        bad = [({"Sc": 20000}, "code_values.Sc must be an object"),
+               ({"Sc": dict(cv(1, "psi"), source="vendor")}, "code_values.Sc.source must be"),
+               ({"Sc": dict(cv(1, "psi"), citation={})}, "code_values.Sc.citation needs")]
+        for block, fragment in bad:
+            r = self._cli("piping.displacement-stress", dict(base, code_values=block))
+            self.assertEqual((r.returncode, r.stdout), (2, ""), fragment)
+            self.assertIn(fragment, r.stderr)
+
+    def test_absent_code_values_changes_nothing(self):
+        for module in ss.REGISTRY:
+            base = self._base(module)
+            env = ss.run_module(module, dict(base))
+            self.assertEqual(set(env), self.ENVELOPE_KEYS, module)
+            self.assertEqual(env["inputs"], base, module)
+            self.assertEqual(ss.run_module(module, dict(base, code_values=None)), env, module)
+            self.assertEqual(ss.run_module(module, dict(base, code_values={})), env, module)
+
+    def test_the_basis_command_is_untouched(self):
+        r = subprocess.run([sys.executable, TOOL, "basis", "--code", "B31.3", "--edition", "2022"],
+                           capture_output=True, text=True, encoding="utf-8")
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertNotIn("code_value", r.stdout)
+
+    def test_list_mentions_the_block(self):
+        r = subprocess.run([sys.executable, TOOL, "list"], capture_output=True, text=True, encoding="utf-8")
+        self.assertIn("code_values", r.stdout)
+
+
+class ExampleFile(unittest.TestCase):
+    """examples/sa-and-exemption.json: placeholder inputs for the E3 and E5 prompts, one section per module."""
+
+    PATH = os.path.join(SCRIPTS, "examples", "sa-and-exemption.json")
+
+    @classmethod
+    def setUpClass(cls):
+        with open(cls.PATH, encoding="utf-8") as fh:
+            cls.job = json.load(fh)
+
+    def _cli(self, module):
+        return subprocess.run([sys.executable, TOOL, module, "--input-file", self.PATH],
+                              capture_output=True, text=True, encoding="utf-8")
+
+    def test_note_and_sections(self):
+        self.assertEqual(self.job["_note"], "placeholder inputs, not code values")
+        sections = [k for k in self.job if not k.startswith("_")]
+        self.assertEqual(sections, ["piping.fatigue-factor", "piping.displacement-stress",
+                                    "screen.flexibility-exemption"])
+        for module in sections:
+            self.assertIn(module, ss.REGISTRY)
+
+    def test_fatigue_section_is_the_e3_cycle_count(self):
+        r = self._cli("piping.fatigue-factor")
+        self.assertEqual(r.returncode, 0, r.stderr)
+        env = json.loads(r.stdout)
+        self.assertEqual(env["inputs"], self.job["piping.fatigue-factor"])
+        self.assertEqual(env["inputs"]["N"], 20000)
+        self.assertAlmostEqual(env["output"]["f"], 20 * 20000 ** -0.333, delta=5e-6)
+        self.assertAlmostEqual(env["output"]["f"], 0.7392, delta=5e-5)
+
+    def test_displacement_section_reports_s_a_from_f_sc_sh(self):
+        r = self._cli("piping.displacement-stress")
+        self.assertEqual(r.returncode, 0, r.stderr)
+        sec = self.job["piping.displacement-stress"]
+        self.assertAlmostEqual(json.loads(r.stdout)["output"]["SA"],
+                               sec["f"] * (1.25 * sec["Sc"] + 0.25 * sec["Sh"]), delta=1e-3)
+
+    def test_exemption_section_runs_with_the_disqualifiers_confirmed(self):
+        r = self._cli("screen.flexibility-exemption")
+        self.assertEqual(r.returncode, 0, r.stderr)
+        out = json.loads(r.stdout)["output"]
+        sec = self.job["screen.flexibility-exemption"]
+        self.assertAlmostEqual(out["lhs"], sec["D"] * sec["y"] / (sec["L"] - sec["U"]) ** 2, delta=1e-6)
+        self.assertAlmostEqual(out["K1"], 30 * sec["SA"] / sec["Ea"], delta=1e-6)
+        self.assertTrue(out["disqualifier_inputs_confirmed"])
+        # the E5 prompt's own geometry
+        self.assertEqual((sec["D"], sec["y"], sec["L"], sec["U"]), (4.5, 1.2, 40, 30))
+
+    def test_a_module_with_no_section_is_an_error(self):
+        r = self._cli("supports.spring-variability")
+        self.assertEqual((r.returncode, r.stdout), (2, ""))
+        self.assertIn("the job file has no section for supports.spring-variability", r.stderr)
+
+    def test_plain_input_files_still_work_and_comment_keys_are_dropped(self):
+        with tempfile.TemporaryDirectory() as d:
+            path = os.path.join(d, "job.json")
+            with open(path, "w", encoding="utf-8") as fh:
+                json.dump(dict(_note="x", **self.job["screen.flexibility-exemption"]), fh)
+            r = subprocess.run([sys.executable, TOOL, "screen.flexibility-exemption", "--input-file", path],
+                               capture_output=True, text=True, encoding="utf-8")
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertNotIn("_note", json.loads(r.stdout)["inputs"])
+
+    def test_the_example_is_clean_under_the_content_guard(self):
+        content_guard.assert_clean(self, SKILL)
+
+
 if __name__ == "__main__":
     unittest.main()

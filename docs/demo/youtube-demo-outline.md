@@ -71,11 +71,11 @@ from the people who build the free calculators at pipingtoolset.com."
 
 **Do:** on https://pipingtoolset.com/claude/, scroll slowly through "What it does" (the seven-row
 table), stop on "What it will not do" for 3 s, then on "Where your data goes" for 3 s (the table
-whose row "Anything sent to pipingtoolset.com" says **Nothing**). Scroll back to the top.
+whose row "Sent to pipingtoolset.com by the scripts" says **Nothing**). Scroll back to the top.
 
 **Narration:** "Claude runs the interview, a Python script does the math, and you read the table
-from your own copy of the code. It never quotes a code table value, and nothing you type is sent
-to us."
+from your own copy of the code. It never quotes a code table value, and the scripts send
+nothing to us."
 
 ### Step 3 · Download (edit: 0:38–0:44)
 
@@ -234,7 +234,7 @@ changelog is the recall notice."
 ### Step 12 · Back to the data table (edit: 3:05–3:10, cut in before step 11 footage)
 
 **Do:** browser back to https://pipingtoolset.com/claude/, scroll to "Where your data goes",
-hold 3 s on the **Nothing** row.
+hold 3 s on the **Nothing** row ("Sent to pipingtoolset.com by the scripts").
 
 **Narration:** (covered by the step 11 line; this is the picture under "Everything runs in your
 Claude environment.")
@@ -299,7 +299,7 @@ from a script
 **Description:**
 
 ```
-PipingToolset for Claude is a free, open-source plugin for Claude Code and Claude Cowork: seven ASME B31.3 / B31.1 piping engineering skills (pressure design, stress screening, load case builder, pipe support, iso to PCF, nozzle load, bolted flange). Claude runs the interview, a Python script does the calculation, and you read the table from your licensed copy of the code. The plugin contains no ASME code table values. Nothing you enter is sent to PipingToolset.
+PipingToolset for Claude is a free, open-source plugin for Claude Code and Claude Cowork: seven ASME B31.3 / B31.1 piping engineering skills (pressure design, stress screening, load case builder, pipe support, iso to PCF, nozzle load, bolted flange). Claude runs the interview, a Python script does the calculation, and you read the table from your licensed copy of the code. The plugin contains no ASME code table values. The scripts make no network calls; the optional connector, if you enable it, sends lookup keys only.
 
 Page and install: https://pipingtoolset.com/claude/
 Source and releases: https://github.com/pipingtoolset/pipingtoolset-claude

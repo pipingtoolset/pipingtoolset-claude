@@ -15,6 +15,7 @@
 | `hydrotest` | no | bool, default `true` | Adds `WW+HP(+H)` |
 | `inter_state_expansion_ranges` | no | bool, default `true` | Adds an Algebraic range case between every pair of operating states |
 | `occ_combine_method` | no | `"Scalar"` or `"ABS"`, default `"Scalar"` | Method for the SUS + pure-occasional code case |
+| `code_values` | no | object | Absent, `null` or `{}` only. The generator has no code-table input, so a block with any entry exits 2 with `code_values.<name> is not an input of loadcase_gen.py`; a value is never dropped silently. The shared shape is `{name: {value, unit, citation, source}}` |
 
 ## Thermal state
 

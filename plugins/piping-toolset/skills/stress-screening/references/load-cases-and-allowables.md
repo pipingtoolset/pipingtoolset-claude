@@ -1,6 +1,6 @@
 # Load cases and allowable range - full detail
 
-Relocated verbatim from `SKILL.md` (Step 2 and Step 4). The body of `SKILL.md` carries the rules in summary; this file holds the equations, the occasional-allowable table and the f-factor detail.
+Relocated verbatim from `SKILL.md` (Step 1, Step 2 and Step 4). The body of `SKILL.md` carries the rules in summary; this file holds the equations, the occasional-allowable table and the f-factor detail.
 
 ## Step 2 — The three load cases, always all three
 
@@ -68,3 +68,18 @@ If the user has no cycle count, do not assume f = 1.0 quietly. Ask, or write it 
 ## Section properties for the sustained check (from Step 0)
 
 Section properties for the sustained check are code-specific. **B31.3** (¶320.1): section modulus uses nominal wall less all allowances (mechanical, corrosion, erosion); the area for axial and pressure terms deducts only the allowances that affect the inside diameter; weight uses nominal wall. **B31.1** (¶104.8.1): nominal section modulus and nominal wall, no corrosion deduction. State which basis you used — mixing them silently is a finding.
+
+---
+
+## Edition table
+
+The equation forms changed between editions. `python scripts/stress_screening.py basis --code B31.3 --edition 2022` resolves the row for the edition of record; write that row into the Basis section of the calc sheet.
+
+| Code and edition | SIF source | f-factor form | Notes |
+|---|---|---|---|
+| B31.3-2018 and earlier | Appendix D | `f = 6.0·N^-0.2`, `N_E = Σ Ni·ri⁵` | |
+| B31.3-2020 | B31J (Appendix D deleted) | same legacy form | software offering a legacy Appendix D toggle produces a non-compliant result |
+| B31.3-2022 and later | B31J | `f = 20·N^-0.333`, `N_E = Σ Ni·ri³` (¶302.3.5(d) eqs. (1c)/(1d)) | sustained Eq. (23a) unchanged; 2024 adds ¶320.1(b): absent more applicable data, the B31J Table 1-1 General Note (d) sustained index shall be used |
+| B31.1-2020 and earlier | Appendix D | `f = 6.0·N^-0.2`, cap 1.0 | the exemption uses `K1 = 30·S_A/E_a` from the 2016 edition on |
+| B31.1-2022 | Appendix D; B31J permitted (General Note (b)) | same | |
+| B31.1-2024 | B31J (Appendix D deleted) | same | B31.1 (since 2020) writes its own sustained indices in ¶104.8.1 / Fig. 104.8-1 — I = greater of 0.75·i and 1.00, i from B31J Table 1-1 — so do not import B31.3's General Note (d) rule; 2024 replaces the pressure term with S_lp |

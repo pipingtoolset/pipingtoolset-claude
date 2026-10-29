@@ -33,6 +33,25 @@ CLI:
 Output is a JSON envelope {module, status, output, warnings, citation, inputs,
 user_supplied}. Exit code 2 on bad input.
 
+A job file may carry comment keys: a top-level key that starts with an underscore (for example
+"_note") is dropped before the inputs are read. A file whose other top-level keys are all module
+ids holds one section of inputs per module, and the module named on the command line picks its
+section (see examples/sa-and-exemption.json).
+
+Optional top-level input `code_values` (every module except `basis`):
+    {"code_values": {"Sc": {"value": 12.345, "unit": "ksi",
+                            "citation": {"standard": "...", "edition": "...", "table": "...",
+                                         "row": "...", "column": "..."},
+                            "source": "connector"}}}
+The key is an input name from `list`. An input that is absent from the main inputs is filled
+from code_values[name]["value"]; one that is present must agree, otherwise the run exits 2 with
+"code_values.<name> conflicts with input <name>". A name the module does not declare exits 2.
+"source" is "connector" or "user". A unit other than the input's unit is converted when the
+factor is exact (ksi to psi) and rejected otherwise. No module here has nested inputs, so every
+name is a plain input name. The envelope gains "code_value_provenance": {name: {unit, citation,
+source}}; "inputs" shows the values used and "user_supplied" counts a filled input. Nothing here
+reaches a network.
+
 `list` prints every module with its exact input field names (case-sensitive). Before the
 engine runs, a separate pre-flight layer (`validate`) rejects unknown keys and physically
 impossible inputs (exit 2) and adds warnings for implausible ones; the ported engine
@@ -42,6 +61,7 @@ functions themselves are untouched.
 from __future__ import annotations
 
 import argparse
+import copy
 import json
 import math
 import sys
@@ -824,6 +844,203 @@ FIELDS: Dict[str, List[tuple]] = {
 }
 
 
+# ===== BEGIN code_values helper (identical text in every PipingToolset calculator script) =====
+# Optional top-level input "code_values": {input name: {"value": number|string, "unit": str|null,
+#   "citation": {"standard", "edition", "table", "row"[, "column"]}, "source": "connector"|"user"}}.
+# An input that is absent from the main inputs is filled from code_values[name]["value"]; one that is
+# present must agree, or the run stops with "code_values.<name> conflicts with input <name>". A name
+# the module does not declare is rejected. Nested inputs use dotted names ("allowable.Fx"); a "*"
+# segment fans out over a list and a whole-number segment is one list position. A unit that differs from the input's unit is converted when the factor
+# is exact (ksi and Msi to psi) and rejected otherwise. This block makes no network call.
+
+_CV_SOURCES = ("connector", "user")
+_CV_CITATION_KEYS = ("standard", "edition", "table", "row")
+# unit token (lower case, spaces removed) -> (family, factor to the family's base unit)
+_CV_UNITS = {
+    **{u: ("psi", 1) for u in ("psi", "psig", "psia", "psid", "lbf/in2", "lbf/in^2", "lb/in2", "lb/in^2")},
+    **{u: ("psi", 1000) for u in ("ksi", "kip/in2", "kip/in^2", "kips/in^2")},
+    "msi": ("psi", 1000000),
+    **{u: ("in", 1) for u in ("in", "in.", "inch", "inches")},
+    **{u: ("ft", 1) for u in ("ft", "ft.", "feet", "foot")},
+    **{u: ("lbf", 1) for u in ("lbf", "lb", "lbs")},
+    **{u: ("N", 1) for u in ("n", "newton", "newtons")},
+    **{u: ("N-m", 1) for u in ("n-m", "nm", "n.m", "newton-meter", "newton-metre")},
+    **{u: ("mm", 1) for u in ("mm", "millimeter", "millimetre")},
+    **{u: ("in-lbf", 1) for u in ("in-lbf", "in-lb", "lbf-in", "lb-in")},
+    **{u: ("ft-lbf", 1) for u in ("ft-lbf", "ft-lb", "lbf-ft", "lb-ft")},
+    **{u: ("lbf/in", 1) for u in ("lbf/in", "lb/in")},
+    **{u: ("lbf/ft", 1) for u in ("lbf/ft", "lb/ft")},
+    **{u: ("in^2", 1) for u in ("in^2", "in2")},
+    **{u: ("in^3", 1) for u in ("in^3", "in3")},
+    **{u: ("in^4", 1) for u in ("in^4", "in4")},
+    "1/in": ("1/in", 1),
+    **{u: ("deg", 1) for u in ("deg", "degree", "degrees")},
+    **{u: ("degF", 1) for u in ("f", "degf")},
+    **{u: ("percent", 1) for u in ("%", "percent", "pct")},
+    **{u: ("-", 1) for u in ("", "-", "none", "1", "ratio", "dimensionless", "fraction", "factor",
+                             "count", "cycles", "each", "number", "g")},
+}
+
+
+def _cv_unit(u):
+    """(family, factor) for a unit label, or None when the label is not a known unit."""
+    s = "" if u is None else str(u).strip().lower()
+    for a, b in ((chr(183), "-"), ("*", "-"), (" ", ""), (chr(178), "^2"), (chr(179), "^3"), (chr(176), "")):
+        s = s.replace(a, b)
+    return _CV_UNITS.get(s)
+
+
+def _cv_dot(path):
+    out = ""
+    for s in path:
+        out += f"[{s}]" if isinstance(s, int) else (("." if out else "") + str(s))
+    return out
+
+
+def _cv_entry(where, entry):
+    """Validate one code_values entry; returns (value, unit, citation, source)."""
+    if not isinstance(entry, dict):
+        raise ValueError(f"{where} must be an object with value, unit, citation and source")
+    value = entry.get("value")
+    if isinstance(value, bool) or value is None or not isinstance(value, (int, float, str)):
+        raise ValueError(f"{where}.value must be a number or a string")
+    if isinstance(value, (int, float)) and not math.isfinite(value):
+        raise ValueError(f"{where}.value must be finite")
+    if "unit" not in entry or not (entry["unit"] is None or isinstance(entry["unit"], str)):
+        raise ValueError(f"{where}.unit is required (a string, or null for a dimensionless value)")
+    cit = entry.get("citation")
+    if isinstance(cit, dict) and isinstance(cit.get("edition"), int) and not isinstance(cit["edition"], bool):
+        cit = dict(cit, edition=str(cit["edition"]))          # an edition year typed as a number
+    if not isinstance(cit, dict) or any(not isinstance(cit.get(k), str) or not cit[k].strip()
+                                        for k in _CV_CITATION_KEYS):
+        raise ValueError(f"{where}.citation needs standard, edition, table and row as non-empty strings")
+    if cit.get("column") is not None and not isinstance(cit["column"], str):
+        raise ValueError(f"{where}.citation.column must be a string when given")
+    if entry.get("source") not in _CV_SOURCES:
+        raise ValueError(f"{where}.source must be 'connector' or 'user'")
+    return value, entry["unit"], copy.deepcopy(cit), entry["source"]
+
+
+def _cv_convert(where, value, unit, expected):
+    """(value in the input's unit, note or None). Strings and unchecked inputs pass through."""
+    if expected is None or isinstance(value, str):
+        return value, None
+    want = _cv_unit(expected)
+    if want is None:
+        return value, None
+    have = _cv_unit(unit)
+    if have is None or have[0] != want[0]:
+        raise ValueError(f"{where} unit {unit!r} cannot be used for an input in {expected!r}")
+    factor = Decimal(have[1]) / Decimal(want[1])
+    if factor == 1:
+        return value, None
+    out = float(Decimal(repr(float(value))) * factor)
+    return out, f"{where}: {value:g} {unit} applied as {out:g} {expected}."
+
+
+def _cv_get(root, path, where):
+    node = root
+    for k, seg in enumerate(path):
+        if node is None:
+            return None
+        if isinstance(node, dict):
+            node = node.get(seg)
+        elif isinstance(node, list) and isinstance(seg, int) and 0 <= seg < len(node):
+            node = node[seg]
+        elif isinstance(node, list) and isinstance(seg, int):
+            raise ValueError(f"{where}: {_cv_dot(path[:k]) or 'root'} has no entry {seg}")
+        else:
+            raise ValueError(f"{where}: input {_cv_dot(path[:k]) or 'root'} is not an object")
+    return node
+
+
+def _cv_put(root, path, value):
+    node = root
+    for seg in path[:-1]:
+        if isinstance(node, dict) and node.get(seg) is None:
+            node[seg] = {}
+        node = node[seg]
+    node[path[-1]] = value
+
+
+def _cv_paths(root, path, where):
+    """Concrete key paths for `path`; a "*" segment fans out over the list found there."""
+    out = [()]
+    for seg in path:
+        nxt = []
+        for p in out:
+            if seg != "*":
+                nxt.append(p + (seg,))
+                continue
+            node = _cv_get(root, p, where)
+            if not isinstance(node, list) or not node:
+                raise ValueError(f"{where}: nothing to fill, {_cv_dot(p) or 'root'} is not a non-empty list")
+            nxt.extend(p + (j,) for j in range(len(node)))
+        out = nxt
+    return out
+
+
+def _cv_same(a, b):
+    if all(isinstance(x, (int, float)) and not isinstance(x, bool) for x in (a, b)):
+        return math.isclose(float(a), float(b), rel_tol=1e-9, abs_tol=0.0)
+    return a == b
+
+
+def _cv_resolve(name, fields, aliases):
+    """(key path, field shape) for a code_values name; whole-number segments are list positions."""
+    canon = (aliases or {}).get(name, name)
+    segs = tuple(int(x) if x.isdigit() else x for x in canon.split("."))
+    return segs, ".".join("*" if isinstance(x, int) else x for x in segs)
+
+
+def apply_code_values(inputs, module, fields, aliases=None, keys=("code_values",)):
+    """Resolve the optional code_values block of `inputs`.
+
+    fields: {dotted input name (a "*" segment is any list position): expected unit label or None};
+    aliases: {accepted name: dotted input name}; keys: the spellings of the block's own key.
+    Returns (effective inputs without the block, provenance or None when the block is absent or
+    empty, notes). The caller's dict is not modified.
+    """
+    present = [k for k in keys if isinstance(inputs, dict) and k in inputs]
+    if not present:
+        return inputs, None, []
+    if len(present) > 1:
+        raise ValueError(f"give code_values once, not as both {' and '.join(present)}")
+    block = inputs[present[0]]
+    eff = copy.deepcopy({k: v for k, v in inputs.items() if k not in keys})
+    if block is None or block == {}:
+        return eff, None, []
+    if not isinstance(block, dict):
+        raise ValueError("code_values must be an object mapping an input name to {value, unit, citation, source}")
+    prov, notes = {}, []
+    for name, entry in block.items():
+        where = f"code_values.{name}"
+        segs, shape = _cv_resolve(name, fields, aliases)
+        if shape not in fields:
+            valid = ", ".join(sorted(set(fields) | set(aliases or {})))
+            raise ValueError(f"{where} is not an input of {module} (valid: {valid}; names are case-sensitive)")
+        value, unit, cit, source = _cv_entry(where, entry)
+        value, note = _cv_convert(where, value, unit, fields[shape])
+        if note:
+            notes.append(note)
+        paths = _cv_paths(eff, segs, where)
+        for path in paths:
+            have = _cv_get(eff, path, where)
+            if have is None:
+                _cv_put(eff, path, value)
+            elif not _cv_same(have, value):
+                raise ValueError(f"{where} conflicts with input "
+                                 f"{name if len(paths) == 1 else name + ' (' + _cv_dot(path) + ')'}")
+        prov[name] = {"unit": unit, "citation": cit, "source": source}
+    return eff, prov, notes
+# ===== END code_values helper =====
+
+
+def _cv_fields(module: str) -> Dict[str, Optional[str]]:
+    """Input name -> unit label, for the code_values block (no module here has nested inputs)."""
+    return {f[0]: f[1] for f in FIELDS.get(module, []) if f[1] not in ("list", "bool")}
+
+
 def render_list() -> str:
     lines = ["Modules and exact input field names (case-sensitive). Units: psi, in, ft where stated.", ""]
     for mid in REGISTRY:
@@ -831,6 +1048,8 @@ def render_list() -> str:
         for name, units, required, desc in FIELDS[mid]:
             lines.append(f"    {name:<24}{units:<9}{'required' if required else 'optional':<10}{desc}")
         lines.append("")
+    lines.append("Any input above may instead come from the optional top-level object code_values: "
+                 "{name: {value, unit, citation{standard, edition, table, row, column?}, source: connector|user}}.")
     return "\n".join(lines).rstrip() + "\n"
 
 
@@ -898,9 +1117,10 @@ def validate(module: str, inputs: Any) -> List[str]:
 
 
 def run_module(module: str, inp: Dict[str, Any]) -> Dict[str, Any]:
-    pre_warnings = validate(module, inp)
+    inp, provenance, cv_notes = apply_code_values(inp, module, _cv_fields(module))
+    pre_warnings = cv_notes + validate(module, inp)
     res = REGISTRY[module](dict(inp))
-    return {
+    envelope = {
         "module": res["module"],
         "status": res["status"],
         "output": res["output"],
@@ -909,6 +1129,9 @@ def run_module(module: str, inp: Dict[str, Any]) -> Dict[str, Any]:
         "inputs": inp,
         "user_supplied": [k for k in USER_SUPPLIED[module] if k in inp],
     }
+    if provenance is not None:
+        envelope["code_value_provenance"] = provenance
+    return envelope
 
 
 # --------------------------------------------------------------------------- CLI
@@ -917,6 +1140,19 @@ def run_module(module: str, inp: Dict[str, Any]) -> Dict[str, Any]:
 def _fail(msg: str) -> int:
     print(f"input error: {msg}", file=sys.stderr)
     return 2
+
+
+def _job_inputs(module: str, data: Any) -> Any:
+    """The inputs for one module from a job file: comment keys (leading underscore) dropped, and
+    the section for `module` picked when every other top-level key is a module id."""
+    if not isinstance(data, dict):
+        return data
+    body = {k: v for k, v in data.items() if not str(k).startswith("_")}
+    if body and all(k in REGISTRY for k in body):
+        if module not in body:
+            raise ValueError(f"the job file has no section for {module} (sections: {', '.join(body)})")
+        return body[module]
+    return body
 
 
 def main(argv: Optional[List[str]] = None) -> int:
@@ -956,7 +1192,7 @@ def main(argv: Optional[List[str]] = None) -> int:
             data = json.loads(raw)
         except json.JSONDecodeError as exc:
             return _fail(f"invalid JSON: {exc}")
-        print(json.dumps(run_module(args.module, data), indent=2))
+        print(json.dumps(run_module(args.module, _job_inputs(args.module, data)), indent=2))
         return 0
     except (ValueError, OSError) as exc:
         return _fail(str(exc))

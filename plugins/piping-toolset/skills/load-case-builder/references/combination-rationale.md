@@ -65,3 +65,18 @@ So the software's documentation, the software's own wizard, and the code disagre
 **Friction is a multiplier, not μ.** The Load Case Options friction column scales the modelled coefficient: 1.0 = as modelled, 0.0 = frictionless. Bracketing several multipliers in one run is legitimate. Where PIP PNC00004 is invoked, §3.2.3 requires with **and** without friction, the governing result taken, and **both documented**; frictionless alone is valid only if the whole system is spring- or rod-hung.
 
 **Hot modulus** (Load Case Options) uses E at temperature instead of ambient E for equipment-load cases. It can materially reduce strain-based nozzle loads — read E at temperature from the code's modulus table for the actual material. It is legitimate for nozzle qualification, **not** for the code stress check, which uses the reference modulus.
+
+## Report extraction matrix
+
+Relocated verbatim from the load-case-builder SKILL.md (Step 8). Every case set ends with a table saying which cases feed which qualification. Generate it from the resolved numbering, never from another job; the generator prints it.
+
+| Purpose | Source block |
+|---|---|
+| Code stress — sustained | SUS cases, both friction variants |
+| Code stress — expansion | EXP cases |
+| Code stress — occasional | the **Maximum Occasional** envelope |
+| Code stress — hydrotest | HYD |
+| Support and hanger loads | SUS, HYD, Maximum Operating |
+| Displacements | SUS (sag — the PNC00004 limit is 16 mm / ⅝ in. where invoked), Maximum Operating (lateral) |
+| Flange loads | operating case, with friction |
+| Nozzle loads — rotating and non-rotating | operating cases, both friction variants; installation deflection from SUS with the anchor released |

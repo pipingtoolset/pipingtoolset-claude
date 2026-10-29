@@ -13,6 +13,19 @@ and the chain is continuous by construction.
 Exit codes: 0 clean; 2 a closure check or BOM count failed (PCF still written so it can
 be inspected, but it is not deliverable); 1 the spec is defective (nothing written).
 
+Optional spec key "skeyOverrides": {item type: SKEY}, applied over the default SKEYs. The keys
+are the item `type` names (flange blind gasket valve cap misc coupling reducer elbow bend tee
+olet support; "reducer" covers the concentric and the eccentric record) or the builder's record
+names (ELBOW, BEND, TEE, OLET, FLANGE, FLANGE-BLIND, GASKET, VALVE, CAP, MISC-COMPONENT,
+COUPLING, REDUCER-CONCENTRIC, REDUCER-ECCENTRIC, SUPPORT). A SKEY is one token of 2 to 8
+upper-case letters and digits starting with a letter (null omits it), and a support takes ANCH,
+SKID, GUID or SPRG. An item's own "skey" still wins over the override, and the override over the
+default. The report gains "skey_overrides" (the map as the spec gave it, SKEYs upper-cased) and
+"skey_overrides_unused" (keys no item of the line used). A spec with no skeyOverrides produces
+the same file and report as before. A spec key "code_values" may be absent, null or empty; PCF
+building has no code-table inputs, so a block with any entry exits 2 with
+"input error: code_values.<name> is not an input of build_pcf.py" and no file is written.
+
 Standard library only (Python 3.9+).
 """
 
@@ -27,8 +40,9 @@ from typing import Dict, List, Optional
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from pcf_lib import (DIRS, PCF, SAFE_MAP, PCFError, Point, Profile, add, along,  # noqa: E402
-                     angle_deg, fmt_in, ftin, length, off_ray, sub, tangent, unit)
+from pcf_lib import (DIRS, PCF, SAFE_MAP, CodeValuesError, PCFError, Point, Profile,  # noqa: E402
+                     add, along, angle_deg, check_code_values, check_skey_overrides, fmt_in,
+                     ftin, length, off_ray, sub, tangent, unit)
 
 
 # Closure-check flag words, chosen by truth value rather than a conditional expression
@@ -53,6 +67,7 @@ LINE_TOL = 1 / 64   # in: perpendicular offset beyond which a point is off the r
 class Builder:
     def __init__(self, spec: dict):
         self.spec = spec
+        check_code_values(spec.get("code_values"))
         self.pcf = PCF(axes=spec.get("axes", "Z-up"), coords=spec.get("units", "MM"),
                        safe=not spec.get("full_vocabulary", False),
                        weight_units=spec.get("weight_units", "LBS"),
@@ -68,6 +83,12 @@ class Builder:
         self.checks: List[dict] = []
         self.pipe_len: Dict[str, F] = {}
         self.assumed: List[str] = list(spec.get("assumed", []))
+        self.skey_overrides: Optional[Dict[str, Optional[str]]] = None    # record name -> SKEY
+        self.skey_given: Dict[str, Optional[str]] = {}                    # as the spec wrote the keys
+        self.skey_groups: Dict[str, tuple] = {}                           # given key -> record names
+        if "skeyOverrides" in spec:
+            self.skey_overrides, self.skey_given, self.skey_groups = check_skey_overrides(spec["skeyOverrides"])
+        self.skey_used: set = set()
         self.substitutions: List[str] = []
         self.deferred: List[tuple] = []     # branch walks, written after the main run
 
@@ -111,6 +132,13 @@ class Builder:
         return (e, n, z)
 
     # ------------------------------------------------------------------ helpers
+    def _skey(self, component: str, default: Optional[str]) -> Optional[str]:
+        """The SKEY for a component: the spec's skeyOverrides entry, else the builder default."""
+        if self.skey_overrides is not None and component in self.skey_overrides:
+            self.skey_used.add(component)
+            return self.skey_overrides[component]
+        return default
+
     def _on_line(self, target: Point, what: str):
         """target must lie ahead of the cursor on the current run, within 1/64 in."""
         if target == self.cursor:
@@ -170,7 +198,7 @@ class Builder:
         else:
             raise PCFError("needs len (face-to-face along the run) or to")
         self._on_line(p2, logical)
-        skey = it.get("skey", DEFAULT_SKEY.get(logical))
+        skey = it["skey"] if "skey" in it else self._skey(logical, DEFAULT_SKEY.get(logical))
         self.pcf.inline(logical, self.cursor, p2, self.bore, bore2=bore2, desc=it.get("desc"),
                         skey=skey, weight=F(str(it["weight"])) if "weight" in it else None,
                         extra=extra)
@@ -191,7 +219,7 @@ class Builder:
         logical = "REDUCER-ECCENTRIC" if ecc else "REDUCER-CONCENTRIC"
         extra = [f"FLAT-DIRECTION {it.get('flat', 'DOWN')}"] if ecc else []
         if "skey" not in it:
-            it = dict(it, skey="RECC" if ecc else "RCBW")
+            it = dict(it, skey=self._skey(logical, "RECC" if ecc else "RCBW"))
         if ecc and "to" not in it:
             raise PCFError("eccentric reducer needs 'to' (the offset end point), not just len")
         if ecc and self.pcf.safe:
@@ -224,7 +252,8 @@ class Builder:
         self._pipe_to(t1, it, "bend")
         t2 = along(corner, out, T)
         self.pcf.bend(t1, t2, corner, self.bore, ang, R, desc=it.get("desc"),
-                      skey=it.get("skey", "BEBW"), logical="BEND" if bend else "ELBOW")
+                      skey=it["skey"] if "skey" in it else self._skey("BEND" if bend else "ELBOW", "BEBW"),
+                      logical="BEND" if bend else "ELBOW")
         self.cursor, self.anchor, self.dir = t2, corner, out
 
     def do_elbow(self, it):
@@ -251,7 +280,7 @@ class Builder:
         self._pipe_to(p1, it, "tee")
         bp = along(centre, bdir, M)
         self.pcf.tee(p1, p2, centre, self.bore, bp, bbore, desc=it.get("desc"),
-                     skey=it.get("skey", "TEBW"))
+                     skey=it["skey"] if "skey" in it else self._skey("TEE", "TEBW"))
         self.cursor, self.anchor = p2, centre
         self._branch(it, centre, bp, bdir, bbore)
         self.cursor, self.anchor = p2, centre
@@ -262,7 +291,8 @@ class Builder:
         bdir = self.direction(it["branch_dir"])
         bbore = F(str(it["branch_bore"]))
         bp = along(centre, bdir, ftin(it["height"]))
-        self.pcf.olet(centre, bp, bbore, desc=it.get("desc"), skey=it.get("skey", "WTBW"))
+        self.pcf.olet(centre, bp, bbore, desc=it.get("desc"),
+                      skey=it["skey"] if "skey" in it else self._skey("OLET", "WTBW"))
         self.anchor = centre
         self._branch(it, centre, bp, bdir, bbore)
         self.anchor = centre
@@ -273,7 +303,7 @@ class Builder:
         at = self.point(it["at"]) if "at" in it else self.cursor
         if at != self.cursor:
             self._pipe_to(at, it, "support")          # raises if behind or off the run
-        skey = it.get("skey", "SKID")
+        skey = it["skey"] if "skey" in it else self._skey("SUPPORT", "SKID")
         dirs = it.get("direction", SUPPORT_SKEYS.get(skey, "UP"))
         for d in (dirs if isinstance(dirs, list) else [dirs]):
             self.pcf.support(at, self.bore, skey=skey, direction=d, name=it.get("name"),
@@ -317,7 +347,7 @@ class Builder:
 
 
 def report(b: Builder, bom: List[dict]) -> dict:
-    return {
+    r = {
         "pipeline": b.spec.get("pipeline", {}).get("reference", "LINE"),
         "axes": b.spec.get("axes", "Z-up"),
         "coords": b.pcf.coords,
@@ -331,6 +361,10 @@ def report(b: Builder, bom: List[dict]) -> dict:
         "substitutions": b.substitutions,
         "ok": all(c["pass"] for c in b.checks) and all(c["pass"] for c in bom),
     }
+    if b.skey_overrides is not None:
+        r["skey_overrides"] = dict(b.skey_given)
+        r["skey_overrides_unused"] = [k for k, comps in b.skey_groups.items() if not set(comps) & b.skey_used]
+    return r
 
 
 def render(r: dict) -> str:
@@ -349,6 +383,11 @@ def render(r: dict) -> str:
         L += ["", "BOM reconciliation:"]
         L += [f"  [{_flag(c['pass'])}] {c['item']:20s} BOM {c['bom']}  emitted {c['emitted']}"
               for c in r["bom_checks"]]
+    if r.get("skey_overrides"):
+        L += ["", "SKEY overrides applied over the defaults:"]
+        L += [f"  {k:20s} {v if v else '(no SKEY)'}" for k, v in r["skey_overrides"].items()]
+        if r["skey_overrides_unused"]:
+            L.append("  not used by any item: " + ", ".join(r["skey_overrides_unused"]))
     for title, key in (("ASSUMED", "assumed"), ("Record substitutions", "substitutions")):
         if r[key]:
             L += ["", f"{title}:"] + [f"  - {x}" for x in r[key]]
@@ -368,6 +407,9 @@ def main(argv=None) -> int:
         with open(a.spec, encoding="utf-8") as fh:
             spec = json.load(fh)
         b = Builder(spec).build()
+    except CodeValuesError as e:
+        print(f"input error: {e}", file=sys.stderr)
+        return 2
     except (PCFError, KeyError, ValueError, ArithmeticError) as e:
         print(f"SPEC ERROR: {e}", file=sys.stderr)
         return 1

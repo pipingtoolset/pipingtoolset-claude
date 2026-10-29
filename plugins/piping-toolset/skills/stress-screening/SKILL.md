@@ -51,14 +51,7 @@ python scripts/stress_screening.py basis --code B31.3 --edition 2022
 
 It returns structure only — which SIF document governs, which `equation` value the f-factor tool takes, which occasional-factor rule applies, the f-cap rule, the exemption form, and the ASD position. It never returns a table value.
 
-| Code and edition | SIF source | f-factor form | Notes |
-|---|---|---|---|
-| B31.3-2018 and earlier | Appendix D | `f = 6.0·N^-0.2`, `N_E = Σ Ni·ri⁵` | |
-| B31.3-2020 | B31J (Appendix D deleted) | same legacy form | software offering a legacy Appendix D toggle produces a non-compliant result |
-| B31.3-2022 and later | B31J | `f = 20·N^-0.333`, `N_E = Σ Ni·ri³` (¶302.3.5(d) eqs. (1c)/(1d)) | sustained Eq. (23a) unchanged; 2024 adds ¶320.1(b): absent more applicable data, the B31J Table 1-1 General Note (d) sustained index shall be used |
-| B31.1-2020 and earlier | Appendix D | `f = 6.0·N^-0.2`, cap 1.0 | the exemption uses `K1 = 30·S_A/E_a` from the 2016 edition on |
-| B31.1-2022 | Appendix D; B31J permitted (General Note (b)) | same | |
-| B31.1-2024 | B31J (Appendix D deleted) | same | B31.1 (since 2020) writes its own sustained indices in ¶104.8.1 / Fig. 104.8-1 — I = greater of 0.75·i and 1.00, i from B31J Table 1-1 — so do not import B31.3's General Note (d) rule; 2024 replaces the pressure term with S_lp |
+The edition-by-edition rows for B31.3 and B31.1 (SIF source, f-factor form, notes) are in [references/load-cases-and-allowables.md](references/load-cases-and-allowables.md#edition-table).
 
 Write the resolved row into the Basis section of the calc sheet.
 
@@ -129,7 +122,7 @@ Equations and end-condition table: [references/exemption-and-spans.md](reference
 
 ## Step 8 — Spring hangers
 
-Variable springs: variability |rate·travel| / hot load ≤ 25 % (MSS SP-58 §7.7.1.2); constant supports: deviation ≤ 6 % (§7.7.1.3). Report hot load, cold load, travel, rate and variability for **every** spring, installed and operating; a spring that tops or bottoms out cold is a finding. In the tool, `supports.spring-variability` takes `limit` in **percent** (25) but `supports.max-spring-rate` takes `variabilityLimit` as a **fraction** (0.25); do not mix them.
+Variable springs: variability |rate·travel| / hot load ≤ 25 % (MSS SP-58 §7.7.1.2); constant supports: deviation ≤ 6 % (§7.7.1.3). Report hot load, cold load, travel, rate and variability for **every** spring, installed and operating. In the tool, `supports.spring-variability` takes `limit` in **percent** (25) but `supports.max-spring-rate` takes `variabilityLimit` as a **fraction** (0.25); do not mix them.
 
 Formulas and notes: [references/spring-hangers.md](references/spring-hangers.md).
 
@@ -156,18 +149,9 @@ python scripts/stress_screening.py <module-id> --input-file inputs.json
 python scripts/stress_screening.py basis --code B31.1 --edition 2024
 ```
 
-| Module id | What it does |
-|---|---|
-| `piping.displacement-stress` | S_E vs S_A (Eq. 17) |
-| `piping.sustained-stress` | S_L and occasional stress, ratios |
-| `piping.fatigue-factor` | N_E and f, either edition form |
-| `supports.spring-variability` | spring cold load and variability % |
-| `supports.max-spring-rate` | stiffest spring within a variability fraction |
-| `noncode.pipe-section` | ID, A, I, Z, r from OD and wall |
-| `screen.support-span` | bending, deflection and governing span |
-| `screen.flexibility-exemption` | `D·y/(L−U)²` vs K1 and disqualifiers |
+Modules (one-line purposes in [references/tool-reference.md](references/tool-reference.md)): `piping.displacement-stress`, `piping.sustained-stress`, `piping.fatigue-factor`, `supports.spring-variability`, `supports.max-spring-rate`, `noncode.pipe-section`, `screen.support-span`, `screen.flexibility-exemption`.
 
-Each call prints a JSON envelope `{module, status, output, warnings, citation, inputs, user_supplied}`; exit code 2 means bad input. Quote warnings and the `equation` string in the calc sheet. Every allowable, modulus and `i` comes from the user's licensed copy. Per-module outputs, an illustrative call and the meaning of status `na` are in [references/tool-reference.md](references/tool-reference.md).
+Each call prints a JSON envelope `{module, status, output, warnings, citation, inputs, user_supplied}`; exit code 2 means bad input. Quote warnings and the `equation` string in the calc sheet. Every allowable, modulus and `i` comes from the user's licensed copy (an allowable may come from the connector, below). Per-module outputs, an illustrative call and the meaning of status `na` are in [references/tool-reference.md](references/tool-reference.md).
 
 ---
 
@@ -185,9 +169,10 @@ ASD-factor position for wind/seismic, resolved equation generation and SIF sourc
 ## 2. Inputs
 Geometry, material, conditions, cycle count, site data. Every assumed value flagged ASSUMED.
 
-## 3. Allowable stresses and factors
+## 3. Code-table values (user-supplied or connector-supplied, cited)
 Each value with its full citation: code, edition, table, material spec, grade, product form,
 temperature, notes. Interpolation arithmetic shown. f derivation and cap reason shown.
+A source column (user | connector) on every row.
 
 ## 4. Load cases
 ### 4.1 Sustained    equation used, S_L, allowable, ratio, verdict (within or exceeds the allowable)
@@ -222,9 +207,23 @@ Run the 17-item checklist in [references/rejection-checklist.md](references/reje
 
 > I need S_h at the design temperature for your material and product form. That is in the code's allowable stress table; read the value at the two adjacent tabulated temperatures and I will interpolate. Which edition are you using?
 
-Do not ask the user to upload a standard's PDF; if the user offers an excerpt, use it only to read the specific value they need.
+Do not ask the user to upload a standard's PDF; if the user offers an excerpt, use it only to read the specific value they need. A value returned by the connector carries its citation and is recorded as connector-supplied; it is still verified against your copy before issue.
 
 Equations, clause numbers, symbol definitions and numeric limits stated in running text (1.33, k = 1.15 / 1.20, the 25 % and 6 % spring limits, the f-factor floor of 0.15, the 700 °F and 75 ksi cap conditions) are usable.
+
+---
+
+## With the Engineering Data connector
+
+The Engineering Data connector is optional and separate from this plugin; this skill works as written without it. If its tools are present, call `verify_connector` once per session, then make one call per value the job needs. Pass returned allowables to the script in a `code_values` block with `"source": "connector"` and the lookup's own `unit`, which the script converts ksi to psi ([field rules](references/tool-reference.md#connector-supplied-values-code_values)), and put the citation, `rows_used` and `verify_at` line on the sheet. Use a value only when its citation names the edition and table of record. On a `mode` of `pointer`, a one-line account or daily-limit message, any other error, or absent tools, use the interview and the lookup wording above, unchanged, and quote nothing new. A call sends only the dataset, the row key and the temperature.
+
+| Slot | Tool and dataset_id | Key fields | What comes back |
+|---|---|---|---|
+| `Sc` at minimum metal temperature, `Sh` at maximum | `lookup_value`: `b313-allowable-stresses-2024` (B31.3) or `b311-allowable-stresses-2024` (B31.1) | `spec`, plus `grade`, `productForm` and any other discriminator the reply names; `T` (°F); `column` `S` | `S` in ksi, interpolated between the two tabulated temperatures |
+| Suggested span (cross-check only) | `lookup_value`: `b311-support-spans` | `nps` | `waterFt`, `steamFt` |
+| SIF source row (citation only) | `lookup_value`: `b31j-components` | `sketch` | `title`, `group`, `inputs`, `applicability`, `notes`: row text, never an `i` |
+
+`ii` and `io` stay user-supplied: no `i` is returned, and this skill never computes one. `E`, `Ea`, `S_allow` and `delta_allow` have no dataset. Record the span cross-check in section 5 of the sheet.
 
 ---
 
