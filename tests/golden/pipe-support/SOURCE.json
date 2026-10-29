@@ -1,0 +1,17 @@
+{
+  "source": "pipecalcpro packages/calc-core/src/structural (PiperSTR engine)",
+  "calc_core_commit": "70e273c7311446846598aa8a3f3c00769f1469ff",
+  "calc_core_branch": "main",
+  "generators": [
+    "gen-goldens.mts",
+    "gen-assembly-goldens.mts",
+    "gen-aisc-member-goldens.mts"
+  ],
+  "goldens": {
+    "weld.json": "a33d36917668d063a2cc03f160b6cf33556ff30c467541cd275a2efd145de27d",
+    "baseplate.json": "9138f793e5cf6e75637638bc7806b6e063de6f614559afe801c060a5755a8b26",
+    "pier.json": "3b0ac8b65858a6cca30adb577e62a211420d349052e2c361ceaa70154ee280db",
+    "assembly.json": "94b7863a4964f8b2025c3f54f2fce708e2513164dd1b5249e3e343b7b6fad904",
+    "aisc-member.json": "b269fba45aa922de6ff88b71ea40ded271d57c2f44d473baac134da4c8642abb"
+  }
+}
