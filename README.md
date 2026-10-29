@@ -129,8 +129,10 @@ the standard library, so a host can check it before running a script.
 
 Python 3.9 or newer wherever the skills run: your own machine for Claude Code; Cowork's built-in
 sandbox provides it (confirmed on a live Cowork session with `tests/e2e/COWORK-CHECKLIST.md`,
-2026-10-27). There is nothing else to install. The skills send nothing anywhere; the connector is
-optional and has its own section below.
+2026-10-27). There is nothing else to install. The skills and their scripts send nothing anywhere.
+With the connector declared, your assistant contacts pipingtoolset.com when a session starts and
+when a skill asks for a value; every skill works with it disconnected. The connector is optional
+and has its own section below.
 
 ### Invoking a skill
 
