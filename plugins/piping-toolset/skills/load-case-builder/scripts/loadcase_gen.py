@@ -34,6 +34,15 @@ USAGE
     has no code-table inputs, so a block with any entry exits 2 with
     "code_values.<name> is not an input of loadcase_gen.py": a value is never dropped silently.
 
+COVERAGE
+    Every thermal state x every friction multiplier reaches Maximum Operating and every
+    extraction-matrix row it can govern; HYD and inter-state ranges are generated per
+    friction multiplier. An occasional with an ASD "scale" keeps it on the code-stress path
+    and gets an unreduced companion (block OPE+OCC-UNRED) that feeds Maximum Operating,
+    support loads and displacements. "primary_state" and "hanger_friction" set the hanger
+    design pair only; they never limit coverage. The resolved case set is checked against
+    the spec after numbering (qc-gate.md item 17) and returned as "qc" in the JSON output.
+
 UNITS / CONVENTIONS
     Y is vertical (CAESAR II default). Friction values are CAESAR II FRICTION
     MULTIPLIERS on the modelled mu, not mu itself.
@@ -148,6 +157,21 @@ class LoadCaseSet:
         self.occ_combine: Method = spec.get("occ_combine_method", "Scalar")  # Scalar or ABS
         self.cases: list[Case] = []
         self.findings: list[str] = []
+        self.qc: dict[str, Any] = {}
+        if not self.frictions:
+            raise SpecError("frictions must list at least one [label, multiplier] pair")
+        for _, fv in self.frictions:
+            if isinstance(fv, bool) or not isinstance(fv, (int, float)) or fv < 0:
+                raise SpecError(f"friction multiplier must be a number >= 0, got {fv!r}")
+        for label, keys in (("thermal state", [s.key for s in self.states]),
+                            ("occasional", [o.key for o in self.occ]),
+                            # compared as numbers so 1 and 1.0 are one multiplier
+                            ("friction multiplier", [float(fv) for _, fv in self.frictions])):
+            dup = sorted({k for k in keys if keys.count(k) > 1})
+            if dup:
+                # Case keys are built from these handles; a duplicate would make two cases
+                # share one key and a reference resolve to the wrong one.
+                raise SpecError(f"duplicate {label} {dup[0]!r}: every {label} must be unique")
         self._by_state = {s.key: s for s in self.states}
         for o in self.occ:
             if o.base not in self._by_state:
@@ -155,6 +179,27 @@ class LoadCaseSet:
             if o.kind not in ENVELOPE_KINDS:
                 raise SpecError(f"occasional {o.key!r} has kind {o.kind!r}; "
                                 f"use one of {', '.join(ENVELOPE_KINDS)}")
+            # scale is an ASD reduction: a number strictly between 0 and 1. 0 (falsy) used
+            # to read as unscaled, and >= 1 was labelled REDUCED; both are refused now.
+            if o.scale is not None and (isinstance(o.scale, bool)
+                                        or not isinstance(o.scale, (int, float))
+                                        or not 0 < o.scale < 1):
+                raise SpecError(f"occasional {o.key!r} has scale {o.scale!r}; scale is an ASD "
+                                "reduction factor, a number with 0 < scale < 1 (omit it for an "
+                                "unreduced occasional)")
+        # Primary state: hanger design and the rows the matrix labels "primary". It never
+        # limits coverage - every state is enveloped and extracted whatever it is set to.
+        ps = spec.get("primary_state")
+        if ps is not None and ps not in self._by_state:
+            raise SpecError(f"primary_state {ps!r} is not the key of a declared thermal state")
+        self.primary_state_declared: bool = ps is not None
+        self.primary: ThermalState = self._by_state[ps] if ps is not None else self.states[0]
+        # Friction multiplier for the hanger design pair (CAESAR II runs one recommended pair).
+        hf = spec.get("hanger_friction")
+        if hf is not None and (isinstance(hf, bool) or not isinstance(hf, (int, float)) or hf < 0):
+            raise SpecError(f"hanger_friction must be a friction multiplier >= 0, got {hf!r}")
+        self.hanger_friction_declared: bool = hf is not None
+        self.hanger_friction: float = float(hf) if hf is not None else self.frictions[0][1]
 
     # -- helpers ------------------------------------------------------------------------
 
@@ -178,30 +223,49 @@ class LoadCaseSet:
     def _k(*parts: str) -> str:
         return ":".join(parts)
 
+    def _max_ope_members(self) -> list[str]:
+        """Maximum Operating: per friction, each state's OPE case followed by the OPE+OCC
+        cases riding on that state (unreduced companion where the occasional is scaled)."""
+        out: list[str] = []
+        for _, fv in self.frictions:
+            for st in self.states:
+                out.append(self._k("ope", st.key, str(fv)))
+                out += [self._load_occ_key(o, fv) for o in self.occ if o.base == st.key]
+        return out
+
     # -- blocks -------------------------------------------------------------------------
 
     def _block_hanger(self) -> None:
         """Hanger design, CAESAR II's recommended pair: W with springs Rigid sizes the load;
-        W+T1 with springs Ignored sizes the travel. H is the OUTPUT of these two cases, so it
-        first appears in the As-Designed cases that follow. Both must precede them."""
+        W+T<primary state's T slot> with springs Ignored sizes the travel. H is the OUTPUT
+        of these two cases, so it first appears in the As-Designed cases that follow. Both
+        must precede them.
+        The pair is run once, for the primary state (spec primary_state, default the first
+        declared) at one friction multiplier (spec hanger_friction, default the first
+        declared); both are stated in the QC findings and the extraction matrix."""
         if not self.hangers:
             return
-        primary = self.states[0]
+        primary = self.primary
         self._add(Case(key="hgr:rigid", block="HGR", stress="HGR", desc="WEIGHT FOR HANGER LOADS",
-                       terms=["W"], hanger="Rigid", friction=self.frictions[0][1]))
+                       terms=["W"], hanger="Rigid", friction=self.hanger_friction))
         self._add(Case(key="hgr:travel", block="HGR", stress="HGR",
                        desc="OPERATING FOR HANGER TRAVEL",
                        terms=["W", primary.T],
-                       hanger="Ignore", friction=self.frictions[0][1]))
+                       hanger="Ignore", friction=self.hanger_friction))
 
     def _block_hydro(self) -> None:
         """WW = water-filled weight, HP = hydro pressure. Insulation weight in the hydro case
-        is a CAESAR II configuration choice; state it."""
+        is a CAESAR II configuration choice; state it. The hydrotest is run once per
+        friction variant like every other primitive case, so a support load or movement that
+        governs only with friction off reaches the hydrotest extraction too. Whether your
+        CAESAR II version applies the friction multiplier to the HYD case is NOT asserted
+        here; confirm it in the program before relying on the w/o Friction HYD case."""
         if not self.hydrotest:
             return
         terms = ["WW", "HP"] + (["H"] if self.hangers else [])
-        self._add(Case(key="hyd", block="HYD", stress="HYD", desc="HYDRO TEST CASE",
-                       terms=terms, friction=self.frictions[0][1]))
+        for fname, fval in self.frictions:
+            self._add(Case(key=self._k("hyd", str(fval)), block="HYD", stress="HYD",
+                           desc=f"HYDRO TEST CASE ({fname})", terms=terms, friction=fval))
 
     def _block_operating(self) -> None:
         """Base operating cases: every thermal state x every friction multiplier."""
@@ -220,10 +284,35 @@ class LoadCaseSet:
                 st = self._by_state[o.base]
                 term = f"{o.sign}{o.scale}{o.vector}" if o.scale else f"{o.sign}{o.vector}"
                 terms = self._primitive_terms(st, thermal=True, hanger=True) + [term]
+                # A scaled (ASD-reduced) case feeds the code-stress occasional path only; its
+                # label says so. The unscaled description is unchanged from 0.7.0.
+                occ_name = f"{o.scale} {o.name} REDUCED" if o.scale else o.name
                 self._add(Case(key=self._k("opeocc", o.key, str(fval)), block="OPE+OCC",
-                               stress="OPE", desc=f"{st.name} with {o.name} ({fname})",
+                               stress="OPE", desc=f"{st.name} with {occ_name} ({fname})",
                                terms=terms, friction=fval,
                                hanger="As Designed" if self.hangers else None))
+
+    def _block_operating_with_occ_unreduced(self) -> None:
+        """Unreduced companions of every ASD-scaled OPE+OCC case (owner ruling 2026-10-30).
+        The reduced case keeps the scale for the code-stress occasional path; the support-
+        load and displacement extraction and the Maximum Operating envelope read these
+        instead, so a 0.6W / 0.7E factor never reaches a reaction or a movement. No case is
+        added when no occasional carries a scale, so an unscaled set is unchanged."""
+        for fname, fval in self.frictions:
+            for o in self.occ:
+                if not o.scale:
+                    continue
+                st = self._by_state[o.base]
+                terms = self._primitive_terms(st, thermal=True, hanger=True) + [f"{o.sign}{o.vector}"]
+                self._add(Case(key=self._k("opeoccu", o.key, str(fval)), block="OPE+OCC-UNRED",
+                               stress="OPE", desc=f"{st.name} with {o.name} UNREDUCED ({fname})",
+                               terms=terms, friction=fval,
+                               hanger="As Designed" if self.hangers else None))
+
+    def _load_occ_key(self, o: Occasional, fval: float) -> str:
+        """The OPE+OCC case that feeds support loads and displacements for one occasional:
+        the unreduced companion when the occasional is scaled, otherwise the case itself."""
+        return self._k("opeoccu" if o.scale else "opeocc", o.key, str(fval))
 
     def _block_sustained(self) -> None:
         for st in self.states:
@@ -243,16 +332,19 @@ class LoadCaseSet:
                                desc=f"EXPANSION {st.name} ({fname})", method="Algebraic",
                                refs=[(+1, self._k("ope", st.key, str(fval))),
                                      (-1, self._k("sus", st.key, str(fval)))]))
+        # Inter-state ranges per friction multiplier, like the single-state EXP cases: a
+        # range that governs only with friction off must exist as a case.
         if self.inter_state_ranges and len(self.states) > 1:
-            fval = self.frictions[0][1]
             for i in range(len(self.states)):
                 for j in range(i + 1, len(self.states)):
                     a, b = self.states[i], self.states[j]
-                    self._add(Case(key=self._k("exprange", a.key, b.key), block="EXP", stress="EXP",
-                                   desc=f"EXPANSION RANGE {a.name} to {b.name}",
-                                   method="Algebraic",
-                                   refs=[(+1, self._k("ope", a.key, str(fval))),
-                                         (-1, self._k("ope", b.key, str(fval)))]))
+                    for fname, fval in self.frictions:
+                        self._add(Case(key=self._k("exprange", a.key, b.key, str(fval)), block="EXP",
+                                       stress="EXP",
+                                       desc=f"EXPANSION RANGE {a.name} to {b.name} ({fname})",
+                                       method="Algebraic",
+                                       refs=[(+1, self._k("ope", a.key, str(fval))),
+                                             (-1, self._k("ope", b.key, str(fval)))]))
 
     def _block_pure_occasional(self) -> None:
         """(OPE + occ) - OPE, Algebraic. Intermediate only, so output is suppressed."""
@@ -276,15 +368,12 @@ class LoadCaseSet:
     def _block_envelopes(self) -> None:
         """Max envelopes. The overall occasional envelope must include every occasional kind;
         an envelope that omits one silently drops it from the code check."""
-        # Every friction variant: a reaction or movement that governs only with friction
-        # off must still reach the support-load and displacement envelope.
-        primary = self.states[0].key
-        max_ope: list[str] = []
-        for _, fv in self.frictions:
-            max_ope.append(self._k("ope", primary, str(fv)))
-            max_ope += [self._k("opeocc", o.key, str(fv)) for o in self.occ if o.base == primary]
+        # Every thermal state x every friction variant: a reaction or movement that governs
+        # in a non-primary state, or only with friction off, must still reach the support-
+        # load and displacement envelope. Scaled occasionals enter through their unreduced
+        # companions, never through the reduced (code-stress) case.
         self._add(Case(key="max:ope", block="MAX", stress="OPE", desc="Maximum Operating",
-                       method="Max", refs=[(+1, k) for k in max_ope]))
+                       method="Max", refs=[(+1, k) for k in self._max_ope_members()]))
 
         group_keys: list[str] = []
         for kind in ENVELOPE_KINDS:
@@ -309,6 +398,7 @@ class LoadCaseSet:
         self._block_hydro()
         self._block_operating()
         self._block_operating_with_occ()
+        self._block_operating_with_occ_unreduced()
         self._block_sustained()
         self._block_expansion()
         self._block_pure_occasional()
@@ -357,6 +447,16 @@ class LoadCaseSet:
         if self.edition == "UNSTATED" or year is None:
             f.append("BASIS: code edition not stated. An undeclared edition is a review finding.")
 
+        if len(self.states) > 1 and not self.primary_state_declared:
+            f.append(f"ASSUMED: primary state = {self.primary.key} (first declared) for the hanger "
+                     "design pair and the primary-labelled matrix rows. Set primary_state to the "
+                     "maximum operating state to confirm it. Coverage does not depend on it: every "
+                     "state is enveloped and extracted.")
+        if self.hangers and not self.hanger_friction_declared:
+            f.append(f"ASSUMED: hanger design pair (W Rigid, W+{self.primary.T} Ignore) runs at "
+                     f"friction multiplier {self.hanger_friction:.1f} (first declared friction "
+                     "variant). Set hanger_friction to confirm it.")
+
         kinds = {o.kind for o in self.occ}
         if "seismic" in kinds and "wind" in kinds:
             f.append("OK: wind and seismic are separate envelopes; they are never combined "
@@ -403,19 +503,22 @@ class LoadCaseSet:
         # ASD reduction policy - the software documentation, the software wizard and the code
         # do not agree; the position must be stated either way.
         scaled = [o for o in self.occ if o.scale]
+        companions = (f"Unreduced companions ({len(scaled) * len(self.frictions)} OPE+OCC-UNRED "
+                      "cases) are generated for every scaled occasional x friction and feed "
+                      "Maximum Operating, support loads and displacements; the REDUCED cases "
+                      "feed the code-stress occasional path only.")
         if self.code == "B31.1" and scaled:
             if year is not None and year >= 2024:
                 f.append("ERROR: B31.1-2024 101.5.2 / 101.5.3 state the ASD reduction factor "
                          "shall not be applied, but occasional terms carry a scale factor. "
-                         "Remove it.")
+                         "Remove it. " + companions)
             else:
                 f.append("CHECK: occasional terms carry an ASD scale factor under B31.1 "
                          f"{self.edition}. B31.1-2024 prohibits it; for earlier editions cite "
-                         "the owner or EOR direction that permits it.")
+                         "the owner or EOR direction that permits it. " + companions)
         elif scaled:
             f.append("ASD: 0.6W / 0.7E reduction applied for stress. B31.3 is silent on the "
-                     "factor; cite the owner or EOR direction, and keep UNREDUCED companion "
-                     "cases for support loads and displacements.")
+                     "factor; cite the owner or EOR direction. " + companions)
         elif self.occ:
             f.append("ASD: no 0.6W / 0.7E reduction applied (strength level). This matches "
                      "B31.1-2024 and the conservative reading of B31.3, and differs from the "
@@ -427,6 +530,169 @@ class LoadCaseSet:
         expect = len(self.states) * len(self.frictions)
         if n_exp < expect:
             f.append(f"GAP: {n_exp} expansion cases for {expect} state x friction pairs.")
+
+        # Resolved case set against the declared spec (qc-gate.md item 17)
+        self.qc = self._qc_case_set()
+        q = self.qc
+        if q["pass"]:
+            c = q["counts"]
+            extra = []
+            if c["scaled_occasionals"]:
+                extra.append(f"{c['scaled_occasionals']} scaled with unreduced companions")
+            if c["state_pairs_ranged"]:
+                extra.append(f"{c['state_pairs_ranged']} inter-state pairs")
+            f.append(f"QC: resolved case set complete - {c['generated_cases']} cases match the "
+                     f"{c['expected_cases']} the spec declares ({c['states']} states x "
+                     f"{c['frictions']} friction variants, {c['occasionals']} occasionals"
+                     + (", " + ", ".join(extra) if extra else "") + f"); {c['checks']} "
+                     "coverage, reference, envelope and matrix checks, 0 misses.")
+        else:
+            shown = q["misses"][:10]
+            more = len(q["misses"]) - len(shown)
+            f.append(f"ERROR: resolved case set has {len(q['misses'])} miss(es): "
+                     + "; ".join(shown)
+                     + (f"; (+{more} more in the JSON qc block)" if more > 0 else "")
+                     + ". Do not issue this set.")
+
+    def _qc_case_set(self) -> dict[str, Any]:
+        """Compare the generated set with what the spec declares, independently of the
+        block builders: every state x friction (OPE, SUS, EXP), every occasional x friction
+        (OPE+OCC, pure, code OCC, and the unreduced companion when scaled), every state pair
+        x friction when inter-state ranges are on, HYD per friction, the hanger pair, the
+        envelope membership and the extraction matrix rows."""
+        have = {c.key: c for c in self.cases}
+        misses: list[str] = []
+        checks = 0
+        expected: set[str] = set()
+        F = [str(fv) for _, fv in self.frictions]
+
+        def need(key: str, what: str, refs: list[tuple[int, str]] | None = None) -> None:
+            nonlocal checks
+            checks += 1
+            expected.add(key)
+            c = have.get(key)
+            if c is None:
+                misses.append(f"missing {what} [{key}]")
+            elif refs is not None and c.refs != refs:
+                misses.append(f"{what} [{key}] references {c.refs}, expected {refs}")
+
+        def refs_of(key: str) -> set[str]:
+            c = have.get(key)
+            return {r for _, r in c.refs} if c else set()
+
+        def member(env: str, key: str, what: str) -> None:
+            nonlocal checks
+            checks += 1
+            if key not in refs_of(env):
+                misses.append(f"{what} [{key}] is not in {env}")
+
+        if self.hangers:
+            need("hgr:rigid", "hanger design Rigid case")
+            need("hgr:travel", "hanger design travel case")
+        if self.hydrotest:
+            for fv in F:
+                need(f"hyd:{fv}", f"HYD case at friction {fv}")
+        for st in self.states:
+            for fv in F:
+                need(f"ope:{st.key}:{fv}", f"OPE {st.key} x friction {fv}")
+                need(f"sus:{st.key}:{fv}", f"SUS {st.key} x friction {fv}")
+                need(f"exp:{st.key}:{fv}", f"EXP {st.key} x friction {fv}",
+                     [(+1, f"ope:{st.key}:{fv}"), (-1, f"sus:{st.key}:{fv}")])
+        pairs = 0
+        if self.inter_state_ranges and len(self.states) > 1:
+            for i, a in enumerate(self.states):
+                for b in self.states[i + 1:]:
+                    pairs += 1
+                    for fv in F:
+                        need(f"exprange:{a.key}:{b.key}:{fv}",
+                             f"inter-state range {a.key}-{b.key} x friction {fv}",
+                             [(+1, f"ope:{a.key}:{fv}"), (-1, f"ope:{b.key}:{fv}")])
+        load_occ: set[str] = set()
+        for o in self.occ:
+            for fv in F:
+                need(f"opeocc:{o.key}:{fv}", f"OPE+OCC {o.key} x friction {fv}")
+                need(f"pure:{o.key}:{fv}", f"pure occasional {o.key} x friction {fv}",
+                     [(+1, f"opeocc:{o.key}:{fv}"), (-1, f"ope:{o.base}:{fv}")])
+                need(f"occ:{o.key}:{fv}", f"code occasional {o.key} x friction {fv}",
+                     [(+1, f"sus:{o.base}:{fv}"), (+1, f"pure:{o.key}:{fv}")])
+                if o.scale:
+                    need(f"opeoccu:{o.key}:{fv}", f"unreduced companion {o.key} x friction {fv}")
+                    load_occ.add(f"opeoccu:{o.key}:{fv}")
+                else:
+                    load_occ.add(f"opeocc:{o.key}:{fv}")
+
+        # Envelopes
+        need("max:ope", "Maximum Operating envelope")
+        for st in self.states:
+            for fv in F:
+                member("max:ope", f"ope:{st.key}:{fv}", "OPE case")
+        for k in sorted(load_occ):
+            member("max:ope", k, "load-path OPE+OCC case")
+        for o in self.occ:
+            if o.scale:
+                for fv in F:
+                    checks += 1
+                    if f"opeocc:{o.key}:{fv}" in refs_of("max:ope"):
+                        misses.append(f"REDUCED case [opeocc:{o.key}:{fv}] is in max:ope; "
+                                      "support loads would be understated")
+        kinds = [k for k in ENVELOPE_KINDS if any(o.kind == k for o in self.occ)]
+        for kind in kinds:
+            need(f"max:{kind}", f"Maximum {kind} envelope")
+            for o in self.occ:
+                if o.kind == kind:
+                    for fv in F:
+                        member(f"max:{kind}", f"occ:{o.key}:{fv}", "code occasional case")
+        if kinds:
+            need("max:occ", "Maximum Occasional envelope")
+            for kind in kinds:
+                member("max:occ", f"max:{kind}", "kind envelope")
+
+        # Extraction matrix: each row lists every case its purpose needs
+        rows = {purpose: set(keys) for purpose, keys, _ in self.matrix_rows()}
+
+        def in_row(purpose: str, key: str) -> None:
+            nonlocal checks
+            checks += 1
+            if key not in rows.get(purpose, set()):
+                misses.append(f"matrix row '{purpose}' does not list [{key}]")
+
+        for st in self.states:
+            for fv in F:
+                for purpose in ("Code stress - Sustained", "Support loads - Sustained",
+                                "Displacements - Sustained"):
+                    in_row(purpose, f"sus:{st.key}:{fv}")
+                in_row("Code stress - Expansion", f"exp:{st.key}:{fv}")
+                in_row("Flange / nozzle loads - Operating", f"ope:{st.key}:{fv}")
+        for k in sorted(x for x in expected if x.startswith("exprange:")):
+            in_row("Code stress - Expansion range between states", k)
+        if self.hydrotest:
+            for fv in F:
+                in_row("Code stress - Hydrotest", f"hyd:{fv}")
+                in_row("Support loads - Hydrotest", f"hyd:{fv}")
+        if self.hangers:
+            in_row("Hanger design - Rigid load / Ignore travel", "hgr:rigid")
+            in_row("Hanger design - Rigid load / Ignore travel", "hgr:travel")
+        if kinds:
+            in_row("Code stress - Occasional", "max:occ")
+        in_row("Support loads - Max Operating", "max:ope")
+        in_row("Displacements - Max Operating", "max:ope")
+        for k in sorted(x for x in load_occ if x.startswith("opeoccu:")):
+            in_row("Support loads / displacements - Occasional UNREDUCED", k)
+
+        unexpected = sorted(set(have) - expected)
+        for k in unexpected:
+            misses.append(f"unexpected case [{k}] not declared by the spec")
+        n_scaled = sum(1 for o in self.occ if o.scale)
+        return {
+            "pass": not misses,
+            "counts": {
+                "states": len(self.states), "frictions": len(F), "occasionals": len(self.occ),
+                "scaled_occasionals": n_scaled, "state_pairs_ranged": pairs,
+                "expected_cases": len(expected), "generated_cases": len(self.cases),
+                "checks": checks, "misses": len(misses),
+            },
+            "misses": misses,
+        }
 
     # -- render -------------------------------------------------------------------------
 
@@ -454,39 +720,78 @@ class LoadCaseSet:
         return buf.getvalue()
 
     def to_json(self) -> str:
+        n = {c.key: c.number for c in self.cases}
         return json.dumps({
             "code": self.code, "edition": self.edition, "total_cases": len(self.cases),
-            "cases": self.rows(), "findings": self.findings,
+            "primary_state": self.primary.key,
+            "hanger_friction": self.hanger_friction if self.hangers else None,
+            "cases": self.rows(),
+            "extraction_matrix": [{"purpose": a, "cases": [n.get(k, "MISSING " + k) for k in keys], "basis": c}
+                                  for a, keys, c in self.matrix_rows()],
+            "qc": self.qc, "findings": self.findings,
         }, indent=2)
+
+    def matrix_rows(self) -> list[tuple[str, list[str], str]]:
+        """(purpose, case keys, basis) for the report extraction matrix. Every row that a
+        state or friction variant can govern lists every state x friction case; the QC
+        case-set check verifies that independently."""
+        have = {c.key for c in self.cases}
+        F = [str(fv) for _, fv in self.frictions]
+        ordered = [self.primary] + [s for s in self.states if s is not self.primary]
+        sus = [self._k("sus", s.key, fv) for s in self.states for fv in F]
+        exp = [self._k("exp", s.key, fv) for s in self.states for fv in F]
+        ranges = [c.key for c in self.cases if c.key.startswith("exprange:")]
+        hyd = [self._k("hyd", fv) for fv in F if self._k("hyd", fv) in have]
+        ope = [self._k("ope", s.key, fv) for s in ordered for fv in F]
+        unred = [c.key for c in self.cases if c.block == "OPE+OCC-UNRED"]
+        scaled = bool(unred)
+        every = "every state x friction"
+        rows: list[tuple[str, list[str], str]] = [
+            ("Code stress - Sustained", sus, f"{self.code} sustained; {every}"),
+            ("Code stress - Expansion", exp, f"{self.code} expansion, S_A; {every}"),
+        ]
+        if ranges:
+            rows.append(("Code stress - Expansion range between states", ranges,
+                         "inter-state range, every state pair x friction; take the greatest S_E"))
+        if "max:occ" in have:
+            rows.append(("Code stress - Occasional", ["max:occ"],
+                         f"{self.code} occasional envelope"
+                         + ("; ASD-scaled terms are REDUCED here (stress path only)" if scaled
+                            else "")))
+        if hyd:
+            rows.append(("Code stress - Hydrotest", hyd, "test case; every friction variant"))
+        if "hgr:rigid" in have:
+            rows.append(("Hanger design - Rigid load / Ignore travel", ["hgr:rigid", "hgr:travel"],
+                         f"CAESAR II hanger design pair; primary state {self.primary.key}, "
+                         f"friction {self.hanger_friction:.1f}"))
+        rows.append(("Support loads - Sustained", sus, f"hanger/restraint design; {every}"))
+        if hyd:
+            rows.append(("Support loads - Hydrotest", hyd,
+                         "restraint load under test weight; every friction variant"))
+        envelope = ("every OPE and OPE+OCC case, all states x friction"
+                    + ("; scaled occasionals enter UNREDUCED" if scaled else ""))
+        rows.append(("Support loads - Max Operating", ["max:ope"],
+                     f"governing operating reaction; {envelope}"))
+        if unred:
+            rows.append(("Support loads / displacements - Occasional UNREDUCED", unred,
+                         "ASD-scaled occasionals at full magnitude; never read the REDUCED "
+                         "OPE+OCC cases for loads or movements"))
+        rows += [
+            ("Displacements - Sustained", sus, f"vertical sag limit; {every}"),
+            ("Displacements - Max Operating", ["max:ope"], f"lateral movement; {envelope}"),
+            ("Flange / nozzle loads - Operating", ope,
+             f"manufacturer or WRC allowable; {every}, take the governing; primary state "
+             f"{self.primary.key} listed first"),
+        ]
+        return rows
 
     def report_matrix(self) -> str:
         """Which load cases feed which qualification. Regenerated from the resolved
         numbering; this is the table that goes stale when a template is copied."""
         n = {c.key: c.number for c in self.cases}
-        p = self.states[0].key
-        sus = [str(n[self._k("sus", p, str(fv))]) for _, fv in self.frictions]
-        exp = [str(n[self._k("exp", s.key, str(fv))])
-               for s in self.states for _, fv in self.frictions]
-        rows = [
-            ("Code stress - Sustained", ", ".join(sus), f"{self.code} sustained"),
-            ("Code stress - Expansion", ", ".join(exp), f"{self.code} expansion, S_A"),
-        ]
-        if "max:occ" in n:
-            rows.append(("Code stress - Occasional", f"{n['max:occ']}",
-                         f"{self.code} occasional envelope"))
-        if "hyd" in n:
-            rows.append(("Code stress - Hydrotest", f"{n['hyd']}", "test case"))
-        rows += [
-            ("Support loads - Sustained", ", ".join(sus), "hanger/restraint design"),
-            ("Support loads - Max Operating", f"{n['max:ope']}", "governing operating reaction"),
-            ("Displacements - Sustained", sus[0], "vertical sag limit"),
-            ("Displacements - Max Operating", f"{n['max:ope']}", "lateral movement"),
-            ("Flange / nozzle loads - Operating",
-             ", ".join(str(n[self._k("ope", p, str(fv))]) for _, fv in self.frictions),
-             "manufacturer or WRC allowable; both friction variants, take the governing"),
-        ]
         out = ["| Purpose | Load Case(s) | Basis |", "|---|---|---|"]
-        out += [f"| {a} | {b} | {c} |" for a, b, c in rows]
+        out += [f"| {a} | {', '.join(str(n.get(k, 'MISSING ' + k)) for k in keys)} | {c} |"
+                for a, keys, c in self.matrix_rows()]
         return "\n".join(out)
 
     def to_autopipe(self) -> str:

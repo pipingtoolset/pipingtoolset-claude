@@ -52,7 +52,7 @@ So the software's documentation, the software's own wizard, and the code disagre
 
 - **B31.1-2024**: strength level, no reduction. Applying 0.6/0.7 is a finding.
 - **B31.3**: default to no reduction, flag it ASSUMED, and apply 0.6/0.7 only on the written direction of the owner spec or engineer of record — and record that direction.
-- Either way, if you *do* reduce for stress, keep **unreduced** companion cases for support loads and displacements. The difference is 1/0.6 = 1.67× on wind force; never leave it unstated.
+- Either way, if you *do* reduce for stress, keep **unreduced** companion cases for support loads and displacements. The difference is 1/0.6 = 1.67× on wind force; never leave it unstated. The generator does this itself: an occasional with a `scale` gets an `OPE+OCC-UNRED` companion per friction variant, and Maximum Operating and the support-load and displacement rows read it, never the reduced case.
 
 ## Occasional allowables (Step 5)
 
@@ -72,11 +72,12 @@ Relocated verbatim from the load-case-builder SKILL.md (Step 8). Every case set 
 
 | Purpose | Source block |
 |---|---|
-| Code stress — sustained | SUS cases, both friction variants |
-| Code stress — expansion | EXP cases |
-| Code stress — occasional | the **Maximum Occasional** envelope |
-| Code stress — hydrotest | HYD |
-| Support and hanger loads | SUS, HYD, Maximum Operating |
-| Displacements | SUS (sag — the PNC00004 limit is 16 mm / ⅝ in. where invoked), Maximum Operating (lateral) |
-| Flange loads | operating case, with friction |
-| Nozzle loads — rotating and non-rotating | operating cases, both friction variants; installation deflection from SUS with the anchor released |
+| Code stress — sustained | SUS cases, every state × every friction variant |
+| Code stress — expansion | EXP cases, every state × friction; inter-state range cases, every state pair × friction |
+| Code stress — occasional | the **Maximum Occasional** envelope (the REDUCED cases where an ASD scale is applied) |
+| Code stress — hydrotest | HYD, every friction variant |
+| Hanger design | the Rigid / Ignore pair, at the stated primary state and friction multiplier |
+| Support and hanger loads | SUS (every state × friction), HYD (every friction), Maximum Operating (every OPE and OPE+OCC case of every state and friction; the UNREDUCED companions where an ASD scale is applied) |
+| Displacements | SUS (sag — the PNC00004 limit is 16 mm / ⅝ in. where invoked; every state × friction), Maximum Operating (lateral) |
+| Flange loads | operating cases, every state × friction, take the governing |
+| Nozzle loads — rotating and non-rotating | operating cases, every state × friction; installation deflection from SUS with the anchor released |

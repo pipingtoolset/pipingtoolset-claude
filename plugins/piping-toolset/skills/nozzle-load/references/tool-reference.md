@@ -119,5 +119,23 @@ Rules:
 - An input missing from the main inputs is filled from `code_values[name].value`. An input present in both places with different values stops the run, exit code 2, with `code_values.<name> conflicts with input <name>`; fix the job file, do not edit one side to match.
 - The envelope gains `code_value_provenance`, `{name: {unit, citation, source}}`, for every entry. `inputs` shows the values used, and `user_supplied` lists a filled input as it lists a typed one. Quote any unit-conversion note in `warnings`, and copy the provenance into section 3 of the calc sheet with its source column.
 - Put only the entries the module being run declares in that job file; an entry for another module's input is an error. The script makes no network calls.
-- `S_vessel` and `S_nozzle` (`equipment.pvp2011-allowables`) are the only values the connector returns for this skill. It returns them in ksi: pass `"unit": "ksi"` and let the script convert.
-- Every table row, coefficient, constant and figure reading is pointer-only today: the user reads it, and it is entered as an ordinary input or as a `code_values` entry with `"source": "user"` and the pointer's standard, edition and table in `citation` (the force and moment components of a load set are unit-checked: lbf and ft-lbf, or N and N-m for the `api610-annexf` sets when `units` is `SI`; `nozzle-load-sum` limits take the unit of your load sets and are not checked). An `ownerFactor` is applied after the fill, to the values as filled.
+- `S_vessel` and `S_nozzle` (`equipment.pvp2011-allowables`) come back in ksi: pass `"unit": "ksi"` and let the script convert. The load-table slots (`allowable`, `suctionAllowable`, `dischargeAllowable`, `limits`) can come back as values too: see [Equipment load tables from the connector](#equipment-load-tables-from-the-connector).
+- Every other table row, coefficient, constant and figure reading is pointer-only today: the user reads it, and it is entered as an ordinary input or as a `code_values` entry with `"source": "user"` and the pointer's standard, edition and table in `citation` (the force and moment components of a load set are unit-checked: lbf and ft-lbf, or N and N-m for the `api610-annexf` sets when `units` is `SI`; `nozzle-load-sum` limits take the unit of your load sets and are not checked). An `ownerFactor` is applied after the fill, to the values as filled.
+
+## Equipment load tables from the connector
+
+Currently the connector serves four equipment load tables as cited values at the Ultimate tier: API 610 Tables 5a and 5b, API 660 Table 2, API 661 Table 4 and API 560 Tables 7 to 10. Each table's tier and whether it returns a value or a pointer are stated in each reply and can change, so read the `mode` of every reply and never assume it.
+
+1. `verify_connector` once per session, then `describe_dataset` for the dataset id (its key fields and columns, and the daily lookup limit) and `list_keys` for the exact row text. Do not type a row label from memory.
+2. One `lookup_value` call per value. A six-component set is six calls, each with its own citation; a pump's suction and discharge sets are twelve. Use the unit-system columns that match the job: USC lbf and ft-lbf, SI N and N-m.
+3. Enter each result as one scalar `code_values` entry with `"source": "connector"`, the lookup's own `unit` and its citation copied whole: `allowable.Fx` to `allowable.Mz`, `suctionAllowable.Fx` to `suctionAllowable.Mz`, `dischargeAllowable.*`, or `limits.*`. The scalar contract above carries them as it is; no other key changes shape.
+4. Copy the six citations into section 3 of the calc sheet with `connector` in the source column. If the vendor datasheet gives different values, use those.
+
+| Dataset | Key fields | Columns used |
+|---|---|---|
+| `api610-nozzle-loads` | `table` (`5a` USC or `5b` SI), `nozzle`, `nps` | `FX FY FZ MX MY MZ`; not the resultants `FR`, `MR` |
+| `api660-nozzle-loads` | `sizeNps`, `flangeClass` | `FxLbf FyLbf FzLbf MxFtLbf MyFtLbf MzFtLbf`, or `FxN FyN FzN MxNm MyNm MzNm` for SI |
+| `api661-nozzle-loads` | `sizeNps` | the same six columns as 660; `limits` only from a row whose citation names the header rule (API 661 7.1.10) |
+| `api560-terminal-loads` | `table`, `sizeNps`, plus `component`, `orientation` where the table has them | the same six columns as 660; not the movements `dx dy dz`, which this skill does not check |
+
+The table lists the datasets' structure (`describe_dataset` states it in each session), not table values. `line` addresses a row by position when the key fields match more than one. On a `mode` of `pointer`, a reply naming a plan the account is not on, a daily-limit message or any other error, the value is not available through the connector: say in one line what the reply said, do not press the user toward a plan, and use the interview, where the user reads the row from their copy or the vendor datasheet.

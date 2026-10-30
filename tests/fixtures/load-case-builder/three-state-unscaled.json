@@ -1,0 +1,21 @@
+{
+  "code": "B31.3",
+  "edition": "2022",
+  "thermal_states": [
+    {"key": "op", "name": "NORMAL OPERATING", "T": "T1", "P": "P1", "D": "D1", "role": "operating"},
+    {"key": "max", "name": "MAXIMUM OPERATING", "T": "T2", "P": "P2", "D": "D2", "role": "design"},
+    {"key": "cold", "name": "COLD UPSET", "T": "T3", "P": "P3", "role": "upset"}
+  ],
+  "frictions": [["w/ Friction", 1.0], ["half Friction", 0.5], ["w/o Friction", 0.0]],
+  "hangers": true,
+  "hydrotest": true,
+  "inter_state_expansion_ranges": true,
+  "occasionals": [
+    {"key": "seis_px", "name": "Seismic +X", "vector": "U1", "sign": "+", "base": "op", "kind": "seismic"},
+    {"key": "seis_mx", "name": "Seismic -X", "vector": "U1", "sign": "-", "base": "op", "kind": "seismic"},
+    {"key": "seis_v", "name": "Seismic -Y", "vector": "U2", "sign": "-", "base": "op", "kind": "seismic"},
+    {"key": "win_px", "name": "Wind +X", "vector": "WIN1", "base": "max", "kind": "wind"},
+    {"key": "win_mx", "name": "Wind -X", "vector": "WIN2", "base": "max", "kind": "wind"},
+    {"key": "psv_cold", "name": "PSV Pop Off at upset", "vector": "F1", "base": "cold", "kind": "psv"}
+  ]
+}
