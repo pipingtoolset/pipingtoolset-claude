@@ -12,6 +12,7 @@ submission, read 2026-10-28): displayName and shortDescription 30 characters, lo
 4000, developerName 80, up to 20 capabilities of 120, up to 3 unique defaultPrompt entries of
 128, HTTPS URLs, ``#RRGGBB`` brandColor, square icons of at least 48 px under ``./assets``.
 """
+from __future__ import annotations
 
 import glob
 import json
@@ -27,10 +28,12 @@ AGENT_MANIFEST = os.path.join(PLUGIN, "plugin.json")
 CLAUDE_MARKET = os.path.join(ROOT, ".claude-plugin", "marketplace.json")
 CODEX_MARKET = os.path.join(ROOT, ".agents", "plugins", "marketplace.json")
 HOSTS_CHECKLIST = os.path.join(ROOT, "tests", "e2e", "HOSTS-CHECKLIST.md")
-# The optional Engineering Data connector: Claude hosts read .mcp.json, Agent Plugins hosts read
-# mcp.json, both at the plugin root (tests/test_connector_manifest.py pins their contents).
+# The optional Engineering Data connector: Claude hosts read .mcp.json at the plugin root
+# (tests/test_connector_manifest.py pins its contents). Since 0.7.1 there is no Agent Plugins
+# mcp.json: Codex asked for a sign-in at install while it existed, so Codex and ChatGPT add the
+# server by hand.
 CLAUDE_CONNECTOR = os.path.join(PLUGIN, ".mcp.json")
-AGENT_CONNECTOR = os.path.join(PLUGIN, "mcp.json")
+RETIRED_AGENT_CONNECTOR = os.path.join(PLUGIN, "mcp.json")
 SEMVER = re.compile(r"^\d+\.\d+\.\d+$")
 SKILLS = sorted(glob.glob(os.path.join(PLUGIN, "skills", "*", "SKILL.md")))
 
@@ -110,10 +113,10 @@ class ManifestParity(unittest.TestCase):
         self.assertIn("(plugin %s)" % version, text.splitlines()[0])
         self.assertEqual(set(re.findall(r"\bv\d+\.\d+\.\d+\b", text)), {"v" + version})
 
-    def test_connector_declarations_sit_next_to_the_manifests(self):
-        for path in (CLAUDE_CONNECTOR, AGENT_CONNECTOR):
-            self.assertTrue(os.path.isfile(path), path)
-        # Each manifest is discovered by file name, so the Claude manifest keeps its field set
+    def test_connector_declaration_sits_next_to_the_claude_manifest_and_only_there(self):
+        self.assertTrue(os.path.isfile(CLAUDE_CONNECTOR), CLAUDE_CONNECTOR)
+        self.assertFalse(os.path.exists(RETIRED_AGENT_CONNECTOR), RETIRED_AGENT_CONNECTOR)
+        # The declaration is discovered by file name, so the Claude manifest keeps its field set
         # (no mcpServers key) and the Agent Plugins manifest points at nothing extra.
         self.assertNotIn("mcpServers", self.claude)
         self.assertNotIn("mcpServers", self.agent)

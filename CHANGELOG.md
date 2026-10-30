@@ -8,6 +8,50 @@ keep a defect until the plugin is updated, so each such entry names the skill, t
 affected inputs and the release that fixed it. GitHub Releases carry the same
 label and are the recall channel.
 
+## [0.7.1] — 2026-10-30
+
+Two **UNCONSERVATIVE-FIX** corrections in the load-case-builder skill (CODEX review findings P1-1 and P1-2, 2026-10-29), the Codex install made consistent with the “optional connector” copy, and the plugin-side copy for the API nozzle tables the connector now serves at Ultimate. Every other skill's numbers are unchanged. Installed copies of 0.7.0 and earlier keep the load-case defects until updated; this release is the recall notice.
+
+- **UNCONSERVATIVE-FIX — load-case-builder: every operating state and friction variant now reaches the envelopes and the extraction matrix (CODEX P1-1).** These inputs were affected in 0.7.0 and earlier:
+  - specs with more than one thermal state: Maximum Operating held only the first state's OPE and OPE+OCC cases, and the sustained rows listed only the first state's SUS cases;
+  - specs with more than one friction multiplier: the vertical-sag row read only the first friction case, and HYD was pinned to the first friction;
+  - `inter_state_expansion_ranges`: only the first friction multiplier got a range case;
+  - hydrotest: HYD was missing from the support-load extraction.
+
+  A non-primary state, a frictionless range or a hydrotest reaction could govern and still be missing from the case the matrix pointed to. Fixed in 0.7.1:
+  - Maximum Operating holds every OPE and OPE+OCC case of every state × friction variant.
+  - HYD and inter-state ranges are generated per friction multiplier (`hyd:<f>`, `exprange:<a>:<b>:<f>`). Confirm in your CAESAR II version that the friction multiplier is applied to the HYD case.
+  - The extraction matrix lists every SUS case of every state × friction under code stress, support loads and vertical sag. It lists every EXP and range case, HYD under both code stress and support loads, the hanger design pair in its own row, and every OPE case under flange / nozzle loads.
+  - With no ASD-scaled occasional, every other case is unchanged in content and order.
+  - Scope: this fix is in the load-case-builder skill only. The hanger design pair intentionally still runs once, at a single friction multiplier (`hanger_friction`), as CAESAR II recommends. It is not repeated per friction.
+- **UNCONSERVATIVE-FIX — load-case-builder: ASD-scaled occasionals now get generated unreduced companions (CODEX P1-2).** Affected inputs: any occasional with `scale` (a user-supplied ASD factor, for example 0.6W / 0.7E) in 0.7.0 and earlier. The scaled OPE+OCC case fed Maximum Operating, so support reactions and displacements were understated by the scale factor. The QC text told the user to keep unreduced companions, but none were generated. Fixed in 0.7.1:
+  - The scaled case is labelled REDUCED and feeds only the code-stress occasional path.
+  - A new `OPE+OCC-UNRED` block adds an UNREDUCED companion for each scaled occasional × friction variant.
+  - Maximum Operating and the support-load and displacement rows read the companions, never the reduced case.
+- **load-case-builder: new optional spec fields `primary_state` and `hanger_friction`.**
+  - `primary_state` sets the state the hanger design pair runs at (`W+T` of that state, springs Ignored) and the state the matrix lists first.
+  - `hanger_friction` sets the friction multiplier for that pair.
+  - When either is absent, the first declared state or friction is used and reported as an `ASSUMED:` finding. Neither field limits coverage.
+- **load-case-builder: stricter spec validation (exit 2).** The generator now refuses:
+  - an unknown `primary_state`;
+  - a negative or non-numeric `hanger_friction` or friction multiplier;
+  - an empty `frictions` list;
+  - an occasional `scale` that is not a number with 0 < scale < 1. Before this, `0` silently read as unscaled, and values of 1 or more were labelled REDUCED;
+  - a duplicated state key, occasional key or friction multiplier. Multipliers are compared as numbers, so `1` and `1.0` collide.
+- **load-case-builder: resolved-case-set QC (`references/qc-gate.md` item 17).** After numbering, the generator compares the generated set with what the spec declares:
+  - every state × friction, occasional × friction and state-pair × friction case;
+  - HYD per friction, the hanger pair and the unreduced companions;
+  - envelope membership;
+  - extraction-matrix membership.
+
+  The result is the last QC finding (`QC: resolved case set complete …` or `ERROR: resolved case set has N miss(es) … Do not issue this set.`). It is also the new `qc` object (`pass`, `counts`, `misses`) in `--format json`, which also gains `extraction_matrix`, `primary_state` and `hanger_friction`.
+- **Golden files.**
+  - `tests/golden/two-state-b313.md` was regenerated on purpose and grows from 87 to 88 cases. The second HYD case shifts every later L-number by one, and Maximum Operating adds the design-state cases.
+  - New fixture specs under `tests/fixtures/load-case-builder/`, with `baseline-0.7.0-unscaled.json` as the 0.7.0 reference.
+  - New golden `tests/golden/three-state-scaled-b313.md` (three states, three friction multipliers, scaled wind and seismic).
+- **Connector copy made true in Codex (B3).** Removed `plugins/piping-toolset/mcp.json`, the Agent Plugins declaration. The owner's install test of 0.7.0 in Codex showed a sign-in prompt at install, so "optional connector" was untrue there. `.mcp.json` (Claude Code, Cowork) is now the only declaration, and the `.plugin` and `.zip` carry it alone. Codex and the ChatGPT desktop app add the server by hand (`codex mcp add`, documented in the README). `.agents/plugins/marketplace.json` keeps `authentication: ON_INSTALL`, the only documented value; with no server declared there is nothing to sign in to. `python tools/package_plugin.py --check` now fails if `mcp.json` returns. The README, the OpenAI longDescription, the site drafts in `docs/site/` and the Phase 2 runbook say the same; the runbook's Codex connector row expects no sign-in prompt and names the policy value as the next suspect if one appears. The 0.7.0 entry below stays as released.
+- **API nozzle tables as cited values at Ultimate (C3, plugin copy).** The connector currently serves API 610 Tables 5a and 5b, API 560 Tables 7 to 10, API 660 Table 2 and API 661 Table 4 as cited values at the Ultimate tier (the server change ships separately and goes live before this release). The README table, the manifest and marketplace descriptions ("cited ASME and API table values"), the listing longDescription and the site drafts move them out of the pointer-only line; PVP2011-57100, ASCE 7-22, AISC 360, ACI and NEMA SM-23 stay pointer-only, and the copy keeps "currently" because a source can return to pointer mode. `nozzle-load` now makes one `lookup_value` call per value (a six-component allowable set is six lookups and six citations) and enters each as a scalar `code_values` entry (`allowable.Fx`, `suctionAllowable.Mz`, `limits.Fy`), with the key fields and columns per dataset in `references/tool-reference.md`; the pointer fallback is unchanged. No script, calculation or `code_values` shape changed.
+
 ## [0.7.0] — 2026-10-28
 
 An optional Engineering Data connector, and the listing copy re-scoped around it. The plugin stays

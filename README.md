@@ -21,7 +21,7 @@ works without it.
 | Install file | `piping-toolset.plugin` (drag into Cowork) | `codex plugin marketplace add pipingtoolset/pipingtoolset-claude` |
 | Invoke | `/piping-toolset:pressure-design` or name it in Cowork | `$pressure-design` in Codex, name it in ChatGPT |
 | Manifest read | `.claude-plugin/plugin.json` | `plugin.json` (Agent Plugins 1.0, `extensions.com.openai`) |
-| Connector declaration read | `.mcp.json` (`http`) | `mcp.json` (`streamable-http`, sign-in mode `mixed`) |
+| Engineering Data connector | Declared by the plugin in `.mcp.json` | Not declared; you add it by hand (see [Add the connector](#add-the-connector)) |
 
 | Skill | What it does |
 |---|---|
@@ -150,10 +150,11 @@ plugin shows as **PipingToolset** in the plugin list; its id (and the command pr
 
 An optional remote server for the Model Context Protocol (MCP): `pipingtoolset-data` at
 `https://pipingtoolset.com/mcp` (Streamable HTTP, stateless). The plugin declares it in `.mcp.json`
-for Claude hosts (transport `http`) and in `mcp.json` for Agent Plugins hosts (transport
-`streamable-http`), so a host that reads the declaration offers it; you can also add it by hand
-(below). The plugin stays free, every skill works without the connector, and the refusal prompts
-behave the same with it off. Setup and the dataset list:
+for Claude Code and Cowork, so those hosts offer it. It does not declare it for Codex or the ChatGPT
+desktop app: in 0.7.0 a declaration there made Codex ask for a sign-in at install, which an optional
+connector must not do, so in those hosts you add it by hand (below). Installing the plugin does not
+contact it or ask you to sign in. The plugin stays free, every skill works without the connector,
+and the refusal prompts behave the same with it off. Setup and the dataset list:
 [pipingtoolset.com/docs/connector/](https://pipingtoolset.com/docs/connector/).
 
 ### What is sent
@@ -172,11 +173,12 @@ Currently:
 | Needs | Served |
 |---|---|
 | No account | Worked examples of the data-free modules (`get_fixture_example`); ISOGEN SKEY and CAESAR II-safe PCF mappings (`get_skey_map`); AISC shapes (`get_aisc_shape`); pointers (`get_pointer`) to where a value is printed |
-| A signed-in paid pipingtoolset.com account: Pro, Pro Plus or Ultimate | The ASME tables the plan covers, each cited to standard, edition, table and row. Pro: B31.3 Table A-1C and B31.1 Appendix A allowable stresses and bolting; the B31.3 E, W and Y and B31.1 E and y factor tables; B31J Table 1-1 component rows (row text only: the SIF number itself is still supplied by you or computed by a script); B31.1 Table 121.5-1 spans; BPE tables; B36.10M and B36.19M pipe dimensions (`get_pipe_dimensions`). Pro Plus adds B16.5 ratings and dimensions, B16.20, UCS-66 and BPVC VIII-2 Table 4.16.1 gasket factors. A higher plan includes the tables of the lower ones |
-| Pointer only, at every plan | API 610, 560, 660 and 661 tables; PVP2011-57100 tables; ASCE 7-22; AISC 360 and ACI tables; NEMA SM-23. The connector returns the table, row key, column and edition and no value; you read the value from your own copy |
+| A signed-in paid pipingtoolset.com account: Pro, Pro Plus or Ultimate | The ASME and API tables the plan covers, each cited to standard, edition, table and row. Pro: B31.3 Table A-1C and B31.1 Appendix A allowable stresses and bolting; the B31.3 E, W and Y and B31.1 E and y factor tables; B31J Table 1-1 component rows (row text only: the SIF number itself is still supplied by you or computed by a script); B31.1 Table 121.5-1 spans; BPE tables; B36.10M and B36.19M pipe dimensions (`get_pipe_dimensions`). Pro Plus adds B16.5 ratings and dimensions, B16.20, UCS-66 and BPVC VIII-2 Table 4.16.1 gasket factors. Ultimate adds API 610 Tables 5a and 5b, API 560 Tables 7 to 10, API 660 Table 2 and API 661 Table 4, one value per lookup (a six-component allowable set is six lookups, each cited). A higher plan includes the tables of the lower ones |
+| Pointer only, at every plan | PVP2011-57100 tables; ASCE 7-22; AISC 360 and ACI tables; NEMA SM-23. The connector returns the table, row key, column and edition and no value; you read the value from your own copy |
 
 Which plan covers which table is the site's tiering today and can change, and a table's source can
-move between served and pointer-only; each result states the tier it needed and whether it is a
+move between served and pointer-only (the four API tables currently serve values at Ultimate and can
+return to pointer-only); each result states the tier it needed and whether it is a
 value or a pointer. The docs page above has the current list of every dataset.
 
 ### What a result looks like
@@ -206,8 +208,9 @@ naming the plan it needs and the [pricing page](https://pipingtoolset.com/pricin
 
 ### Add the connector
 
-Installing the plugin already declares the server for hosts that read the declaration. Use these
-lines to add it by hand, or without the plugin.
+Installing the plugin already declares the server in Claude Code and Cowork. Codex and the ChatGPT
+desktop app do not get a declaration from the plugin, so use these lines there, or to add it by hand
+anywhere, or without the plugin.
 
 - **claude.ai custom connector.** Settings › Connectors › Add custom connector. Name it
   `PipingToolset Data`, enter the URL `https://pipingtoolset.com/mcp`, and if asked how to register
@@ -223,7 +226,8 @@ lines to add it by hand, or without the plugin.
 - **ChatGPT.** Turn on developer mode in the connector settings, create a connector with the MCP
   server URL `https://pipingtoolset.com/mcp` and OAuth authentication, and sign in through
   pipingtoolset.com when asked.
-- **Codex.** Codex takes a streamable HTTP server by URL:
+- **Codex.** Installing the plugin adds no server and asks for no sign-in. Codex takes a streamable
+  HTTP server by URL:
 
   ```
   codex mcp add pipingtoolset-data --url https://pipingtoolset.com/mcp
@@ -292,11 +296,12 @@ combination strings or QC text must be a deliberate golden update, reviewed by t
 `python tools/package_plugin.py --check` builds `piping-toolset.plugin` (Cowork and Agent Plugins
 hosts), `piping-toolset.zip` (the same bytes, for the OpenAI plugin portal) and
 `piping-toolset-skills.zip` (skills-only upload) for a release, and checks that every image the
-manifests reference and both connector declarations (`.mcp.json`, `mcp.json`) travel inside the
-first two archives and stay out of the skills-only one. `tests/test_manifests.py` keeps the Claude and
-Agent Plugins manifests in step and holds the OpenAI listing block to the portal's limits (30-character
-display name and subtitle, 4000-character description, square icons of at least 48 px).
-`tests/test_connector_manifest.py` pins the connector declarations (one server, one https URL, no
+manifests reference and the connector declaration (`.mcp.json`) travel inside the first two archives
+and stay out of the skills-only one, and that no Agent Plugins connector file has come back.
+`tests/test_manifests.py` keeps the Claude and Agent Plugins manifests in step and holds the OpenAI
+listing block to the portal's limits (30-character display name and subtitle, 4000-character
+description, square icons of at least 48 px).
+`tests/test_connector_manifest.py` pins the connector declaration (one server, one https URL, no
 headers, nothing stored for sign-in), the packaging facts above, the rule that no skill script imports a
 network module, and the wording rules for the listing copy. CI also runs
 the agentskills.io reference validator, `skills-ref validate`, on each skill folder; locally:

@@ -45,7 +45,7 @@ Where PIP PNC00004 is invoked, §3.2.1.1–3.2.1.3 require the flexibility case 
 
 **Occasional loads present** — wind, seismic, snow/ice, PSV thrust, water hammer, slug, blast.
 **Site data** — basic wind speed, S_DS, Seismic Design Category, I_p, ice thickness, ground snow, from the project's structural basis.
-**Supports** — CAESAR-designed springs, pre-set springs, or none? Rod hangers (where PNC00004 applies: model rod length, rotation ≤ 5°)? Restraint gaps?
+**Supports** — CAESAR-designed springs (sized at which `primary_state` and `hanger_friction`?), pre-set springs, or none? Rod hangers (where PNC00004 applies: model rod length, rotation ≤ 5°)? Restraint gaps?
 **Hydrotest** — required? Vapour line (hydro weight governs)?
 
 ---
@@ -91,12 +91,13 @@ Build in this order. The order is what makes every reference point backward.
 
 | # | Block | Stress type | Content |
 |---|---|---|---|
-| 1 | Hanger design | HGR | `W` with HS = **Rigid** (sizes the load); `W+T1` with HS = **Ignore** (sizes the travel). No `H` — the spring preload is what these two cases design. |
-| 2 | Hydrotest | HYD | `WW+HP+H` |
+| 1 | Hanger design | HGR | `W` with HS = **Rigid** (sizes the load); `W+T` of `primary_state` with HS = **Ignore** (sizes the travel). No `H` — the spring preload is what these two cases design. |
+| 2 | Hydrotest | HYD | `WW+HP+H` per friction |
 | 3 | Operating | OPE | every thermal state × every friction multiplier |
 | 4 | Operating + occasional | OPE | every occasional riding its base state × friction |
+| 4a | Unreduced | OPE | scaled occasionals at full magnitude, for loads and movements |
 | 5 | Sustained | SUS | `W+P+H` per state × friction |
-| 6 | Expansion | EXP | Algebraic `OPE − SUS`, plus inter-state ranges |
+| 6 | Expansion | EXP | Algebraic `OPE − SUS`, plus inter-state ranges per friction |
 | 7 | Pure occasional | OCC | Algebraic `(OPE+occ) − OPE` — **Suppress output** |
 | 8 | Occasional code stress | OCC | Scalar `SUS + pure occ` |
 | 9 | Envelopes | OPE / OCC | Max of the above |
@@ -148,7 +149,7 @@ Full clause discussion: [references/combination-rationale.md](references/combina
 
 ### The 0.6W / 0.7E question — a three-way conflict
 
-CAESAR II's help topic, the CAESAR II 2019 (v11) and later Seismic Wizard, and ASME B31.1-2024 disagree on the 0.6W / 0.7E reduction factors. Resolve it explicitly. B31.1-2024: strength level, no reduction. B31.3: default to no reduction, flag it ASSUMED, and reduce only on the owner's or engineer of record's written direction. If you reduce for stress, keep unreduced companion cases for support loads and displacements.
+CAESAR II's help topic, the CAESAR II 2019 (v11) and later Seismic Wizard, and ASME B31.1-2024 disagree on the 0.6W / 0.7E reduction factors. Resolve it explicitly. B31.1-2024: strength level, no reduction. B31.3: default to no reduction, flag it ASSUMED, and reduce only on the owner's or engineer of record's written direction. If you reduce for stress, the generator adds unreduced companions (block 4a) for support loads and displacements.
 
 The full three-way comparison: [references/combination-rationale.md](references/combination-rationale.md).
 
@@ -172,13 +173,13 @@ Details: [references/wind-seismic-and-autopipe.md](references/wind-seismic-and-a
 
 ## Step 8 — Report extraction matrix
 
-Every case set ends with a table saying which cases feed which qualification (sustained, expansion, occasional and hydrotest code stress; support and hanger loads; displacements; flange loads; nozzle loads). Generate it from the resolved numbering — never copy it from another job. The generator prints it. The source block for each purpose: [references/combination-rationale.md](references/combination-rationale.md#report-extraction-matrix).
+Every case set ends with a table saying which cases feed which qualification (sustained, expansion, occasional and hydrotest code stress; support and hanger loads; displacements; flange loads; nozzle loads), every state × friction. Generate it from the resolved numbering — never copy it from another job. The generator prints it. The source block for each purpose: [references/combination-rationale.md](references/combination-rationale.md#report-extraction-matrix).
 
 ---
 
 ## Step 9 — QC gate
 
-Run every item of the 16-point checklist; each is a defect class that appears when a template is reused on a larger job. The full list, with the reasoning for each item, is in [references/qc-gate.md](references/qc-gate.md). **Open that file before issue; the body does not repeat the items.** The generator checks five of them automatically and prints its findings: item 4 (vertical seismic present, `U2` not double-booked), item 5 (expansion completeness), item 7 (forward references), item 10 (occasional factor matches the code, edition and duration) and item 11 (ASD reduction position).
+Run every item of the 17-point checklist; each is a defect class that appears when a template is reused on a larger job. The full list, with the reasoning for each item, is in [references/qc-gate.md](references/qc-gate.md). **Open that file before issue; the body does not repeat the items.** The generator checks six of them automatically and prints its findings: item 4 (vertical seismic present, `U2` not double-booked), item 5 (expansion completeness), item 7 (forward references), item 10 (occasional factor matches the code, edition and duration), item 11 (ASD reduction position) and item 17 (resolved case set; also the JSON `qc` object).
 
 The other eleven need the model and are checked by hand against `references/qc-gate.md`.
 
@@ -195,7 +196,7 @@ The other eleven need the model and are checked by hand against `references/qc-g
    python scripts/loadcase_gen.py --spec spec.json --format csv      # for a spreadsheet
    python scripts/loadcase_gen.py --spec spec.json --format json     # machine-readable
    ```
-3. Present the table, the extraction matrix and every QC finding. Put the ASSUMED items from Step 0 at the top. If the spec changes (a state added, an occasional dropped), regenerate — never hand-edit L-numbers.
+3. Present the table, the extraction matrix and every QC finding. Put the ASSUMED items from Step 0 and the generator at the top. If the spec changes (a state added, an occasional dropped), regenerate — never hand-edit L-numbers.
 
 The built-in example (`--example`) deliberately puts snow on `U2` with no vertical seismic, so its QC output shows what a GAP and a CONFLICT finding look like.
 
@@ -203,9 +204,7 @@ The built-in example (`--example`) deliberately puts snow on `U2` with no vertic
 
 ## On PN19 (Engineering New Zealand)
 
-Practice Note 19 *Seismic Resistance of Pressure Equipment* is New Zealand guidance built on NZS 1170.5 and AS/NZS 1170, not an ASCE 7 document. Do not port its coefficients or minimum design accelerations into a US ASME B31 project. Three of its ideas transfer: the damping guidance, the SAM-plus-inertia combination, and the pipe-rack-to-grade vertical drop and flange-leak risks.
-
-Full discussion: [references/pn19.md](references/pn19.md).
+Practice Note 19 is New Zealand guidance built on NZS 1170.5 and AS/NZS 1170, not ASCE 7: do not port its coefficients or minimum accelerations into a US ASME B31 project. Its damping guidance, SAM-plus-inertia combination, and pipe-rack-to-grade drop and flange-leak risks transfer: [references/pn19.md](references/pn19.md).
 
 ---
 

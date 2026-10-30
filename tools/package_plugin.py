@@ -4,10 +4,12 @@
 ``piping-toolset.plugin`` is the Cowork install file: a ZIP whose root holds
 ``.claude-plugin/plugin.json`` directly (no wrapping folder) plus everything else in
 ``plugins/piping-toolset``, including the Agent Plugins root ``plugin.json`` (with the
-``extensions.com.openai.interface`` listing block), the two declarations of the optional
-Engineering Data connector (``.mcp.json`` for Claude hosts, ``mcp.json`` for Agent Plugins hosts)
-and ``assets/`` (the logo both directories show), so the same archive serves any Agent
-Plugins 1.0 host.
+``extensions.com.openai.interface`` listing block), the declaration of the optional
+Engineering Data connector (``.mcp.json``, read by Claude Code and Cowork) and ``assets/`` (the
+logo both directories show), so the same archive serves any Agent Plugins 1.0 host. The archive
+carries no Agent Plugins ``mcp.json``: a declaration there made Codex ask for a sign-in at install
+(owner's install test of 0.7.0, 2026-10-30), so from 0.7.1 the connector is added by hand in Codex
+and ``check`` fails if ``mcp.json`` returns.
 
 ``piping-toolset.zip`` is that same archive, byte for byte, under the ``.zip`` extension the
 OpenAI plugin submission portal (platform.openai.com/plugins, "Create plugin") and other
@@ -28,6 +30,8 @@ Usage:
 Exit codes: 0 ok, 1 check failed, 2 manifest missing or name not kebab-case.
 Python 3.9+, standard library only.
 """
+from __future__ import annotations
+
 import argparse
 import fnmatch
 import json
@@ -42,8 +46,10 @@ PLUGIN_DIR = REPO_ROOT / "plugins" / "piping-toolset"
 MANIFEST_REL = ".claude-plugin/plugin.json"
 AGENT_MANIFEST_REL = "plugin.json"
 CLAUDE_CONNECTOR_REL = ".mcp.json"
-AGENT_CONNECTOR_REL = "mcp.json"
-CONNECTOR_RELS = (CLAUDE_CONNECTOR_REL, AGENT_CONNECTOR_REL)
+# Retired in 0.7.1: the Agent Plugins declaration. It must stay out of every archive.
+RETIRED_AGENT_CONNECTOR_REL = "mcp.json"
+CONNECTOR_RELS = (CLAUDE_CONNECTOR_REL,)
+NO_DECLARATION_RELS = (CLAUDE_CONNECTOR_REL, RETIRED_AGENT_CONNECTOR_REL)
 SKILLS_REL = "skills"
 FIXED_DATE = (1980, 1, 1, 0, 0, 0)
 EXCLUDE_DIRS = {"__pycache__"}
@@ -130,8 +136,7 @@ def _image_refs(out_file: Path):
 
 
 def _connector_problems(out_file: Path):
-    """Why the two connector declarations in a plugin archive are not usable, as strings."""
-    urls = []
+    """Why the connector declaration in a plugin archive is not usable, as strings."""
     problems = []
     with zipfile.ZipFile(out_file) as zf:
         for rel in CONNECTOR_RELS:
@@ -148,10 +153,6 @@ def _connector_problems(out_file: Path):
             url = server.get("url") if isinstance(server, dict) else None
             if not isinstance(url, str) or not url.startswith("https://"):
                 problems.append("%s: the server url must be an https:// URL" % rel)
-                continue
-            urls.append(url)
-    if len(urls) == len(CONNECTOR_RELS) and len(set(urls)) != 1:
-        problems.append("the two connector declarations name different URLs: %s" % sorted(set(urls)))
     return problems
 
 
@@ -170,6 +171,11 @@ def check(out_file: Path) -> bool:
         if rel not in names:
             print("check failed: connector declaration %s not at archive root" % rel, file=sys.stderr)
             ok = False
+    if RETIRED_AGENT_CONNECTOR_REL in names:
+        print("check failed: %s must not ship (Codex asks for a sign-in at install when it finds it); "
+              "the connector is declared in %s only" % (RETIRED_AGENT_CONNECTOR_REL, CLAUDE_CONNECTOR_REL),
+              file=sys.stderr)
+        ok = False
     skills = [n for n in names if re.fullmatch(r"skills/[^/]+/SKILL\.md", n)]
     if not skills:
         print("check failed: no skills/*/SKILL.md at archive root", file=sys.stderr)
@@ -186,8 +192,8 @@ def check(out_file: Path) -> bool:
                 print("check failed: manifest %s -> %s is not in the archive" % (key, rel), file=sys.stderr)
                 ok = False
     if ok:
-        print("check ok: %s, plugin.json, %s, %s, manifest images and %d SKILL.md file(s) at root"
-              % (MANIFEST_REL, CLAUDE_CONNECTOR_REL, AGENT_CONNECTOR_REL, len(skills)))
+        print("check ok: %s, plugin.json, %s, manifest images and %d SKILL.md file(s) at root, no %s"
+              % (MANIFEST_REL, CLAUDE_CONNECTOR_REL, len(skills), RETIRED_AGENT_CONNECTOR_REL))
     return ok
 
 
@@ -200,7 +206,7 @@ def check_skills(out_file: Path) -> bool:
     if outside:
         print("check failed: entries outside skills/: %s" % outside[:5], file=sys.stderr)
         ok = False
-    declared = [n for n in names if n.rsplit("/", 1)[-1] in CONNECTOR_RELS]
+    declared = [n for n in names if n.rsplit("/", 1)[-1] in NO_DECLARATION_RELS]
     if declared:
         print("check failed: connector declaration in the skills-only archive: %s" % declared, file=sys.stderr)
         ok = False
