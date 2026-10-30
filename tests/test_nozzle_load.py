@@ -864,7 +864,8 @@ class CommandLine(unittest.TestCase):
             env = json.loads(r.stdout)
             self.assertEqual(env["module"], module)
             self.assertEqual(env["status"], case["status"])
-            self.assertEqual(set(env), {"module", "status", "output", "warnings", "citation", "inputs", "user_supplied"})
+            self.assertEqual(set(env), {"module", "status", "output", "warnings", "citation", "inputs", "user_supplied",
+                                        "result_status", "checks", "result_status_line", "banner"})
             self.assertEqual(env["citation"], nl.CITATIONS[module])
             self.assertEqual(env["inputs"], inp)
             for key, want in case["expect"].items():
@@ -1111,7 +1112,8 @@ def _without(base, paths):
 class CodeValues(unittest.TestCase):
     """The optional top-level code_values input, the contract shared by the calculator scripts."""
 
-    ENVELOPE_KEYS = {"module", "status", "output", "warnings", "citation", "inputs", "user_supplied"}
+    ENVELOPE_KEYS = {"module", "status", "output", "warnings", "citation", "inputs", "user_supplied",
+                     "result_status", "checks", "result_status_line", "banner"}
 
     def _base(self, module):
         """A valid CLI-layer input for each module."""

@@ -13,7 +13,7 @@ elements between them, and someone spends an afternoon merging nodes that should
 have been separate.
 
 This skill is built on one rule: **a coordinate is computed once and reused**. It is never
-recomputed by a second route. The bundled builder enforces that, so your job and the assistant's is
+recomputed by a second route. The bundled builder enforces that, so the job is
 to **transcribe the drawing faithfully**. The script does all of the geometry.
 
 | File | Role |
@@ -40,6 +40,7 @@ Standard-library Python 3.9+. The scripts make no network calls, and nothing fro
    - **The SKEYs the user's site actually emits.** Ask for one of their own Isogen PCFs and
      harvest the SKEYs from it (`references/reading-isos.md`).
    - **Drawing set and revision**, and which sheets are in scope.
+   - **Project basis record.** If a `pipingtoolset.project-basis/1` record exists (an earlier skill run this session, or a file the user names), reuse it as `--project-basis <file>`, ask only for what it lacks, and never relabel a field ([format](references/project-basis.md)). Its ASSUMED items head the report.
 2. **Read the drawing.** In a chat host (Claude Cowork, the ChatGPT desktop app) the user attaches the iso PDF and the skill reads it from the working directory; in a terminal host (Claude Code, Codex CLI) the user gives the path. Read in this order: title block and notes → continuation references → dimension
    chains → bill of materials → supports. Use the text layer and image zooms together. A dimension
    whose arrows you have not seen is a dimension you have not read.
@@ -114,9 +115,8 @@ Standard-library Python 3.9+. The scripts make no network calls, and nothing fro
   invented SKEY imports as an unrecognised item. Use SKEYs harvested from the user's own Isogen
   PCFs. If a component type has none, use the nearest confirmed SKEY in the same family, keep
   the true identity in the description, and **tell the user**.
-- **Weights on rigids.** Valves, flanges, blinds and instruments take `weight` in the PCF's
-  weight unit (lb by default). Without one, CAESAR II estimates, and hand-corrected rigid weights
-  are a common review finding. Spot-check one rigid's weight in CAESAR II after the first import.
+- **Weights on rigids.** Valves, flanges, blinds and instruments take `weight`
+  (`references/caesar-import.md`).
 - **Supports.** The restraint type is carried by the support SKEY and direction, as in the
   import-proven files: `ANCH` (anchor, no direction), `SKID` (resting, `UP`), `GUID` (guide; give
   `["EAST", "WEST"]` or `["NORTH", "SOUTH"]` for both sides, written as two records), `SPRG`
@@ -142,10 +142,9 @@ output, and a short build note that states:
 - drawing set and revision, axis convention, datum, coordinate units
 - every ASSUMED item, including the elbow radius basis and any rounding-governed closure
 - every SKEY substitution and record-type substitution
-- **what the PCF does not carry**, which the analyst sets in CAESAR II after import:
-  material, design and operating temperatures and pressures (unless mapped through the
-  importer's attribute map), insulation, fluid density, restraint stiffness, gaps and friction,
-  hanger design data, wind and seismic data, corrosion allowance and mill tolerance
+- **what the PCF does not carry**, which the analyst sets in CAESAR II after import (the list is
+  in `references/caesar-import.md`)
+- the report's `Result status` line, verbatim. While it reads `manual check required`, nothing is issued
 
 A PCF is geometry and components. It is not a load case set and not a code check. Say so,
 so nobody mistakes an imported model for one that is ready to run.

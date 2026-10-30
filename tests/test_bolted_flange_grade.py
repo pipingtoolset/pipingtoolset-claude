@@ -96,7 +96,7 @@ class DefaultRunIsScreening(unittest.TestCase):
 
     def test_envelope_keys_are_unchanged(self):
         env = bf.run_module(APP2, with_pre_flight(CASE))
-        self.assertEqual(set(env), {"module", "status", "output", "warnings", "citation", "inputs", "user_supplied"})
+        self.assertEqual(set(env), {"module", "status", "output", "warnings", "citation", "inputs", "user_supplied", "result_status", "checks", "not_checked"})
 
     def test_example_job_is_screening(self):
         with open(EXAMPLE, encoding="utf-8") as fh:
@@ -257,7 +257,7 @@ class CommandLineSheet(unittest.TestCase):
         r = self._run(APP2, "--input-file", EXAMPLE)
         self.assertEqual(r.returncode, 0, r.stderr)
         env = json.loads(r.stdout)
-        self.assertEqual(set(env), {"module", "status", "output", "warnings", "citation", "inputs", "user_supplied"})
+        self.assertEqual(set(env), {"module", "status", "output", "warnings", "citation", "inputs", "user_supplied", "result_status", "checks", "not_checked"})
         self.assertEqual(env["output"]["result_grade"], "screening")
         self.assertEqual(env["warnings"][0], BANNER)
 

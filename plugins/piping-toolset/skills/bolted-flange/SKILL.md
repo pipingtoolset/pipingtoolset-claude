@@ -6,9 +6,9 @@ compatibility: Requires Python 3.9+ (standard library only)
 
 # Bolted Flange - loads on flanged joints
 
-A flange evaluation is rarely rejected for arithmetic. It is rejected because the screen was run against the wrong rating, the moment was in the wrong unit, the gasket factors have no table line behind them, or a conservative screen was reported as if it were a stress check. The equations are short. The method order and the traceability are what a reviewer reads.
+A flange evaluation is rarely rejected for arithmetic. It is rejected because the screen used the wrong rating, the moment was in the wrong unit, the gasket factors have no table line, or a conservative screen was reported as a stress check. The method order and the traceability are what a reviewer reads.
 
-So this skill does two things. It runs the loads from the piping analysis through a fixed ladder - a mandatory pressure-equivalent screen, then the detailed Section VIII flange analysis - using a deterministic script (`scripts/bolted_flange.py`), and it embeds no code-table value: the user reads each one, or takes it from the optional connector section below with its citation. A screen failure is a reason to look harder, not a verdict on the joint.
+So this skill runs the loads from the piping analysis through a fixed ladder - a mandatory pressure-equivalent screen, then the detailed Section VIII flange analysis - with a deterministic script (`scripts/bolted_flange.py`), and embeds no code-table value: the user reads each one, or takes it from the optional connector with its citation. A screen failure is a reason to look harder, not a verdict on the joint.
 
 ## Scope
 
@@ -24,7 +24,7 @@ Torsion and shear are not used by either method; the sheet must say so. The user
 
 ## Step 0 - The basis interview
 
-Ask these together, accept a partial answer, and mark every unanswered item **ASSUMED** at the top of the calc sheet. Do not silently default; the edition is an input.
+Ask these together, accept a partial answer, and mark every unanswered item **ASSUMED** at the top of the calc sheet. Do not silently default; the edition is an input. If a project basis record exists (an earlier skill run, or a file the user names), reuse it with `--project-basis`, ask only for what is missing, and never relabel a field: [references/project-basis.md](references/project-basis.md).
 
 1. **Code and edition:** B31.3 or B31.1, and the year. Section VIII edition: VIII-1 2025 deleted Appendix 2 paragraphs 2-3 and 2-5 to 2-14 and maps them to VIII-2 Part 4.16, so cite 4.16. B31.3 304.5.1(b) permits either VIII-1 Appendix 2 or VIII-2 4.16 using B31.3 allowables, with Sf = S x E x W. B31.1 104.5.1 names Section VIII Division 1 only, with Sa and Sb from Mandatory Appendix A Table A-10 and Sf the Appendix A flange allowable: confirm with the user's B31.1 edition which edition of VIII-1 it references before applying 4.16.
 2. **Owner practice** on external loads (a stress design criteria document, PIP PNC00004). It may set an acceptance percentage of the rating, or demand the detailed analysis. Ask; do not assume.
@@ -68,7 +68,7 @@ Run `aux.app2-flange-integral` for the operating case (design temperature allowa
 - Supply **Sn**. Without it the 2.5 Sn cap is unchecked and the tool warns.
 - Hub factors F, V, f default to a closed-form series that is a reconstruction, not Code text, so the run is graded `screening` (label "screening / reconstructed factors") and carries the banner `SCREENING / RECONSTRUCTED FACTORS`. Only when the user reads F, V, f from the VIII-2 Table 4.16.5 equations or figures and passes all three of `F_override`, `V_override`, `f_override` is it graded `calculated` (a loose flange uses no hub factor and is `calculated`); a partial override stays `screening` and names the factors still on the series. The Table 4.16.5 curve-fit option is not shipped (`hubFactorMethod` other than `series` exits 2).
 - The moment `Mext` is in **ft-lbf** in this module (use `Mext_in_lbf` for in-lbf). The bolt-spacing correction scales the stress moments, not the rigidity moment.
-- Relay `report_word`, never the machine `status`. Report all of a failing result. On a `screening` run write no PASS or issue-grade wording: give ratios and "within" or "exceeds", banner first. Status taxonomy: calculated / screening / manual check required / pointer only / not checked. The Step 2 screen is always `screening`.
+- Relay `report_word`, never the machine `status`. Report all of a failing result. Every envelope carries `result_status` (calculated / screening / manual check required / pointer only / not checked) and `checks[]`; write no PASS or issue-grade wording at `manual check required`, `pointer only`, or `screening` with series factors: give ratios and "within" or "exceeds", banner first, then the `Result status:` line. The Step 2 screen is always `screening`.
 
 Equations in engine order, symbols and the loose/integral differences: [references/app2-engine.md](references/app2-engine.md).
 
@@ -80,11 +80,11 @@ Name these on the sheet; do not compute them here: the UG-44(b) / VIII-2 4.16.12
 
 ## Running the tool
 
-`scripts/bolted_flange.py` (Python 3.9+, standard library only). Script paths are relative to this skill's directory. Call the script by its full path from wherever the session is working; do not change into the skill folder (in Cowork it is a read-only mount and the working directory is the outputs folder). Write `job.json` and every output file to the working directory, never into the skill folder, so the user can open and download them. `scripts/examples/integral-weld-neck.json` is a worked example with placeholder inputs.
+`scripts/bolted_flange.py` (Python 3.9+, standard library only). Script paths are relative to this skill's directory. Call the script by its full path from wherever the session is working; do not change into the skill folder (in Cowork it is a read-only mount and the working directory is the outputs folder). Write `job.json` and every output file to the working directory, never into the skill folder. `scripts/examples/integral-weld-neck.json` is a worked example with placeholder inputs.
 
 - **Run `list` first** to get the exact field names; names are case-sensitive and unknown names are rejected with exit code 2.
 - **Every number you state comes from a script run**, including side comparisons and what-ifs (for example "what if the moment were halved"): run it again rather than computing in your head.
-- Write the object to `job.json` with the file tool and run with `--input-file job.json`; inline JSON is shell-dependent.
+- Write the object to `job.json` with the file tool and run with `--input-file job.json`.
 - A pre-flight check refuses to default the moduli and ambient flange allowable, rejects two moment units at once, and adds warnings. Quote them in the findings.
 
 ```
@@ -100,7 +100,7 @@ python scripts/bolted_flange.py aux.app2-flange-integral --input-file job.json
 | `connections.flange-equivalent-pressure` | Pe, utilization against the rating (the screen) |
 | `aux.app2-flange-integral` | VIII-2 4.16 bolt loads, moments, stresses, rigidity (integral and loose) |
 
-Each call prints `{module, status, output, warnings, citation, inputs, user_supplied}`; `--format sheet` prints a markdown block headed by the grade banner instead. Exit code 2 means bad input. Fields, outputs, and status meaning: [references/tool-reference.md](references/tool-reference.md).
+Each call prints `{module, status, output, warnings, citation, inputs, user_supplied, result_status, checks, not_checked}`; `--format sheet` prints a markdown block headed by the grade banner instead. Exit code 2 means bad input. Fields, outputs, and status meaning: [references/tool-reference.md](references/tool-reference.md).
 
 ---
 
@@ -126,10 +126,10 @@ Command, Pe, rated pressure, utilization, status, warnings. State: leakage scree
 
 ## 5. Step 3 - Detailed analysis
 Operating and gasket seating cases: Peq, Am vs Ab, moments, SH SR ST and averages vs allowables,
-J, Bsc, result grade and banner, hub-factor basis per factor (series or override). Both cases, all checks.
+J, Bsc, result grade and banner, hub-factor basis per factor (series or override).
 
 ## 6. Findings and assumptions
-Every warning, ASSUMED item, unchecked cap, method not computed (Step 4), anything that would
+Every warning, ASSUMED item, `checks[]` and `not_checked` entry, anything that would
 change the conclusion.
 
 ## 7. References
@@ -175,9 +175,9 @@ Take the rating from the dataset edition that matches the user's B16.5 edition. 
 
 ## Hand-offs
 
-- Equipment nozzle loads against the equipment's own allowable (API 610 and similar): the `nozzle-load` skill in this pack, if it is installed.
-- Wall thickness, MAWP, hydrotest and leak-test pressure: the `pressure-design` skill, if it is installed. The flange rating itself is read from B16.5 by the user.
-- Piping stress and the loads fed to this skill: the `stress-screening` and `load-case-builder` skills, if they are installed.
+- Equipment nozzle loads against the equipment's own allowable (API 610 and similar): `nozzle-load`, if it is installed.
+- Wall thickness, MAWP, hydrotest and leak-test pressure: `pressure-design`, if it is installed.
+- Piping stress and the loads fed to this skill: `stress-screening` and `load-case-builder`, if they are installed.
 
 ## Related tools
 

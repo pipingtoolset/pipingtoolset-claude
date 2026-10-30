@@ -1,4 +1,5 @@
 ## Load case set - B31.3 2022
+Result status: manual check required - confirm QC 11 ASD position; not performed by this module: 12 items that need the model
 
 | L | Combination | Description | Stress Type | Method | Friction | Hanger | Output |
 |---|---|---|---|---|---|---|---|

@@ -7,7 +7,7 @@ engine repo's fixtures carry, plus the two reviewer findings the engine does not
   4. WT flexure honours the stem orientation (F9: Mp = My, B < 0, stem local buckling)
   5. goalpost / trapeze headers are checked as simple spans
   6. ASD anchorage governed by a wind combination -> reviewer recommends LRFD.
-     SUPERSEDED 2026-10-30 (owner ruling, plugin 0.7.2, P.E. confirmation pending): the
+     SUPERSEDED 2026-10-30 (owner ruling, plugin 0.7.2, P.E. confirmed 2026-10-30): the
      "documented only" treatment is replaced by an automatic envelope guard ("manual check
      required", NOT ISSUABLE verdict, exit 3) - pinned in test_pipe_support_asd_wind_guard.py.
      The reviewer finding pinned below stays as defence in depth.

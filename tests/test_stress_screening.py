@@ -557,7 +557,8 @@ class CommandLine(unittest.TestCase):
         r = self._run("noncode.pipe-section", "--input", json.dumps({"OD": 6.625, "t": 0.28}))
         self.assertEqual(r.returncode, 0, r.stderr)
         env = json.loads(r.stdout)
-        self.assertEqual(set(env), {"module", "status", "output", "warnings", "citation", "inputs", "user_supplied"})
+        self.assertEqual(set(env), {"module", "status", "output", "warnings", "citation", "inputs", "user_supplied",
+                                    "result_status", "checks", "result_status_line", "banner"})
         self.assertEqual(env["module"], "noncode.pipe-section")
         self.assertEqual(env["output"]["Z"], 8.49575)
         self.assertEqual(env["inputs"], {"OD": 6.625, "t": 0.28})
@@ -705,7 +706,8 @@ def _is_number(x):
 class CodeValues(unittest.TestCase):
     """The optional top-level code_values input, the contract shared by the calculator scripts."""
 
-    ENVELOPE_KEYS = {"module", "status", "output", "warnings", "citation", "inputs", "user_supplied"}
+    ENVELOPE_KEYS = {"module", "status", "output", "warnings", "citation", "inputs", "user_supplied",
+                     "result_status", "checks", "result_status_line", "banner"}   # 0.8.0 adds the last four
     DISP = dict(ii=2.0, io=1.5, Mi=1000, Mo=500, Mt=0, Z=8.0, Sc=20000, Sh=17000, f=1)
 
     def _base(self, module):

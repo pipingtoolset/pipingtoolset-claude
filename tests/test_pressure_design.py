@@ -615,8 +615,9 @@ class CodeValues(unittest.TestCase):
 
     MOD = "piping.b313-wall-thickness"
     B313 = dict(HandDerived.B313, W_basis="seamless")
+    # 0.8.0 (B9) adds result_status, checks, banner_allowed and result_status_line to every envelope.
     ENVELOPE_KEYS = {"module", "status", "output", "warnings", "citation", "inputs", "user_supplied",
-                     "defaults_applied"}
+                     "defaults_applied", "result_status", "checks", "banner_allowed", "result_status_line"}
 
     def _keys(self, module):
         """The envelope keys of a valid run: W modules add weld_factor_basis, gated ones validity."""

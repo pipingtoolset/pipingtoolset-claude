@@ -131,7 +131,7 @@ class ThinWallGateB313(unittest.TestCase):
                                        millTolerance=0.125, edition="2022"))
         assert_no_design_basis(self, env)
         clause = env["validity"]["clause"]
-        self.assertIn("pending P.E. confirmation", clause)
+        self.assertIn("confirmed by the P.E. 2026-10-30", clause)
         self.assertNotIn("screening", clause)
 
     def test_the_header_says_exit_0_does_not_mean_a_design_basis(self):

@@ -25,7 +25,7 @@ FINDING(S). Never present a NOT ISSUABLE or a held stage as a pass, and never so
 "passes with a note". The guard today:
 
 - **ASD anchorage governed by a wind combination** (code-basis item 10; owner ruling
-  2026-10-30, superseding the 2026-10-26 "documented only" ruling; P.E. confirmation pending).
+  2026-10-30, superseding the 2026-10-26 "documented only" ruling; P.E. confirmed 2026-10-30).
   Verdict: "NOT ISSUABLE - ASD anchorage governed by wind combination `<id>`: run anchorage in
   LRFD or resolve the ACI strength-to-ASD factor treatment (code-basis item 10)". The engine
   also raises the *major* finding "ASD anchorage governed by a wind combination", which says

@@ -197,7 +197,7 @@ def _asd_wind_anchorage(design: dict, env: dict, spec: Optional[dict] = None) ->
     is 1/0.6 = 1.67, so ASD anchorage can be about 10 % unconservative there.
 
     Owner ruling 2026-10-30 (supersedes item 6 of the 2026-10-26 P.E. rulings, "documented
-    only"; P.E. confirmation pending at PR review): the envelope's automatic guard
+    only"; P.E. confirmed 2026-10-30): the envelope's automatic guard
     (optimizer.envelope) now holds such a stage at "manual check required" and the verdict at
     NOT ISSUABLE. This major finding is kept as defence in depth: it applies the same
     predicates (loads.asd_wind_combo on the governing combination, loads.asd_wind_could_govern

@@ -10,7 +10,7 @@ pier that is not anchored into existing concrete is checked at SERVICE level (AS
 combinations), because soil bearing, overturning and sliding are allowable-stress checks.
 
 ASD wind-anchorage guard (code-basis item 10; owner ruling 2026-10-30, superseding item 6 of
-the 2026-10-26 P.E. rulings, P.E. confirmation pending at PR review): when the design method
+the 2026-10-26 P.E. rulings, P.E. confirmed 2026-10-30): when the design method
 is ASD and an anchorage stage's governing combination carries wind (loads.asd_wind_combo),
 or a wind combination's anchorage ratio raised by the 1/0.6-over-1.5 margin reaches the
 governing ratio (loads.asd_wind_could_govern), or the loads are factored "as entered" and the

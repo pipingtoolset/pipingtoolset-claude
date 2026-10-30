@@ -67,9 +67,13 @@ def cli_verdict(doc: dict) -> str:
     """The one-line verdict support_calc prints with --quiet (ASCII only).
 
     fail -> FAIL; guard (manual check required) -> NOT ISSUABLE naming the guarded stage and
-    check, never PASS; otherwise PASS, or PASS WITH n CRITICAL FINDING(S)."""
+    check, never PASS; a result status that blocks a PASS (manual check required, pointer only;
+    doc["_status"] from support_calc) -> that status word in capitals, with the reason, and a
+    critical finding -> "<word> WITH n CRITICAL FINDING(S)"; otherwise PASS."""
     env = doc["envelope"]
     crit = doc["criticalFindings"]
+    rs = doc.get("_status") or {}
+    held = not rs.get("banner_allowed", True)
     g = _first_guard(env)
     if env["status"] == MANUAL_CHECK and g:
         line = f"{guard_headline(env)} - {g['stage']} / {g['check']} = {g['ratio']} ({g['combo']})"
@@ -77,10 +81,14 @@ def cli_verdict(doc: dict) -> str:
             line += f"; plus {crit} critical finding(s)"
     else:
         head = _verdict_label(env["status"] == "pass")
-        if head == "PASS" and crit:
-            head = f"PASS WITH {crit} CRITICAL FINDING(S)"
+        if head == "PASS" and held:
+            head = rs["word"]
+        if env["status"] == "pass" and crit:
+            head = f"{head} WITH {crit} CRITICAL FINDING(S)"
         line = (f"{head} - {env['governingStage']} / {env['governingCheck']} = "
                 f"{env['governingRatio']} ({env['governingCombo']})")
+        if env["status"] == "pass" and held:
+            line += f"; result status: {rs['why']}"
     return line.replace("\u2014", "-").encode("ascii", "replace").decode("ascii")
 
 
@@ -172,6 +180,10 @@ def markdown(doc: dict) -> str:
     m = d["method"]
     L: List[str] = []
     L += [f"# Pipe Support Calculation - {d.get('tag') or spec.get('tag') or 'support'}", ""]
+    rs = doc.get("_status") or {}
+    held = not rs.get("banner_allowed", True)
+    if rs.get("line"):
+        L += [rs["line"], ""]
     tb = [["Support tag", d.get("tag") or "-", "Design code", "AISC 360-22 / ACI 318-19 / ASCE 7-22"],
           ["Configuration", CONFIG.get(d["type"], d["type"]), "Design method", m],
           ["Project", spec.get("project", "-"), "Unit system", "US customary (in, kip, ksi)"],
@@ -179,7 +191,11 @@ def markdown(doc: dict) -> str:
     L += _table(["", "", "", ""], tb) + [""]
     verdict = _verdict_label(env["status"] == "pass")
     crit = sum(1 for f in doc["findings"] if f["severity"] == "critical")
-    if verdict == "PASS" and crit:
+    if verdict == "PASS" and held:
+        verdict = f"{rs['word']} (strength ratios within limits)"
+        verdict += (f" WITH {crit} CRITICAL REVIEW FINDING(S) - not issuable until resolved" if crit
+                    else f" - {rs['why']}")
+    elif verdict == "PASS" and crit:
         verdict = f"PASS (strength) WITH {crit} CRITICAL REVIEW FINDING(S) - not issuable until resolved"
     run_txt = "loads as entered" if doc.get("loadMode") == "factored" else \
         f"combination {env['governingCombo']}; {env['combosRun']} combinations run"
@@ -198,7 +214,7 @@ def markdown(doc: dict) -> str:
             L += [f"> Also {guard_headline(env)}.", ""]
     if g:
         L += ["**Validity guard - ASD anchorage under wind** (code-basis item 10; owner ruling 2026-10-30, "
-              "superseding item 6 of the 2026-10-26 P.E. rulings; P.E. confirmation pending). The ACI 318-19 "
+              "superseding item 6 of the 2026-10-26 P.E. rulings; P.E. confirmed 2026-10-30). The ACI 318-19 "
               "strength-design anchor capacity is converted to ASD with a fixed 1/1.5 (R17.5.3); under a 0.6W "
               "combination the implied factor is 1/0.6 = 1.67, so the anchorage ratio shown can be about 10 % "
               "unconservative. The ratio is the engine's, unchanged; the stage is held at "
@@ -209,6 +225,8 @@ def markdown(doc: dict) -> str:
               + "; ".join(f"{guard_held_text(x)} [{x.get('trigger', 'governing')}]"
                           for x in env.get("guards") or []) + ".", ""]
 
+    if doc.get("_basis_section"):
+        L += [doc["_basis_section"].rstrip("\n"), ""]
     L += ["## Design basis", ""]
     if m == "LRFD":
         rows = [["phi_t tension yielding", PHI.get("tensionYield", 0.9)], ["phi_c compression", PHI.get("compression", 0.9)],
@@ -285,7 +303,10 @@ def markdown(doc: dict) -> str:
     factored = doc.get("loadMode") == "factored"
     L += ["## Limit-state results" + ("" if factored else " (envelope of all combinations)"), ""]
     for st in env["stages"]:
-        L += [f"### {st['stage']} - {st['status'].upper()} (max UR {_n(st['ratio'])}"
+        word = st["status"].upper()
+        if held and st["status"] == "pass":
+            word = "RATIO WITHIN LIMITS"
+        L += [f"### {st['stage']} - {word} (max UR {_n(st['ratio'])}"
               + ("" if factored else f", combination {st['combo']}") + ")", ""]
         if st.get("asdWindGuard"):
             sg = st["asdWindGuard"]
@@ -310,9 +331,11 @@ def markdown(doc: dict) -> str:
 
     opt = doc.get("optimizer")
     if opt:
-        L += ["## Optimized alternatives (all pass every combination)", "",
+        ok = "ratios within limits in" if held else "all pass"      # B9 banner rule: no PASS wording when held
+        L += [f"## Optimized alternatives ({ok} every combination)", "",
               f"Ranking weights: {', '.join(f'{k} {v:g}' for k, v in opt['objectives'].items())}; "
-              f"max ratio {opt['maxRatio']:g}; {opt['evaluated']} passing designs found.", ""]
+              f"max ratio {opt['maxRatio']:g}; {opt['evaluated']} "
+              + ("designs within limits found." if held else "passing designs found."), ""]
         L += _table(["#", "Arm", "Column", "Fillet", "Plate t", "Anchor", "Steel (lb)", "Field pts",
                      "Non-stock", "Governing", "UR"],
                     [[f"{a['rank']}{' (as drawn)' if a.get('asDrawn') else ''}", ", ".join(a["arms"]), a["column"] or "-", _n(a["weldSize"], 4),
@@ -329,6 +352,13 @@ def markdown(doc: dict) -> str:
               f"governing {alt['governing']} = {alt['ratio']}; plate (no-prying) ratio {alt['plateRatio']}.",
               "", alt["note"], ""]
 
+    if env.get("checks"):
+        L += ["## Result status by check", "",
+              f"Envelope result status: **{env['result_status']}** (the worst of the checks below; "
+              "not checked items are listed and never block).", ""]
+        L += _table(["Check", "Result status", "Status", "Note"],
+                    [[c["name"], c["result_status"], c["status"], (c.get("note") or "-").replace("|", "/")]
+                     for c in env["checks"]]) + [""]
     L += ["## Assumptions", ""]
     seen = set()
     for w in doc["assumed"] + doc["notes"]:
@@ -364,4 +394,4 @@ def to_json(doc: dict) -> str:
         if isinstance(o, list):
             return [clean(v) for v in o]
         return o
-    return json.dumps(clean({k: v for k, v in doc.items() if k != "spec"}), indent=2)
+    return json.dumps(clean({k: v for k, v in doc.items() if k != "spec" and not k.startswith("_")}), indent=2)

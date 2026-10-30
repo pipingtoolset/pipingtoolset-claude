@@ -1,0 +1,64 @@
+{
+  "schema": "pipingtoolset.project-basis/1",
+  "project": {
+    "name": "Example unit tie-in",
+    "number": "P-0000",
+    "line": "6\"-P-1001-A1",
+    "revision": "A",
+    "calcBy": "initials",
+    "date": "2026-10-30"
+  },
+  "code": {
+    "standard": "B31.3",
+    "edition": "2022",
+    "route": "Normal fluid service"
+  },
+  "service": {
+    "fluid_category": "Normal",
+    "fluid": "hydrocarbon liquid",
+    "corroded": true,
+    "cyclic": false
+  },
+  "owner_practice": [
+    {
+      "document": "Owner piping stress practice",
+      "edition": "user to confirm",
+      "items": [
+        "Run support friction both with and without; report the governing case",
+        {"name": "nozzle load design-stage fraction", "value": "from the owner document", "note": "pointer only until the user reads it"}
+      ]
+    }
+  ],
+  "materials": [
+    {"id": "PIPE-1", "spec": "user spec (e.g. ASTM A106)", "grade": "user grade", "form": "seamless", "use": "pipe",
+     "notes": "S, E, W, Y come from the user's licensed copy or the connector, cited"},
+    {"id": "SUP-1", "spec": "user structural spec", "grade": "user grade", "form": "plate", "use": "support"}
+  ],
+  "states": [
+    {"key": "OPE1", "name": "Normal operating", "role": "operating", "T_F": 350, "P_psig": 120, "cycles": 7000,
+     "slot": {"T": "T1", "P": "P1", "D": "D1"}},
+    {"key": "DES", "name": "Design", "role": "design", "T_F": 400, "P_psig": 150,
+     "slot": {"T": "T2", "P": "P2"}}
+  ],
+  "installation_T_F": 70,
+  "units": {"system": "USC"},
+  "load_case_ids": {
+    "software": "CAESAR II",
+    "version": "user to confirm",
+    "cases": {"HYD": "L1", "OPE": "L2", "SUS": "L3", "EXP": "L4", "OCC": ["L5", "L6"]}
+  },
+  "equipment_axes": {
+    "global_vertical": "Y",
+    "pipe_axis": "X",
+    "nozzle_axis_map": {"Fx": "+X", "Fy": "+Y", "Fz": "+Z", "Mx": "+X", "My": "+Y", "Mz": "+Z"},
+    "notes": "nozzle local axes equal the model global axes for this example"
+  },
+  "citations": [
+    {"ref": "C1", "standard": "ASME B31.3", "edition": "2022", "table": "user reads the table", "row": "user material row",
+     "note": "value supplied by the user or the connector, never by the skill"}
+  ],
+  "assumptions": [
+    {"item": "Corrosion allowance per the line list", "status": "ASSUMED", "note": "line list not yet issued", "owner": "lead"},
+    {"item": "Design state governs pressure design", "status": "confirmed"}
+  ]
+}

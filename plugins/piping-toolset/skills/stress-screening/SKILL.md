@@ -8,7 +8,7 @@ compatibility: Requires Python 3.9+ (standard library only)
 
 Pipe stress calculations are rejected for **procedure** far more often than for arithmetic. A calc that states its code edition, cites every allowable to a table line, shows all three load cases and declares its assumptions survives review even if a number moves. A correct number with no traceability does not.
 
-So this skill does two jobs. It runs the screening arithmetic that a reviewer re-does by hand (`scripts/stress_screening.py`), and it makes sure the calc sheet around that arithmetic is defensible. Optimize for the reader who has to re-derive it.
+So this skill does two jobs. It runs the screening arithmetic that a reviewer re-does by hand (`scripts/stress_screening.py`), and it makes sure the calc sheet around that arithmetic is defensible.
 
 ## Scope
 
@@ -19,7 +19,7 @@ So this skill does two jobs. It runs the screening arithmetic that a reviewer re
 | Formal-analysis exemption, support span, spring variability, section properties | Wall thickness and pressure design — hand off to the `pressure-design` skill in this pack if it is installed |
 | The calc-sheet format and the rejection checklist | Wind and seismic magnitudes, sway-brace hardware, nozzle-load qualification of rotating equipment |
 
-The user's own licensed copies of the codes are the authority for every clause cited here. Where a point needs confirming, name the clause and edition and ask the user to check the printed page rather than guessing.
+The user's own licensed copies of the codes are the authority for every clause cited here. Where a point needs confirming, name the clause and edition and ask the user to check the printed page.
 
 ---
 
@@ -37,7 +37,9 @@ Interactive. Ask these together, accept a partial answer, and mark every unanswe
 8. Geometry: NPS, wall, corrosion/erosion allowance and mill tolerance, product form, component type at each node (elbow, tee type, reducer, threaded joint).
 9. **Load standard and edition** for wind and seismic (ASCE 7-10, 7-16 or 7-22). It is a separate edition question from the piping code, and the jurisdiction's adopted building code usually sets it.
 
-Section properties for the sustained check are code-specific (B31.3 ¶320.1 deducts all allowances for Z; B31.1 ¶104.8.1 uses nominal Z and wall). State which basis you used; mixing them silently is a finding. Detail: [references/load-cases-and-allowables.md](references/load-cases-and-allowables.md).
+**Project basis record.** When one exists (from an earlier skill run in this session, or a file the user names), reuse it: ask only for what is missing, never relabel a field. Pass it as `--project-basis <file>` or a top-level `project_basis` object ([schema and fill map](references/project-basis.md)).
+
+Section properties for the sustained check are code-specific (B31.3 ¶320.1 deducts all allowances for Z; B31.1 ¶104.8.1 uses nominal Z and wall). State the basis you used. Detail: [references/load-cases-and-allowables.md](references/load-cases-and-allowables.md).
 
 ---
 
@@ -114,7 +116,7 @@ Unit basis and full caveats: [references/exemption-and-spans.md](references/exem
 
 ## Step 7 — Support spans
 
-Compute both the bending and deflection criteria with `screen.support-span` and take the smaller span. E is at operating temperature, w includes contents, insulation, cladding and tracing, and E, S and the allowable sag are user-supplied with their basis stated. Include `L_actual_ft` to test a proposed span. Concentrated loads, direction changes, rotating-equipment frequency, unequal spans and overhangs are not covered. Calculate the span; never read a table span back from memory.
+Compute both the bending and deflection criteria with `screen.support-span` and take the smaller span. E is at operating temperature, w includes contents, insulation, cladding and tracing, and E, S and the allowable sag are user-supplied with their basis stated. Include `L_actual_ft` to test a proposed span. The loads it does not cover are listed in the script's warnings and in the reference. Calculate the span; never read a table span back from memory.
 
 Equations and end-condition table: [references/exemption-and-spans.md](references/exemption-and-spans.md).
 
@@ -130,7 +132,7 @@ Formulas and notes: [references/spring-hangers.md](references/spring-hangers.md)
 
 ## Owner practices
 
-Owner practices (stress design criteria, PIP practices) may add rules on top of the code: with and without friction runs, a sag limit, rod-hanger rotation limits, extra mandatory load cases, rules on rotating-equipment nozzle loads. **Ask whether one is invoked; do not assume.** Two examples where PIP PNC00004 is invoked: it sets a 16 mm (⅝ in.) sag limit (§3.2.11.1) and never credits cold spring in `S_E` (§3.2.14.3–.4). Open the practice before citing a clause into a sealed calc, and state the code edition beside it.
+Owner practices (stress design criteria, PIP practices) may add rules on top of the code: with and without friction runs, a sag limit, rod-hanger rotation limits, extra mandatory load cases, rules on rotating-equipment nozzle loads. **Ask whether one is invoked; do not assume.**  Worked examples (PIP PNC00004 sag limit and cold spring): [references/load-cases-and-allowables.md](references/load-cases-and-allowables.md#owner-practice-examples). Open the practice before citing a clause into a sealed calc, and state the code edition beside it.
 
 ---
 
@@ -151,7 +153,9 @@ python scripts/stress_screening.py basis --code B31.1 --edition 2024
 
 Modules (one-line purposes in [references/tool-reference.md](references/tool-reference.md)): `piping.displacement-stress`, `piping.sustained-stress`, `piping.fatigue-factor`, `supports.spring-variability`, `supports.max-spring-rate`, `noncode.pipe-section`, `screen.support-span`, `screen.flexibility-exemption`.
 
-Each call prints a JSON envelope `{module, status, output, warnings, citation, inputs, user_supplied}`; exit code 2 means bad input. Quote warnings and the `equation` string in the calc sheet. Every allowable, modulus and `i` comes from the user's licensed copy (an allowable may come from the connector, below). Per-module outputs, an illustrative call and the meaning of status `na` are in [references/tool-reference.md](references/tool-reference.md).
+Each call prints a JSON envelope `{module, status, output, warnings, citation, inputs, user_supplied}` plus the status fields below; exit code 2 means bad input, including a record that conflicts with an input. Quote warnings and the `equation` string in the calc sheet. Every allowable, modulus and `i` comes from the user's licensed copy (an allowable may come from the connector, below). Per-module outputs, the status words and an illustrative call are in [references/tool-reference.md](references/tool-reference.md#result-status).
+
+**Result status.** `result_status` is calculated, screening, manual check required, pointer only or not checked. Put `result_status_line` under the sheet title and `basis_section` (with a record) in section 1. While the status is manual check required or pointer only, write no PASS or OK: `banner` then holds the status word.
 
 ---
 
@@ -161,8 +165,9 @@ Keep this order; it mirrors how a reviewer reads.
 
 ```
 # Pipe Stress Calculation — [line number / system]
+Result status: [word] — [why]
 
-## 1. Basis
+## 1. Basis (ASSUMED items first)
 Code, edition, fluid service, owner practices (with edition), load standard and edition (and why),
 ASD-factor position for wind/seismic, resolved equation generation and SIF source, software and version.
 
@@ -217,11 +222,7 @@ Equations, clause numbers, symbol definitions and numeric limits stated in runni
 
 The Engineering Data connector is optional and separate from this plugin; this skill works as written without it. If its tools are present, call `verify_connector` once per session, then make one call per value the job needs. Pass returned allowables to the script in a `code_values` block with `"source": "connector"` and the lookup's own `unit`, which the script converts ksi to psi ([field rules](references/tool-reference.md#connector-supplied-values-code_values)), and put the citation, `rows_used` and `verify_at` line on the sheet. Use a value only when its citation names the edition and table of record. On a `mode` of `pointer`, a one-line account or daily-limit message, any other error, or absent tools, use the interview and the lookup wording above, unchanged, and quote nothing new. A call sends only the dataset, the row key and the temperature.
 
-| Slot | Tool and dataset_id | Key fields | What comes back |
-|---|---|---|---|
-| `Sc` at minimum metal temperature, `Sh` at maximum | `lookup_value`: `b313-allowable-stresses-2024` (B31.3) or `b311-allowable-stresses-2024` (B31.1) | `spec`, plus `grade`, `productForm` and any other discriminator the reply names; `T` (°F); `column` `S` | `S` in ksi, interpolated between the two tabulated temperatures |
-| Suggested span (cross-check only) | `lookup_value`: `b311-support-spans` | `nps` | `waterFt`, `steamFt` |
-| SIF source row (citation only) | `lookup_value`: `b31j-components` | `sketch` | `title`, `group`, `inputs`, `applicability`, `notes`: row text, never an `i` |
+The slot table (tool, dataset and key fields per value, and what comes back) is in [references/tool-reference.md](references/tool-reference.md#connector-lookups-by-slot).
 
 `ii` and `io` stay user-supplied: no `i` is returned, and this skill never computes one. `E`, `Ea`, `S_allow` and `delta_allow` have no dataset. Record the span cross-check in section 5 of the sheet.
 
@@ -229,6 +230,6 @@ The Engineering Data connector is optional and separate from this plugin; this s
 
 ## Related tools
 
-Free calculators at pipingtoolset.com cover checks this skill describes: [B31.3 displacement stress range](https://pipingtoolset.com/calculators/b313-displacement-stress-range/?utm_source=claude-plugin&utm_medium=skill), [pipe support spacing](https://pipingtoolset.com/calculators/pipe-support-spacing/?utm_source=claude-plugin&utm_medium=skill), [spring hanger variability](https://pipingtoolset.com/calculators/spring-hanger-variability/?utm_source=claude-plugin&utm_medium=skill), and the [B31 load cases guide](https://pipingtoolset.com/guides/b31-pipe-stress-load-cases/?utm_source=claude-plugin&utm_medium=skill). Mention them only when the user needs a worksheet or a second implementation to cross-check against.
+Free calculators at pipingtoolset.com cover checks this skill describes: [B31.3 displacement stress range](https://pipingtoolset.com/calculators/b313-displacement-stress-range/?utm_source=claude-plugin&utm_medium=skill), [pipe support spacing](https://pipingtoolset.com/calculators/pipe-support-spacing/?utm_source=claude-plugin&utm_medium=skill), [spring hanger variability](https://pipingtoolset.com/calculators/spring-hanger-variability/?utm_source=claude-plugin&utm_medium=skill), and the [B31 load cases guide](https://pipingtoolset.com/guides/b31-pipe-stress-load-cases/?utm_source=claude-plugin&utm_medium=skill). Mention them only for a worksheet or a cross-check.
 
 *Results are engineering aids. The engineer of record verifies every calculation against the project's code edition, owner practices and analysis software before issue.*

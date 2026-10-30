@@ -26,8 +26,10 @@ The user's own licensed copies of the codes are the authority for every clause c
 
 Ask these together, accept a partial answer, and mark every unanswered item **ASSUMED** at the top of the calc sheet. Do not silently default.
 
+**Project basis record.** If one exists (written by an earlier skill this session, or a file the user names), reuse it: run with `--project-basis project-basis.json`, ask only for what it lacks and never relabel a field. Fill map: [references/project-basis.md](references/project-basis.md).
+
 1. **Code: B31.1 or B31.3?** They are not interchangeable. Different equation symbols (`Y` in B31.3, `y` in B31.1), different tables, different allowables for the same material. The MAWP and bend modules take it as the `code` input (MAWP also B31.9 or B31.12).
-2. **Edition year.** It decides which tables hold the inputs, and table names move between editions. As a pointer only: in B31.3 the basic allowable stress table is Table A-1 through the 2022 edition and Table A-1C in 2024, and the quality-factor tables are A-1A / A-1B through 2022 and A-2 / A-3 in 2024. Confirm the table name in your copy (ask the user to check the printed page of their own). Ask for it and pass it as `edition` (it decides whether the B31.1 equation carries W). If the user cannot give it, proceed with a clearly marked **ASSUMED** edition, but do not present the result as a final calc sheet until the edition is confirmed.
+2. **Edition year.** It decides which tables hold the inputs, and table names move between editions. Pointers: [table names by edition](references/modules.md#table-names-by-edition). Ask for it and pass it as `edition` (it decides whether the B31.1 equation carries W). If the user cannot give it, proceed with a clearly marked **ASSUMED** edition, but do not present the result as a final calc sheet until the edition is confirmed.
 3. **B31.3 only: fluid service** — Normal, Category D, Category M, or Chapter IX high pressure. This skill covers the Normal-service equations only; for Category M or high-pressure piping say the calc needs the code's additional requirements.
 4. **Design pressure and design temperature**, and whether they are coincident. Design metal temperature, not fluid temperature, selects the allowable stress.
 5. **Material:** specification, grade, **product form** (seamless, ERW, EFW, spiral, cast). Product form sets the quality factor E.
@@ -64,7 +66,7 @@ Verify each table name and number against the printed page of the user's edition
 
 ## With the Engineering Data connector
 
-The Engineering Data connector is optional and separate from this plugin; everything above works without it. If its tools are present, call `verify_connector` once per session. Then make one `lookup_value` call per value the job needs (never sweep a table), choosing the dataset by the code basis from Step 0, and pass each result to the script in a `code_values` block with `"source": "connector"` and the lookup's own `unit`, which the script converts where it can, ksi to psi ([field rules](references/modules.md#connector-supplied-values-code_values)). Put the returned citation with its notes, the `rows_used` entries and the `verify_at` line on the sheet. Use a value only when its citation names the edition and table of record. On a `mode` of `pointer`, a one-line account or daily-limit message, any other error, or when the tools are not present, use the interview and the lookup instruction above for that slot, unchanged, and quote nothing new. A call sends only the dataset, the row key and the temperature.
+The Engineering Data connector is optional and separate from this plugin; everything above works without it. If its tools are present, call `verify_connector` once per session. Then make one `lookup_value` call per value the job needs (never sweep a table), choosing the dataset by the code basis from Step 0, and pass each result to the script in a `code_values` block with `"source": "connector"` and the lookup's own `unit`, which the script converts where it can, ksi to psi ([field rules](references/modules.md#connector-supplied-values-code_values)). Put the returned citation with its notes, the `rows_used` entries and the `verify_at` line on the sheet. Use a value only when its citation names the edition and table of record. On a `mode` of `pointer`, pass it as that slot's `code_values` entry with `"mode": "pointer"` and no value (the run is `pointer only`) and ask the user for the value. On a one-line account or daily-limit message, any other error, or when the tools are not present, use the interview and the lookup instruction above for that slot, unchanged, and quote nothing new. A call sends only the dataset, the row key and the temperature.
 
 | Slot | Tool and dataset_id | Key fields | What comes back |
 |---|---|---|---|
@@ -93,13 +95,14 @@ The numbers above are placeholders to show the shape of a complete input, not co
 - **Run `python scripts/pressure_design.py list` first** to get the exact field names; do not guess them.
 - **Every number you state comes from a script run**, including side comparisons, what-ifs and sensitivity remarks (for example "what would the wall be at 10 % lower pressure"): run the script again rather than computing in your head.
 - A pre-flight check runs before the engine. It stops physically impossible inputs with exit code 2 (negative pressure or allowance, E or W above 1, Y or y outside 0 to 1, a wall of D/2 or more, allowances that consume the wall, a miter radius R1 that does not exceed r2) and adds warnings for implausible ones (ST/S above 2, a pneumatic factor above 1.33). Quote those warnings in the findings.
-- **US customary only:** psi, in., in.², degrees. The equations are unit-consistent, but the script documents and expects these units.
+- **US customary only:** psi, in., in.², degrees (the equations are unit-consistent).
 - Input names are **case-sensitive** and unknown names are rejected: `Y` (B31.3) and `y` (B31.1) are different fields on different modules.
-- Output is a JSON envelope: `status` (`pass` / `fail` / `na`, or `manual check required` when a validity gate trips), `output`, `warnings`, the paragraph `citation`, an echo of `inputs` (the basis texts included), `user_supplied` (the table values the user must cite), `defaults_applied` (never W), and `weld_factor_basis` (W, its basis and source) on every module that carries W.
+- Output is a JSON envelope: `status` (`pass` / `fail` / `na`, or `manual check required` / `pointer only`), `output`, `warnings`, the paragraph `citation`, an echo of `inputs` (the basis texts included), `user_supplied` (the table values the user must cite), `defaults_applied` (never W), and `weld_factor_basis` (W, its basis and source) on every module that carries W.
 - **W gate.** Where the equation carries W, W omitted or W = 1.0 without `W_basis` exits 2 naming the W table and edition. Never retry with a basis the user did not give.
-- **Validity gate** (straight pipe, MAWP, bends): `validity` reports `P_over_SE` against 0.385 and the thickness against D/6. On a trip, `status` is `manual check required`, `output` is empty and the numbers sit in `equation_value` as an **equation value, not a design basis**; quote the `banner` (it names the clause) and write no PASS, schedule or margin. Otherwise `result_grade` is `calculated`. Details: [modules.md](references/modules.md).
+- **Validity gate** (straight pipe, MAWP, bends): `validity` reports `P_over_SE` against 0.385 and the thickness against D/6. On a trip, `status` is `manual check required`, `output` is empty and the numbers sit in `equation_value` as an **equation value, not a design basis**; quote the `banner` (it names the clause) and write no PASS, schedule or margin. Otherwise `result_grade` is `calculated`, or `manual check required` on a special-service record. Details: [modules.md](references/modules.md).
+- **Result status.** `result_status` is the worst performed word of `checks[]`: calculated, screening, manual check required, pointer only, not checked ([meanings](references/project-basis.md#result-status-words)). Write PASS, a schedule or margin only when `banner_allowed` is true, whatever `status` says.
 - Exit code 2 with a one-line message means bad input. Fix it; never retry with guessed values.
-- Results are rounded to the precision shown (5 decimals on thickness, 3 on pressure). Quote `warnings` in the findings verbatim.
+- Results are rounded to the precision shown (5 decimals on thickness, 3 on pressure).
 
 ---
 
@@ -117,7 +120,7 @@ Each module's equations, inputs, validity limits and reviewer notes are in [refe
 | `piping.miter-allowable-pressure` | Allowable pressure of a single or multiple miter bend | B31.3 304.2.3, Eq. (4a)/(4b)/(4c) | [section 6](references/modules.md#6-mitered-bends--allowable-pressure) |
 | `piping.leak-test-pressure` | Hydrostatic and pneumatic leak test pressure (piping minimum) | B31.3 345.4.2 Eq. (24), 345.5.4; B31.1 137 | [section 7](references/modules.md#7-leak-test-pressure) |
 
-Points that hold across every module: quote `P_over_SE` from `validity` rather than computing it (the miter module has no such gate); `th` and `tb` for the branch check come from the two wall-thickness runs; the bend module does not predict thinning during forming; the miter module does not check the clause's minimum R1; the leak-test module applies no ceiling on ST/S unless the owner supplies `stressRatioCap` and always warns that flange, valve and equipment limits are separate. The details are in the reference file.
+Quote `P_over_SE` from `validity`; `th` and `tb` come from the two wall-thickness runs. What a module does not evaluate is listed in its `not checked` rows.
 
 ---
 
@@ -127,8 +130,10 @@ Keep this order; it mirrors how a reviewer reads. Fill every field or mark it AS
 
 ```
 # Pressure Design Calculation — [line number / system]
+Result status: [result_status_line from the run]
 
 ## 1. Basis
+`basis_section` first when a record was used. Then:
 Code and edition year; B31.3 fluid service; owner practices; design P and T (and
 whether coincident); material spec, grade, product form; joint type;
 allowances (corrosion, erosion, thread/groove, mechanical); mill under-tolerance
@@ -153,12 +158,12 @@ for the reviewer.
 Thin-wall validity first: P_over_SE against 0.385 and the thickness against D/6, from `validity`.
 tOrder vs the selected nominal wall (read by the user from B36.10M / B36.19M or mill data);
 allowable pressure vs design pressure; reinforcement margin; test pressure.
-PASS or FAIL for each, with the margin, only where status is not "manual check required".
-A "manual check required" run shows the banner, the equation value labelled
+PASS or FAIL for each, with the margin, only where banner_allowed is true.
+A "manual check required" or "pointer only" run shows the banner, the equation value labelled
 "equation value, not a design basis", the clause, and no PASS, schedule or margin.
 
 ## 6. Findings and assumptions
-Every script warning, every ASSUMED item, the validity result (P_over_SE, t vs D/6) and
+Every script warning, every ASSUMED item, every not checked row, the validity result (P_over_SE, t vs D/6) and
 the W basis, every hand check (345.2.1(a) yield check, R1 minimum on miters), anything that
 would change the conclusion.
 

@@ -84,6 +84,15 @@ def check_code_values(raw) -> None:
                           "(PCF building has no code-table inputs)")
 
 
+# What no script of this skill checks: (name, note). The build report lists them as "not checked"
+# result_status items; validate_pcf.py's closing paragraph says the same in prose.
+HAND_CHECKS = (
+    ("SKEYs against the site's Isogen output", "hand check; --skeys only compares the list the user gives"),
+    ("continuation coordinates against adjoining sheets", "hand check against the neighbouring iso"),
+    ("vertical-axis declaration", "hand check; a wrong axis imports as a model lying on its side"),
+)
+
+
 def check_skey_overrides(raw) -> Tuple[Dict[str, Optional[str]], Dict[str, Optional[str]], Dict[str, Tuple[str, ...]]]:
     """Validate a spec's "skeyOverrides" map and resolve it to record names.
 
