@@ -28,6 +28,8 @@ The user's own licensed copies of the codes are the authority for every clause c
 
 This skill is interactive. Ask these together, accept a partial answer, and mark every unanswered item **ASSUMED** at the top of the output. Do not silently default.
 
+**Project basis record.** When one exists (an earlier skill run this session, or a file the user names), reuse it with `--project-basis <file>`, ask only for what it lacks, and never relabel a field: [references/project-basis.md](references/project-basis.md); this skill's fill map is in [spec-format.md](references/spec-format.md#project-basis). With none, write the agreed answers as `project-basis.json` in the working directory for later skills.
+
 **Code basis**
 1. B31.1 or B31.3? **Edition year?** The equation set depends on it: B31.1 moved its sustained and occasional equation to an SRSS form with B31J-based indices in 2020; B31.3 deleted Appendix D in 2020 and changed the f-factor equation in 2022.
 2. B31.3 only: fluid service category. **Chapter IX high-pressure piping uses 1.20, not 1.33** (K302.3.6(a)).
@@ -179,9 +181,7 @@ Every case set ends with a table saying which cases feed which qualification (su
 
 ## Step 9 — QC gate
 
-Run every item of the 17-point checklist; each is a defect class that appears when a template is reused on a larger job. The full list, with the reasoning for each item, is in [references/qc-gate.md](references/qc-gate.md). **Open that file before issue; the body does not repeat the items.** The generator checks six of them automatically and prints its findings: item 4 (vertical seismic present, `U2` not double-booked), item 5 (expansion completeness), item 7 (forward references), item 10 (occasional factor matches the code, edition and duration), item 11 (ASD reduction position) and item 17 (resolved case set; also the JSON `qc` object).
-
-The other eleven need the model and are checked by hand against `references/qc-gate.md`.
+Run every item of the 17-point checklist; each is a defect class that appears when a template is reused on a larger job. The full list, with the reasoning for each item, is in [references/qc-gate.md](references/qc-gate.md). **Open that file before issue; the body does not repeat the items.** The generator evaluates items 4, 5, 7, 10, 11 and 17; the other eleven need the model, are listed as `not checked`, and are checked by hand.
 
 ---
 
@@ -196,9 +196,7 @@ The other eleven need the model and are checked by hand against `references/qc-g
    python scripts/loadcase_gen.py --spec spec.json --format csv      # for a spreadsheet
    python scripts/loadcase_gen.py --spec spec.json --format json     # machine-readable
    ```
-3. Present the table, the extraction matrix and every QC finding. Put the ASSUMED items from Step 0 and the generator at the top. If the spec changes (a state added, an occasional dropped), regenerate — never hand-edit L-numbers.
-
-The built-in example (`--example`) deliberately puts snow on `U2` with no vertical seismic, so its QC output shows what a GAP and a CONFLICT finding look like.
+3. Present the report as printed: the `Result status` line, the ASSUMED block, the table, the matrix and every QC finding ([status words](references/spec-format.md#output)). If the spec changes (a state added, an occasional dropped), regenerate — never hand-edit L-numbers.
 
 ---
 

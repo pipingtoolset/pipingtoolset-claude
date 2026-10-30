@@ -273,6 +273,66 @@ connector and show it with its citation; check it against your own copy.
 
 More prompts, with pass criteria, are in [`tests/e2e/PROMPTS.md`](tests/e2e/PROMPTS.md).
 
+## Project basis record
+
+Since 0.8.0 the seven skills share one record of the project facts, so you state them once. It is a
+JSON file, schema `pipingtoolset.project-basis/1`, passed to any script as `--project-basis
+project-basis.json` or as a top-level `project_basis` object in the job file. It holds project data
+and pointers only. S, E, W, Y, ratings, allowables and gasket factors never go in it; they stay
+`code_values` entries with their citations.
+
+| Key | What it carries |
+|---|---|
+| `project` | name, number, line, revision, calcBy, date |
+| `code` | standard (B31.3, B31.1, B31.9, B31.12 or another), edition, route (for example Normal fluid service, Chapter IX) |
+| `service` | fluid category (Normal, Category D, Category M, High Pressure), fluid, corroded, cyclic |
+| `states` | one entry per condition: key, name, role (operating, design, upset, steamout, hydrotest ...), T_F, P_psig, cycles, CAESAR II slot (T1, P1, D1); plus `installation_T_F` |
+| `units` | system (USC or SI) and any unit that differs from the system default |
+| `load_case_ids` | software (CAESAR II or AutoPIPE), version, the case ids for SUS, OPE, EXP, OCC, HYD, HGR |
+| `equipment_axes` | global vertical (Y or Z), pipe axis, nozzle axis map |
+| `materials`, `owner_practice`, `citations` | material id, spec, grade, form and use; owner documents with their items; citation pointers |
+| `assumptions` | each item with status ASSUMED or confirmed, a note and an owner |
+
+Every key but `schema` is optional; an unknown key exits 2. The full schema and each skill's fill
+map are in `references/project-basis.md` inside every skill (one canonical copy, pinned by a test).
+
+**Hand-off.** The first skill run in a session (usually `load-case-builder`, whose basis interview
+collects most of it) writes the agreed record to `project-basis.json` in your working folder. Each
+later skill runs with `--project-basis project-basis.json` and asks only for its own inputs.
+
+1. An input the job file leaves out is filled from the record where the skill has a slot (for
+   example the design state's pressure for `pressure-design` and `bolted-flange`, the vertical axis
+   for `pipe-support` and `iso-to-pcf`, the design temperature for `nozzle-load`).
+2. An input given in both places that differs stops the run, exit 2, `project_basis.<path>
+   conflicts with input <name>`. The record never overrides what you typed, and no field is
+   relabelled.
+3. The result gains `project_basis_applied` (`fields_used` with filled, agreed or noted, the
+   ASSUMED items verbatim, and `conflicts`), and section 1 of every calc sheet renders the record
+   with every ASSUMED item at the top.
+4. When a fact changes, edit the record and rerun the skills whose `fields_used` name it.
+
+`tests/test_project_basis_handoff.py` runs all seven scripts on one record and checks that each
+result equals the run with the same values typed in.
+
+**Result status.** Every result carries `result_status` and `checks[]` beside the existing pass,
+fail or na `status`, and every calc sheet has a `Result status: <word> - <why>` line under its
+title.
+
+| Word | Meaning |
+|---|---|
+| calculated | every input confirmed, no gate tripped, no reconstructed factor |
+| screening | a screening method by definition (flange pressure-equivalent screen, PVP2011 derived set, span screen, flexibility exemption) or a reconstructed factor in the chain |
+| manual check required | a validity gate tripped, or a code-required item the script cannot evaluate for these inputs |
+| pointer only | a required value was given only as a pointer; that check did not run |
+| not checked | a check the module does not perform, listed from the skill's known limits; it never sets the result word |
+
+The result word is the worst of the checks the module performs, in the order manual check
+required, pointer only, screening, calculated; `not checked` rows are listed and never set it, so a
+clean run reads `calculated` and the line names what was not performed. Every ASSUMED input (in the
+record or the skill's own list) gives one `ASSUMED inputs` check graded manual check required. No
+skill prints PASS, OK, ISSUE or DELIVERABLE while the word is manual check required or pointer only,
+or screening with an unresolved reconstructed factor; the status word is printed instead.
+
 ## What the skills will not do
 
 They never reproduce tabulated code values from memory or from a file in the plugin: a value comes
@@ -293,6 +353,9 @@ python -m unittest discover -s tests -v
 CRLF, kept byte-exact by `.gitattributes`) for the worked examples. A change to case order,
 combination strings or QC text must be a deliberate golden update, reviewed by the engineer of record.
 `tools/sync_fixtures.py --check` confirms the vendored calc-core fixture snapshot is current.
+`tools/sync_shared_blocks.py --check` confirms that the shared `project_basis` and `result_status`
+code blocks, `references/project-basis.md` and `scripts/examples/project-basis.example.json` in
+every skill are byte copies of `tools/shared/` (run it without `--check` to rewrite them).
 `python tools/package_plugin.py --check` builds `piping-toolset.plugin` (Cowork and Agent Plugins
 hosts), `piping-toolset.zip` (the same bytes, for the OpenAI plugin portal) and
 `piping-toolset-skills.zip` (skills-only upload) for a release, and checks that every image the

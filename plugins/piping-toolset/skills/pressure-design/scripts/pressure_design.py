@@ -46,6 +46,7 @@ USAGE
     python pressure_design.py list --json
     python pressure_design.py piping.b313-wall-thickness --input '{"P": 500, ...}'
     python pressure_design.py b313-wall-thickness --input-file job.json
+    python pressure_design.py b313-wall-thickness --input-file job.json --project-basis project-basis.json
 
     Exit status: 0 = the run completed, 2 = bad input (one-line message on stderr). Exit 0 does
     not mean a design basis: a tripped validity gate also exits 0, so callers must read
@@ -71,6 +72,29 @@ GATES (CLI layer; the engine functions and their fixture outputs are unchanged)
     Basis inputs W_basis, edition and code (the last for the MAWP and bend modules) are text,
     echoed in "inputs" and never passed to the equations.
 
+PROJECT BASIS (0.8.0; optional top-level "project_basis" object or --project-basis <file>)
+    One pipingtoolset.project-basis/1 record shared by every skill (references/project-basis.md);
+    file and key both given with different content exits 2. This skill fills: code (MAWP and bend
+    modules) from code.standard, which must lie in the module's code family on every module (else
+    exit 2, "project_basis.code.standard conflicts with input <module> ..."); edition from
+    code.edition; P from the design state (role design, else the first state); W_basis "seamless"
+    from materials[use=pipe] when its form is seamless, W_basis is absent and W is absent or 1.0.
+    An input present in both and different exits 2; units.system SI exits 2. A B31.1 record on the
+    branch module grades that check "screening"; Category M or Chapter IX service grades the run
+    "manual check required". The envelope gains project_basis_applied and basis_section (calc-sheet
+    section 1, every ASSUMED item first).
+
+RESULT STATUS (0.8.0)
+    Every envelope carries result_status (calculated | screening | manual check required |
+    pointer only | not checked: the worst word among the checks performed; "not checked" rows never
+    set it), checks[] {name, result_status, status, note},
+    banner_allowed (false means no PASS wording on the sheet) and result_status_line, the line under
+    the sheet title. The checks a module does not perform are listed as "not checked". A code_values
+    entry {"mode": "pointer", "citation": {...}, "source": ...} with no value makes the run "pointer
+    only": status "pointer only", empty output, no equation evaluated. Existing status words are
+    unchanged. Any ASSUMED item of the record adds one "ASSUMED inputs" row graded "manual check
+    required" (banner_allowed false).
+
     A job file may carry comment keys: a top-level key that starts with an underscore
     (for example "_note") is dropped before the inputs are read. See examples/.
 
@@ -94,6 +118,447 @@ import re
 import sys
 from decimal import Decimal, ROUND_HALF_UP
 from typing import Any, Callable, Dict, List, Optional
+
+
+# BEGIN shared project_basis (do not edit here; source tools/shared/project_basis.py)
+# Optional top-level input "project_basis" (or --project-basis <file>, never both with different
+# content): one project record that every PipingToolset skill reads. An input absent from the main
+# inputs is filled from the record where the skill has a slot; one that is present must agree, or
+# the run stops with "project_basis.<path> conflicts with input <name>". Unknown keys and bad enum
+# words are rejected. Schema and fill map: references/project-basis.md. The only file this block
+# reads is the --project-basis file named on the command line.
+
+PROJECT_BASIS_SCHEMA_ID = "pipingtoolset.project-basis/1"
+_PB_AXIS = ("enum", ("X", "Y", "Z"))
+_PB_SIGNED = ("enum", ("X", "Y", "Z", "+X", "+Y", "+Z", "-X", "-Y", "-Z"))
+_PB_CASE = ("oneof", ("id", ("list", "id")))
+PROJECT_BASIS_SCHEMA = ("obj", {
+    "schema": ("enum", (PROJECT_BASIS_SCHEMA_ID,)),
+    "project": ("obj", {k: "str" for k in ("name", "number", "line", "revision", "calcBy", "date")}, ()),
+    "code": ("obj", {"standard": "str", "edition": "str", "route": "str"}, ()),
+    "service": ("obj", {"fluid_category": ("enum", ("Normal", "Category D", "Category M", "High Pressure")),
+                        "fluid": "str", "corroded": "bool", "cyclic": "bool"}, ()),
+    "owner_practice": ("list", ("obj", {"document": "str", "edition": "str", "items": ("list", (
+        "oneof", ("str", ("obj", {"name": "str", "value": ("oneof", ("num", "str")), "unit": "str",
+                                  "note": "str"}, ("name",)))))}, ("document",))),
+    "materials": ("list", ("obj", {
+        "id": "str", "spec": "str", "grade": "str", "notes": "str",
+        "form": ("enum", ("seamless", "welded", "ERW", "EFW", "SAW", "forged", "cast", "plate", "bar", "other")),
+        "use": ("enum", ("pipe", "fitting", "flange", "bolt", "gasket", "vessel", "nozzle", "support", "other"))},
+        ())),
+    "states": ("list", ("obj", {
+        "key": "str", "name": "str", "T_F": "num", "P_psig": "num", "cycles": "num",
+        "role": ("enum", ("operating", "design", "upset", "startup", "shutdown", "steamout", "installed",
+                          "hydrotest", "pneumatic", "other")),
+        "slot": ("obj", {"T": ("slot", "T"), "P": ("slot", "P"), "D": ("slot", "D")}, ())}, ("key",))),
+    "installation_T_F": "num",
+    "units": ("obj", {"system": ("enum", ("USC", "SI")), "force": "str", "moment": "str", "length": "str",
+                      "temperature": "str", "pressure": "str", "stress": "str"}, ()),
+    "load_case_ids": ("obj", {"software": ("enum", ("CAESAR II", "AutoPIPE")), "version": "str",
+                              "cases": ("obj", {k: _PB_CASE for k in ("SUS", "OPE", "EXP", "OCC", "HYD", "HGR")},
+                                        ())}, ()),
+    "equipment_axes": ("obj", {"global_vertical": ("enum", ("Y", "Z")), "pipe_axis": _PB_AXIS, "notes": "str",
+                               "nozzle_axis_map": ("obj", {k: _PB_SIGNED for k in ("Fx", "Fy", "Fz", "Mx", "My", "Mz")},
+                                                   ())}, ()),
+    "citations": ("list", ("obj", {k: "str" for k in ("ref", "standard", "edition", "table", "row", "column", "note")},
+                           ())),
+    "assumptions": ("list", ("obj", {"item": "str", "status": ("enum", ("ASSUMED", "confirmed")), "note": "str",
+                                     "owner": "str"}, ("item",))),
+}, ("schema",))
+# units.<name> when the record gives only the system
+PROJECT_BASIS_UNIT_DEFAULTS = {
+    "USC": {"force": "lbf", "moment": "ft-lbf", "length": "in", "temperature": "F", "pressure": "psig", "stress": "psi"},
+    "SI": {"force": "N", "moment": "N-m", "length": "mm", "temperature": "C", "pressure": "kPa", "stress": "MPa"},
+}
+_PB_MISSING = object()
+PROJECT_BASIS_SKIP = object()  # a fill_map transform returns this to leave the input alone
+
+
+class ProjectBasisError(ValueError):
+    """A project_basis record that cannot be used; the CLI prints the message and exits 2."""
+
+
+def _pb_is_num(v):
+    return isinstance(v, (int, float)) and not isinstance(v, bool)
+
+
+def _pb_kind_ok(v, kind):
+    if kind == "str":
+        return isinstance(v, str)
+    if kind == "num":
+        return _pb_is_num(v)
+    if kind == "bool":
+        return isinstance(v, bool)
+    return isinstance(v, str) or (isinstance(v, int) and not isinstance(v, bool))  # "id"
+
+
+def _pb_check(v, spec, where, errors):
+    kind = spec if isinstance(spec, str) else spec[0]
+    if kind in ("str", "num", "bool", "id"):
+        if not _pb_kind_ok(v, kind):
+            hint = " (write an edition year or an id in quotes)" if kind == "str" and _pb_is_num(v) else ""
+            label = {"str": "string", "num": "number", "bool": "true or false", "id": "string or whole number"}[kind]
+            errors.append(f"{where}: must be a {label}{hint}")
+    elif kind == "enum":
+        if not isinstance(v, str) or v not in spec[1]:
+            errors.append(f"{where}: {v!r} is not one of {', '.join(spec[1])}")
+    elif kind == "slot":
+        if not (isinstance(v, str) and len(v) > 1 and v[0] == spec[1] and v[1:].isdigit()):
+            errors.append(f"{where}: {v!r} must be {spec[1]} followed by a number, e.g. {spec[1]}1")
+    elif kind == "oneof":
+        if all(_pb_errors(v, s, where) for s in spec[1]):
+            errors.append(f"{where}: {v!r} has the wrong type")
+    elif kind == "list":
+        if not isinstance(v, list):
+            errors.append(f"{where}: must be a list")
+            return
+        for i, item in enumerate(v):
+            _pb_check(item, spec[1], f"{where}[{i}]", errors)
+    elif not isinstance(v, dict):
+        errors.append(f"{where}: must be an object")
+    else:
+        for key in v:
+            if key not in spec[1]:
+                errors.append(f"{where}.{key}: unknown key (valid: {', '.join(spec[1])})")
+        for key in spec[2]:
+            if key not in v:
+                errors.append(f"{where}.{key}: required")
+        for key, item in v.items():
+            if key in spec[1]:
+                _pb_check(item, spec[1][key], f"{where}.{key}", errors)
+
+
+def _pb_errors(v, spec, where):
+    errors = []
+    _pb_check(v, spec, where, errors)
+    return errors
+
+
+def validate_project_basis(obj):
+    """Every problem with a project_basis record, as 'project_basis.<path>: <reason>' strings."""
+    errors = _pb_errors(obj, PROJECT_BASIS_SCHEMA, "project_basis")
+    states = obj.get("states") if isinstance(obj, dict) else None
+    keys = [s.get("key") for s in states if isinstance(s, dict)] if isinstance(states, list) else []
+    for key in sorted({k for k in keys if isinstance(k, str) and keys.count(k) > 1}):
+        errors.append(f"project_basis.states: key {key!r} is used more than once")
+    return errors
+
+
+def _pb_same(a, b):
+    if _pb_is_num(a) and _pb_is_num(b):
+        return abs(float(a) - float(b)) <= 1e-9 * max(abs(float(a)), abs(float(b)))
+    if isinstance(a, dict) and isinstance(b, dict):
+        return set(a) == set(b) and all(_pb_same(a[k], b[k]) for k in a)
+    if isinstance(a, list) and isinstance(b, list):
+        return len(a) == len(b) and all(_pb_same(x, y) for x, y in zip(a, b))
+    return type(a) is type(b) and a == b
+
+
+def _pb_copy(v):
+    if isinstance(v, dict):
+        return {k: _pb_copy(x) for k, x in v.items()}
+    if isinstance(v, list):
+        return [_pb_copy(x) for x in v]
+    return v
+
+
+def load_project_basis(cli_path, top_level_obj):
+    """The validated record from --project-basis <cli_path> and/or the input's project_basis object.
+
+    None when neither is given. Both given with different content raises ProjectBasisError.
+    """
+    from_file = _PB_MISSING
+    if cli_path:
+        import json as _pb_json
+        try:
+            with open(cli_path, encoding="utf-8-sig") as fh:
+                from_file = _pb_json.load(fh)
+        except OSError as exc:
+            raise ProjectBasisError(f"cannot read --project-basis file {cli_path}: {exc.strerror or exc}")
+        except ValueError as exc:
+            raise ProjectBasisError(f"--project-basis file {cli_path} is not valid JSON: {exc}")
+    if from_file is not _PB_MISSING and top_level_obj is not None and not _pb_same(from_file, top_level_obj):
+        raise ProjectBasisError("project_basis conflicts with --project-basis file")
+    basis = top_level_obj if from_file is _PB_MISSING else from_file
+    if basis is None and from_file is _PB_MISSING:
+        return None
+    errors = validate_project_basis(basis)
+    if errors:
+        raise ProjectBasisError(f"project_basis is not a valid {PROJECT_BASIS_SCHEMA_ID} record: " + "; ".join(errors))
+    return _pb_copy(basis)
+
+
+def _pb_steps(path):
+    steps, depth, cur = [], 0, ""
+    for ch in path:
+        depth += (ch == "[") - (ch == "]")
+        if ch == "." and depth == 0:
+            steps.append(cur)
+            cur = ""
+        else:
+            cur += ch
+    return steps + [cur]
+
+
+def basis_get(basis, path, default=None):
+    """Value at a basis path: dotted keys plus list selectors name[2], name[k=v], name[k=v|first]."""
+    node = basis
+    for step in _pb_steps(path):
+        name, _, sel = step.partition("[")
+        if name:
+            if not isinstance(node, dict) or node.get(name) is None:
+                return default
+            node = node[name]
+        if not sel:
+            continue
+        sel = sel[:-1] if sel.endswith("]") else sel
+        if not isinstance(node, list) or not node:
+            return default
+        if sel.isdigit():
+            if int(sel) >= len(node):
+                return default
+            node = node[int(sel)]
+            continue
+        cond, _, fallback = sel.partition("|")
+        key, _, want = cond.partition("=")
+        hits = [x for x in node if isinstance(x, dict) and x.get(key) == want]
+        if not hits and fallback != "first":
+            return default
+        node = hits[0] if hits else node[0]
+    return node
+
+
+def basis_units(basis):
+    """units with the system's defaults filled in ({} without a units.system)."""
+    units = dict((basis or {}).get("units") or {})
+    defaults = PROJECT_BASIS_UNIT_DEFAULTS.get(units.get("system"))
+    return dict(defaults, **units) if defaults else units
+
+
+def basis_assumptions(basis):
+    """The ASSUMED items (a missing status counts as ASSUMED), copied verbatim."""
+    return [_pb_copy(a) for a in (basis or {}).get("assumptions") or [] if a.get("status", "ASSUMED") == "ASSUMED"]
+
+
+def project_basis_conflict(path, name):
+    return ProjectBasisError(f"project_basis.{path} conflicts with input {name}")
+
+
+def _pb_input_get(inputs, name):
+    node = inputs
+    for key in name.split("."):
+        if not isinstance(node, dict) or key not in node:
+            return None
+        node = node[key]
+    return node
+
+
+def _pb_input_put(inputs, name, value):
+    keys = name.split(".")
+    node = inputs
+    for key in keys[:-1]:
+        if node.get(key) is None:
+            node[key] = {}
+        if not isinstance(node[key], dict):
+            raise ProjectBasisError(f"input {key} must be an object to take {name} from project_basis")
+        node = node[key]
+    node[keys[-1]] = value
+
+
+def fill_from_basis(inputs, basis, fill_map):
+    """Fill-or-conflict from the record. fill_map: [(input name (dotted), basis path, transform or None)].
+
+    A basis path that resolves to nothing, or a transform that returns PROJECT_BASIS_SKIP, leaves
+    the input alone; an absent (or null) input is filled; a present one must agree. Returns
+    (effective inputs, applied); (inputs, None) when basis is None. The caller's dict is not modified.
+    """
+    if basis is None:
+        return inputs, None
+    eff = _pb_copy(inputs)
+    used = []
+    for entry in fill_map:
+        name, path, transform = (tuple(entry) + (None,))[:3]
+        value = basis_get(basis, path, _PB_MISSING)
+        if value is _PB_MISSING:
+            continue
+        if transform is not None:
+            value = transform(value)
+            if value is PROJECT_BASIS_SKIP:
+                continue
+        have = _pb_input_get(eff, name)
+        if have is None:
+            _pb_input_put(eff, name, _pb_copy(value))
+            action = "filled"
+        elif _pb_same(have, value):
+            action = "agreed"
+        else:
+            raise project_basis_conflict(path, name)
+        used.append({"input": name, "basis": path, "action": action})
+    return eff, {"schema": PROJECT_BASIS_SCHEMA_ID, "fields_used": used,
+                 "assumptions": basis_assumptions(basis), "conflicts": []}
+
+
+def mark_basis_used(applied, path, name=None, action="noted"):
+    """Record a basis field the skill read for the sheet only (no script input)."""
+    if applied is not None:
+        applied["fields_used"].append({"input": name, "basis": path, "action": action})
+    return applied
+
+
+def _pb_fmt(v):
+    if isinstance(v, bool):
+        return "yes" if v else "no"
+    if isinstance(v, float) and v.is_integer():
+        v = int(v)
+    if isinstance(v, dict):
+        return ", ".join(f"{k}={_pb_fmt(x)}" for k, x in v.items())
+    if isinstance(v, list):
+        return "; ".join(_pb_fmt(x) for x in v)
+    return str(v).replace("|", "/")
+
+
+def render_basis_section(applied, basis, heading=None):
+    """Markdown for calc-sheet section 1 (Basis): the ASSUMED list first, then the record, then fields used."""
+    if basis is None:
+        return ""
+    out = [heading, ""] if heading else []
+    assumed = (applied or {}).get("assumptions", basis_assumptions(basis))
+    if assumed:
+        out.append("**ASSUMED - confirm before issue:**")
+        for a in assumed:
+            extra = "".join(f"; {k}: {_pb_fmt(a[k])}" for k in ("note", "owner") if a.get(k))
+            out.append(f"- {_pb_fmt(a['item'])}{extra}")
+    else:
+        out.append("No ASSUMED items in the project basis record.")
+    out += ["", f"| Basis item ({PROJECT_BASIS_SCHEMA_ID}) | Value |", "|---|---|"]
+    rows = [("Project", basis.get("project")), ("Code", basis.get("code")), ("Service", basis.get("service")),
+            ("Units", basis_units(basis) or None), ("Installation T_F", basis.get("installation_T_F")),
+            ("Equipment axes", basis.get("equipment_axes")), ("Load case ids", basis.get("load_case_ids"))]
+    rows += [(f"State {s['key']}", {k: x for k, x in s.items() if k != "key"}) for s in basis.get("states") or []]
+    rows += [(f"Material {m.get('id', i + 1)}", {k: x for k, x in m.items() if k != "id"})
+             for i, m in enumerate(basis.get("materials") or [])]
+    rows += [(f"Owner practice {p['document']}", {k: x for k, x in p.items() if k != "document"})
+             for p in basis.get("owner_practice") or []]
+    rows += [(f"Citation {c.get('ref', i + 1)}", {k: x for k, x in c.items() if k != "ref"})
+             for i, c in enumerate(basis.get("citations") or [])]
+    out += [f"| {label} | {_pb_fmt(v)} |" for label, v in rows if v not in (None, {}, [])]
+    used = (applied or {}).get("fields_used") or []
+    if used:
+        out += ["", "Taken from the record: " + "; ".join(
+            f"{u['input'] or 'sheet'} <- {u['basis']} ({u['action']})" for u in used)]
+    return "\n".join(out) + "\n"
+# END shared project_basis
+
+
+# BEGIN shared result_status (do not edit here; source tools/shared/result_status.py)
+# Output status taxonomy. Every result envelope carries result_status (envelope_status of its
+# checks: the worst word among the checks the module performs) and checks: [{name, result_status,
+# status (pass/fail/na), note[, unresolved_factor]}]. "not checked" rows never drive the envelope;
+# they are listed, and the envelope reads "not checked" only when every row is. A positive banner
+# word (PASS, OK, ISSUE, DELIVERABLE) is printed only when banner_allowed() is true: never under
+# "manual check required" or "pointer only", nor under "screening" when a reconstructed factor in
+# the chain is unresolved. Any ASSUMED input gives one "ASSUMED inputs" row (assumed_inputs_check)
+# graded manual check required, so an unconfirmed input always holds the banner.
+
+RESULT_STATUS = ("calculated", "screening", "manual check required", "pointer only", "not checked")
+# severity for worst_of (ordering only): manual check required > pointer only > screening > not checked > calculated
+RESULT_STATUS_SEVERITY = {"manual check required": 4, "pointer only": 3, "screening": 2, "not checked": 1,
+                          "calculated": 0}
+CHECK_STATUS = ("pass", "fail", "na")
+ASSUMED_CHECK_NAME = "ASSUMED inputs"
+
+
+def _rs_word(item):
+    word = item.get("result_status") if isinstance(item, dict) else item
+    if word not in RESULT_STATUS_SEVERITY:
+        raise ValueError(f"result_status {word!r} is not one of {', '.join(RESULT_STATUS)}")
+    return word
+
+
+def worst_of(statuses):
+    """The most severe result_status of words or check dicts; 'not checked' for an empty list."""
+    words = [_rs_word(s) for s in statuses]
+    return max(words, key=RESULT_STATUS_SEVERITY.__getitem__) if words else "not checked"
+
+
+def envelope_status(checks):
+    """The envelope word: the most severe word among the checks that are not 'not checked'.
+
+    'not checked' rows (limits the module does not perform) never drive it; when every row is
+    'not checked', or there are none, the envelope reads 'not checked'.
+    """
+    words = [w for w in (_rs_word(c) for c in checks) if w != "not checked"]
+    return worst_of(words) if words else "not checked"
+
+
+def make_check(name, result_status, status=None, note=None, unresolved_factor=False):
+    """One checks[] entry. status is pass/fail/na (None means na); unresolved_factor only with screening."""
+    _rs_word(result_status)
+    status = "na" if status is None else status
+    if status not in CHECK_STATUS:
+        raise ValueError(f"check status {status!r} is not one of {', '.join(CHECK_STATUS)}")
+    if unresolved_factor and result_status != "screening":
+        raise ValueError("unresolved_factor marks a screening check only")
+    check = {"name": name, "result_status": result_status, "status": status, "note": note}
+    if unresolved_factor:
+        check["unresolved_factor"] = True
+    return check
+
+
+def assumed_inputs_check(items):
+    """The one 'ASSUMED inputs' row for every ASSUMED item (strings or {item[, note]} dicts), or None.
+
+    Graded manual check required, so the envelope follows it and no positive banner prints; the
+    note reads 'confirm before issue: <item>; <item>' (duplicates dropped, order kept).
+    """
+    texts = []
+    for it in items or ():
+        text = it.get("item") if isinstance(it, dict) else it
+        text = str(text).strip() if text is not None else ""
+        if text and text not in texts:
+            texts.append(text)
+    if not texts:
+        return None
+    return make_check(ASSUMED_CHECK_NAME, "manual check required", "na",
+                      "confirm before issue: " + "; ".join(texts))
+
+
+def not_performed(checks):
+    """'not performed by this module: a; b' for the 'not checked' rows of checks, '' when there are none."""
+    names = [c["name"] for c in checks if isinstance(c, dict) and c.get("result_status") == "not checked"]
+    return "not performed by this module: " + "; ".join(names) if names else ""
+
+
+def banner_allowed(result_status, unresolved_factor=False):
+    """False for manual check required, pointer only, and screening with an unresolved factor."""
+    word = _rs_word(result_status)
+    if word in ("manual check required", "pointer only"):
+        return False
+    return not (word == "screening" and unresolved_factor)
+
+
+def status_fields(checks):
+    """{result_status: envelope_status, checks} to merge into an envelope (adds keys, changes none)."""
+    checks = list(checks)
+    return {"result_status": envelope_status(checks), "checks": checks}
+
+
+def checks_banner_allowed(checks):
+    """banner_allowed for the envelope word of checks, with any unresolved_factor among them."""
+    checks = list(checks)
+    return banner_allowed(envelope_status(checks), any(c.get("unresolved_factor") for c in checks))
+
+
+def banner_word(ok_word, result_status, unresolved_factor=False):
+    """ok_word (e.g. PASS) when the banner rule allows it, else the result_status in capitals."""
+    return ok_word if banner_allowed(result_status, unresolved_factor) else _rs_word(result_status).upper()
+
+
+def render_status_line(result_status, why):
+    """The one line under every calc-sheet title: 'Result status: <word> - <why>' (ASCII ' - ')."""
+    word = _rs_word(result_status)
+    return f"Result status: {word} - {why}" if why else f"Result status: {word}"
+# END shared result_status
 
 
 # The two CalcResult status words, chosen by truth value. Written as a lookup rather than
@@ -1018,7 +1483,7 @@ _CLAUSE_B313 = ("B31.3 para. 304.1.2(b): for t >= D/6 or P/(S*E) > 0.385 the pre
 _CLAUSE_B311 = ("B31.1 para. 104.1.2: for Do/tm < 6 the general note to the y table (Table 104.1.2-1; Table "
                 "104.1.2(A) in 2016) replaces y, which this script does not apply; B31.1 states no P/(S*E) limit, "
                 "so the pack also stops the run at the B31.3 para. 304.1.2(b) trigger, P/(S*E) > 0.385 (a pack "
-                "rule pending P.E. confirmation, not a B31.1 requirement)")
+                "rule confirmed by the P.E. 2026-10-30, not a B31.1 requirement)")
 
 
 def _clause(module: str, code: Optional[str]) -> str:
@@ -1098,6 +1563,245 @@ def _banner(module: str, validity: dict) -> str:
 
 
 # --------------------------------------------------------------------------- #
+# Project basis record (0.8.0, B8) and result status taxonomy (B9). CLI layer only: the shared
+# blocks above supply the helpers; this skill's fill map, code families and checks live here.
+# --------------------------------------------------------------------------- #
+
+PB_DESIGN_STATE = "states[role=design|first]"
+# The standards each module's equation serves. A project_basis code.standard outside the family is
+# a conflict (exit 2). The branch module reads a B31.1 project as a screening check against the
+# B31.3 area method (references/modules.md section 4).
+CODE_FAMILY: Dict[str, tuple] = {
+    "piping.b313-wall-thickness": ("B31.3",),
+    "piping.b311-wall-thickness": ("B31.1", "B31.5", "B31.9"),
+    "piping.b31-allowable-pressure": CODE_CHOICES["piping.b31-allowable-pressure"],
+    "piping.branch-reinforcement": ("B31.3", "B31.1"),
+    "piping.bend-thickness": CODE_CHOICES["piping.bend-thickness"],
+    "piping.miter-allowable-pressure": ("B31.3",),
+    "piping.leak-test-pressure": ("B31.3", "B31.1"),
+}
+BRANCH_SCREENING_CODES = ("B31.1",)
+P_MODULES = tuple(m for m in FIELDS if any(f[0] == "P" for f in FIELDS[m]))
+ALLOWABLE_P_MODULES = ("piping.b31-allowable-pressure", "piping.miter-allowable-pressure")
+_SPECIAL_SERVICE = ("Category M", "High Pressure")
+_SPECIAL_ROUTE = re.compile(r"chapter\s*(?:ix|viii)\b|high[- ]pressure|category\s*m\b", re.I)
+STATUS_POINTER = "pointer only"
+
+MAIN_CHECK: Dict[str, str] = {
+    "piping.b313-wall-thickness": "pressure design thickness, B31.3 para. 304.1.2 Eq. (3a)",
+    "piping.b311-wall-thickness": "minimum required thickness, B31.1 para. 104.1.2",
+    "piping.b31-allowable-pressure": "allowable pressure of the nominal wall (straight-pipe equation solved for P)",
+    "piping.branch-reinforcement": "branch reinforcement by area replacement, B31.3 para. 304.3.3",
+    "piping.bend-thickness": "thickness after bending at intrados, extrados and sidewall",
+    "piping.miter-allowable-pressure": "miter allowable pressure, B31.3 para. 304.2.3",
+    "piping.leak-test-pressure": "leak test pressure (piping minimum)",
+}
+CHECK_VALIDITY = "thin-wall validity (P/(S*E) against 0.385, thickness against D/6)"
+CHECK_DESIGN_P = "allowable pressure against the design pressure"
+CHECK_SERVICE = "B31.3 Category M / Chapter IX requirements"
+_NC_SCHEDULE = ("selected nominal wall against tOrder",
+                "compare the B36.10M / B36.19M or mill nominal wall with tOrder on the sheet, or run "
+                "piping.b31-allowable-pressure on it")
+# Checks a module does not perform (its known limits, references/modules.md): listed on every run
+# as "not checked". They never block a result; they are named so the sheet does not imply them.
+NOT_CHECKED: Dict[str, List[tuple]] = {
+    "piping.b313-wall-thickness": [_NC_SCHEDULE, ("external pressure, B31.3 para. 304.1.3", "outside this skill")],
+    "piping.b311-wall-thickness": [_NC_SCHEDULE, ("external pressure, B31.1 para. 104.1.3", "outside this skill")],
+    "piping.b31-allowable-pressure": [],
+    "piping.branch-reinforcement": [
+        ("need for the area calculation, B31.3 para. 304.3.2",
+         "listed fittings and the clause's exemptions need no area calc; check them first"),
+        ("adjacent openings and overlapping reinforcement zones", "check by hand where zones overlap"),
+    ],
+    "piping.bend-thickness": [
+        ("wall thinning during bending",
+         "choose the pre-bend wall from the bender's predicted thinning and state its source"),
+    ],
+    "piping.miter-allowable-pressure": [
+        ("minimum R1 of a multiple miter, B31.3 para. 304.2.3",
+         "depends on a tabulated size-dependent value; check it on your copy"),
+    ],
+    "piping.leak-test-pressure": [
+        ("test stress against yield and component ratings, B31.3 para. 345.2.1(a)", "check the resulting stress"),
+        ("pneumatic limit of 90 % of the para. 345.2.1(a) pressure, B31.3 para. 345.5.4", "not evaluated"),
+        ("flange, valve and equipment test limits", "check each separately"),
+    ],
+}
+
+
+def _norm_code(raw: Any) -> Any:
+    """'ASME B31.3' / 'b31.3' -> 'B31.3' (the same normalisation split_basis applies)."""
+    return re.sub(r"^ASME", "", raw.replace(" ", "").upper()) if isinstance(raw, str) else raw
+
+
+def _cite_text(cit: dict) -> str:
+    return ", ".join(str(cit[k]) for k in ("standard", "edition", "table", "row", "column") if cit.get(k))
+
+
+def split_pointers(module: str, raw: Any) -> tuple:
+    """(inputs without pointer entries, {name: {citation, source}}).
+
+    A code_values entry with "mode": "pointer" names where a value is read (the connector's pointer
+    result) and carries no value. It is taken out before the shared code_values block runs; the run
+    then evaluates no equation and reports "pointer only" for that check."""
+    if not isinstance(raw, dict) or not isinstance(raw.get("code_values"), dict):
+        return raw, {}
+    kept, pointers = {}, {}
+    fields = _cv_fields(module)
+    for name, entry in raw["code_values"].items():
+        if not (isinstance(entry, dict) and entry.get("mode") == "pointer"):
+            kept[name] = entry
+            continue
+        where = f"code_values.{name}"
+        if name not in fields:
+            raise ValueError(f"{where} is not an input of {module} (valid: {', '.join(sorted(fields))}; "
+                             f"names are case-sensitive)")
+        if entry.get("value") is not None:
+            raise ValueError(f"{where} is a pointer and carries no value; drop \"mode\" or the value")
+        cit = entry.get("citation")
+        if not isinstance(cit, dict) or any(not isinstance(cit.get(k), str) or not cit[k].strip()
+                                            for k in ("standard", "table")):
+            raise ValueError(f"{where}.citation needs standard and table (where to read the value) as "
+                             f"non-empty strings")
+        source = entry.get("source", "connector")
+        if source not in _CV_SOURCES:
+            raise ValueError(f"{where}.source must be 'connector' or 'user'")
+        pointers[name] = {"citation": copy.deepcopy(cit), "source": source}
+    if not pointers:
+        return raw, {}
+    return dict(raw, code_values=kept), pointers
+
+
+def _is_one(v: Any) -> bool:
+    return isinstance(v, (int, float)) and not isinstance(v, bool) and float(v) == 1.0
+
+
+def apply_project_basis(module: str, inputs: dict, record: Optional[dict]) -> tuple:
+    """Fill this module's inputs from a project_basis record. Returns (inputs, applied, context).
+
+    Fill map: code (MAWP and bend modules) from code.standard, which must lie in the module's code
+    family on every module; edition from code.edition; P from the design state (role design, else
+    the first state); W_basis "seamless" from materials[use=pipe] when its form is seamless, W_basis
+    is absent and W is absent or 1.0. units.system SI exits 2 (the engine is US customary). Present
+    and different inputs exit 2 with the shared conflict message. Design T, the pipe material,
+    owner practice and project fields are recorded as read for the sheet."""
+    if record is None:
+        return inputs, None, {}
+    if basis_get(record, "units.system") == "SI":
+        raise ProjectBasisError("project_basis.units.system is SI: pressure_design.py works in US customary "
+                                "units (psi, in, deg F); give the inputs in those units and set units.system to USC")
+    ctx: Dict[str, Any] = {}
+    fill: List[tuple] = []
+    std = basis_get(record, "code.standard")
+    if std is not None:
+        norm = _norm_code(std)
+        family = CODE_FAMILY[module]
+        if norm not in family:
+            raise project_basis_conflict("code.standard", f"{module} (this module serves {', '.join(family)})")
+        ctx["code"] = norm
+        if module in CODE_CHOICES:
+            have = inputs.get("code")
+            fill.append(("code", "code.standard", lambda v, h=have, n=norm: h if _norm_code(h) == n else n))
+    if module in W_MODULES:
+        have_ed = inputs.get("edition")
+        fill.append(("edition", "code.edition",
+                     lambda v, h=have_ed: h if h is not None and str(h).strip() == v.strip() else v))
+        W = inputs.get("W")
+        if (basis_get(record, "materials[use=pipe].form") == "seamless" and inputs.get("W_basis") is None
+                and (W is None or _is_one(W))):
+            fill.append(("W_basis", "materials[use=pipe].form", lambda v: "seamless"))
+    if module in P_MODULES:
+        fill.append(("P", PB_DESIGN_STATE + ".P_psig", None))
+    eff, applied = fill_from_basis(inputs, record, fill)
+    if std is not None and module not in CODE_CHOICES:
+        mark_basis_used(applied, "code.standard")
+    if module not in W_MODULES and basis_get(record, "code.edition") is not None:
+        mark_basis_used(applied, "code.edition")
+    if module in ALLOWABLE_P_MODULES:
+        dp = basis_get(record, PB_DESIGN_STATE + ".P_psig")
+        if dp is not None:
+            ctx["design_P"] = float(dp)
+            ctx["design_state"] = basis_get(record, PB_DESIGN_STATE + ".key")
+            mark_basis_used(applied, PB_DESIGN_STATE + ".P_psig")
+    for path in (PB_DESIGN_STATE + ".T_F", "materials[use=pipe]", "owner_practice", "project"):
+        if basis_get(record, path) is not None:
+            mark_basis_used(applied, path)
+    fc = basis_get(record, "service.fluid_category")
+    route = basis_get(record, "code.route")
+    if fc is not None:
+        mark_basis_used(applied, "service.fluid_category")
+    if fc in _SPECIAL_SERVICE or (isinstance(route, str) and _SPECIAL_ROUTE.search(route)):
+        ctx["special_service"] = (f"fluid service {fc or route}: this skill covers the Normal fluid service "
+                                  f"equations only; the additional requirements for Category M or Chapter IX "
+                                  f"(High Pressure) piping are not evaluated")
+    return eff, applied, ctx
+
+
+def result_checks(module: str, envelope: dict, ctx: dict, pointers: dict) -> List[dict]:
+    """checks[] for the envelope: the module's own check, the validity gate, the design-pressure
+    comparison and the fluid-service flag where they apply, then the module's known limits."""
+    main, status = MAIN_CHECK[module], envelope["status"]
+    validity = envelope.get("validity")
+    tripped = validity is not None and not validity["thin_wall_valid"]
+    checks = []
+    if pointers:
+        where = "; ".join(f"{n} at {_cite_text(p['citation'])}" for n, p in sorted(pointers.items()))
+        checks.append(make_check(main, STATUS_POINTER, "na", f"supplied as a pointer only ({where}); read the "
+                                 f"value on your licensed copy and rerun; no equation was evaluated"))
+    elif tripped:
+        checks.append(make_check(main, GRADE_MANUAL, "na",
+                                 f"outside the thin-wall basis; the numbers are an {LABEL_EQUATION_VALUE}"))
+    elif module == "piping.branch-reinforcement" and ctx.get("code") in BRANCH_SCREENING_CODES:
+        checks.append(make_check(main, "screening", status, "B31.3 area method on a B31.1 project: a screening "
+                                 "check against the B31.3 form; confirm the B31.1 para. 104.3.1 zone limits"))
+    else:
+        checks.append(make_check(main, GRADE_CALCULATED, status, "evaluated by the script from the inputs given"))
+    if validity is not None:
+        checks.append(make_check(
+            CHECK_VALIDITY, GRADE_MANUAL if tripped else GRADE_CALCULATED, _verdict(not tripped),
+            f"P/(S*E) = {_js_num(validity['P_over_SE'])} against {_js_num(THIN_WALL_LIMIT)}; "
+            f"{validity['thickness_checked'].split(' ')[0]} = {_js_num(validity['thickness'])} against "
+            f"D/6 = {_js_num(validity['D_over_6'])}" + (f". {validity['clause']}" if tripped else "")))
+    if module in ALLOWABLE_P_MODULES and not pointers and not tripped:
+        dp = ctx.get("design_P")
+        if dp is None:
+            checks.append(make_check(CHECK_DESIGN_P, "not checked", "na",
+                                     "no design state in a project basis record; compare on the sheet"))
+        else:
+            pa = float(envelope["output"]["allowablePressure"])
+            checks.append(make_check(CHECK_DESIGN_P, GRADE_CALCULATED, _verdict(pa >= dp),
+                                     f"allowable {_js_num(pa)} against design {_js_num(dp)} (project basis state "
+                                     f"{ctx.get('design_state')}), same pressure unit"))
+    if ctx.get("special_service"):
+        checks.append(make_check(CHECK_SERVICE, GRADE_MANUAL, "na", ctx["special_service"]))
+    assumed = assumed_inputs_check((envelope.get("project_basis_applied") or {}).get("assumptions"))
+    if assumed is not None:
+        checks.append(assumed)
+    checks += [make_check(name, "not checked", "na", note) for name, note in NOT_CHECKED[module]]
+    return checks
+
+
+def _status_why(checks: List[dict]) -> str:
+    word = envelope_status(checks)
+    limits = not_performed(checks)
+    if word == GRADE_CALCULATED:
+        if limits:
+            return f"{checks[0]['name']} calculated; {limits}"
+        return "every check this module performs was evaluated from the inputs given"
+    if word == "not checked":
+        return limits
+    return "; ".join(c["note"] for c in checks if c["result_status"] == word and c.get("note"))
+
+
+def add_result_status(envelope: dict, checks: List[dict]) -> dict:
+    """Merge result_status, checks, banner_allowed and result_status_line into the envelope."""
+    envelope.update(status_fields(checks))
+    envelope["banner_allowed"] = checks_banner_allowed(checks)
+    envelope["result_status_line"] = render_status_line(envelope["result_status"], _status_why(checks))
+    return envelope
+
+
+# --------------------------------------------------------------------------- #
 # CLI
 # --------------------------------------------------------------------------- #
 
@@ -1117,53 +1821,100 @@ def user_supplied_names(module: str) -> List[str]:
     return [f[0] for f in FIELDS[module] if f[3]]
 
 
-def run_module(module: str, inputs: dict) -> dict:
+def run_module(module: str, inputs: dict, project_basis_file: Optional[str] = None) -> dict:
     """Run one module behind the pre-flight check and the two gates.
 
-    Order: code_values fill; split off the basis strings (W_basis, edition, code); the W gate
-    (exit 2 when W must be read); validate(); the engine; the thin-wall validity gate. A
-    tripped gate makes the envelope status "manual check required", empties "output" and moves
-    the engine's numbers to "equation_value" with the label "equation value, not a design
-    basis". The engine's numbers themselves are never changed."""
+    Order: the project_basis record (top-level key and/or --project-basis file) is taken out and
+    validated; code_values pointer entries are taken out; code_values fill; project_basis fill
+    (this skill's map, apply_project_basis); split off the basis strings (W_basis, edition, code);
+    the W gate (exit 2 when W must be read); validate(); the engine; the thin-wall validity gate;
+    result_status and checks. A tripped gate makes the envelope status "manual check required",
+    empties "output" and moves the engine's numbers to "equation_value" with the label "equation
+    value, not a design basis". A pointer-supplied value makes the status "pointer only" and runs
+    no equation. The engine's numbers themselves are never changed."""
+    record = None
+    if isinstance(inputs, dict):
+        inputs = dict(inputs)
+        record = load_project_basis(project_basis_file, inputs.pop("project_basis", None))
+    elif project_basis_file:
+        record = load_project_basis(project_basis_file, None)
+    inputs, pointers = split_pointers(module, inputs)
     inputs, provenance, cv_notes = apply_code_values(inputs, module, _cv_fields(module))
+    inputs, applied, ctx = apply_project_basis(module, inputs, record)
+    for name in sorted(pointers):
+        if inputs.get(name) is not None:
+            raise ValueError(f"code_values.{name} is a pointer but input {name} has a value; give one or the other")
     inputs, basis = split_basis(module, inputs)
     w_record, w_warnings = None, []
-    if module in W_MODULES:
+    if module in W_MODULES and "W" not in pointers:
         inputs, w_record, w_warnings = w_gate(module, inputs, basis, provenance)
-    pre_warnings = cv_notes + w_warnings + validate(module, inputs)
-    result = REGISTRY[module](dict(inputs))
-    output = dict(result["output"])
-    if module == "piping.miter-allowable-pressure" and inputs.get("miters") == 1:
-        output["Pm2"] = None          # not evaluated for a single miter (the engine reports 0.0)
     present_supplied = [n for n in user_supplied_names(module) if inputs.get(n) is not None]
-    envelope = {
-        "module": result["module"],
-        "status": result["status"],
-        "output": output,
-        "warnings": pre_warnings + result["warnings"],
-        "citation": CITATIONS[module],
-        "inputs": dict(inputs, **basis),
-        "user_supplied": present_supplied,
-        # W is never defaulted silently: the W gate either has a value, a stated basis, or an
-        # equation without W, and records which in weld_factor_basis.
-        "defaults_applied": {},
-    }
+    if pointers:
+        # names, types and every other required input are checked as for a full run
+        _prepare(module, dict(inputs, **{n: 1.0 for n in pointers}))
+        banner = (f"POINTER ONLY: {', '.join(sorted(pointers))} supplied as a pointer, not a value. No equation "
+                  f"was evaluated; read the value at the cited table on your licensed copy and rerun.")
+        envelope = {
+            "module": module,
+            "status": STATUS_POINTER,
+            "output": {},
+            "warnings": [banner] + cv_notes + w_warnings,
+            "citation": CITATIONS[module],
+            "inputs": dict(inputs, **basis),
+            "user_supplied": present_supplied,
+            "defaults_applied": {},
+            "banner": banner,
+            "value_pointers": pointers,
+        }
+        if module in GATED_MODULES:
+            envelope["result_grade"] = STATUS_POINTER
+    else:
+        pre_warnings = cv_notes + w_warnings + validate(module, inputs)
+        result = REGISTRY[module](dict(inputs))
+        output = dict(result["output"])
+        if module == "piping.miter-allowable-pressure" and inputs.get("miters") == 1:
+            output["Pm2"] = None          # not evaluated for a single miter (the engine reports 0.0)
+        envelope = {
+            "module": result["module"],
+            "status": result["status"],
+            "output": output,
+            "warnings": pre_warnings + result["warnings"],
+            "citation": CITATIONS[module],
+            "inputs": dict(inputs, **basis),
+            "user_supplied": present_supplied,
+            # W is never defaulted silently: the W gate either has a value, a stated basis, or an
+            # equation without W, and records which in weld_factor_basis.
+            "defaults_applied": {},
+        }
     if w_record is not None:
         envelope["weld_factor_basis"] = w_record
-    code = w_record["code"] if w_record is not None else None
-    validity = validity_gate(module, inputs, result, code) if result["status"] == "na" else None
-    if validity is not None:
-        envelope["validity"] = validity
-        if validity["thin_wall_valid"]:
-            envelope["result_grade"] = GRADE_CALCULATED
-        else:
-            banner = _banner(module, validity)
-            envelope.update(status=GRADE_MANUAL, result_grade=GRADE_MANUAL, banner=banner, output={},
-                            equation_value={"label": LABEL_EQUATION_VALUE, "values": output})
-            envelope["warnings"] = [banner] + envelope["warnings"]
+    if not pointers:
+        code = w_record["code"] if w_record is not None else None
+        validity = validity_gate(module, inputs, result, code) if result["status"] == "na" else None
+        if validity is not None:
+            envelope["validity"] = validity
+            if validity["thin_wall_valid"]:
+                envelope["result_grade"] = GRADE_CALCULATED
+            else:
+                banner = _banner(module, validity)
+                envelope.update(status=GRADE_MANUAL, result_grade=GRADE_MANUAL, banner=banner, output={},
+                                equation_value={"label": LABEL_EQUATION_VALUE, "values": output})
+                envelope["warnings"] = [banner] + envelope["warnings"]
+    if ctx.get("special_service"):
+        # The fluid-service flag reaches the 0.7.2 fields a reader already trusts, not only checks[]:
+        # a warning, the banner (unless a gate or pointer banner already holds it) and result_grade on
+        # the gated modules. status and output keep the engine's words and numbers.
+        svc = f"MANUAL CHECK REQUIRED: {ctx['special_service']}."
+        envelope["warnings"].insert(1 if "banner" in envelope else 0, svc)
+        envelope.setdefault("banner", svc)
+        if envelope.get("result_grade") == GRADE_CALCULATED:
+            envelope["result_grade"] = GRADE_MANUAL
     if provenance is not None:
         envelope["code_value_provenance"] = provenance
-    return envelope
+    if applied is not None:
+        envelope["project_basis_applied"] = applied
+        envelope["basis_section"] = render_basis_section(applied, record)
+    return add_result_status(envelope, result_checks(module, envelope, ctx, pointers))
 
 
 def render_list() -> str:
@@ -1187,6 +1938,10 @@ def render_list() -> str:
                  "edition's equation carries W, a run with W omitted or W = 1.0 and no W_basis exits 2. A run "
                  "outside the thin-wall basis (t >= D/6 or P/(S*E) > 0.385) returns status "
                  "'manual check required' with the numbers as an equation value, not a design basis.")
+    lines.append("project_basis (top-level object, or --project-basis <file>): code, edition, design P and a "
+                 "seamless W_basis fill from the record; a value present in both must agree (exit 2 otherwise). "
+                 "Every run carries result_status and checks[]; a code_values entry with \"mode\": \"pointer\" "
+                 "and no value gives 'pointer only' and evaluates no equation.")
     return "\n".join(lines).rstrip() + "\n"
 
 
@@ -1232,6 +1987,9 @@ def main(argv: Optional[List[str]] = None) -> int:
     ap.add_argument("--input", help="inputs as a JSON object")
     ap.add_argument("--input-file", help="path to a JSON file holding the inputs")
     ap.add_argument("--json", action="store_true", help="with 'list': machine-readable output")
+    ap.add_argument("--project-basis", metavar="FILE",
+                    help="project basis record (pipingtoolset.project-basis/1); must match a top-level "
+                         "project_basis object if the inputs carry one")
 
     try:
         args = ap.parse_args(argv)
@@ -1267,7 +2025,7 @@ def main(argv: Optional[List[str]] = None) -> int:
             raise CliError("inputs must be a JSON object")
         inputs = {k: v for k, v in inputs.items() if not str(k).startswith("_")}   # "_note"-style comment keys
 
-        envelope = run_module(module, inputs)
+        envelope = run_module(module, inputs, args.project_basis)
         print(json.dumps(_normalise_zero(envelope), indent=2, ensure_ascii=False))
         return 0
     except ArithmeticError as exc:

@@ -1,0 +1,154 @@
+{
+  "_note": "Pairs with project-basis.example.json: axes and pipeline.reference are left out and filled from the record (Y vertical, project.line).",
+  "units": "MM",
+  "start": {
+    "at": {
+      "E": "0",
+      "N": "0",
+      "EL": "0"
+    },
+    "dir": "UP",
+    "bore": 6
+  },
+  "items": [
+    {
+      "type": "support",
+      "skey": "ANCH",
+      "desc": "Nozzle anchor"
+    },
+    {
+      "type": "flange",
+      "len": "4",
+      "skey": "FLWN",
+      "weight": 19,
+      "desc": "Flange WN CL150 6in"
+    },
+    {
+      "type": "elbow",
+      "corner": {
+        "EL": "5'0"
+      },
+      "out": "N",
+      "radius": "LR",
+      "desc": "Elbow 90 LR 6in"
+    },
+    {
+      "type": "support",
+      "at": {
+        "N": "4'0"
+      },
+      "skey": "SKID",
+      "direction": "UP",
+      "name": "PS-1",
+      "desc": "Shoe"
+    },
+    {
+      "type": "tee",
+      "centre": {
+        "N": "10'0"
+      },
+      "C": "5.5/8",
+      "M": "5.1/8",
+      "branch_dir": "E",
+      "branch_bore": 4,
+      "desc": "Tee red 6x4",
+      "branch": [
+        {
+          "type": "pipe",
+          "to": {
+            "d": {
+              "e": "3'0"
+            }
+          },
+          "desc": "Pipe 4in"
+        },
+        {
+          "type": "valve",
+          "len": "9",
+          "weight": 60,
+          "desc": "Gate valve 4in CL150 RF"
+        },
+        {
+          "type": "support",
+          "skey": "ANCH",
+          "desc": "Branch end anchor"
+        }
+      ]
+    },
+    {
+      "type": "support",
+      "at": {
+        "N": "15'0"
+      },
+      "skey": "GUID",
+      "direction": [
+        "EAST",
+        "WEST"
+      ],
+      "name": "PG-1",
+      "desc": "Guide"
+    },
+    {
+      "type": "elbow",
+      "corner": {
+        "N": "20'0"
+      },
+      "out": "UP",
+      "radius": "LR",
+      "desc": "Elbow 90 LR 6in"
+    },
+    {
+      "type": "reducer",
+      "at": {
+        "d": {
+          "el": "3'0"
+        }
+      },
+      "len": "5.1/2",
+      "bore": 4,
+      "desc": "Reducer conc 6x4"
+    },
+    {
+      "type": "pipe",
+      "to": {
+        "EL": "10'0"
+      },
+      "desc": "Pipe 4in"
+    },
+    {
+      "type": "valve",
+      "len": "9",
+      "weight": 60,
+      "desc": "Gate valve 4in CL150 RF"
+    },
+    {
+      "type": "flange",
+      "len": "3",
+      "weight": 13,
+      "desc": "Flange WN CL150 4in"
+    },
+    {
+      "type": "support",
+      "skey": "ANCH",
+      "desc": "Equipment nozzle anchor"
+    },
+    {
+      "type": "check",
+      "label": "Top flange face EL 11'0",
+      "of": "cursor",
+      "expect": {
+        "E": "0",
+        "N": "20'0",
+        "EL": "11'0"
+      }
+    }
+  ],
+  "bom": {
+    "ELBOW": 2,
+    "TEE": 1,
+    "FLANGE": 2,
+    "VALVE": 2,
+    "REDUCER-CONCENTRIC": 1,
+    "SUPPORT": 6
+  }
+}

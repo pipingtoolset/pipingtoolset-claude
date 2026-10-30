@@ -54,8 +54,11 @@ Compression: pass `Fax` = max(F, 0) to follow VIII-2 4.16.13 (FA is the tensile 
 ## Envelope
 
 ```
-{ "module", "status", "output", "warnings", "citation", "inputs", "user_supplied" }
+{ "module", "status", "output", "warnings", "citation", "inputs", "user_supplied",
+  "result_status", "checks", "not_checked" }
 ```
+
+Plus `code_value_provenance` when the call carried `code_values`, and `project_basis_applied` when it carried a project basis record (below).
 
 `status` is the engine's machine word (`pass` / `fail` / `na`) and stays as the fixtures assert it. It is not the report wording: on a `screening` run state the result as "within" or "exceeds" with the ratios, never PASS. The output key `report_word` carries that wording ("within" / "exceeds" for the screen, "tool rule met" / "tool rule not met" for the detailed analysis): relay it, not `status`. `--format sheet` prints a markdown calc-sheet block (banner, grade, factor basis, results, findings) that does this; the default `--format json` prints the envelope. `user_supplied` lists the inputs present in the call that are code, table or project values the user must be able to cite. When the call carried `code_values`, the envelope also has `code_value_provenance` (below). `status` `na` means a value with no pass/fail. Exit code 2 with a one-line `input error: ...` message means bad input; fix it, never retry with guessed values.
 
@@ -121,3 +124,38 @@ Rules:
 - The entries each module declares: `ratedPressure` for `connections.flange-equivalent-pressure`; `A`, `C`, `t`, `m`, `y`, `nBolts`, `Sa`, `Sb`, `Sf`, `SfAmbient`, `Sn`, `SnAmbient` for `aux.app2-flange-integral`; `gasket_ID`, `gasket_OD`, `bolt_D`, `nBolts`, `X`, `Y`, `t` for `connections.flange-derive`.
 - The connector returns allowables in ksi and ratings in psig: pass the unit as returned and the script converts ksi to psi. Dimensions are in inches; `m` is dimensionless (`"unit": null`).
 - `Sf` under B31.3 is S x E x W: form the product by a script run, enter it with `"unit": "ksi"`, cite the `S` line in `citation`, list the `E` and `W` lines in `row`, and show the three lookups and the product on the sheet.
+
+## Result status (`result_status`, `checks`, `not_checked`)
+
+Every envelope carries `result_status`, the worst word among the checks it performs (a `not checked` row is listed but never sets it), and `checks`, a list of `{name, result_status, status, note}`. `status` is pass / fail / na as before and no number or `status` value moves. `not_checked` lists, in the same shape, the methods this module never performs; they are listed and never block. Severity, worst first: manual check required, pointer only, screening, not checked, calculated.
+
+| Module | Checks and the word each carries |
+|---|---|
+| `connections.flange-derive` | `geometry derivation`: calculated |
+| `connections.flange-equivalent-pressure` | `pressure-equivalent screen`: screening, always (a leakage screen, not a stress check); `owner acceptance (<document>)` when the record gives one: calculated for a fraction, pointer only for a text value (that check does not run) |
+| `aux.app2-flange-integral` | `bolt area Ab >= Am`: calculated; `flange stresses, operating and seating` and `rigidity J <= 1`: screening with the unresolved-factor mark while any hub factor the flange type uses came from the series, otherwise calculated; `hub stress cap 2.5 Sn` and `external loads`: not checked when Sn, or both Fax and Mext, are missing |
+| every module, from the record | `ASSUMED inputs`: one row, manual check required, note `confirm before issue: <items>`, when the record has an ASSUMED item |
+| both pressure modules, from the record | `code route`: calculated for B31.3 (304.5.1(b)), not checked for B31.1 (name the VIII-1 edition), manual check required for any other standard; `B31.3 Chapter IX`: manual check required for high pressure service or a Chapter IX route; the `B16.5 2.5.2 advisory` is always listed in `not_checked` (the script embeds no threshold; the note carries the recorded design temperature, or says none was given) |
+
+`not_checked` always names the UG-44(b) / VIII-2 4.16.12 interaction, ASME III NC-3658.3, EN 1591-1 and PCC-1 Appendix O; the detailed module adds the VIII-2 4.16.7.2 Step 9(b) shear check and the Code external-moment term Moe; the screen adds bolt, gasket and flange stress.
+
+Banner rule: while `result_status` is manual check required or pointer only, or screening with an unresolved hub factor, no PASS or issue-grade wording is printed; a calculated run's ISSUE-GRADE banner is replaced by the status word and the blocking checks. `--format sheet` prints `Result status: <word> - <why>` under the banner, then section 1 Basis when a record was given, the checks, the not-checked list and the findings.
+
+## Project basis (`project_basis`, `--project-basis`)
+
+The record format, the conflict rules and the cross-skill hand-off are in [project-basis.md](project-basis.md). What this skill takes from it:
+
+| Record field | Use here |
+|---|---|
+| `states[role=design]` (else the first state) `.P_psig` | fills `P` on both pressure modules; a different `P` in the input exits 2, `project_basis.states[role=design|first].P_psig conflicts with input P` |
+| the same state's `T_F` | read for the sheet and the note of the B16.5 2.5.2 advisory; there is no temperature input |
+| `units.system` | SI exits 2 (the engine is USC) |
+| `units.moment` (explicit only; the system default is not applied) | must match the moment input actually given: `M_in_lbf` and `Mext_in_lbf` are in-lbf, `M_ft_lbf` and `Mext` are ft-lbf, `M` is in-lbf; a mismatch exits 2, `project_basis.units.moment conflicts with input <name>` |
+| `code.standard`, `code.route`, `service.fluid_category` | the `code route` and `B31.3 Chapter IX` checks above |
+| `owner_practice` item named like an acceptance criterion | `owner acceptance (<document>)` on the screen: `value` as a fraction of the rating (0 to 1) or a percent with `unit` `%`; a text value is a pointer |
+| `assumptions` | the ASSUMED block that opens section 1 of the sheet |
+
+The shipped `scripts/examples/project-basis.example.json` is the pack-wide neutral record (a byte copy of the shared one): its design `P_psig` is 150, so it conflicts by design with `examples/integral-weld-neck.json` (`P` 300). Edit the record's design pressure to the flange's `P` before pairing them.
+
+The record never carries a rating, dimension, gasket factor or allowable. The envelope gains `project_basis_applied`: `{schema, fields_used, assumptions, conflicts}`.
+

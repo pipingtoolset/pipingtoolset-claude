@@ -19,13 +19,13 @@ So this skill does two jobs. It interviews for the basis, then runs the arithmet
 | PIP RECE002 design-stage factors as an optional owner practice | Pressure design of the nozzle neck and reinforcement: hand off to `pressure-design` |
 | The calc sheet and the rejection checklist | The flanged joint carrying the same loads: hand off to `bolted-flange` if installed. Support design near equipment: `pipe-support` |
 
-The user's own licensed copies are the authority for every clause cited here. Where a point needs confirming, name the clause and edition and ask the user to check the printed page rather than guessing. Where a reference file marks an item as read from an image, the user verifies the equation on the printed page.
+The user's licensed copies are the authority for every clause cited here. Name the clause and edition and ask the user to check the printed page rather than guessing; an item a reference file marks as read from an image is verified there too.
 
 ---
 
 ## Step 0 — The basis interview
 
-Ask these together, accept a partial answer, and mark every unanswered item **ASSUMED** at the top of the calc sheet. Do not silently default. The standard's edition is an input, never a default.
+Ask these together, accept a partial answer, and mark every unanswered item **ASSUMED** at the top of the calc sheet. Do not silently default. The standard's edition is an input, never a default. When a project basis record exists (an earlier skill run this session, or a file the user names; [references/project-basis.md](references/project-basis.md)), reuse it, ask only for what is missing and never relabel a field.
 
 1. **Equipment type and tag**, and the governing document: standard and **edition**, or the **vendor datasheet** (is it attached?). For a pump: OH1 / OH2 / OH3 / OH6 / BB, casing material, largest nozzle NPS.
 2. **Axis mapping, global to nozzle.** Which global direction is each nozzle axis (shaft, vertical, nozzle centreline), and the sign convention. Record it; a load set in the wrong axes passes silently. See [references/axes-and-load-cases.md](references/axes-and-load-cases.md).
@@ -44,7 +44,7 @@ Ask these together, accept a partial answer, and mark every unanswered item **AS
 3. **Choose which load cases meet which allowable.** The mapping per family is in [references/axes-and-load-cases.md](references/axes-and-load-cases.md): operating loads with thermal included are always run; hydrotest is not compared unless the standard says so.
 4. **Ask the user to read each allowable** from their copy: name the table and edition and the row. Never supply one. Record it with its citation.
 5. **Run the per-nozzle check**, then the family check (sum, Annex F, ordinates, derivation). Quote every warning.
-6. **State the verdict against the right allowable.** 1x the table is the piping allowable. For pumps, 2x Table 5 is the casing design margin, not a piping allowance, and loads between 1x and 2x need Annex F and the purchaser's approval. One exception: for OH3 / OH6 vertical in-line pumps whose supports are not anchored, API 610 6.5.3 permits 2x Table 5 on the side nozzles (confirm the support condition and the datasheet).
+6. **State the verdict against the right allowable.** 1x the table is the piping allowable; for pumps, loads between 1x and 2x Table 5 need Annex F and the purchaser's approval (2x is the casing design margin, not an allowance). One exception: for OH3 / OH6 vertical in-line pumps whose supports are not anchored, API 610 6.5.3 permits 2x Table 5 on the side nozzles (confirm the support condition and the datasheet).
 7. **Write the calc sheet**, run the rejection checklist and hand off.
 
 | Equipment | Method | Module |
@@ -55,13 +55,13 @@ Ask these together, accept a partial answer, and mark every unanswered item **AS
 | Atmospheric storage tank, API 650 Annex P | Nomogram ordinates from FR, ML, MC; acceptance read from the figures | `equipment.api650-annexp-ordinates` |
 | Pressure vessel, no API or vendor allowable (the default) | Method of the paper "Establishing Allowable Nozzle Loads", ASME PVP2011-57100, then the per-nozzle check against the derived set | `equipment.pvp2011-allowables`, `connections.nozzle-load-check` |
 
-**NEMA SM-23 coefficient: no default.** The `coefficient` input is required, because the equations that share the form differ. The user reads the coefficient `a` of `3·Fr + Mr ≤ a·De` from the equation of the governing standard in the edition of record (API 617 Part 2 Annex E, E.1b; API 611 Annex I, I.1b; API 612 Annex D, D.1b; or the owner's SM-23 copy) and enters it. The skill states no value for any of them; ask for the equation and the edition. `De` is NPS up to NPS 8 and `(NPS + 16)/3` above, in USC. The tool is USC only for this form; the SI forms carry different coefficients, so do not convert. The combined resultant at the exhaust connection (API 611 I.5, API 612 D.5) or the largest connection (API 617 E.5), the component limits that go with it, the vertical-down exhaust allowance, and the 1.85x and 3x multipliers some datasheets quote, are separate criteria this tool does not compute. List them as **vendor-sheet items the user confirms**.
+**NEMA SM-23 coefficient: no default.** The `coefficient` input is required. The user reads the coefficient `a` of `3·Fr + Mr ≤ a·De` from the equation of the governing standard in the edition of record (API 617 Part 2 Annex E, E.1b; API 611 Annex I, I.1b; API 612 Annex D, D.1b; or the owner's SM-23 copy) and enters it. The skill states no value for any of them; ask for the equation and the edition. `De` is NPS up to NPS 8 and `(NPS + 16)/3` above, in USC. The tool is USC only for this form; the SI forms carry different coefficients, so do not convert. This tool does not compute the combined resultant at the exhaust (API 611 I.5, API 612 D.5) or largest connection (API 617 E.5) with its component limits, the vertical-down exhaust allowance, or the 1.85x and 3x datasheet multipliers: list them as **vendor-sheet items the user confirms**.
 
-**Annex F method constants: no defaults.** The `annexF` input is required for `connections.api610-annexf`. The user reads each constant from its equation in the edition of record and enters it: `componentMultiple`, `resultantDenominator`, `interactionLimit`, `centreForceFactor`, `centreMyFactor`, `sigmaPLimit`, `kSigma` and `kTau`, the last three in the `units` system given. The equation for each key is in [references/tool-reference.md](references/tool-reference.md#the-annexf-block). Horizontal pumps need the first five; vertical in-line pumps need the last three. A missing or non-positive constant stops the run (exit 2) and names the key. Ask for the equation and the edition; never fill a constant from memory.
+**Annex F method constants: no defaults.** The `annexF` input is required for `connections.api610-annexf`. The user reads each constant from its equation in the edition of record and enters it: `componentMultiple`, `resultantDenominator`, `interactionLimit`, `centreForceFactor`, `centreMyFactor`, `sigmaPLimit`, `kSigma` and `kTau`, the last three in the `units` system given. The equation for each key is in [references/tool-reference.md](references/tool-reference.md#the-annexf-block). Horizontal pumps need the first five; vertical in-line pumps need the last three. Ask for the equation and the edition; never fill a constant from memory.
 
-**Pump facts to state every time.** Table 5 at 1x is the piping allowable. The 2x Table 5 limit of Annex F is the casing design margin (6.5.6), so Annex F use needs the purchaser's approval and the vendor's direction. Table 5 applies to steel casings and nozzles within its size range; a non-steel casing or a nozzle above NPS 24 needs vendor allowables. Table 5 loads and Annex F loads each carry a shaft displacement limit, read by the user from F.1.1 and F.1.2. The pump resolution point is the intersection of the shaft centreline and the casing transverse centreline. The 6.5.3 exception in Step 6 applies; F.2 then governs loads beyond it.
+**Pump facts to state every time.** Table 5 at 1x is the piping allowable; the 2x limit of Annex F is the casing design margin (6.5.6), so Annex F use needs the purchaser's approval and the vendor's direction. Table 5 covers steel casings and nozzles within its size range; otherwise vendor allowables. The user reads the shaft displacement limits (F.1.1, F.1.2). The resolution point is where the shaft centreline meets the casing transverse centreline. The 6.5.3 exception in Step 6 applies; F.2 then governs beyond it.
 
-**Vessel default.** With no API or vendor allowable, the user reads one row of the paper's table (1A: Class 150, thickness 0.25 in and up; 1B: Class 150, 0.375 in and up; 2: Class 300, 0.375 in and up) and gives the vessel thickness and the two allowable stresses at design temperature. The tool applies the thickness extrapolation, the stress ratio and the optional owner factor and logs each. Method, limits and scaling rules: [references/pvp2011-method.md](references/pvp2011-method.md). The result is a derived allowable set with status `na`; it is then fed to the per-nozzle check.
+**Vessel default.** With no API or vendor allowable, the user reads one row of the paper's table (1A: Class 150, thickness 0.25 in and up; 1B: Class 150, 0.375 in and up; 2: Class 300, 0.375 in and up) and gives the vessel thickness and the two allowable stresses at design temperature. The tool applies the thickness extrapolation, the stress ratio and the optional owner factor and logs each. Method, limits and scaling rules: [references/pvp2011-method.md](references/pvp2011-method.md). The result is a derived set with status `na`; feed it to the per-nozzle check with `derivedSetStatus` set to its `result_status`.
 
 ---
 
@@ -79,7 +79,7 @@ python scripts/nozzle_load.py <module-id> --input '<json>'
 python scripts/nozzle_load.py <module-id> --input-file job.json
 ```
 
-Prefer `--input-file`: inline JSON quoting is shell-dependent. `scripts/examples/vessel-nozzle-pvp2011.json` shows a complete input with placeholder numbers.
+Prefer `--input-file`: inline JSON quoting is shell-dependent. A record goes in as `project_basis` or `--project-basis <file>`; the envelope adds `result_status`, `checks`, `result_status_line`, `banner` and `project_basis_section`. `scripts/examples/vessel-nozzle-pvp2011.json` shows a complete input with placeholder numbers.
 
 | Module id | What it does |
 |---|---|
@@ -100,10 +100,11 @@ Keep this order; it mirrors how a reviewer reads.
 
 ```
 # Nozzle Load Evaluation - [equipment tag / nozzle]
+Result status: <word> - <why> (the envelope's `result_status_line`)
 
 ## 1. Basis
 Equipment type, governing standard and edition or vendor datasheet, owner practice and machinery
-class, resolution point, design conditions. ASSUMED items listed first.
+class, resolution point, design conditions. ASSUMED items listed first (`project_basis_section`).
 
 ## 2. Inputs
 Axis map (global to nozzle, signs), load cases with source run and units, corroded or new,
@@ -120,8 +121,9 @@ limit and the two stress coefficients) and the SM-23-form `coefficient`, each wi
 number, alongside the Table 5 ranges, header limits and figure ordinates.
 
 ## 4. Checks per load case
-Per case: script command, ratios, governing component, PASS or FAIL against the allowable stated
-(1x or 2x, factored or not). Header sum and bay total where API 661 applies.
+Per case: script command, ratios, governing component, the envelope's `banner` (PASS or FAIL) against
+the allowable stated (1x or 2x, factored or not). No PASS while `result_status` is manual check required
+or pointer only. Header sum and bay total where API 661 applies.
 
 ## 5. Findings and assumptions
 Every warning, every ASSUMED item, vendor confirmations outstanding, what would change the verdict.
@@ -166,10 +168,8 @@ The `annexF` constants have no pointer: read them as before. This skill's basis 
 
 ## Hand-offs
 
-- Loads that feed this check come from a piping stress run: `stress-screening` for the hand checks, `load-case-builder` for the case set, if installed.
-- Nozzle neck thickness and reinforcement under pressure: `pressure-design`.
-- The bolted flanged joint at the nozzle under the same loads: `bolted-flange`.
-- Supports near equipment: `pipe-support`.
+- Loads come from a piping stress run: `stress-screening` (hand checks), `load-case-builder` (case set), if installed.
+- Neck thickness and reinforcement: `pressure-design`. Flanged joint at the nozzle: `bolted-flange`. Supports near equipment: `pipe-support`.
 - Local shell stress beyond the derived values (WRC 537 / 297, VIII-2 4.5.15, FEA): outside this skill; say so in the findings.
 
 ## Related tools

@@ -2,6 +2,10 @@
 
 Per-module equations, inputs, validity limits and reviewer notes for the pressure-design skill. Relocated from SKILL.md; the module list, units and field names always come from `python scripts/pressure_design.py list`.
 
+## Table names by edition
+
+A pointer only, moved from the Step 0 interview: in B31.3 the basic allowable stress table is Table A-1 through the 2022 edition and Table A-1C in 2024, and the quality-factor tables are A-1A / A-1B through 2022 and A-2 / A-3 in 2024. Confirm the table name in your copy (ask the user to check the printed page of their own).
+
 ## 1. Straight pipe — pressure design thickness, B31.3
 
 Module `piping.b313-wall-thickness`. Citation: B31.3 para. 304.1.2, Eq. (3a).
@@ -39,7 +43,7 @@ The module's `t` is the pressure term before the allowance and `tm = t + A`. Use
 
 **W and its basis.** W is a live multiplicative term in Eq. (7) from the 2018 edition on (para. 102.4.7, Table 102.4.7-1). For those editions, and when `edition` is not given, W omitted with no `W_basis`, or W = 1.0 with no `W_basis`, exits 2 naming Table 102.4.7-1 and the edition; W omitted with a `W_basis` is applied as 1.0 on that basis and shown in `inputs`. In **B31.1-2016** para. 104.1.1 picks the equation: Eq. (7) of para. 104.1.2 (no W) for seamless pipe or pipe below the creep range, Eq. (11) of para. 104.1.4 (S·E·W, the engine's own form) for longitudinal- or spiral-welded pipe in the creep range, with W from Table 102.4.7. Because that route can require W, a 2016 run still needs W or a `W_basis` naming the route (exit 2 otherwise, naming para. 104.1.1 and Table 102.4.7). A W below 1.0 is recorded as the para. 104.1.4 route; W = 1.0 or a basis alone is recorded as para. 104.1.2 and a warning puts the para. 104.1.4 limit on the sheet. Any other year is treated as carrying W.
 
-**Validity gate.** B31.1 reads the thick-wall case as Do/tm < 6: the general note to the y table (Table 104.1.2-1; Table 104.1.2(A) in 2016) replaces y there, and this script does not apply that note. The `validity` object therefore compares **tm** (not t) with D/6. B31.1 states no P/(S·E) limit; the pack also stops the run at the B31.3 304.1.2(b) trigger, P/(S·E) > 0.385, as a pack rule pending P.E. confirmation (not a B31.1 requirement), and the `clause` says so. A trip gives `manual check required` exactly as in section 1.
+**Validity gate.** B31.1 reads the thick-wall case as Do/tm < 6: the general note to the y table (Table 104.1.2-1; Table 104.1.2(A) in 2016) replaces y there, and this script does not apply that note. The `validity` object therefore compares **tm** (not t) with D/6. B31.1 states no P/(S·E) limit; the pack also stops the run at the B31.3 304.1.2(b) trigger, P/(S·E) > 0.385, as a pack rule confirmed by the P.E. 2026-10-30 (author, licensed P.E.) (not a B31.1 requirement), and the `clause` says so. A trip gives `manual check required` exactly as in section 1.
 
 ## 3. Schedule check and allowable pressure (MAWP)
 
@@ -164,3 +168,34 @@ Rules:
 - Put only the entries the module being run declares in that job file; an entry for another module's input is an error. The script makes no network calls.
 - `S` and `ST` come back from the connector in ksi and the modules take psi: pass `"unit": "ksi"` and let the script convert. `E`, `W`, `Y` and `y` are dimensionless (`"unit": null`). `t` (`piping.b31-allowable-pressure`) is in inches, as `get_pipe_dimensions` returns it.
 - `piping.b31-allowable-pressure` takes the coefficient as `y` for both codes: fill it from the `Y` or `y` lookup and say which on the sheet.
+
+## Project basis and result status (0.8.0)
+
+The shared record and the five status words are described in [project-basis.md](project-basis.md). This skill's part:
+
+**Fill map.** With a `project_basis` object in the job file, or `--project-basis project-basis.json` on the command line (both given with different content exits 2):
+
+| Input | From the record | Rule |
+|---|---|---|
+| `code` (MAWP and bend modules) | `code.standard` | `ASME B31.3` and `B31.3` read the same. On every module the standard must be one the module serves (b313 and miter: B31.3; b311: B31.1, B31.5, B31.9; MAWP: B31.3, B31.1, B31.9, B31.12; bend: B31.3, B31.1; branch and leak test: B31.3, B31.1), else exit 2 `project_basis.code.standard conflicts with input <module> ...` |
+| `edition` (modules that carry W) | `code.edition` | `2022` typed as a number agrees with `"2022"` |
+| `P` (b313, b311, bend, leak test) | the design state's `P_psig` (role `design`, else the first state) | a different typed P exits 2 |
+| `W_basis` (modules that carry W) | `materials[use=pipe]` with form `seamless` | only when `W_basis` is absent and W is absent or 1.0; the E-below-1 warning still fires |
+| none (MAWP, miter) | the design state's `P_psig` | compared with `allowablePressure` as a calculated check |
+| none | design `T_F`, the pipe material, `owner_practice`, `project`, `service.fluid_category` | recorded as `noted` for the sheet |
+
+`units.system` SI exits 2: the engine is US customary. An input present in both places that differs exits 2 with `project_basis.<path> conflicts with input <name>`. The envelope gains `project_basis_applied` and `basis_section`, the markdown for calc-sheet section 1 with every ASSUMED item first.
+
+**Checks.** Every envelope carries `result_status`, `checks[]`, `banner_allowed` and `result_status_line` (copy it under the sheet title). `status` keeps its words.
+
+| Word | When this skill gives it |
+|---|---|
+| calculated | per check: the module's own check ran from the inputs given; the validity gate held; the allowable pressure was compared with a design pressure from the record. As the envelope word: every clean run, since `not checked` rows never set it |
+| screening | branch reinforcement on a B31.1 record: the B31.3 area method used as a screening check (section 4) |
+| manual check required | the thin-wall validity gate tripped; or the record has an ASSUMED item (one `ASSUMED inputs` row, note `confirm before issue: <items>`, `banner_allowed` false); or the record says Category M, High Pressure, or a Chapter VIII / IX route, whose additional requirements this skill does not evaluate. The fluid-service flag also adds a `MANUAL CHECK REQUIRED:` warning, sets `banner` when no gate or pointer banner holds it, and sets `result_grade` to `manual check required` on the gated modules; `status` and `output` keep the engine's words and numbers |
+| pointer only | a `code_values` entry `{"mode": "pointer", "citation": {"standard", "table", ...}, "source": "connector"}` with no value: `status` and `result_grade` are `pointer only`, `output` is empty, no equation runs, and `value_pointers` names where to read the value |
+| not checked | the module's known limits: nominal wall against tOrder and external pressure (straight pipe); para. 304.3.2 need for the calculation and adjacent openings (branch); thinning during bending (bend); minimum R1 (miter); para. 345.2.1(a) stress, the para. 345.5.4 90 % limit and component limits (leak test); allowable pressure against design pressure when no record gives one (MAWP, miter) |
+
+A clean run of a module with listed limits reads `calculated`: the limits stay in `checks` as `not checked`, `banner_allowed` stays true and the line names what was not performed. Write no PASS, schedule or margin while `banner_allowed` is false, whatever `status` says: `status` is the engine's word and may read `pass` or `fail` beside a blocking `result_status`.
+
+The shipped `scripts/examples/project-basis.example.json` is the pack's shared sample and is independent of `b313-wall-thickness.json`: its design state P differs from that file's P, so pairing the two exits 2 with `project_basis.states[role=design|first].P_psig conflicts with input P`. Drop P from the job file to take it from the record, or edit the record's design state.

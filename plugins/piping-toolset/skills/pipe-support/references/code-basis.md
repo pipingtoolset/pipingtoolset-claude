@@ -80,7 +80,7 @@ verdict.
    "footing too small", not a numerical fault.
 
 10. **ASD anchorage under wind - GUARDED in the engine (owner ruling 2026-10-30; plugin 0.7.2;
-    P.E. confirmation pending at PR review).**
+    confirmed 2026-10-30 by the author, a licensed P.E.).**
     - *The issue.* ASD anchorage converts the ACI 318-19 (strength-design) anchor capacity to
       an allowable value with a fixed 1/1.5 (R17.5.3). For a wind-governed ASD combination
       (0.6W) the implied factor is 1/0.6 = 1.67, so ASD anchorage can be about 10 %
@@ -124,7 +124,7 @@ verdict.
       finding stays as defence in depth and now says whether the guard was applied.
     - *Not seen by the guard.* A factored-mode spec that declares `factored_wind: false`
       when the loads do carry wind: the declaration is taken as given (info finding).
-    - *P.E. confirmation points (PR review).* (a) The trigger is coarse: combination 5a
+    - *P.E. confirmation points (confirmed 2026-10-30 by the author, a licensed P.E.).* (a) The trigger is coarse: combination 5a
       (1.0D + 0.6W) is at least as large as 1a whenever any horizontal WIN case exists, so the
       guard fires on almost every ASD support with a WIN case, even when W is small and the
       fixed 1/1.5 is conservative for the mixed D + W demand (ps-201 in ASD with WIN x0.1

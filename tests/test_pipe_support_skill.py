@@ -464,8 +464,15 @@ class CodeValues(unittest.TestCase):
             spec["code_values"] = {name: cv(800, "psi", "user")}
             doc = support_calc.run(spec, optimize=False)
             self.assertEqual(doc["design"]["baseplate"]["bondStrength"], 800, name)
+            # the preset note goes away, so the anchorage check's screening note no longer names
+            # bondStrength (0.8.0 result status); every other envelope key equals the explicit run
             self._same_as_explicit(doc, ignore=("spec", "notes", "assumed", "code_value_provenance",
-                                                "code_value_applied"))
+                                                "code_value_applied", "envelope", "_status"))
+            strip = ("checks", "result_status")
+            self.assertEqual({k: v for k, v in doc["envelope"].items() if k not in strip},
+                             {k: v for k, v in self.want["envelope"].items() if k not in strip}, name)
+            note = [c for c in doc["envelope"]["checks"] if c["name"] == "Anchorage"][0]["note"]
+            self.assertNotIn("bondStrength", note, name)
         spec = copy.deepcopy(self.spec)
         spec["code_values"] = {"anchorFuta": cv(58, "ksi"), "plateFy": cv(36, "ksi"), "cac": cv(12, "in", "user")}
         doc = support_calc.run(spec, optimize=False)
@@ -579,7 +586,7 @@ class CodeValues(unittest.TestCase):
                 data = json.load(fh)
             with open(mpath, encoding="utf-8") as fh:
                 md = fh.read()
-        self.assertEqual(code, 3 if self.want["criticalFindings"] else 0)
+        self.assertEqual(code, 3)          # ps-201's ASSUMED item and CSA preset anchor values hold the banner
         self.assertEqual(list(data["code_value_provenance"]), ["Fy", "Fu"])
         self.assertEqual(data["code_value_provenance"]["Fy"]["source"], "connector")
         self.assertEqual(data["code_value_applied"]["Fu"], {"value": 58, "unit": "ksi"})

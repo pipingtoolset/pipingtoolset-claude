@@ -120,3 +120,31 @@ Where the SKEYs come from, in order of preference:
 2. When the site list has no SKEY for a type, the Engineering Data connector's `get_skey_map` (`scope` `isogen` for the vocabulary, `caesar-safe` for the records that import cleanly into CAESAR II). That map is Piping Toolset's vocabulary, not the site's. Record each SKEY taken from it in `assumed` and in the handover note as a substitution, with the scope and group, and check it against the site's own Isogen output before issue.
 
 The map never changes geometry, and a SKEY is not a code-table value, so no citation block is attached. `code_values` is refused when it has any entry (exit 2): PCF building has no code-table inputs. The script makes no network calls.
+
+## Project basis and result status
+
+**`project_basis`** (optional top-level object) or `--project-basis <file>` carries the record described in [project-basis.md](project-basis.md). Both given and different: exit 2, `project_basis conflicts with --project-basis file`. The builder reads three fields and reports the rest:
+
+| Spec input | Taken from | Rule |
+|---|---|---|
+| `axes` | `equipment_axes.global_vertical` | `Y` gives `Y-up`, `Z` gives `Z-up` |
+| `units` | `units.length` | only an explicit `mm` counts (`MM`); any other unit is the model's own, since the PCF is always written in mm, and is listed as noted |
+| `pipeline.reference` | `project.line` | verbatim |
+
+The bundled `scripts/examples/project-basis.example.json` declares a Y-vertical model, so it pairs with `scripts/examples/project-basis-line.json` (axes and reference left out, filled from the record); the other two example specs are Z-up and exit 2 against it by design. A spec value that differs from the record exits 2 with `project_basis.<path> conflicts with input <name>`; an absent one is filled. Every ASSUMED item of the record is appended to `assumed` as `project basis: <item> - <note> (<owner>)`. The report gains `project_basis_applied` and a `1. Basis` section at the top that lists every ASSUMED item first.
+
+**`result_status`** (one of `calculated`, `screening`, `manual check required`, `pointer only`, `not checked`) is the worst word among the checks the builder performs in `checks[]` (a `not checked` row is listed but never sets it); each check is `{name, result_status, status, note}`. `ok`, the exit codes and the PCF do not change. The report prints `Result status: <word> - <why>` under its title.
+
+| Check | Word |
+|---|---|
+| closure checks, all within tolerance | `calculated` |
+| BOM component counts, all matching | `calculated` |
+| BOM `PIPE-LENGTH` (a +/-10 % magnitude screen) | `screening` |
+| `ASSUMED inputs`: one row for every ASSUMED item (spec, builder or record), note `confirm before issue: <items>` | `manual check required` |
+| a closure check or BOM line that failed | `manual check required` (exit 2) |
+| no closure checks or no BOM in the spec | `not checked` |
+| `validate_pcf.py`, site SKEYs, continuation coordinates, axis declaration | `not checked` (never run by the builder) |
+
+`pointer only` is not reachable here: the builder has no code-table input. A clean build with closure checks and BOM counts reads `calculated`, with the never-run rows summarised after the word as `not performed by this module: ...`. The OK, PASS and DELIVERABLE words follow the banner rule: they print only while the word is not `manual check required`, `pointer only`, or `screening` with an unresolved factor, so a failed run prints the status word in capitals where PASS would be, and `NOT DELIVERABLE`. With an ASSUMED item the last line reads `RESULT: MANUAL CHECK REQUIRED - confirm the ASSUMED items, then run validate_pcf.py`. `validate_pcf.py --json` carries the same two fields.
+
+`validate_pcf.py` now imports `build_pcf.py` and `pcf_lib.py` (same folder), so keep the three scripts together.

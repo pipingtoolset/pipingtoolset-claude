@@ -8,6 +8,200 @@ keep a defect until the plugin is updated, so each such entry names the skill, t
 affected inputs and the release that fixed it. GitHub Releases carry the same
 label and are the recall channel.
 
+## [0.8.0] — 2026-10-30
+
+One project basis record consumed by all seven skills (CODEX developer priority 2, workstream B8) and one output status taxonomy with a banner rule (priority 3, workstream B9). Computed numbers for the same inputs are unchanged from 0.7.2; the fixture parity suite is green; result keys are added, never changed. Owner ruling 2026-10-30: unconfirmed inputs (ASSUMED basis items, pipe-support preset values) hold the PASS banner until confirmed. **P.E. confirmation 2026-10-30 (the author, a licensed P.E.):** the four pipe-support ASD wind-guard points of code-basis item 10, the B31.1 / B31.9 0.385 pack-rule stop in pressure-design, and the HYD friction-multiplier note in load-case-builder are confirmed; the "pending" wording from 0.7.2 is replaced in the references, scripts and tests.
+
+### Shared infrastructure (B8)
+- One project basis record, schema `pipingtoolset.project-basis/1`, is now read by all seven skills. It can be given as a top-level `project_basis` object or as `--project-basis <file>`.
+  - Both given with different content exits 2 with `project_basis conflicts with --project-basis file`.
+  - An unknown key, a bad enum word or a wrong type exits 2 and names the path.
+  - The record holds project data and pointers only. No code-table value goes in it; those stay in `code_values`, cited.
+- Fill-or-conflict rule, the same as `code_values`:
+  - An absent input is filled where the skill has a slot.
+  - An input present in both places that differs exits 2 with `project_basis.<path> conflicts with input <name>`.
+  - The result gains `project_basis_applied` `{schema, fields_used: [{input, basis, action}], assumptions, conflicts}`, where action is filled, agreed or noted.
+  - Calc-sheet section 1 renders the record with every ASSUMED item first.
+- Shared code is copied byte for byte from `tools/shared/project_basis.py` and `tools/shared/result_status.py` into the seven scripts, between `# BEGIN shared ...` / `# END shared ...` markers. No skill imports another.
+  - `tools/sync_shared_blocks.py` writes the copies; `--check` (and `--strict`) catches drift.
+  - The same tool keeps each skill's `references/project-basis.md` and `scripts/examples/project-basis.example.json` identical to `tools/shared/`.
+  - The 0.7.0 `code_values` block is unchanged.
+- Cross-skill hand-off, `tests/test_project_basis_handoff.py`: one record (`tests/fixtures/handoff/project-basis.json`, the load-case-builder example interview) runs through all seven scripts on their shipped examples. Each run:
+  - fills its slots with no conflict;
+  - copies the ASSUMED item verbatim;
+  - gives the same result as the run with the values typed in;
+  - prints section 1 and a Result status line.
+- README gains a "Project basis record" section: the schema summary, the hand-off pattern and the result-status words. `tests/e2e/PROMPTS.md` gains E15, load-case-builder then pressure-design on one record.
+
+### load-case-builder
+- Fills `code`, `edition`, `thermal_states` (key, name, role, cycles, slot T/P/D) and `primary_state` (the first design state, else the first state) from the record.
+  - Records with role hydrotest, pneumatic or installed are skipped as thermal states.
+  - `load_case_ids.software` is noted. AutoPIPE adds a NOTE finding and a `not checked` item.
+  - A friction item in `owner_practice` adds a NOTE finding when the spec has one friction multiplier.
+  - The report gains `### 1 Basis` under the title.
+- SKILL.md Step 0:
+  - Reuse an existing record and ask only for what it lacks.
+  - With none, write the agreed answers as `project-basis.json` in the working directory for later skills.
+- `references/spec-format.md` says the shared example record and `two-state-b313.json` are not a matched pair. Running them together exits 2 with `project_basis.states conflicts with input thermal_states`, by design. The page gives the recipe for filling a spec from a record: leave out `code`, `edition`, `thermal_states` and `primary_state`, and set every `occasionals[].base` to a record state key. A test pins the recipe.
+- Result status:
+  - ASSUMED inputs (generator defaults or a record item) and an unstated edition are manual check required.
+  - QC 10 under B31.1 and an ASD `scale` other than the B31.1-2024 case are manual check required.
+  - The eleven model-dependent QC items are always listed as not checked, so the best envelope word is `not checked`.
+  - While the word is manual check required, an `OK:` finding prints as `MANUAL CHECK REQUIRED:`.
+
+### pressure-design
+- Project basis record (B8):
+  - `pressure_design.py` accepts a top-level `project_basis` object or `--project-basis <file>`. If both are given and they differ, the run exits 2.
+  - Fills from the record:
+    - `code` on the MAWP and bend modules.
+    - `edition` on the modules that carry W.
+    - Design `P` from the design state (role `design`, else the first state) on the b313, b311, bend and leak-test modules.
+    - `W_basis` `seamless` from a seamless `materials[use=pipe]` entry, when `W_basis` is absent and W is absent or 1.0.
+  - `code.standard` must be a code the module serves. For example, a B31.3 record on the B31.1 module exits 2 with `project_basis.code.standard conflicts with input <module> ...`.
+  - An input present in both places with a different value exits 2 with `project_basis.<path> conflicts with input <name>`.
+  - `units.system` SI exits 2 because the engine is US customary.
+  - Design temperature, pipe material, owner practice and project fields are recorded as `noted`.
+  - The envelope gains `project_basis_applied` and `basis_section` (calc-sheet section 1, every ASSUMED item first).
+  - The shipped example record is the pack's shared sample. Its design P differs from `b313-wall-thickness.json`, so pairing the two exits 2 on P (documented in `references/modules.md`).
+- Result status (B9):
+  - Every envelope carries `result_status`, `checks[]`, `banner_allowed` and `result_status_line`.
+  - calculated:
+    - Per check: the module's own check ran from the inputs given, the validity gate held, or the MAWP / miter allowable pressure was compared with a design pressure from the record.
+    - Envelope level: only a module with no `not checked` rows reaches it. Today that is MAWP with a design pressure from the record. A clean run of any other module reads `not checked`, with `banner_allowed` true.
+  - screening: branch reinforcement on a B31.1 record.
+  - manual check required: the 0.7.2 thin-wall gate tripped, or the record says Category M, High Pressure or a Chapter VIII / IX route. The fluid-service flag also:
+    - adds a `MANUAL CHECK REQUIRED:` warning;
+    - sets `banner` when no gate or pointer banner holds it;
+    - sets `result_grade` to `manual check required` on the gated modules.
+    `status` and `output` keep the engine's words and numbers.
+  - pointer only: a new `code_values` entry with `"mode": "pointer"` and no value. The run's `status` is `pointer only`, no equation runs, and `value_pointers` says where to read the value.
+  - not checked: each module's known limits.
+    - Straight pipe: nominal wall against tOrder; external pressure.
+    - Branch: para. 304.3.2 exemptions; adjacent openings.
+    - Bend: thinning during bending.
+    - Miter: minimum R1.
+    - Leak test: para. 345.2.1(a) stress; the para. 345.5.4 90 % limit; component limits.
+  - Existing `status` words and fixture outputs are unchanged.
+- SKILL.md:
+  - Step 0 reuses an existing project basis record and asks only for what it lacks.
+  - The calc sheet gains a `Result status:` line under its title, and `basis_section` heads section 1.
+  - PASS, a schedule or a margin is written only where `banner_allowed` is true, whatever `status` says.
+  - The connector pointer route passes a pointer entry to the script.
+  - The word count is unchanged from 0.7.2. The edition table pointers and cross-module notes moved to `references/modules.md`, which gains a "Project basis and result status (0.8.0)" section. `references/project-basis.md` is linked.
+- Tests: new `tests/test_pressure_design_basis.py` and `tests/test_pressure_design_status.py`, including fluid-service warning, banner and result_grade coverage. The `tests/test_pressure_design.py` envelope key set gains the four B9 keys.
+
+### stress-screening
+- Fills from the record:
+  - `equation` (piping.fatigue-factor) from code and edition, resolved as `basis` does.
+  - `N` from the one state that carries `cycles` (not filled when `sets` is given or several states carry cycles; a warning says so).
+  - `code` and `edition` (screen.flexibility-exemption).
+  - `--code` and `--edition` (`basis`).
+  - States, `installation_T_F`, `owner_practice` and `units.system` are noted for the sheet.
+  - An SI record stops the run.
+  - The envelope gains `project_basis_applied` and `basis_section`.
+- An ASSUMED item in the record adds a screening check, so a run built on unconfirmed inputs is never reported as calculated. The run still prints PASS or FAIL; a worse word wins.
+- Each module lists its known limits as not checked on every run:
+  - SIF source and tee orientation;
+  - liberal allowance Eq. 1b;
+  - the section and occasional-load basis behind Sb and Socc;
+  - the load ranges behind N;
+  - the spring installed case and manufacturer size;
+  - the span wall basis.
+
+  Because not checked outranks calculated, the envelope word is `not checked` except for noncode.pipe-section. The status line reads "<main check> calculated; not performed by this module: ...".
+- `status`, `output` and the PASS/FAIL banner are unchanged, and fixture parity is green.
+
+### pipe-support
+- Fills from the record:
+  - `project`, `calcBy` and `date` from `project`.
+  - `pipes.<n>.loads.units` from `units`: USC gives `lb-ft`; SI exits 2.
+  - `vertical_axis` and `pipe_axis` from `equipment_axes` (CAESAR II mode).
+  - ASSUMED items are added to `assumed`.
+  - `materials[use=support]` and `load_case_ids` are carried to the report notes only. The record holds no Fy or Fu, and `loads.map` is not filled.
+  - The report gains a "Basis - project basis record" section.
+- Banner rule:
+  - While the result status is manual check required or pointer only, the verdict line and the report banner print that word (or the guard's NOT ISSUABLE line), never PASS.
+  - A passing stage heading reads RATIO WITHIN LIMITS.
+  - The CLI exits 3.
+  - The optimizer heading reads "Optimized alternatives (ratios within limits in every combination)" and the count line reads "N designs within limits found". "all pass" and "passing designs" appear only when a PASS is allowed.
+- `references/spec-format.md`:
+  - A seismic run without SDS is manual check required (exit 3); a string SDS is pointer only.
+  - The status line is shown with its em dash.
+  - The shared sample record conflicts on purpose with `ps-201-caesar.json`'s `project` string: drop or align the spec's title-block keys.
+- SKILL.md: Exit 0 now also requires a result status other than manual check required or pointer only.
+- New test `BannerRule.test_the_optimizer_section_drops_pass_wording_while_held` (tests/test_pipe_support_status.py, 22 tests).
+
+### iso-to-pcf
+- Project basis: `build_pcf.py` accepts a top-level `project_basis` key or `--project-basis <file>` (schema `pipingtoolset.project-basis/1`; both present and different exits 2).
+  - Absent spec inputs are filled from the record:
+    - `axes` from `equipment_axes.global_vertical` (Y gives Y-up, Z gives Z-up).
+    - `units` from an explicit `units.length` of mm.
+    - `pipeline.reference` from `project.line`.
+  - A spec value that differs exits 2 with `project_basis.<path> conflicts with input <name>`.
+  - A record length other than mm is the model's own unit: it is noted, never a conflict, and the PCF is still written in mm.
+  - The record's ASSUMED items are added to the report's ASSUMED list. The report gains `project_basis_applied` and a "1. Basis" section at the top that lists every ASSUMED item first.
+  - New `references/project-basis.md`, `scripts/examples/project-basis.example.json` (a Y-vertical record) and `scripts/examples/project-basis-line.json`, the paired spec that builds with it. The two Z-up example specs conflict with that record by design.
+- Result status: the build report gains `result_status`, `checks[]` and a "Result status: <word> - <why>" line under the title.
+  - A failed closure or BOM line is manual check required.
+  - ASSUMED items (including the builder's LR/SR elbow radius default) and the BOM PIPE-LENGTH screen are screening, not an unresolved factor.
+  - `validate_pcf.py` (not run by the builder), the site SKEYs, continuation coordinates and the axis declaration are listed as not checked. Because they are always listed, the report's own word is never `calculated` (individual checks can be).
+  - Banner rule: PASS and OK print only while the word allows it. A failed run prints NOT DELIVERABLE, with the status word where PASS would be. `pointer only` is unreachable here (no code-table input).
+  - `validate_pcf.py` carries the same two fields and its OK banner follows them. It now imports `build_pcf.py` and `pcf_lib.py` from its own folder, so the three scripts must stay together.
+  - `ok`, the exit codes and the PCF are unchanged; the demo PCF stays byte-identical to tests/golden/demo-line.pcf.
+- SKILL.md:
+  - Net -4 words; the rigid-weights note moved to `references/caesar-import.md`, which also holds the not-carried list.
+  - Interview: reuse an existing record, ask only for what it lacks, never relabel a field.
+
+### nozzle-load
+- Fills from the record:
+  - `units` (connections.api610-annexf) from `units.system`.
+  - `designTempF` (equipment.pvp2011-allowables) from the design state's `T_F`.
+  - The `ownerFactorBasis` label from the `owner_practice` document and edition; a label the user already wrote is kept.
+  - The `ownerFactor` value is never taken from the record.
+  - An SI record stops connections.nema-sm23 and equipment.pvp2011-allowables.
+  - The envelope gains `project_basis_applied` and `project_basis_section`.
+- A per-nozzle check or header sum whose `standard` label names a derived or PVP2011 set, run without `derivedSetStatus`, is now `manual check required` (banner MANUAL CHECK REQUIRED, not PASS), because the derivation's scope limits are unknown. Pass the derivation run's `result_status` as `derivedSetStatus` to clear it.
+- Plain-text `owner_practice` items that mention a factor, fraction, percent, margin or limit without a decimal or percent value now count as pointers (`pointer only`). A text item that states a value only adds the existing warning.
+- `references/tool-reference.md`:
+  - `derivedSetStatus` is documented: valid on the check and the sum only; one of the five status words, otherwise exit 2.
+  - A missing or non-positive `annexF` constant stops the run (exit 2).
+
+### bolted-flange
+- Fills `P` on both pressure modules from the design state's `P_psig`.
+  - The same state's `T_F` is read for the sheet and the B16.5 2.5.2 advisory note.
+  - `units.system` SI exits 2.
+  - An explicit `units.moment` must match the moment input actually given.
+  - `code.standard`, `code.route` and `service.fluid_category` feed the code-route and B31.3 Chapter IX checks.
+  - An owner acceptance item becomes `owner acceptance (<document>)` on the screen; a text value is a pointer.
+- The B16.5 2.5.2 advisory carries no temperature threshold in the script. It is always listed under `not_checked[]`. Its note shows the recorded design temperature, or says none was given, and tells the user to read the threshold from the printed standard. A design temperature in the record can no longer lower the envelope `result_status`.
+- With reconstructed hub factors (series F, V, f), the flange-stress and rigidity checks are screening with `unresolved_factor`, and the sheet carries no PASS wording.
+- tool-reference.md:
+  - The status line is written with its em dash.
+  - The advisory rows are updated.
+  - A note says the shipped neutral project-basis example (design P 150) conflicts with `examples/integral-weld-neck.json` (P 300) by design.
+- Tests: `tests/test_bolted_flange_basis.py` replaces the temperature-threshold test with three tests:
+  - the advisory is always `not_checked`, with the temperature in the note;
+  - there are no `B165_*` constants;
+  - the design temperature never lowers the envelope word.
+
+### Result status taxonomy (B9)
+- Every envelope gains `result_status`, one of calculated, screening, manual check required, pointer only or not checked, and `checks[]` = `[{name, result_status, status, note}]`.
+  - The envelope word is the worst of its checks, in the order manual check required > pointer only > screening > not checked > calculated.
+  - Existing `status` words and values are unchanged; fixture parity is green.
+- Banner rule in all seven skills: no PASS / OK / ISSUE / DELIVERABLE wording while the word is manual check required or pointer only, or screening with an unresolved reconstructed factor.
+- Every calc sheet gains a `Result status: <word> — <why>` line under its title. iso-to-pcf's text report writes the dash as `-`.
+- Known limits are listed as `not checked` rows on every run, so a clean run of most modules reads `not checked` and names what was not performed. This ranking is under review for 0.8.x.
+
+### Pack-wide rulings applied after the build
+- All skills: the envelope `result_status` is the most severe word among the checks the module performs. `not checked` rows (the module's known limits) are listed in `checks[]` but never set the word; the envelope reads `not checked` only when every row is. A clean run of a module that performs its checks reads `calculated`, and the status line summarises the limits after the word (`calculated - ...; not performed by this module: ...`). Shared helpers: `envelope_status`, `not_performed`.
+- All skills: an unconfirmed input holds the banner. Every ASSUMED item goes into exactly one check row named `ASSUMED inputs`, graded `manual check required`, with the note `confirm before issue: <item>; <item>`. This covers `project_basis.assumptions` with status ASSUMED or missing, the skill's own `assumed` list, and load-case-builder's generator defaults. The envelope follows that row, and no PASS, OK, ISSUE or DELIVERABLE banner prints: pressure-design `banner_allowed` false; stress-screening and nozzle-load `banner` "MANUAL CHECK REQUIRED"; bolted-flange's ISSUE-GRADE banner is replaced; pipe-support's verdict reads MANUAL CHECK REQUIRED and exits 3; iso-to-pcf ends `RESULT: MANUAL CHECK REQUIRED - confirm the ASSUMED items, then run validate_pcf.py`.
+- pipe-support: anchor and concrete values taken from a CSA preset (`bondStrength`, `anchorFuta`, `anchorType`, `anchorEmbedment`, `fc`) give one `preset inputs` row graded `manual check required`, with the same banner effect. The stages on those values read `calculated` and name the preset. The shipped ps-201 example therefore reads MANUAL CHECK REQUIRED and exits 3 until its preset values and its ASSUMED item are confirmed.
+- load-case-builder: QC findings keep their `OK:`, `GAP:` and `ERROR:` prefixes under every result status. They are check results; only verdict and RESULT banners follow the banner rule. The report keeps its `Result status:` line.
+- load-case-builder: with a project basis record, `primary_state` is filled from the first state whose role is `operating`, else the first declared thermal state, never the design state by role (`states[role=operating|first].key`). The hanger design pair is W+T of that state.
+- All skills: the status line reads `Result status: <word> - <why>`, with an ASCII hyphen and a space each side, in the shared renderer and in iso-to-pcf's report and validator.
+- pipe-support and iso-to-pcf: when the record's ASSUMED items are added to `assumed`, `fields_used` records the action `filled`, also when they are appended to an existing list.
+- stress-screening: the `basis` command prints the edition as the string the record or `--edition` gave (`"2022"`).
+
 ## [0.7.2] — 2026-10-30
 
 Executable validity gates and honest result grades in three skills (CODEX review findings P1-3, P1-4 and P1-5, 2026-10-29). For inputs inside every gate the computed numbers are unchanged from 0.7.1; the fixture parity suite is green. Owner and P.E. rulings taken 2026-10-30 at review: the B31.3 0.385 thick-wall trigger is applied to B31.1 modules as a disclosed pack rule that stops the run; the pipe-support ASD wind guard ships as built: the governing-combination trigger plus the near-governing hold (a wind combination whose anchorage ratio times 1.111 reaches the governor) and the factored-mode hold unless the spec declares `factored_wind: false`, every one of them a hold and never a release, with the P.E. confirming the four points listed in code-basis.md item 10 at review; a loose-type flange is graded calculated with the caveat line.

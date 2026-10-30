@@ -11,6 +11,8 @@ changes without a reducer, SKEYs outside the --skeys list, LF line endings.
 
 It does NOT check that the SKEYs are what your site's Isogen emits, continuation
 coordinates against adjoining sheets, or the axis declaration - do those by hand.
+The result carries "result_status" and "checks" (the plugin's taxonomy: errors are "manual
+check required", the three hand checks are "not checked"), and the OK banner follows it.
 
 Works on any PCF (the builder's own or a third-party export). Standard library only.
 """
@@ -21,7 +23,13 @@ import argparse
 import json
 import math
 import sys
+import os
 from typing import Dict, List, Optional, Tuple
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+from build_pcf import banner_word, make_check, status_fields, status_why  # noqa: E402
+from pcf_lib import HAND_CHECKS  # noqa: E402
 
 INLINE = {"PIPE", "PIPE-FIXED", "ELBOW", "BEND", "FLANGE", "FLANGE-BLIND", "GASKET",
           "VALVE", "VALVE-ANGLE", "REDUCER-ECCENTRIC", "REDUCER-CONCENTRIC", "CAP",
@@ -93,6 +101,9 @@ def seg_dist(p, a, b) -> float:
         return d3(p, a)
     t = max(0.0, min(1.0, ((p[0] - ax) * vx + (p[1] - ay) * vy + (p[2] - az) * vz) / L2))
     return math.dist(p[:3], (ax + t * vx, ay + t * vy, az + t * vz))
+
+
+_VERDICT = (("calculated", "pass"), ("manual check required", "fail"))   # indexed by "has errors"
 
 
 def validate(text: str, skeys: Optional[set] = None, safe: bool = True,
@@ -224,9 +235,16 @@ def validate(text: str, skeys: Optional[set] = None, safe: bool = True,
     census: Dict[str, int] = {}
     for c in comps:
         census[c["kind"]] = census.get(c["kind"], 0) + 1
-    return {"units": unit or "?", "census": census, "branch_jumps": jumps,
-            "extents": ext, "centreline_length": sum(d3(c["ends"][0], c["ends"][1]) for c in inline),
-            "errors": errs, "warnings": warns, "ok": not errs}
+    word, status = _VERDICT[1 if errs else 0]
+    checks = [make_check("PCF structure and connectivity", word, status,
+                         f"{len(errs)} error(s)" if errs else "every component attaches to an existing node")]
+    checks += [make_check(name, "not checked", "na", note) for name, note in HAND_CHECKS]
+    out = {"units": unit or "?", "census": census, "branch_jumps": jumps,
+           "extents": ext, "centreline_length": sum(d3(c["ends"][0], c["ends"][1]) for c in inline),
+           "errors": errs, "warnings": warns, "ok": not errs}
+    out.update(status_fields(checks))
+    out["result_status_why"] = status_why(checks, out["result_status"])
+    return out
 
 
 def main(argv=None) -> int:
@@ -255,12 +273,13 @@ def main(argv=None) -> int:
             f"{ax} {lo:.0f}..{hi:.0f}" for ax, (lo, hi) in zip("XYZ", r["extents"])))
     print(f"Total inline centreline length: {r['centreline_length']:.0f} {u}")
     print(f"Branch starts (tee/olet legs): {r['branch_jumps']}")
+    print(f"Result status: {r['result_status']} - {r['result_status_why']}")
     if r["errors"]:
         print(f"\n!! {len(r['errors'])} ERRORS - not deliverable")
         for e in r["errors"]:
             print("   " + e)
     else:
-        print("\nOK - every component attaches to an existing node; no floating or zero-length")
+        print("\n" + banner_word("OK", r["result_status"]) + " - every component attaches to an existing node; no floating or zero-length")
         print("     elements; olets and supports lie on the centreline; record types are safe.")
     if r["warnings"]:
         print(f"\n{len(r['warnings'])} warnings:")

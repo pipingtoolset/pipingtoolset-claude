@@ -26,8 +26,15 @@ USAGE
     python loadcase_gen.py --spec my_job.json         # your project spec
     python loadcase_gen.py --spec my_job.json --format csv > cases.csv
     python loadcase_gen.py --spec my_job.json --format json
+    python loadcase_gen.py --spec my_job.json --project-basis project-basis.json
 
     Exit status: 0 = built, 2 = spec error (unknown or forward reference, bad field).
+
+    A project basis record (pipingtoolset.project-basis/1, the spec key "project_basis" or
+    --project-basis <file>; both given and different exits 2) fills code, edition,
+    thermal_states and primary_state where the spec leaves them out; a spec value that differs
+    exits 2 with "project_basis.<path> conflicts with input <name>". The report and the JSON
+    carry result_status (the five-word taxonomy) and checks[]; spec-format.md has both.
 
     A spec key "code_values" (the optional block the other PipingToolset calculators take,
     {input name: {value, unit, citation, source}}) may be absent, null or empty. This generator
@@ -57,6 +64,448 @@ import json
 import sys
 from dataclasses import dataclass, field
 from typing import Any, Literal
+
+
+# BEGIN shared project_basis (do not edit here; source tools/shared/project_basis.py)
+# Optional top-level input "project_basis" (or --project-basis <file>, never both with different
+# content): one project record that every PipingToolset skill reads. An input absent from the main
+# inputs is filled from the record where the skill has a slot; one that is present must agree, or
+# the run stops with "project_basis.<path> conflicts with input <name>". Unknown keys and bad enum
+# words are rejected. Schema and fill map: references/project-basis.md. The only file this block
+# reads is the --project-basis file named on the command line.
+
+PROJECT_BASIS_SCHEMA_ID = "pipingtoolset.project-basis/1"
+_PB_AXIS = ("enum", ("X", "Y", "Z"))
+_PB_SIGNED = ("enum", ("X", "Y", "Z", "+X", "+Y", "+Z", "-X", "-Y", "-Z"))
+_PB_CASE = ("oneof", ("id", ("list", "id")))
+PROJECT_BASIS_SCHEMA = ("obj", {
+    "schema": ("enum", (PROJECT_BASIS_SCHEMA_ID,)),
+    "project": ("obj", {k: "str" for k in ("name", "number", "line", "revision", "calcBy", "date")}, ()),
+    "code": ("obj", {"standard": "str", "edition": "str", "route": "str"}, ()),
+    "service": ("obj", {"fluid_category": ("enum", ("Normal", "Category D", "Category M", "High Pressure")),
+                        "fluid": "str", "corroded": "bool", "cyclic": "bool"}, ()),
+    "owner_practice": ("list", ("obj", {"document": "str", "edition": "str", "items": ("list", (
+        "oneof", ("str", ("obj", {"name": "str", "value": ("oneof", ("num", "str")), "unit": "str",
+                                  "note": "str"}, ("name",)))))}, ("document",))),
+    "materials": ("list", ("obj", {
+        "id": "str", "spec": "str", "grade": "str", "notes": "str",
+        "form": ("enum", ("seamless", "welded", "ERW", "EFW", "SAW", "forged", "cast", "plate", "bar", "other")),
+        "use": ("enum", ("pipe", "fitting", "flange", "bolt", "gasket", "vessel", "nozzle", "support", "other"))},
+        ())),
+    "states": ("list", ("obj", {
+        "key": "str", "name": "str", "T_F": "num", "P_psig": "num", "cycles": "num",
+        "role": ("enum", ("operating", "design", "upset", "startup", "shutdown", "steamout", "installed",
+                          "hydrotest", "pneumatic", "other")),
+        "slot": ("obj", {"T": ("slot", "T"), "P": ("slot", "P"), "D": ("slot", "D")}, ())}, ("key",))),
+    "installation_T_F": "num",
+    "units": ("obj", {"system": ("enum", ("USC", "SI")), "force": "str", "moment": "str", "length": "str",
+                      "temperature": "str", "pressure": "str", "stress": "str"}, ()),
+    "load_case_ids": ("obj", {"software": ("enum", ("CAESAR II", "AutoPIPE")), "version": "str",
+                              "cases": ("obj", {k: _PB_CASE for k in ("SUS", "OPE", "EXP", "OCC", "HYD", "HGR")},
+                                        ())}, ()),
+    "equipment_axes": ("obj", {"global_vertical": ("enum", ("Y", "Z")), "pipe_axis": _PB_AXIS, "notes": "str",
+                               "nozzle_axis_map": ("obj", {k: _PB_SIGNED for k in ("Fx", "Fy", "Fz", "Mx", "My", "Mz")},
+                                                   ())}, ()),
+    "citations": ("list", ("obj", {k: "str" for k in ("ref", "standard", "edition", "table", "row", "column", "note")},
+                           ())),
+    "assumptions": ("list", ("obj", {"item": "str", "status": ("enum", ("ASSUMED", "confirmed")), "note": "str",
+                                     "owner": "str"}, ("item",))),
+}, ("schema",))
+# units.<name> when the record gives only the system
+PROJECT_BASIS_UNIT_DEFAULTS = {
+    "USC": {"force": "lbf", "moment": "ft-lbf", "length": "in", "temperature": "F", "pressure": "psig", "stress": "psi"},
+    "SI": {"force": "N", "moment": "N-m", "length": "mm", "temperature": "C", "pressure": "kPa", "stress": "MPa"},
+}
+_PB_MISSING = object()
+PROJECT_BASIS_SKIP = object()  # a fill_map transform returns this to leave the input alone
+
+
+class ProjectBasisError(ValueError):
+    """A project_basis record that cannot be used; the CLI prints the message and exits 2."""
+
+
+def _pb_is_num(v):
+    return isinstance(v, (int, float)) and not isinstance(v, bool)
+
+
+def _pb_kind_ok(v, kind):
+    if kind == "str":
+        return isinstance(v, str)
+    if kind == "num":
+        return _pb_is_num(v)
+    if kind == "bool":
+        return isinstance(v, bool)
+    return isinstance(v, str) or (isinstance(v, int) and not isinstance(v, bool))  # "id"
+
+
+def _pb_check(v, spec, where, errors):
+    kind = spec if isinstance(spec, str) else spec[0]
+    if kind in ("str", "num", "bool", "id"):
+        if not _pb_kind_ok(v, kind):
+            hint = " (write an edition year or an id in quotes)" if kind == "str" and _pb_is_num(v) else ""
+            label = {"str": "string", "num": "number", "bool": "true or false", "id": "string or whole number"}[kind]
+            errors.append(f"{where}: must be a {label}{hint}")
+    elif kind == "enum":
+        if not isinstance(v, str) or v not in spec[1]:
+            errors.append(f"{where}: {v!r} is not one of {', '.join(spec[1])}")
+    elif kind == "slot":
+        if not (isinstance(v, str) and len(v) > 1 and v[0] == spec[1] and v[1:].isdigit()):
+            errors.append(f"{where}: {v!r} must be {spec[1]} followed by a number, e.g. {spec[1]}1")
+    elif kind == "oneof":
+        if all(_pb_errors(v, s, where) for s in spec[1]):
+            errors.append(f"{where}: {v!r} has the wrong type")
+    elif kind == "list":
+        if not isinstance(v, list):
+            errors.append(f"{where}: must be a list")
+            return
+        for i, item in enumerate(v):
+            _pb_check(item, spec[1], f"{where}[{i}]", errors)
+    elif not isinstance(v, dict):
+        errors.append(f"{where}: must be an object")
+    else:
+        for key in v:
+            if key not in spec[1]:
+                errors.append(f"{where}.{key}: unknown key (valid: {', '.join(spec[1])})")
+        for key in spec[2]:
+            if key not in v:
+                errors.append(f"{where}.{key}: required")
+        for key, item in v.items():
+            if key in spec[1]:
+                _pb_check(item, spec[1][key], f"{where}.{key}", errors)
+
+
+def _pb_errors(v, spec, where):
+    errors = []
+    _pb_check(v, spec, where, errors)
+    return errors
+
+
+def validate_project_basis(obj):
+    """Every problem with a project_basis record, as 'project_basis.<path>: <reason>' strings."""
+    errors = _pb_errors(obj, PROJECT_BASIS_SCHEMA, "project_basis")
+    states = obj.get("states") if isinstance(obj, dict) else None
+    keys = [s.get("key") for s in states if isinstance(s, dict)] if isinstance(states, list) else []
+    for key in sorted({k for k in keys if isinstance(k, str) and keys.count(k) > 1}):
+        errors.append(f"project_basis.states: key {key!r} is used more than once")
+    return errors
+
+
+def _pb_same(a, b):
+    if _pb_is_num(a) and _pb_is_num(b):
+        return abs(float(a) - float(b)) <= 1e-9 * max(abs(float(a)), abs(float(b)))
+    if isinstance(a, dict) and isinstance(b, dict):
+        return set(a) == set(b) and all(_pb_same(a[k], b[k]) for k in a)
+    if isinstance(a, list) and isinstance(b, list):
+        return len(a) == len(b) and all(_pb_same(x, y) for x, y in zip(a, b))
+    return type(a) is type(b) and a == b
+
+
+def _pb_copy(v):
+    if isinstance(v, dict):
+        return {k: _pb_copy(x) for k, x in v.items()}
+    if isinstance(v, list):
+        return [_pb_copy(x) for x in v]
+    return v
+
+
+def load_project_basis(cli_path, top_level_obj):
+    """The validated record from --project-basis <cli_path> and/or the input's project_basis object.
+
+    None when neither is given. Both given with different content raises ProjectBasisError.
+    """
+    from_file = _PB_MISSING
+    if cli_path:
+        import json as _pb_json
+        try:
+            with open(cli_path, encoding="utf-8-sig") as fh:
+                from_file = _pb_json.load(fh)
+        except OSError as exc:
+            raise ProjectBasisError(f"cannot read --project-basis file {cli_path}: {exc.strerror or exc}")
+        except ValueError as exc:
+            raise ProjectBasisError(f"--project-basis file {cli_path} is not valid JSON: {exc}")
+    if from_file is not _PB_MISSING and top_level_obj is not None and not _pb_same(from_file, top_level_obj):
+        raise ProjectBasisError("project_basis conflicts with --project-basis file")
+    basis = top_level_obj if from_file is _PB_MISSING else from_file
+    if basis is None and from_file is _PB_MISSING:
+        return None
+    errors = validate_project_basis(basis)
+    if errors:
+        raise ProjectBasisError(f"project_basis is not a valid {PROJECT_BASIS_SCHEMA_ID} record: " + "; ".join(errors))
+    return _pb_copy(basis)
+
+
+def _pb_steps(path):
+    steps, depth, cur = [], 0, ""
+    for ch in path:
+        depth += (ch == "[") - (ch == "]")
+        if ch == "." and depth == 0:
+            steps.append(cur)
+            cur = ""
+        else:
+            cur += ch
+    return steps + [cur]
+
+
+def basis_get(basis, path, default=None):
+    """Value at a basis path: dotted keys plus list selectors name[2], name[k=v], name[k=v|first]."""
+    node = basis
+    for step in _pb_steps(path):
+        name, _, sel = step.partition("[")
+        if name:
+            if not isinstance(node, dict) or node.get(name) is None:
+                return default
+            node = node[name]
+        if not sel:
+            continue
+        sel = sel[:-1] if sel.endswith("]") else sel
+        if not isinstance(node, list) or not node:
+            return default
+        if sel.isdigit():
+            if int(sel) >= len(node):
+                return default
+            node = node[int(sel)]
+            continue
+        cond, _, fallback = sel.partition("|")
+        key, _, want = cond.partition("=")
+        hits = [x for x in node if isinstance(x, dict) and x.get(key) == want]
+        if not hits and fallback != "first":
+            return default
+        node = hits[0] if hits else node[0]
+    return node
+
+
+def basis_units(basis):
+    """units with the system's defaults filled in ({} without a units.system)."""
+    units = dict((basis or {}).get("units") or {})
+    defaults = PROJECT_BASIS_UNIT_DEFAULTS.get(units.get("system"))
+    return dict(defaults, **units) if defaults else units
+
+
+def basis_assumptions(basis):
+    """The ASSUMED items (a missing status counts as ASSUMED), copied verbatim."""
+    return [_pb_copy(a) for a in (basis or {}).get("assumptions") or [] if a.get("status", "ASSUMED") == "ASSUMED"]
+
+
+def project_basis_conflict(path, name):
+    return ProjectBasisError(f"project_basis.{path} conflicts with input {name}")
+
+
+def _pb_input_get(inputs, name):
+    node = inputs
+    for key in name.split("."):
+        if not isinstance(node, dict) or key not in node:
+            return None
+        node = node[key]
+    return node
+
+
+def _pb_input_put(inputs, name, value):
+    keys = name.split(".")
+    node = inputs
+    for key in keys[:-1]:
+        if node.get(key) is None:
+            node[key] = {}
+        if not isinstance(node[key], dict):
+            raise ProjectBasisError(f"input {key} must be an object to take {name} from project_basis")
+        node = node[key]
+    node[keys[-1]] = value
+
+
+def fill_from_basis(inputs, basis, fill_map):
+    """Fill-or-conflict from the record. fill_map: [(input name (dotted), basis path, transform or None)].
+
+    A basis path that resolves to nothing, or a transform that returns PROJECT_BASIS_SKIP, leaves
+    the input alone; an absent (or null) input is filled; a present one must agree. Returns
+    (effective inputs, applied); (inputs, None) when basis is None. The caller's dict is not modified.
+    """
+    if basis is None:
+        return inputs, None
+    eff = _pb_copy(inputs)
+    used = []
+    for entry in fill_map:
+        name, path, transform = (tuple(entry) + (None,))[:3]
+        value = basis_get(basis, path, _PB_MISSING)
+        if value is _PB_MISSING:
+            continue
+        if transform is not None:
+            value = transform(value)
+            if value is PROJECT_BASIS_SKIP:
+                continue
+        have = _pb_input_get(eff, name)
+        if have is None:
+            _pb_input_put(eff, name, _pb_copy(value))
+            action = "filled"
+        elif _pb_same(have, value):
+            action = "agreed"
+        else:
+            raise project_basis_conflict(path, name)
+        used.append({"input": name, "basis": path, "action": action})
+    return eff, {"schema": PROJECT_BASIS_SCHEMA_ID, "fields_used": used,
+                 "assumptions": basis_assumptions(basis), "conflicts": []}
+
+
+def mark_basis_used(applied, path, name=None, action="noted"):
+    """Record a basis field the skill read for the sheet only (no script input)."""
+    if applied is not None:
+        applied["fields_used"].append({"input": name, "basis": path, "action": action})
+    return applied
+
+
+def _pb_fmt(v):
+    if isinstance(v, bool):
+        return "yes" if v else "no"
+    if isinstance(v, float) and v.is_integer():
+        v = int(v)
+    if isinstance(v, dict):
+        return ", ".join(f"{k}={_pb_fmt(x)}" for k, x in v.items())
+    if isinstance(v, list):
+        return "; ".join(_pb_fmt(x) for x in v)
+    return str(v).replace("|", "/")
+
+
+def render_basis_section(applied, basis, heading=None):
+    """Markdown for calc-sheet section 1 (Basis): the ASSUMED list first, then the record, then fields used."""
+    if basis is None:
+        return ""
+    out = [heading, ""] if heading else []
+    assumed = (applied or {}).get("assumptions", basis_assumptions(basis))
+    if assumed:
+        out.append("**ASSUMED - confirm before issue:**")
+        for a in assumed:
+            extra = "".join(f"; {k}: {_pb_fmt(a[k])}" for k in ("note", "owner") if a.get(k))
+            out.append(f"- {_pb_fmt(a['item'])}{extra}")
+    else:
+        out.append("No ASSUMED items in the project basis record.")
+    out += ["", f"| Basis item ({PROJECT_BASIS_SCHEMA_ID}) | Value |", "|---|---|"]
+    rows = [("Project", basis.get("project")), ("Code", basis.get("code")), ("Service", basis.get("service")),
+            ("Units", basis_units(basis) or None), ("Installation T_F", basis.get("installation_T_F")),
+            ("Equipment axes", basis.get("equipment_axes")), ("Load case ids", basis.get("load_case_ids"))]
+    rows += [(f"State {s['key']}", {k: x for k, x in s.items() if k != "key"}) for s in basis.get("states") or []]
+    rows += [(f"Material {m.get('id', i + 1)}", {k: x for k, x in m.items() if k != "id"})
+             for i, m in enumerate(basis.get("materials") or [])]
+    rows += [(f"Owner practice {p['document']}", {k: x for k, x in p.items() if k != "document"})
+             for p in basis.get("owner_practice") or []]
+    rows += [(f"Citation {c.get('ref', i + 1)}", {k: x for k, x in c.items() if k != "ref"})
+             for i, c in enumerate(basis.get("citations") or [])]
+    out += [f"| {label} | {_pb_fmt(v)} |" for label, v in rows if v not in (None, {}, [])]
+    used = (applied or {}).get("fields_used") or []
+    if used:
+        out += ["", "Taken from the record: " + "; ".join(
+            f"{u['input'] or 'sheet'} <- {u['basis']} ({u['action']})" for u in used)]
+    return "\n".join(out) + "\n"
+# END shared project_basis
+
+
+# BEGIN shared result_status (do not edit here; source tools/shared/result_status.py)
+# Output status taxonomy. Every result envelope carries result_status (envelope_status of its
+# checks: the worst word among the checks the module performs) and checks: [{name, result_status,
+# status (pass/fail/na), note[, unresolved_factor]}]. "not checked" rows never drive the envelope;
+# they are listed, and the envelope reads "not checked" only when every row is. A positive banner
+# word (PASS, OK, ISSUE, DELIVERABLE) is printed only when banner_allowed() is true: never under
+# "manual check required" or "pointer only", nor under "screening" when a reconstructed factor in
+# the chain is unresolved. Any ASSUMED input gives one "ASSUMED inputs" row (assumed_inputs_check)
+# graded manual check required, so an unconfirmed input always holds the banner.
+
+RESULT_STATUS = ("calculated", "screening", "manual check required", "pointer only", "not checked")
+# severity for worst_of (ordering only): manual check required > pointer only > screening > not checked > calculated
+RESULT_STATUS_SEVERITY = {"manual check required": 4, "pointer only": 3, "screening": 2, "not checked": 1,
+                          "calculated": 0}
+CHECK_STATUS = ("pass", "fail", "na")
+ASSUMED_CHECK_NAME = "ASSUMED inputs"
+
+
+def _rs_word(item):
+    word = item.get("result_status") if isinstance(item, dict) else item
+    if word not in RESULT_STATUS_SEVERITY:
+        raise ValueError(f"result_status {word!r} is not one of {', '.join(RESULT_STATUS)}")
+    return word
+
+
+def worst_of(statuses):
+    """The most severe result_status of words or check dicts; 'not checked' for an empty list."""
+    words = [_rs_word(s) for s in statuses]
+    return max(words, key=RESULT_STATUS_SEVERITY.__getitem__) if words else "not checked"
+
+
+def envelope_status(checks):
+    """The envelope word: the most severe word among the checks that are not 'not checked'.
+
+    'not checked' rows (limits the module does not perform) never drive it; when every row is
+    'not checked', or there are none, the envelope reads 'not checked'.
+    """
+    words = [w for w in (_rs_word(c) for c in checks) if w != "not checked"]
+    return worst_of(words) if words else "not checked"
+
+
+def make_check(name, result_status, status=None, note=None, unresolved_factor=False):
+    """One checks[] entry. status is pass/fail/na (None means na); unresolved_factor only with screening."""
+    _rs_word(result_status)
+    status = "na" if status is None else status
+    if status not in CHECK_STATUS:
+        raise ValueError(f"check status {status!r} is not one of {', '.join(CHECK_STATUS)}")
+    if unresolved_factor and result_status != "screening":
+        raise ValueError("unresolved_factor marks a screening check only")
+    check = {"name": name, "result_status": result_status, "status": status, "note": note}
+    if unresolved_factor:
+        check["unresolved_factor"] = True
+    return check
+
+
+def assumed_inputs_check(items):
+    """The one 'ASSUMED inputs' row for every ASSUMED item (strings or {item[, note]} dicts), or None.
+
+    Graded manual check required, so the envelope follows it and no positive banner prints; the
+    note reads 'confirm before issue: <item>; <item>' (duplicates dropped, order kept).
+    """
+    texts = []
+    for it in items or ():
+        text = it.get("item") if isinstance(it, dict) else it
+        text = str(text).strip() if text is not None else ""
+        if text and text not in texts:
+            texts.append(text)
+    if not texts:
+        return None
+    return make_check(ASSUMED_CHECK_NAME, "manual check required", "na",
+                      "confirm before issue: " + "; ".join(texts))
+
+
+def not_performed(checks):
+    """'not performed by this module: a; b' for the 'not checked' rows of checks, '' when there are none."""
+    names = [c["name"] for c in checks if isinstance(c, dict) and c.get("result_status") == "not checked"]
+    return "not performed by this module: " + "; ".join(names) if names else ""
+
+
+def banner_allowed(result_status, unresolved_factor=False):
+    """False for manual check required, pointer only, and screening with an unresolved factor."""
+    word = _rs_word(result_status)
+    if word in ("manual check required", "pointer only"):
+        return False
+    return not (word == "screening" and unresolved_factor)
+
+
+def status_fields(checks):
+    """{result_status: envelope_status, checks} to merge into an envelope (adds keys, changes none)."""
+    checks = list(checks)
+    return {"result_status": envelope_status(checks), "checks": checks}
+
+
+def checks_banner_allowed(checks):
+    """banner_allowed for the envelope word of checks, with any unresolved_factor among them."""
+    checks = list(checks)
+    return banner_allowed(envelope_status(checks), any(c.get("unresolved_factor") for c in checks))
+
+
+def banner_word(ok_word, result_status, unresolved_factor=False):
+    """ok_word (e.g. PASS) when the banner rule allows it, else the result_status in capitals."""
+    return ok_word if banner_allowed(result_status, unresolved_factor) else _rs_word(result_status).upper()
+
+
+def render_status_line(result_status, why):
+    """The one line under every calc-sheet title: 'Result status: <word> - <why>' (ASCII ' - ')."""
+    word = _rs_word(result_status)
+    return f"Result status: {word} - {why}" if why else f"Result status: {word}"
+# END shared result_status
+
 
 # --------------------------------------------------------------------------------------
 # Domain model
@@ -124,13 +573,135 @@ def _edition_year(edition: str) -> int | None:
 
 
 # --------------------------------------------------------------------------------------
+# Project basis record (B8): this generator's fill map. The shared block above validates,
+# fills and conflicts; only the mapping lives here.
+# --------------------------------------------------------------------------------------
+
+# Record states with these roles are not thermal states of a case set (the hydrotest is block 2,
+# the installed state is the reference temperature), so they never become thermal_states.
+_NOT_THERMAL_ROLES = ("hydrotest", "pneumatic", "installed")
+
+
+def _state_record(s: dict[str, Any]) -> dict[str, Any]:
+    """A spec thermal state with the ThermalState defaults explicit, so fill-or-conflict compares
+    meaning, not spelling (an omitted role is "operating", an omitted D or cycles is null)."""
+    out = dict(s)
+    for k, v in (("D", None), ("role", "operating"), ("cycles", None)):
+        out.setdefault(k, v)
+    return out
+
+
+def _basis_thermal_states(basis: dict[str, Any]) -> tuple[list[dict[str, Any]], list[str]]:
+    """(thermal states built from the record's slotted states, keys of states with no T/P slot)."""
+    built: list[dict[str, Any]] = []
+    unslotted: list[str] = []
+    for st in basis.get("states") or []:
+        if st.get("role") in _NOT_THERMAL_ROLES:
+            continue
+        slot = st.get("slot") or {}
+        if not slot.get("T") or not slot.get("P"):
+            unslotted.append(st["key"])
+            continue
+        built.append({"key": st["key"], "name": st.get("name") or st["key"], "T": slot["T"],
+                      "P": slot["P"], "D": slot.get("D"), "role": st.get("role") or "operating",
+                      "cycles": st.get("cycles")})
+    return built, unslotted
+
+
+def apply_project_basis(spec: dict[str, Any], basis: dict[str, Any] | None
+                        ) -> tuple[dict[str, Any], dict[str, Any] | None, list[str]]:
+    """(effective spec, project_basis_applied, notes) for this generator's fill map:
+    code and edition from code; thermal_states from states (key, name, role, cycles, slot
+    T/P/D); primary_state from the first operating state, else the first state; the software,
+    owner practice and assumptions are read for the report only. (spec, None, []) without a record."""
+    if basis is None:
+        return spec, None, []
+    spec = dict(spec)
+    ed = spec.get("edition")
+    if isinstance(ed, (int, float)) and not isinstance(ed, bool):
+        spec["edition"] = str(ed)                        # the generator reads str(edition) anyway
+    given = spec.get("thermal_states")
+    if isinstance(given, list):
+        spec["thermal_states"] = [_state_record(s) if isinstance(s, dict) else s for s in given]
+    built, unslotted = _basis_thermal_states(basis)
+    fill_map: list[tuple[str, str, Any]] = [("code", "code.standard", None),
+                                            ("edition", "code.edition", None)]
+    notes: list[str] = []
+    if unslotted:
+        if given is None:
+            raise ProjectBasisError(f"project_basis.states[key={unslotted[0]}].slot needs T and P to "
+                                    "fill thermal_states (or give thermal_states in the spec)")
+        notes.append(f"NOTE: project basis state(s) {', '.join(unslotted)} carry no T/P slot, so "
+                     "thermal_states and primary_state are the spec's, not checked against the record.")
+    elif built:
+        primary = next((s["key"] for s in built if s["role"] == "operating"), built[0]["key"])
+        fill_map.append(("thermal_states", "states", lambda _v: built))
+        fill_map.append(("primary_state", "states[role=operating|first].key", lambda _v: primary))
+    eff, applied = fill_from_basis(spec, basis, fill_map)
+    software = basis_get(basis, "load_case_ids.software")
+    if software:
+        mark_basis_used(applied, "load_case_ids.software", "--format")
+        if software == "AutoPIPE":
+            notes.append("NOTE: project basis software is AutoPIPE; run --format autopipe for the "
+                         "component map and confirm the occasional construction in AutoPIPE.")
+    for i, practice in enumerate(basis.get("owner_practice") or []):
+        mark_basis_used(applied, f"owner_practice[{i}]")
+        if any("friction" in str(item).lower() for item in practice.get("items") or []) \
+                and len(eff.get("frictions") or [[0, 1.0], [0, 0.0]]) < 2:
+            notes.append(f"NOTE: owner practice {practice['document']} carries a friction item but "
+                         "the spec runs one friction multiplier; run with and without friction.")
+    if applied["assumptions"]:
+        mark_basis_used(applied, "assumptions")
+    return eff, applied, notes
+
+
+def resolve_project_basis(spec: Any, cli_path: str | None = None
+                          ) -> tuple[Any, dict[str, Any] | None, dict[str, Any] | None, list[str]]:
+    """Pop the spec's project_basis key, load it and/or --project-basis, apply this fill map.
+    Returns (effective spec, basis, applied, notes); the spec object itself when neither is given."""
+    if not isinstance(spec, dict) or ("project_basis" not in spec and not cli_path):
+        return spec, None, None, []
+    rest = {k: v for k, v in spec.items() if k != "project_basis"}
+    basis = load_project_basis(cli_path, spec.get("project_basis"))
+    if basis is None:
+        return rest, None, None, []
+    eff, applied, notes = apply_project_basis(rest, basis)
+    return eff, basis, applied, notes
+
+
+# --------------------------------------------------------------------------------------
+# Result status (B9): this generator's checks. Six QC items are evaluated here; the other
+# eleven need the model and are listed as "not checked" (qc-gate.md).
+# --------------------------------------------------------------------------------------
+
+NOT_CHECKED_QC_ITEMS: tuple[tuple[int, str], ...] = (
+    (1, "stale cross-references against the model's case descriptions"),
+    (2, "envelope completeness in the model file"),
+    (3, "direction labels against the vectors in the model"),
+    (6, "linear shortcut on a nonlinear model"),
+    (8, "pure occasional cases set to Suppress in the model"),
+    (9, "friction variants run, governing result taken, both documented"),
+    (12, "hanger Rigid / Ignore cases in the model, carrying no H"),
+    (13, "expansion range brackets the true extremes"),
+    (14, "wind shape factor and first-node elevation"),
+    (15, "SAM and settlement in the expansion check"),
+    (16, "no static seismic with anchor movements; no static water hammer"),
+)
+
+
+# --------------------------------------------------------------------------------------
 # Generator
 # --------------------------------------------------------------------------------------
 
 class LoadCaseSet:
     """Builds, resolves and renders a complete static load case set."""
 
-    def __init__(self, spec: dict[str, Any]) -> None:
+    def __init__(self, spec: dict[str, Any], project_basis_file: str | None = None) -> None:
+        try:
+            spec, self.basis, self.basis_applied, self.basis_notes = resolve_project_basis(
+                spec, project_basis_file)
+        except ProjectBasisError as exc:
+            raise SpecError(str(exc)) from exc
         self.spec = spec
         cv = spec.get("code_values")                            # no code-table slots here: absent, null or empty only
         if cv is not None and not isinstance(cv, dict):
@@ -158,6 +729,8 @@ class LoadCaseSet:
         self.cases: list[Case] = []
         self.findings: list[str] = []
         self.qc: dict[str, Any] = {}
+        self.checks: list[dict[str, Any]] = []
+        self.result_status: str = "not checked"
         if not self.frictions:
             raise SpecError("frictions must list at least one [label, multiplier] pair")
         for _, fv in self.frictions:
@@ -554,6 +1127,96 @@ class LoadCaseSet:
                      + (f"; (+{more} more in the JSON qc block)" if more > 0 else "")
                      + ". Do not issue this set.")
 
+        f.extend(self.basis_notes)
+        self._status()
+
+    def _status(self) -> None:
+        """checks[] and result_status (B9). The envelope word is the shared envelope_status
+        ("not checked" rows are listed, never the word); every ASSUMED item (the generator's and
+        the record's) goes into the one shared "ASSUMED inputs" row. QC findings keep their OK
+        prefix: they are check results, not a banner."""
+        f = self.findings
+        year = _edition_year(self.edition)
+        chk: list[dict[str, Any]] = []
+        assumed = [x[len("ASSUMED: "):] for x in f if x.startswith("ASSUMED: ")]
+        assumed += [a["item"] for a in (self.basis_applied or {}).get("assumptions", [])]
+        row = assumed_inputs_check([x.split(". ")[0].rstrip(".") for x in assumed])  # the item, not the advice
+        if row is not None:
+            chk.append(row)
+        unstated = self.edition == "UNSTATED" or year is None
+        chk.append(make_check("code edition", "manual check required" if unstated else "calculated",
+                              "na" if unstated else "pass",
+                              "edition not stated; the occasional factor and the B31.1-2024 ASD rule "
+                              "depend on it" if unstated else f"{self.code} {self.edition}"))
+        seis = any(o.kind == "seismic" for o in self.occ)
+        bad4 = any(x.startswith(("GAP: no vertical seismic", "CONFLICT: U2")) for x in f)
+        chk.append(make_check("QC 4 vertical seismic and U2", "calculated",
+                              "na" if not seis else ("fail" if bad4 else "pass"),
+                              "no seismic occasional" if not seis else
+                              ("vertical seismic missing or U2 double-booked" if bad4
+                               else "a vertical seismic component is present; U2 is not double-booked")))
+        bad5 = any(x.startswith("GAP: ") and "expansion cases for" in x for x in f)
+        chk.append(make_check("QC 5 expansion completeness", "calculated", "fail" if bad5 else "pass",
+                              "one EXP case per state x friction"))
+        chk.append(make_check("QC 7 forward references", "calculated", "pass",
+                              "every combination references an earlier case (a forward one exits 2)"))
+        if not self.occ:
+            chk.append(make_check("QC 10 occasional factor", "calculated", "na", "no occasional load"))
+        elif self.code == "B31.3":
+            hp = (basis_get(self.basis, "service.fluid_category") == "High Pressure"
+                  or "chapter ix" in str(basis_get(self.basis, "code.route", "")).lower())
+            chk.append(make_check("QC 10 occasional factor", "calculated", "na",
+                                  "the record names Chapter IX / High Pressure service, so "
+                                  "K302.3.6(a) 1.20 Sh applies; set it in the model" if hp else
+                                  "302.3.6(a) 1.33 Sh (1.20 under Chapter IX); set it in the model"))
+        else:
+            chk.append(make_check("QC 10 occasional factor", "manual check required", "na",
+                                  "104.8.2 k = 1.15 or 1.20 depends on the occasional duration, "
+                                  "which is not an input; write the justification into the calc"))
+        scaled = any(o.scale for o in self.occ)
+        if not self.occ:
+            chk.append(make_check("QC 11 ASD position", "calculated", "na", "no occasional load"))
+        elif not scaled:
+            chk.append(make_check("QC 11 ASD position", "calculated", "pass",
+                                  "strength level, no 0.6W / 0.7E reduction"))
+        elif self.code == "B31.1" and year is not None and year >= 2024:
+            chk.append(make_check("QC 11 ASD position", "calculated", "fail",
+                                  "B31.1-2024 101.5.2 / 101.5.3 prohibit the reduction"))
+        else:
+            chk.append(make_check("QC 11 ASD position", "manual check required", "na",
+                                  "a 0.6W / 0.7E reduction needs the owner or EOR written direction, "
+                                  "which the generator cannot verify"))
+        chk.append(make_check("QC 17 resolved case set", "calculated",
+                              "pass" if self.qc.get("pass") else "fail",
+                              f"{self.qc['counts']['misses']} miss(es) in "
+                              f"{self.qc['counts']['checks']} checks"))
+        for item, what in NOT_CHECKED_QC_ITEMS:
+            chk.append(make_check(f"QC {item} {what}", "not checked", "na",
+                                  "needs the model; check by hand (references/qc-gate.md)"))
+        if self.hydrotest and len(self.frictions) > 1:
+            chk.append(make_check("HYD friction multiplier in the software", "not checked", "na",
+                                  "confirm the CAESAR II version applies it to the HYD case"))
+        if basis_get(self.basis, "load_case_ids.software") == "AutoPIPE":
+            chk.append(make_check("AutoPIPE occasional construction", "not checked", "na",
+                                  "subtract-then-scalar is unconfirmed for AutoPIPE"))
+        fields = status_fields(chk)
+        self.checks, self.result_status = fields["checks"], fields["result_status"]
+
+    def status_line(self) -> str:
+        """'Result status: <word> - <why>' under the report title (shared render_status_line)."""
+        rs = self.result_status
+        fails = [c["name"] for c in self.checks if c["status"] == "fail"]
+        n_nc = sum(1 for c in self.checks if c["result_status"] == "not checked")
+        if rs == "manual check required":
+            why = "confirm " + ", ".join(f"{c['name']} ({c['note']})" if c["name"] == ASSUMED_CHECK_NAME
+                                         else c["name"] for c in self.checks if c["result_status"] == rs)
+        else:
+            why = "QC items 4, 5, 7, 10, 11 and 17 calculated"
+        if fails:
+            why += f"; fails: {', '.join(fails)}"
+        why += f"; not performed by this module: {n_nc} items that need the model"
+        return render_status_line(rs, why)
+
     def _qc_case_set(self) -> dict[str, Any]:
         """Compare the generated set with what the spec declares, independently of the
         block builders: every state x friction (OPE, SUS, EXP), every occasional x friction
@@ -729,6 +1392,8 @@ class LoadCaseSet:
             "extraction_matrix": [{"purpose": a, "cases": [n.get(k, "MISSING " + k) for k in keys], "basis": c}
                                   for a, keys, c in self.matrix_rows()],
             "qc": self.qc, "findings": self.findings,
+            "result_status": self.result_status, "checks": self.checks,
+            **({"project_basis_applied": self.basis_applied} if self.basis is not None else {}),
         }, indent=2)
 
     def matrix_rows(self) -> list[tuple[str, list[str], str]]:
@@ -840,9 +1505,29 @@ EXAMPLE_SPEC: dict[str, Any] = {
 }
 
 
+def render_basis_block(s: LoadCaseSet) -> str:
+    """Section 1 Basis: every ASSUMED item first (the record's and the generator's), then the
+    record (shared render_basis_section). Empty when there is neither a record nor an ASSUMED item."""
+    gen = [{"item": x[len("ASSUMED: "):].rstrip("."), "note": "generator default"}
+           for x in s.findings if x.startswith("ASSUMED: ")]
+    heading = "### 1 Basis"
+    if s.basis is not None:
+        applied = dict(s.basis_applied, assumptions=s.basis_applied["assumptions"] + gen)
+        return render_basis_section(applied, s.basis, heading=heading)
+    if not gen:
+        return ""
+    lines = [heading, "", "**ASSUMED - confirm before issue:**"]
+    lines += [f"- {a['item']}; note: {a['note']}" for a in gen]
+    lines += ["", "No project basis record was given; code, edition and states are the spec's."]
+    return "\n".join(lines) + "\n"
+
+
 def render_report(s: LoadCaseSet) -> str:
+    basis = render_basis_block(s)
     parts = [
-        f"## Load case set - {s.code} {s.edition}\n",
+        f"## Load case set - {s.code} {s.edition}",
+        s.status_line() + "\n",
+    ] + ([basis] if basis else []) + [
         s.to_markdown(),
         "\n### Report extraction matrix\n",
         s.report_matrix(),
@@ -859,7 +1544,12 @@ def main(argv: list[str] | None = None) -> int:
     src.add_argument("--spec", help="path to a JSON project spec")
     src.add_argument("--example", action="store_true", help="use the built-in example spec")
     ap.add_argument("--format", choices=("md", "csv", "json", "autopipe"), default="md")
+    ap.add_argument("--project-basis", metavar="FILE",
+                    help="pipingtoolset.project-basis/1 record (JSON); fills what the spec leaves out")
     args = ap.parse_args(argv)
+    for stream in (sys.stdout, sys.stderr):
+        if hasattr(stream, "reconfigure"):
+            stream.reconfigure(encoding="utf-8")       # UTF-8 output whatever the console code page
 
     if args.example:
         spec = EXAMPLE_SPEC
@@ -872,7 +1562,7 @@ def main(argv: list[str] | None = None) -> int:
             return 2
 
     try:
-        s = LoadCaseSet(spec).build()
+        s = LoadCaseSet(spec, project_basis_file=args.project_basis).build()
     except SpecError as exc:
         print(f"spec error: {exc}", file=sys.stderr)
         return 2

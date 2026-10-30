@@ -57,7 +57,7 @@ A pre-flight check runs before the engine and stops with exit code 2 on:
 - a missing `standard` label on the check and the sum;
 - `NPS` or `coefficient` at or below zero for SM-23, a non-positive allowable or limit, a `multiplier` at or below zero, an `ownerFactor` outside (0, 1], or any `ownerFactor` other than 1 with `pumpType` vertical-inline; a non-string `table`;
 - an Annex F `pumpType` or `units` outside the allowed values, and missing positions (horizontal) or bores (vertical in-line), or a bore with `Do` not greater than `Di`;
-- a missing or non-positive `annexF` constant for the pump type (the message names the key), or an unknown key inside `annexF`;
+- a missing or non-positive `annexF` constant for the pump type (the message names the key), or an unknown key inside `annexF`; the run stops (exit 2) rather than defaulting it;
 - Annex P geometry that is not positive, `L` not greater than `a`, `t` not less than `R`;
 - a PVP2011 `table` outside 1A, 1B and 2, a `material` outside the listed values, a non-positive thickness or stress, a `row` given together with an interpolation set, an interpolation NPS outside the two rows, an incomplete interpolation set.
 
@@ -88,7 +88,33 @@ The run returns the derived set (the table row times 0.5625 for thickness times 
 python scripts/nozzle_load.py connections.nozzle-load-check --input-file check.json
 ```
 
-with `check.json` holding `"standard": "PVP2011-57100 Table 1A, derived"`, the `applied` set from the piping run, and `allowable` set to the derived values. Quote the log, the warnings and the citation in the calc sheet.
+with `check.json` holding `"standard": "PVP2011-57100 Table 1A, derived"`, the `applied` set from the piping run, and `allowable` set to the derived values. Pass `"derivedSetStatus"` (accepted only on `connections.nozzle-load-check` and `equipment.nozzle-load-sum`; one of the five status words, otherwise exit 2) with the derivation run's `result_status` so the check inherits it. A `standard` label containing "derived" or "PVP2011" without it is manual check required, because the derivation's scope limits are then unknown: a derived set is at least screening, and a derivation that tripped a scope limit makes the check manual check required. Quote the log, the warnings and the citation in the calc sheet.
+
+## Project basis record
+
+Every module accepts the optional top-level object `project_basis` (schema `pipingtoolset.project-basis/1`, fields in [project-basis.md](project-basis.md)) or `--project-basis <file>`; both given and different exits 2 with `project_basis conflicts with --project-basis file`. The record is removed before validation, so it never reaches the engine and fixture parity is untouched. An input absent from the main input is filled from the record; one that is present must agree, otherwise exit 2 with `project_basis.<path> conflicts with input <name>`. This skill's slots:
+
+| Input | Module | Taken from the record |
+|---|---|---|
+| `units` | `connections.api610-annexf` | `units.system` |
+| `designTempF` | `equipment.pvp2011-allowables` | the design state `T_F` (`states[role=design]`, else the first state) |
+| `ownerFactorBasis` | `equipment.pvp2011-allowables` | `owner_practice` document and edition; a label the user already wrote is kept |
+
+Read for the sheet only (`noted` in `project_basis_applied.fields_used`): `units.system`, `equipment_axes.nozzle_axis_map` and `owner_practice`. An SI record stops `connections.nema-sm23` and `equipment.pvp2011-allowables` (USC only, exit 2). The `ownerFactor` value is never taken from the record: read it from the owner document and enter it. A numeric owner item with no `ownerFactor` in the run only adds a warning. The envelope gains `project_basis_applied` (`schema`, `fields_used`, `assumptions` copied verbatim, `conflicts`) and `project_basis_section`, the sheet's section 1 with every ASSUMED item first.
+
+## Result status and checks
+
+The envelope gains `result_status` (the worst word among the checks performed; a `not checked` row is listed but never sets it; an ASSUMED item in the record adds one `ASSUMED inputs` row graded manual check required), `checks` (`name`, `result_status`, `status`, `note`), `result_status_line` (the line under the sheet title) and `banner`. Existing `status` words and values do not change. Severity: manual check required, then pointer only, then screening, then not checked, then calculated. No `unresolved_factor` arises here: every constant is a user input or a named constant of the paper.
+
+| Word | When it appears in this skill |
+|---|---|
+| calculated | the ratio, sum or equation checks on allowables the user entered, with no scope limit tripped |
+| screening | the PVP2011 derivation inside the paper's basis; a check or sum against a set marked with `derivedSetStatus` |
+| manual check required | a PVP2011 scope limit outside the paper's basis or not stated (NPS range, design temperature, material, D/T, character of the loads, eq. (4) on Table 1B or 2, interpolation above the proportional bound); Annex P lambda outside the plotted range; a derived set that reported this word; a derived-set label with no `derivedSetStatus` |
+| pointer only | an owner practice limit recorded in the project basis as a pointer (an item named as a factor, fraction, percent, margin or limit with no numeric value, or a plain-text item with one of those words and no decimal or percent value) while no `ownerFactor` is entered: that check does not run |
+| not checked | SM-23 vendor-sheet combined resultant items; Annex F shaft displacement limits and approval, and the skipped per-component screen of a vertical in-line run without `componentMultiple`; API 560 terminal movements when the standard label names 560; the Annex P acceptance boundary |
+
+`banner` is PASS or FAIL for the pass and fail modules and NA for the `na` modules. PASS is replaced by the status word in capitals under manual check required or pointer only (and under screening with an unresolved factor); FAIL always prints. The sheet repeats the banner and the status line.
 
 ## What the tool does not do
 

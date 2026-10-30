@@ -31,7 +31,7 @@ capacity, ratio or alternative itself.** Every number in a response comes from a
 | `scripts/support_calc.py` | One spec in → envelope, review findings, optimizer, Markdown report, JSON |
 | `scripts/pipe_support/` | Engine: `aisc` (D/E/F/G/H), `weld`, `bolts` (J3/J4), `detailing` (J2 + D1.1 items), `baseplate` (DG1 + ACI 17), `pier`, `assembly` (cascade), `loads` (ASCE 7-22), `optimizer`, `review`, `report` |
 | `scripts/pipe_support/data/aisc_shapes.json` | Index of the 1,506 AISC shapes (AISC Shapes Database v16 + computed L/HSS/Pipe), with attribution; the rows are in four family-group parts under `data/aisc_shapes/` |
-| `scripts/examples/ps-201-caesar.json` | CAESAR II-mode example (SUS/OPE/WIN/EQ, optimizer on) |
+| `scripts/examples/ps-201-caesar.json` | CAESAR II-mode example (SUS/OPE/WIN/EQ, optimizer on); its CSA preset anchor values and one ASSUMED item make it read MANUAL CHECK REQUIRED and exit 3 until confirmed |
 | `scripts/examples/ps-101-factored.json` | Factored-mode example; reproduces the PS-101 PiperSTR report |
 | `references/spec-format.md` | Every spec key |
 | `references/review-protocol.md` | How to review a support, a drawing or a calc package; finding severities |
@@ -39,7 +39,10 @@ capacity, ratio or alternative itself.** Every number in a response comes from a
 
 ## Workflow
 
-1. **Basis interview.** Ask for anything missing. Never default silently.
+1. **Basis interview.** Ask for anything missing. Never default silently. If a project basis
+   record exists (an earlier skill's `project-basis.json`, or a file the user names), pass it
+   with `--project-basis`, ask only for what it lacks and never relabel a field
+   ([record and fill map](references/project-basis.md)).
    - **Configuration**: t-post, multi-tier, cantilever off existing steel, goalpost or trapeze.
      The two CSA presets (`csa-type-1`, `csa-type-2`) are good starting points.
    - **Geometry**: arm projection and elevation, column height, each pipe's offset from the
@@ -61,16 +64,13 @@ capacity, ratio or alternative itself.** Every number in a response comes from a
 3. **Write the spec** (`references/spec-format.md`) to `spec.json` in the working directory and run:
    `python scripts/support_calc.py spec.json --report calc.md --json result.json`.
    Script paths below are relative to this skill's directory. Call them by their full path from wherever the session is working; do not change into the skill folder (in Cowork it is a read-only mount and the working directory is the outputs folder). Write `job.json` and every output file to the working directory, never into the skill folder, so the user can open and download them.
-   - **Exit 0:** every combination passes and there is no critical review finding.
-   - **Exit 3:** not issuable although no limit state fails. Either a critical finding stands
-     (for example pipe moments the model cannot carry), or a validity guard holds a stage at
-     **manual check required**: in ASD, an anchorage stage governed by a wind combination,
-     or one a wind combination could govern under the 1/0.6 treatment, or (factored mode) one
-     whose loads are not declared wind-free with `factored_wind: false`
-     (`references/code-basis.md` item 10). The guard's verdict line reads "NOT ISSUABLE - ASD
-     anchorage governed by wind combination `<id>`: run anchorage in LRFD or resolve the ACI
-     strength-to-ASD factor treatment (code-basis item 10)" and has no PASS banner. Never
-     present exit 3 as a clean pass.
+   - **Exit 0:** every combination passes, there is no critical review finding and the
+     result status is not manual check required or pointer only.
+   - **Exit 3:** not issuable although no limit state fails: a critical finding (pipe
+     moments the model cannot carry), the ASD wind-anchorage guard (`references/code-basis.md`
+     item 10), or a result status of manual check required or pointer only
+     ([outputs](references/spec-format.md#outputs)). The verdict line reads NOT ISSUABLE or
+     the status word, never PASS. Never present exit 3 as a clean pass.
    - **Exit 2:** a limit state fails.
    - **Exit 1:** the spec is defective.
 4. **Review like a checker** (`references/review-protocol.md`). Lead with the verdict and
@@ -85,8 +85,8 @@ capacity, ratio or alternative itself.** Every number in a response comes from a
    Explain *why* each one ranks where it does (weight, field work, stocked sizes), what
    governs it, and what changes in the field (bolted versus welded, fewer families, standard
    plate). If the user wants reserve margin, re-run with `optimize.maxRatio` (for example 0.85).
-6. **Deliver** the Markdown calc report, the JSON, and a short summary: verdict, governing
-   check, top findings, the recommended alternative and why, and what the engineer of
+6. **Deliver** the Markdown calc report, the JSON, and a short summary: verdict, result
+   status, governing check, top findings, the recommended alternative and why, and what the engineer of
    record must still confirm.
 
 ## Rules
@@ -102,19 +102,19 @@ capacity, ratio or alternative itself.** Every number in a response comes from a
 - **Pipe moments.** The parametric assemblies carry pipe forces, not moments. If the
   restraint report has moments, the review raises a critical finding. Say so plainly and
   recommend a frame model, or confirm the restraint is a simple support.
-- **Status words.** A stage, a compliance row and the envelope read *pass*, *fail* or
-  *manual check required*. Report a *manual check required* stage as held, with its
-  reason, never as a pass. The ASD wind-anchorage guard (owner ruling 2026-10-30, pending
-  P.E. confirmation) is the one guard today: recommend the LRFD re-run. In ASD with wind
-  governing the anchorage the optimizer can return no alternative; the search log says why.
+- **Status words.** Stages read *pass*, *fail* or *manual check required*; the envelope adds
+  `result_status` and `checks[]` (calculated, screening, manual check required, pointer only,
+  not checked). Report a held stage or check with its reason, never as a pass. For the ASD
+  wind guard, recommend the LRFD re-run.
 - **Service versus strength.** Soil bearing, overturning and sliding are service-level
   checks. With LRFD and a gravity pier, the envelope runs those checks on the ASD
   combinations automatically. Tell the user.
 - **Known engine behaviour** is listed in `references/code-basis.md`. Mention an item when
   the design is close to a limit in the element it affects.
 - **Preset values are never silent.** Anchor and concrete values taken from a CSA preset
-  are listed in the report's assumptions as not user-supplied. Replace the bond stress with
-  the anchor ESR value before issue.
+  are listed in the report's assumptions as not user-supplied and graded manual check
+  required in one `preset inputs` row, as every ASSUMED item is in one `ASSUMED inputs` row;
+  either holds the PASS banner. Replace the bond stress with the anchor ESR value before issue.
 
 ## With the Engineering Data connector
 

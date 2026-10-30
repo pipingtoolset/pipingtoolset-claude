@@ -602,7 +602,7 @@ class CommandLine(unittest.TestCase):
         r = self._run("connections.flange-equivalent-pressure", "--input", json.dumps(case["input"]))
         self.assertEqual(r.returncode, 0, r.stderr)
         env = json.loads(r.stdout)
-        self.assertEqual(set(env), {"module", "status", "output", "warnings", "citation", "inputs", "user_supplied"})
+        self.assertEqual(set(env), {"module", "status", "output", "warnings", "citation", "inputs", "user_supplied", "result_status", "checks", "not_checked"})
         self.assertEqual(env["status"], "pass")
         self.assertAlmostEqual(env["output"]["Pe"], 1749.661, delta=1e-3)
         self.assertEqual(env["inputs"], case["input"])
@@ -842,7 +842,7 @@ class SkillContent(unittest.TestCase):
 
     def test_references_exist_and_are_linked(self):
         expected = {"method-ladder.md", "app2-engine.md", "inputs-from-tables.md", "tool-reference.md",
-                    "rejection-checklist.md"}
+                    "rejection-checklist.md", "project-basis.md"}
         self.assertEqual(set(self.refs), expected)
         for name in expected:
             self.assertIn(f"references/{name}", self.text, name)
@@ -905,7 +905,7 @@ def _is_number(x):
 class CodeValues(unittest.TestCase):
     """The optional top-level code_values input, the contract shared by the calculator scripts."""
 
-    ENVELOPE_KEYS = {"module", "status", "output", "warnings", "citation", "inputs", "user_supplied"}
+    ENVELOPE_KEYS = {"module", "status", "output", "warnings", "citation", "inputs", "user_supplied", "result_status", "checks", "not_checked"}
     SCREEN = dict(P=500, F=2000, M_in_lbf=50000, G=6.0, ratedPressure=1975)
     GEOMETRY = dict(gasket_ID=10.0, gasket_OD=11.0, facing="flat", bolt_D=1.0, bolt_tpi=8, nBolts=12)
 

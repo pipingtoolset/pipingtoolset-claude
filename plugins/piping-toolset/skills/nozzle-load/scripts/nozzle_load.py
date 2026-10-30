@@ -30,10 +30,19 @@ it; none has a default. The only standard-derived numbers carried here are the 1
 CLI:
     python nozzle_load.py list
     python nozzle_load.py <module-id> --input '<json>'
-    python nozzle_load.py <module-id> --input-file <path.json>
+    python nozzle_load.py <module-id> --input-file <path.json> [--project-basis <record.json>]
 
-Output is a JSON envelope {module, status, output, warnings, citation, inputs, user_supplied}.
-Exit code 2 on bad input.
+Output is a JSON envelope {module, status, output, warnings, citation, inputs, user_supplied,
+result_status, checks, result_status_line, banner}. Exit code 2 on bad input.
+
+Optional top-level input `project_basis` (or --project-basis <file>): the shared project record
+(schema pipingtoolset.project-basis/1, references/project-basis.md). An input absent from the
+main inputs is filled from it where this skill has a slot (api610-annexf `units`; pvp2011-allowables
+`designTempF` from the design state and the `ownerFactorBasis` label from owner_practice); one that
+is present must agree, otherwise the run exits 2 with "project_basis.<path> conflicts with input
+<name>". The envelope gains `project_basis_applied` and `project_basis_section` (the sheet's
+section 1, ASSUMED items first). The result status words and the banner rule are in the same
+references file; `result_status` and `checks` are added to every envelope and change no existing key.
 
 Optional top-level input `code_values`:
     {"code_values": {"allowable.Fx": {"value": 1000, "unit": "lbf",
@@ -67,9 +76,451 @@ import argparse
 import copy
 import json
 import math
+import re
 import sys
 from decimal import Decimal, ROUND_HALF_UP
 from typing import Any, Callable, Dict, List, Optional, Tuple
+
+
+# BEGIN shared project_basis (do not edit here; source tools/shared/project_basis.py)
+# Optional top-level input "project_basis" (or --project-basis <file>, never both with different
+# content): one project record that every PipingToolset skill reads. An input absent from the main
+# inputs is filled from the record where the skill has a slot; one that is present must agree, or
+# the run stops with "project_basis.<path> conflicts with input <name>". Unknown keys and bad enum
+# words are rejected. Schema and fill map: references/project-basis.md. The only file this block
+# reads is the --project-basis file named on the command line.
+
+PROJECT_BASIS_SCHEMA_ID = "pipingtoolset.project-basis/1"
+_PB_AXIS = ("enum", ("X", "Y", "Z"))
+_PB_SIGNED = ("enum", ("X", "Y", "Z", "+X", "+Y", "+Z", "-X", "-Y", "-Z"))
+_PB_CASE = ("oneof", ("id", ("list", "id")))
+PROJECT_BASIS_SCHEMA = ("obj", {
+    "schema": ("enum", (PROJECT_BASIS_SCHEMA_ID,)),
+    "project": ("obj", {k: "str" for k in ("name", "number", "line", "revision", "calcBy", "date")}, ()),
+    "code": ("obj", {"standard": "str", "edition": "str", "route": "str"}, ()),
+    "service": ("obj", {"fluid_category": ("enum", ("Normal", "Category D", "Category M", "High Pressure")),
+                        "fluid": "str", "corroded": "bool", "cyclic": "bool"}, ()),
+    "owner_practice": ("list", ("obj", {"document": "str", "edition": "str", "items": ("list", (
+        "oneof", ("str", ("obj", {"name": "str", "value": ("oneof", ("num", "str")), "unit": "str",
+                                  "note": "str"}, ("name",)))))}, ("document",))),
+    "materials": ("list", ("obj", {
+        "id": "str", "spec": "str", "grade": "str", "notes": "str",
+        "form": ("enum", ("seamless", "welded", "ERW", "EFW", "SAW", "forged", "cast", "plate", "bar", "other")),
+        "use": ("enum", ("pipe", "fitting", "flange", "bolt", "gasket", "vessel", "nozzle", "support", "other"))},
+        ())),
+    "states": ("list", ("obj", {
+        "key": "str", "name": "str", "T_F": "num", "P_psig": "num", "cycles": "num",
+        "role": ("enum", ("operating", "design", "upset", "startup", "shutdown", "steamout", "installed",
+                          "hydrotest", "pneumatic", "other")),
+        "slot": ("obj", {"T": ("slot", "T"), "P": ("slot", "P"), "D": ("slot", "D")}, ())}, ("key",))),
+    "installation_T_F": "num",
+    "units": ("obj", {"system": ("enum", ("USC", "SI")), "force": "str", "moment": "str", "length": "str",
+                      "temperature": "str", "pressure": "str", "stress": "str"}, ()),
+    "load_case_ids": ("obj", {"software": ("enum", ("CAESAR II", "AutoPIPE")), "version": "str",
+                              "cases": ("obj", {k: _PB_CASE for k in ("SUS", "OPE", "EXP", "OCC", "HYD", "HGR")},
+                                        ())}, ()),
+    "equipment_axes": ("obj", {"global_vertical": ("enum", ("Y", "Z")), "pipe_axis": _PB_AXIS, "notes": "str",
+                               "nozzle_axis_map": ("obj", {k: _PB_SIGNED for k in ("Fx", "Fy", "Fz", "Mx", "My", "Mz")},
+                                                   ())}, ()),
+    "citations": ("list", ("obj", {k: "str" for k in ("ref", "standard", "edition", "table", "row", "column", "note")},
+                           ())),
+    "assumptions": ("list", ("obj", {"item": "str", "status": ("enum", ("ASSUMED", "confirmed")), "note": "str",
+                                     "owner": "str"}, ("item",))),
+}, ("schema",))
+# units.<name> when the record gives only the system
+PROJECT_BASIS_UNIT_DEFAULTS = {
+    "USC": {"force": "lbf", "moment": "ft-lbf", "length": "in", "temperature": "F", "pressure": "psig", "stress": "psi"},
+    "SI": {"force": "N", "moment": "N-m", "length": "mm", "temperature": "C", "pressure": "kPa", "stress": "MPa"},
+}
+_PB_MISSING = object()
+PROJECT_BASIS_SKIP = object()  # a fill_map transform returns this to leave the input alone
+
+
+class ProjectBasisError(ValueError):
+    """A project_basis record that cannot be used; the CLI prints the message and exits 2."""
+
+
+def _pb_is_num(v):
+    return isinstance(v, (int, float)) and not isinstance(v, bool)
+
+
+def _pb_kind_ok(v, kind):
+    if kind == "str":
+        return isinstance(v, str)
+    if kind == "num":
+        return _pb_is_num(v)
+    if kind == "bool":
+        return isinstance(v, bool)
+    return isinstance(v, str) or (isinstance(v, int) and not isinstance(v, bool))  # "id"
+
+
+def _pb_check(v, spec, where, errors):
+    kind = spec if isinstance(spec, str) else spec[0]
+    if kind in ("str", "num", "bool", "id"):
+        if not _pb_kind_ok(v, kind):
+            hint = " (write an edition year or an id in quotes)" if kind == "str" and _pb_is_num(v) else ""
+            label = {"str": "string", "num": "number", "bool": "true or false", "id": "string or whole number"}[kind]
+            errors.append(f"{where}: must be a {label}{hint}")
+    elif kind == "enum":
+        if not isinstance(v, str) or v not in spec[1]:
+            errors.append(f"{where}: {v!r} is not one of {', '.join(spec[1])}")
+    elif kind == "slot":
+        if not (isinstance(v, str) and len(v) > 1 and v[0] == spec[1] and v[1:].isdigit()):
+            errors.append(f"{where}: {v!r} must be {spec[1]} followed by a number, e.g. {spec[1]}1")
+    elif kind == "oneof":
+        if all(_pb_errors(v, s, where) for s in spec[1]):
+            errors.append(f"{where}: {v!r} has the wrong type")
+    elif kind == "list":
+        if not isinstance(v, list):
+            errors.append(f"{where}: must be a list")
+            return
+        for i, item in enumerate(v):
+            _pb_check(item, spec[1], f"{where}[{i}]", errors)
+    elif not isinstance(v, dict):
+        errors.append(f"{where}: must be an object")
+    else:
+        for key in v:
+            if key not in spec[1]:
+                errors.append(f"{where}.{key}: unknown key (valid: {', '.join(spec[1])})")
+        for key in spec[2]:
+            if key not in v:
+                errors.append(f"{where}.{key}: required")
+        for key, item in v.items():
+            if key in spec[1]:
+                _pb_check(item, spec[1][key], f"{where}.{key}", errors)
+
+
+def _pb_errors(v, spec, where):
+    errors = []
+    _pb_check(v, spec, where, errors)
+    return errors
+
+
+def validate_project_basis(obj):
+    """Every problem with a project_basis record, as 'project_basis.<path>: <reason>' strings."""
+    errors = _pb_errors(obj, PROJECT_BASIS_SCHEMA, "project_basis")
+    states = obj.get("states") if isinstance(obj, dict) else None
+    keys = [s.get("key") for s in states if isinstance(s, dict)] if isinstance(states, list) else []
+    for key in sorted({k for k in keys if isinstance(k, str) and keys.count(k) > 1}):
+        errors.append(f"project_basis.states: key {key!r} is used more than once")
+    return errors
+
+
+def _pb_same(a, b):
+    if _pb_is_num(a) and _pb_is_num(b):
+        return abs(float(a) - float(b)) <= 1e-9 * max(abs(float(a)), abs(float(b)))
+    if isinstance(a, dict) and isinstance(b, dict):
+        return set(a) == set(b) and all(_pb_same(a[k], b[k]) for k in a)
+    if isinstance(a, list) and isinstance(b, list):
+        return len(a) == len(b) and all(_pb_same(x, y) for x, y in zip(a, b))
+    return type(a) is type(b) and a == b
+
+
+def _pb_copy(v):
+    if isinstance(v, dict):
+        return {k: _pb_copy(x) for k, x in v.items()}
+    if isinstance(v, list):
+        return [_pb_copy(x) for x in v]
+    return v
+
+
+def load_project_basis(cli_path, top_level_obj):
+    """The validated record from --project-basis <cli_path> and/or the input's project_basis object.
+
+    None when neither is given. Both given with different content raises ProjectBasisError.
+    """
+    from_file = _PB_MISSING
+    if cli_path:
+        import json as _pb_json
+        try:
+            with open(cli_path, encoding="utf-8-sig") as fh:
+                from_file = _pb_json.load(fh)
+        except OSError as exc:
+            raise ProjectBasisError(f"cannot read --project-basis file {cli_path}: {exc.strerror or exc}")
+        except ValueError as exc:
+            raise ProjectBasisError(f"--project-basis file {cli_path} is not valid JSON: {exc}")
+    if from_file is not _PB_MISSING and top_level_obj is not None and not _pb_same(from_file, top_level_obj):
+        raise ProjectBasisError("project_basis conflicts with --project-basis file")
+    basis = top_level_obj if from_file is _PB_MISSING else from_file
+    if basis is None and from_file is _PB_MISSING:
+        return None
+    errors = validate_project_basis(basis)
+    if errors:
+        raise ProjectBasisError(f"project_basis is not a valid {PROJECT_BASIS_SCHEMA_ID} record: " + "; ".join(errors))
+    return _pb_copy(basis)
+
+
+def _pb_steps(path):
+    steps, depth, cur = [], 0, ""
+    for ch in path:
+        depth += (ch == "[") - (ch == "]")
+        if ch == "." and depth == 0:
+            steps.append(cur)
+            cur = ""
+        else:
+            cur += ch
+    return steps + [cur]
+
+
+def basis_get(basis, path, default=None):
+    """Value at a basis path: dotted keys plus list selectors name[2], name[k=v], name[k=v|first]."""
+    node = basis
+    for step in _pb_steps(path):
+        name, _, sel = step.partition("[")
+        if name:
+            if not isinstance(node, dict) or node.get(name) is None:
+                return default
+            node = node[name]
+        if not sel:
+            continue
+        sel = sel[:-1] if sel.endswith("]") else sel
+        if not isinstance(node, list) or not node:
+            return default
+        if sel.isdigit():
+            if int(sel) >= len(node):
+                return default
+            node = node[int(sel)]
+            continue
+        cond, _, fallback = sel.partition("|")
+        key, _, want = cond.partition("=")
+        hits = [x for x in node if isinstance(x, dict) and x.get(key) == want]
+        if not hits and fallback != "first":
+            return default
+        node = hits[0] if hits else node[0]
+    return node
+
+
+def basis_units(basis):
+    """units with the system's defaults filled in ({} without a units.system)."""
+    units = dict((basis or {}).get("units") or {})
+    defaults = PROJECT_BASIS_UNIT_DEFAULTS.get(units.get("system"))
+    return dict(defaults, **units) if defaults else units
+
+
+def basis_assumptions(basis):
+    """The ASSUMED items (a missing status counts as ASSUMED), copied verbatim."""
+    return [_pb_copy(a) for a in (basis or {}).get("assumptions") or [] if a.get("status", "ASSUMED") == "ASSUMED"]
+
+
+def project_basis_conflict(path, name):
+    return ProjectBasisError(f"project_basis.{path} conflicts with input {name}")
+
+
+def _pb_input_get(inputs, name):
+    node = inputs
+    for key in name.split("."):
+        if not isinstance(node, dict) or key not in node:
+            return None
+        node = node[key]
+    return node
+
+
+def _pb_input_put(inputs, name, value):
+    keys = name.split(".")
+    node = inputs
+    for key in keys[:-1]:
+        if node.get(key) is None:
+            node[key] = {}
+        if not isinstance(node[key], dict):
+            raise ProjectBasisError(f"input {key} must be an object to take {name} from project_basis")
+        node = node[key]
+    node[keys[-1]] = value
+
+
+def fill_from_basis(inputs, basis, fill_map):
+    """Fill-or-conflict from the record. fill_map: [(input name (dotted), basis path, transform or None)].
+
+    A basis path that resolves to nothing, or a transform that returns PROJECT_BASIS_SKIP, leaves
+    the input alone; an absent (or null) input is filled; a present one must agree. Returns
+    (effective inputs, applied); (inputs, None) when basis is None. The caller's dict is not modified.
+    """
+    if basis is None:
+        return inputs, None
+    eff = _pb_copy(inputs)
+    used = []
+    for entry in fill_map:
+        name, path, transform = (tuple(entry) + (None,))[:3]
+        value = basis_get(basis, path, _PB_MISSING)
+        if value is _PB_MISSING:
+            continue
+        if transform is not None:
+            value = transform(value)
+            if value is PROJECT_BASIS_SKIP:
+                continue
+        have = _pb_input_get(eff, name)
+        if have is None:
+            _pb_input_put(eff, name, _pb_copy(value))
+            action = "filled"
+        elif _pb_same(have, value):
+            action = "agreed"
+        else:
+            raise project_basis_conflict(path, name)
+        used.append({"input": name, "basis": path, "action": action})
+    return eff, {"schema": PROJECT_BASIS_SCHEMA_ID, "fields_used": used,
+                 "assumptions": basis_assumptions(basis), "conflicts": []}
+
+
+def mark_basis_used(applied, path, name=None, action="noted"):
+    """Record a basis field the skill read for the sheet only (no script input)."""
+    if applied is not None:
+        applied["fields_used"].append({"input": name, "basis": path, "action": action})
+    return applied
+
+
+def _pb_fmt(v):
+    if isinstance(v, bool):
+        return "yes" if v else "no"
+    if isinstance(v, float) and v.is_integer():
+        v = int(v)
+    if isinstance(v, dict):
+        return ", ".join(f"{k}={_pb_fmt(x)}" for k, x in v.items())
+    if isinstance(v, list):
+        return "; ".join(_pb_fmt(x) for x in v)
+    return str(v).replace("|", "/")
+
+
+def render_basis_section(applied, basis, heading=None):
+    """Markdown for calc-sheet section 1 (Basis): the ASSUMED list first, then the record, then fields used."""
+    if basis is None:
+        return ""
+    out = [heading, ""] if heading else []
+    assumed = (applied or {}).get("assumptions", basis_assumptions(basis))
+    if assumed:
+        out.append("**ASSUMED - confirm before issue:**")
+        for a in assumed:
+            extra = "".join(f"; {k}: {_pb_fmt(a[k])}" for k in ("note", "owner") if a.get(k))
+            out.append(f"- {_pb_fmt(a['item'])}{extra}")
+    else:
+        out.append("No ASSUMED items in the project basis record.")
+    out += ["", f"| Basis item ({PROJECT_BASIS_SCHEMA_ID}) | Value |", "|---|---|"]
+    rows = [("Project", basis.get("project")), ("Code", basis.get("code")), ("Service", basis.get("service")),
+            ("Units", basis_units(basis) or None), ("Installation T_F", basis.get("installation_T_F")),
+            ("Equipment axes", basis.get("equipment_axes")), ("Load case ids", basis.get("load_case_ids"))]
+    rows += [(f"State {s['key']}", {k: x for k, x in s.items() if k != "key"}) for s in basis.get("states") or []]
+    rows += [(f"Material {m.get('id', i + 1)}", {k: x for k, x in m.items() if k != "id"})
+             for i, m in enumerate(basis.get("materials") or [])]
+    rows += [(f"Owner practice {p['document']}", {k: x for k, x in p.items() if k != "document"})
+             for p in basis.get("owner_practice") or []]
+    rows += [(f"Citation {c.get('ref', i + 1)}", {k: x for k, x in c.items() if k != "ref"})
+             for i, c in enumerate(basis.get("citations") or [])]
+    out += [f"| {label} | {_pb_fmt(v)} |" for label, v in rows if v not in (None, {}, [])]
+    used = (applied or {}).get("fields_used") or []
+    if used:
+        out += ["", "Taken from the record: " + "; ".join(
+            f"{u['input'] or 'sheet'} <- {u['basis']} ({u['action']})" for u in used)]
+    return "\n".join(out) + "\n"
+# END shared project_basis
+
+
+# BEGIN shared result_status (do not edit here; source tools/shared/result_status.py)
+# Output status taxonomy. Every result envelope carries result_status (envelope_status of its
+# checks: the worst word among the checks the module performs) and checks: [{name, result_status,
+# status (pass/fail/na), note[, unresolved_factor]}]. "not checked" rows never drive the envelope;
+# they are listed, and the envelope reads "not checked" only when every row is. A positive banner
+# word (PASS, OK, ISSUE, DELIVERABLE) is printed only when banner_allowed() is true: never under
+# "manual check required" or "pointer only", nor under "screening" when a reconstructed factor in
+# the chain is unresolved. Any ASSUMED input gives one "ASSUMED inputs" row (assumed_inputs_check)
+# graded manual check required, so an unconfirmed input always holds the banner.
+
+RESULT_STATUS = ("calculated", "screening", "manual check required", "pointer only", "not checked")
+# severity for worst_of (ordering only): manual check required > pointer only > screening > not checked > calculated
+RESULT_STATUS_SEVERITY = {"manual check required": 4, "pointer only": 3, "screening": 2, "not checked": 1,
+                          "calculated": 0}
+CHECK_STATUS = ("pass", "fail", "na")
+ASSUMED_CHECK_NAME = "ASSUMED inputs"
+
+
+def _rs_word(item):
+    word = item.get("result_status") if isinstance(item, dict) else item
+    if word not in RESULT_STATUS_SEVERITY:
+        raise ValueError(f"result_status {word!r} is not one of {', '.join(RESULT_STATUS)}")
+    return word
+
+
+def worst_of(statuses):
+    """The most severe result_status of words or check dicts; 'not checked' for an empty list."""
+    words = [_rs_word(s) for s in statuses]
+    return max(words, key=RESULT_STATUS_SEVERITY.__getitem__) if words else "not checked"
+
+
+def envelope_status(checks):
+    """The envelope word: the most severe word among the checks that are not 'not checked'.
+
+    'not checked' rows (limits the module does not perform) never drive it; when every row is
+    'not checked', or there are none, the envelope reads 'not checked'.
+    """
+    words = [w for w in (_rs_word(c) for c in checks) if w != "not checked"]
+    return worst_of(words) if words else "not checked"
+
+
+def make_check(name, result_status, status=None, note=None, unresolved_factor=False):
+    """One checks[] entry. status is pass/fail/na (None means na); unresolved_factor only with screening."""
+    _rs_word(result_status)
+    status = "na" if status is None else status
+    if status not in CHECK_STATUS:
+        raise ValueError(f"check status {status!r} is not one of {', '.join(CHECK_STATUS)}")
+    if unresolved_factor and result_status != "screening":
+        raise ValueError("unresolved_factor marks a screening check only")
+    check = {"name": name, "result_status": result_status, "status": status, "note": note}
+    if unresolved_factor:
+        check["unresolved_factor"] = True
+    return check
+
+
+def assumed_inputs_check(items):
+    """The one 'ASSUMED inputs' row for every ASSUMED item (strings or {item[, note]} dicts), or None.
+
+    Graded manual check required, so the envelope follows it and no positive banner prints; the
+    note reads 'confirm before issue: <item>; <item>' (duplicates dropped, order kept).
+    """
+    texts = []
+    for it in items or ():
+        text = it.get("item") if isinstance(it, dict) else it
+        text = str(text).strip() if text is not None else ""
+        if text and text not in texts:
+            texts.append(text)
+    if not texts:
+        return None
+    return make_check(ASSUMED_CHECK_NAME, "manual check required", "na",
+                      "confirm before issue: " + "; ".join(texts))
+
+
+def not_performed(checks):
+    """'not performed by this module: a; b' for the 'not checked' rows of checks, '' when there are none."""
+    names = [c["name"] for c in checks if isinstance(c, dict) and c.get("result_status") == "not checked"]
+    return "not performed by this module: " + "; ".join(names) if names else ""
+
+
+def banner_allowed(result_status, unresolved_factor=False):
+    """False for manual check required, pointer only, and screening with an unresolved factor."""
+    word = _rs_word(result_status)
+    if word in ("manual check required", "pointer only"):
+        return False
+    return not (word == "screening" and unresolved_factor)
+
+
+def status_fields(checks):
+    """{result_status: envelope_status, checks} to merge into an envelope (adds keys, changes none)."""
+    checks = list(checks)
+    return {"result_status": envelope_status(checks), "checks": checks}
+
+
+def checks_banner_allowed(checks):
+    """banner_allowed for the envelope word of checks, with any unresolved_factor among them."""
+    checks = list(checks)
+    return banner_allowed(envelope_status(checks), any(c.get("unresolved_factor") for c in checks))
+
+
+def banner_word(ok_word, result_status, unresolved_factor=False):
+    """ok_word (e.g. PASS) when the banner rule allows it, else the result_status in capitals."""
+    return ok_word if banner_allowed(result_status, unresolved_factor) else _rs_word(result_status).upper()
+
+
+def render_status_line(result_status, why):
+    """The one line under every calc-sheet title: 'Result status: <word> - <why>' (ASCII ' - ')."""
+    word = _rs_word(result_status)
+    return f"Result status: {word} - {why}" if why else f"Result status: {word}"
+# END shared result_status
 
 
 # The two CalcResult status words, chosen by truth value. Written as a lookup rather than
@@ -926,6 +1377,8 @@ FIELDS: Dict[str, List[tuple]] = {
         ("applied", "lbf, ft-lbf", True, "Applied loads at the nozzle " + _SET_DESC + ", in the equipment's nozzle axes"),
         ("allowable", "lbf, ft-lbf", True, "Allowables " + _SET_DESC + " read by the user; each must be > 0"),
         ("ownerFactor", "-", False, _OWNER_DESC),
+        ("derivedSetStatus", "text", False, "result_status of the equipment.pvp2011-allowables run the allowable set was derived by "
+                                            "(one of the five words); omit for a set read from a table or datasheet"),
     ],
     "connections.nema-sm23": [
         ("NPS", "in", True, "Nozzle nominal pipe size; must be > 0"),
@@ -957,6 +1410,8 @@ FIELDS: Dict[str, List[tuple]] = {
         ("limits", "same as nozzles", True, "Header limits " + _SET_DESC + " read by the user; each must be > 0"),
         ("multiplier", "-", False, "Factor on every limit for a bay rule (API 661 7.1.10.3: 3); default none (1)"),
         ("ownerFactor", "-", False, _OWNER_DESC),
+        ("derivedSetStatus", "text", False, "result_status of the equipment.pvp2011-allowables run the allowable set was derived by "
+                                            "(one of the five words); omit for a set read from a table or datasheet"),
     ],
     "equipment.api650-annexp-ordinates": [
         ("FR", "force", True, "Radial thrust at the shell mid-surface, signed (Figure P.1)"),
@@ -1248,7 +1703,9 @@ def render_list() -> str:
         lines.append("")
     lines.append("Any input above may instead come from the optional top-level object code_values: "
                  "{name: {value, unit, citation{standard, edition, table, row, column?}, source: connector|user}}; "
-                 "a key inside a load set or block is named with a dot, for example allowable.Fx or annexF.kSigma.")
+                 "a key inside a load set or block is named with a dot, for example allowable.Fx or annexF.kSigma. "
+                 "Any module also takes the optional top-level object project_basis, or --project-basis <file> "
+                 "(schema pipingtoolset.project-basis/1, references/project-basis.md).")
     return "\n".join(lines).rstrip() + "\n"
 
 
@@ -1304,6 +1761,8 @@ def validate(module: str, inputs: Any) -> List[str]:
         _need(0 < owner <= 1, "ownerFactor must be in (0, 1]")
 
     if module in ("connections.nozzle-load-check", "equipment.nozzle-load-sum"):
+        dss = inputs.get("derivedSetStatus")
+        _need(dss is None or dss in RESULT_STATUS, "derivedSetStatus must be one of " + ", ".join(RESULT_STATUS))
         std = inputs.get("standard")
         _need(isinstance(std, str) and std.strip() != "",
               "standard is required: name the table or datasheet the allowables were read from")
@@ -1371,10 +1830,242 @@ def _apply_owner_factor(module: str, inp: Dict[str, Any]) -> Tuple[Dict[str, Any
     return work, note
 
 
-def run_module(module: str, inp: Dict[str, Any]) -> Dict[str, Any]:
+# --------------------------------------------------------------------------- project basis (B8)
+
+# Modules whose inputs are USC only (lbf, ft-lbf, psi, in): an SI project basis stops the run.
+_NL_USC_ONLY = ("connections.nema-sm23", "equipment.pvp2011-allowables")
+# Modules that take ownerFactor (the owner design-stage fraction).
+_NL_OWNER_MODULES = ("connections.nozzle-load-check", "connections.nema-sm23", "connections.api610-annexf",
+                     "equipment.nozzle-load-sum", "equipment.pvp2011-allowables")
+# An owner_practice item whose name carries one of these words is a design-stage limit the run could apply.
+_NL_LIMIT_WORDS = ("factor", "fraction", "percent", "margin", "limit")
+# A plain-text owner_practice item states a value when it carries a decimal number (0.5) or a percent (50 %).
+_NL_TEXT_VALUE = re.compile(r"(\d+\.\d+|\d+(?=\s*%))")
+
+
+def _nl_is_number(v: Any) -> bool:
+    return isinstance(v, (int, float)) and not isinstance(v, bool)
+
+
+def _nl_practice_items(basis: Optional[Dict[str, Any]]) -> List[Tuple[str, str, Any]]:
+    """(document, item name, value) for each limit-type object item of owner_practice."""
+    out: List[Tuple[str, str, Any]] = []
+    for pr in (basis or {}).get("owner_practice") or []:
+        for it in pr.get("items") or []:
+            if isinstance(it, dict) and any(w in it["name"].lower() for w in _NL_LIMIT_WORDS):
+                out.append((pr["document"], it["name"], it.get("value")))
+            elif isinstance(it, str) and any(w in it.lower() for w in _NL_LIMIT_WORDS):
+                # A plain-text item is a pointer unless it states a decimal or percent value.
+                m = _NL_TEXT_VALUE.search(it)
+                out.append((pr["document"], it, float(m.group(1)) if m else None))
+    return out
+
+
+def _nl_owner_label(value: Any) -> Any:
+    """The ownerFactorBasis text from an owner_practice list: 'document edition; ...'."""
+    parts = [(pr["document"] + (" " + pr["edition"] if pr.get("edition") else "")) for pr in value or []]
+    return "; ".join(parts) if parts else PROJECT_BASIS_SKIP
+
+
+def _nl_fill_map(module: str, inp: Dict[str, Any], basis: Dict[str, Any]) -> List[tuple]:
+    """This skill's slots in the project record. An SI record cannot feed a USC-only module."""
+    system = (basis.get("units") or {}).get("system")
+    if system == "SI" and module in _NL_USC_ONLY:
+        raise ProjectBasisError(f"project_basis.units.system is SI but {module} takes USC inputs only "
+                                "(lbf, ft-lbf, psi, in); run it with a USC record")
+    fm: List[tuple] = []
+    if module == "connections.api610-annexf":
+        fm.append(("units", "units.system", None))
+    if module == "equipment.pvp2011-allowables":
+        fm.append(("designTempF", "states[role=design|first].T_F", None))
+        given = inp.get("ownerFactorBasis")
+        keep = isinstance(given, str) and given.strip() != ""
+
+        def label(value: Any) -> Any:
+            # a label the user already wrote is never relabelled and never a conflict
+            return PROJECT_BASIS_SKIP if keep else _nl_owner_label(value)
+
+        fm.append(("ownerFactorBasis", "owner_practice", label))
+    return fm
+
+
+def _nl_apply_basis(module: str, inp: Dict[str, Any], basis: Dict[str, Any]) -> Tuple[Dict[str, Any], Any, List[str]]:
+    """(effective inputs, project_basis_applied, warnings) for a record."""
+    eff, applied = fill_from_basis(inp, basis, _nl_fill_map(module, inp, basis))
+    used = [u["basis"] for u in applied["fields_used"]]
+    if basis_get(basis, "units.system") and "units.system" not in used:
+        mark_basis_used(applied, "units.system")
+    if basis_get(basis, "equipment_axes.nozzle_axis_map"):
+        mark_basis_used(applied, "equipment_axes.nozzle_axis_map")
+    if basis_get(basis, "owner_practice") and "owner_practice" not in used:
+        mark_basis_used(applied, "owner_practice")
+    warnings: List[str] = []
+    if module in _NL_OWNER_MODULES and eff.get("ownerFactor") is None:
+        for doc, name, value in _nl_practice_items(basis):
+            if _nl_is_number(value):
+                warnings.append(f"project_basis owner practice item '{name}' = {value:g} ({doc}) is recorded but no "
+                                "ownerFactor was supplied: this run is against the allowables as entered.")
+    return eff, applied, warnings
+
+
+# --------------------------------------------------------------------------- result status (B9)
+
+
+def _nl_limit(name: str, state: str, note: str) -> Dict[str, Any]:
+    """One applicability limit: inside (calculated, pass), outside (manual check required, fail) or unstated (manual, na)."""
+    if state == "inside":
+        return make_check(name, "calculated", "pass", note)
+    return make_check(name, "manual check required", "fail" if state == "outside" else "na", note)
+
+
+def _nl_pvp_checks(inp: Dict[str, Any], out: Dict[str, Any]) -> List[Dict[str, Any]]:
+    checks = [make_check("derived allowable set (PVP2011-57100 method)", "screening", "na",
+                         "layout-stage estimate by the paper's method; a vendor datasheet value overrides it")]
+    nps = float(inp["NPS"])
+    checks.append(_nl_limit("NPS within the paper's range %g to %g" % (PVP_NPS_MIN, PVP_NPS_MAX),
+                            "inside" if PVP_NPS_MIN <= nps <= PVP_NPS_MAX else "outside", "NPS %g" % nps))
+    temp = inp.get("designTempF")
+    name = "design temperature at or below %g F" % PVP_REF_TEMP_F
+    if temp is None:
+        checks.append(_nl_limit(name, "unstated", "designTempF not stated: the 650 F basis was not evaluated"))
+    else:
+        checks.append(_nl_limit(name, "inside" if temp <= PVP_REF_TEMP_F else "outside",
+                                "design temperature %g F" % temp))
+    mat = inp.get("material")
+    if mat is None:
+        checks.append(_nl_limit("material is killed carbon steel", "unstated", "material not stated"))
+    else:
+        checks.append(_nl_limit("material is killed carbon steel",
+                                "inside" if mat == "killed-carbon-steel" else "outside", "material %s" % mat))
+    name = "D/T at or below %g" % PVP_MAX_D_OVER_T
+    if inp.get("D") is None:
+        checks.append(_nl_limit(name, "unstated", "D not stated: D/T was not evaluated"))
+    else:
+        dt = float(inp["D"]) / float(inp["T"])
+        checks.append(_nl_limit(name, "inside" if dt <= PVP_MAX_D_OVER_T else "outside", "D/T %.1f" % dt))
+    name = "character of the loads stated (loadsPrimary)"
+    if inp.get("loadsPrimary") is None:
+        checks.append(_nl_limit(name, "unstated", "primary or secondary character of the loads not stated"))
+    else:
+        checks.append(_nl_limit(name, "inside", "loadsPrimary %s" % ("true" if inp["loadsPrimary"] else "false")))
+    if float(inp["T"]) < PVP_TABLE_BASIS_THICKNESS[inp["table"]]:
+        name = "thickness below the table basis (eq. 4)"
+        if inp["table"] == "1A":
+            checks.append(_nl_limit(name, "inside", "eq. (4) as the paper writes it, for Table 1A"))
+        else:
+            checks.append(_nl_limit(name, "outside", "eq. (4) applied to the basis of Table %s is the skill's extension, "
+                                    "not the paper's statement" % inp["table"]))
+    if out.get("interpolated"):
+        base, bound = out["base"], out.get("proportionalBound") or {}
+        above = [k for k in COMPONENTS if k in bound and base[k] > bound[k] * (1 + 1e-9)]
+        checks.append(_nl_limit("interpolation between two user-read rows", "outside" if above else "inside",
+                                ("affine value exceeds the proportional bound for " + ", ".join(above)) if above
+                                else "affine value within the proportional bound"))
+    return checks
+
+
+def _nl_checks(module: str, inp: Dict[str, Any], res: Dict[str, Any], basis: Optional[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """checks[] for one run: what was evaluated, and what the module does not check."""
+    out, st = res["output"], res["status"]
+    factor = inp.get("ownerFactor")
+    against = ("against the allowables as entered" if factor is None
+               else "against the allowables factored by ownerFactor %g" % factor)
+    checks: List[Dict[str, Any]] = []
+    if module == "connections.nozzle-load-check":
+        checks.append(make_check("per-component ratios", "calculated", st,
+                                 "six components %s; allowables entered by the user" % against))
+    elif module == "connections.nema-sm23":
+        checks.append(make_check("3*Fr + Mr against a*De", "calculated", st,
+                                 "coefficient entered by the user from the equation of record, %s" % against))
+        checks.append(make_check("combined resultant at the exhaust or largest connection, its component limits, the "
+                                 "vertical-down exhaust allowance and datasheet multipliers", "not checked", None,
+                                 "API 617 E.5, API 611 I.5, API 612 D.5: vendor-sheet items the user confirms"))
+    elif module == "connections.api610-annexf":
+        for c in out["checks"]:
+            checks.append(make_check("%s %s" % (c["id"], c["label"]), "calculated", c["status"],
+                                     "advisory only (F.2 permits exceeding it)" if c["advisory"] else
+                                     "constants entered by the user from the edition of record, %s" % against))
+        if out["pumpType"] == "vertical-inline" and "maxComponentRatio" not in out:
+            checks.append(make_check("F.1.2 a) per-component screen", "not checked", None,
+                                     "annexF.componentMultiple not supplied: the informational screen was skipped"))
+        checks.append(make_check("shaft displacement limits (F.1.1, F.1.2) and the purchaser's approval of loads above "
+                                 "Table 5", "not checked", None, "read by the user; the module compares loads only"))
+    elif module == "equipment.nozzle-load-sum":
+        checks.append(make_check("sum of the nozzle load sets against the limits", "calculated", st,
+                                 "six components %s; limits entered by the user" % against))
+    elif module == "equipment.api650-annexp-ordinates":
+        lam = out["lambda"]
+        inside = ANNEXP_LAMBDA_PLOTTED[0] <= lam <= ANNEXP_LAMBDA_PLOTTED[1]
+        checks.append(make_check("ordinates and opening positions (P.2.7.1)", "calculated", None,
+                                 "YF, YL, YC read from Figures P.4a/P.4b by the user"))
+        checks.append(_nl_limit("lambda within the plotted range of Figures P.4a/P.4b", "inside" if inside else "outside",
+                                "lambda %.4g, plotted range %g to %g"
+                                % (lam, ANNEXP_LAMBDA_PLOTTED[0], ANNEXP_LAMBDA_PLOTTED[1])))
+        checks.append(make_check("acceptance boundary (Figures P.3a/b, P.5a/b) and the stiffness, shell growth and "
+                                 "piping loads of P.2.4 to P.2.6", "not checked", None,
+                                 "plot the ordinates on the printed nomograms"))
+    elif module == "equipment.pvp2011-allowables":
+        checks.extend(_nl_pvp_checks(inp, out))
+    if module in ("connections.nozzle-load-check", "equipment.nozzle-load-sum") and inp.get("derivedSetStatus") is not None:
+        word = worst_of(["screening", inp["derivedSetStatus"]])
+        checks.append(make_check("allowable set derived by equipment.pvp2011-allowables", word, None,
+                                 "derived set, not a table or datasheet value; the derivation run reported %s"
+                                 % inp["derivedSetStatus"]))
+    if (module in ("connections.nozzle-load-check", "equipment.nozzle-load-sum") and inp.get("derivedSetStatus") is None
+            and re.search(r"derived|pvp2011", str(inp.get("standard")), re.I)):
+        checks.append(make_check("allowable set derived by equipment.pvp2011-allowables", "manual check required", None,
+                                 "the standard label names a derived set but derivedSetStatus was not supplied, so "
+                                 "the derivation's scope limits are unknown; pass the derivation run's result_status"))
+    if module == "connections.nozzle-load-check" and re.search(r"\b560\b", str(inp.get("standard"))):
+        checks.append(make_check("heater terminal movements (API 560 section 9.2)", "not checked", None,
+                                 "the module compares forces and moments only; list allowable and calculated movements"))
+    pointers = [(d, n, v) for d, n, v in _nl_practice_items(basis) if not _nl_is_number(v)]
+    if pointers and module in _NL_OWNER_MODULES and factor is None:
+        checks.append(make_check("owner practice design-stage limit", "pointer only", None,
+                                 "; ".join("%s '%s' is recorded as a pointer (%s)" % (d, n, v if v else "no value")
+                                           for d, n, v in pointers)
+                                 + "; no ownerFactor was supplied, so that check does not run"))
+    assumed = assumed_inputs_check(basis_assumptions(basis) if basis is not None else None)
+    if assumed is not None:
+        checks.append(assumed)
+    return checks
+
+
+def _nl_status_why(checks: List[Dict[str, Any]], word: str) -> str:
+    notes = [c["note"] for c in checks if c["result_status"] == word and c.get("note")]
+    why = "; ".join(notes) if notes else "every check evaluated"
+    limits = not_performed(checks)
+    return why + ("; " + limits if word == "calculated" and limits else "")
+
+
+def _nl_result_fields(module: str, inp: Dict[str, Any], res: Dict[str, Any], basis: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+    """The B9 envelope keys: result_status, checks, result_status_line, banner."""
+    checks = _nl_checks(module, inp, res, basis)
+    fields = status_fields(checks)
+    word = fields["result_status"]
+    fields["result_status_line"] = render_status_line(word, _nl_status_why(checks, word))
+    if res["status"] == "pass":
+        fields["banner"] = banner_word("PASS", word, any(c.get("unresolved_factor") for c in checks))
+    else:
+        fields["banner"] = {"fail": "FAIL"}.get(res["status"], "NA")
+    return fields
+
+
+def run_module(module: str, inp: Dict[str, Any], project_basis_path: Optional[str] = None) -> Dict[str, Any]:
+    basis = None
+    if isinstance(inp, dict):
+        inp = dict(inp)
+        basis = load_project_basis(project_basis_path, inp.pop("project_basis", None))
+    elif project_basis_path:
+        basis = load_project_basis(project_basis_path, None)
+    basis_warnings: List[str] = []
+    applied = None
+    if basis is not None and module in REGISTRY and isinstance(inp, dict):
+        inp, applied, basis_warnings = _nl_apply_basis(module, inp, basis)
     inp, provenance, cv_notes = apply_code_values(inp, module, _cv_fields(module, _cv_units_input(inp)))
-    pre_warnings = cv_notes + validate(module, inp)
+    pre_warnings = basis_warnings + cv_notes + validate(module, inp)
     work: Dict[str, Any] = dict(inp)
+    work.pop("derivedSetStatus", None)
     notes: List[str] = []
     if module in OWNER_SCALED and inp.get("ownerFactor") is not None:
         work, note = _apply_owner_factor(module, work)
@@ -1403,6 +2094,10 @@ def run_module(module: str, inp: Dict[str, Any]) -> Dict[str, Any]:
     }
     if provenance is not None:
         envelope["code_value_provenance"] = provenance
+    if applied is not None:
+        envelope["project_basis_applied"] = applied
+        envelope["project_basis_section"] = render_basis_section(applied, basis, "## 1. Basis")
+    envelope.update(_nl_result_fields(module, inp, res, basis))
     return envelope
 
 
@@ -1422,6 +2117,8 @@ def main(argv: Optional[List[str]] = None) -> int:
     ap.add_argument("module", help="module id, or `list`")
     ap.add_argument("--input", help="inline JSON object")
     ap.add_argument("--input-file", help="path to a JSON file")
+    ap.add_argument("--project-basis", help="path to a pipingtoolset.project-basis/1 JSON record "
+                                            "(or give the top-level input project_basis; both must agree)")
     try:
         args = ap.parse_args(argv)
     except SystemExit as exc:  # argparse exits 2 itself on usage errors
@@ -1444,7 +2141,7 @@ def main(argv: Optional[List[str]] = None) -> int:
             data = json.loads(raw)
         except json.JSONDecodeError as exc:
             return _fail(f"invalid JSON: {exc}")
-        print(json.dumps(run_module(args.module, data), indent=2))
+        print(json.dumps(run_module(args.module, data, args.project_basis), indent=2))
         return 0
     except (ValueError, OSError) as exc:
         return _fail(str(exc).replace("\n", " "))

@@ -83,3 +83,7 @@ The equation forms changed between editions. `python scripts/stress_screening.py
 | B31.1-2020 and earlier | Appendix D | `f = 6.0·N^-0.2`, cap 1.0 | the exemption uses `K1 = 30·S_A/E_a` from the 2016 edition on |
 | B31.1-2022 | Appendix D; B31J permitted (General Note (b)) | same | |
 | B31.1-2024 | B31J (Appendix D deleted) | same | B31.1 (since 2020) writes its own sustained indices in ¶104.8.1 / Fig. 104.8-1 — I = greater of 0.75·i and 1.00, i from B31J Table 1-1 — so do not import B31.3's General Note (d) rule; 2024 replaces the pressure term with S_lp |
+
+## Owner practice examples
+
+Where PIP PNC00004 is invoked it sets a 16 mm (⅝ in.) sag limit (§3.2.11.1) and never credits cold spring in `S_E` (§3.2.14.3–.4). Open the practice before citing a clause into a sealed calc, and state the code edition beside it.

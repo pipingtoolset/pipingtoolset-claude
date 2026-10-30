@@ -1,7 +1,7 @@
 """CODEX P1-5 (plugin 0.7.2): the ASD wind-anchorage guard.
 
 Owner ruling 2026-10-30, superseding item 6 of the 2026-10-26 P.E. rulings ("documented
-only"); P.E. confirmation pending at PR review. Code-basis item 10: in ASD the ACI 318-19
+only"); P.E. confirmed 2026-10-30 (author, licensed P.E.). Code-basis item 10: in ASD the ACI 318-19
 strength anchor capacity is converted with a fixed 1/1.5 (R17.5.3); under a 0.6W combination
 the implied factor is 1/0.6 = 1.67, so ASD anchorage can be about 10 % unconservative. When
 an ASD anchorage stage's governing combination carries wind, the envelope now holds the stage
@@ -167,8 +167,10 @@ class GuardDoesNotFire(unittest.TestCase):
         self.assertEqual(doc["envelope"]["guards"], [])
         self.assertEqual(doc["envelope"]["status"], "pass")
         code, line = cli(case("LRFD"))
-        self.assertEqual(code, 0)
-        self.assertTrue(line.startswith("PASS - "), line)
+        # the guard does not fire; ps-201's ASSUMED item and CSA preset anchor values still hold the banner
+        self.assertEqual(code, 3)
+        self.assertTrue(line.startswith("MANUAL CHECK REQUIRED - "), line)
+        self.assertNotIn("NOT ISSUABLE", line)
 
     def test_lrfd_still_fails_on_its_ratio(self):
         doc = support_calc.run(case("LRFD", wind=9), optimize=False)
@@ -189,8 +191,9 @@ class GuardDoesNotFire(unittest.TestCase):
         self.assertEqual(doc["envelope"]["guards"], [])
         self.assertFalse([f for f in doc["findings"] if "ASD anchorage" in f["title"]])
         code, line = cli(case("ASD", wind=None))
-        self.assertEqual(code, 0)
-        self.assertTrue(line.startswith("PASS - "), line)
+        self.assertEqual(code, 3)                     # held by the ASSUMED item and the preset values only
+        self.assertTrue(line.startswith("MANUAL CHECK REQUIRED - "), line)
+        self.assertNotIn("NOT ISSUABLE", line)
 
     def test_asd_seismic_governed_anchorage_is_not_guarded(self):
         doc = support_calc.run(case("ASD", wind=1.0, eq=True), optimize=False)

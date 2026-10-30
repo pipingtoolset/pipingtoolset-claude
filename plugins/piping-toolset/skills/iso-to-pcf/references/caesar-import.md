@@ -107,3 +107,9 @@ Set these in CAESAR II after import, and say so at handover:
 - Spring hanger design data
 - Wind and seismic parameters
 - Corrosion allowance and mill tolerance
+
+## Weights on rigids
+
+Valves, flanges, blinds and instruments take `weight` in the PCF's weight unit (lb by default). Without
+one, CAESAR II estimates, and hand-corrected rigid weights are a common review finding. Spot-check one
+rigid's weight in CAESAR II after the first import.
