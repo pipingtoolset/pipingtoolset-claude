@@ -293,7 +293,7 @@ Not automated; account settings, so done by hand.
 | Local validation (§1) | | n/a | n/a | n/a | n/a | n/a | n/a | n/a | | |
 | Claude Code (§2) | | | | | | | | | | |
 | Claude Cowork (§3) | | | | | | | | | | |
-| Codex CLI (§4) | | | | | | | | | | |
+| Codex CLI (§4) | 0.7.2 (cache path `plugins\cache\pipingtoolset\piping-toolset .7.2`), Codex v0.166.0 | PipingToolset | not recorded | yes (`pressure_design.py` run, Python 3.14.7) | t 0.13650, tm 0.19900, 0.280 adequate; P/(S·E) 0.0419, result_grade calculated | yes (named Appendix A Table A-1, no value) | pass: LRFD, governing UR 0.888 arm-to-column weld, optimizer ran; preset values flagged "NOT from the user - confirm" | not run: `codex mcp list / add / login` were typed into the Codex prompt (codex not on PATH in its shell); run them in PowerShell; API lookup not reached (usage limit) | 2026-10-30 | Install line: "Installed PipingToolset plugin. No additional app authentication is required" - NO sign-in prompt, B3 verified. Models gpt-5.6-terra / luna. Transcript: founder Downloads `#CODEX RUNBOOK PIPINGTOOLSET 10-29-26.txt` |
 | ChatGPT desktop app (§5) | | | | | | | | | | |
 | OpenAI portal dry run (§6) | | | | | | | | n/a | | category offered: |
 | Cursor / Copilot CLI (§7) | | | | | | | | n/a | | |
