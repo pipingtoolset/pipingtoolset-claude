@@ -8,6 +8,13 @@ keep a defect until the plugin is updated, so each such entry names the skill, t
 affected inputs and the release that fixed it. GitHub Releases carry the same
 label and are the recall channel.
 
+## [0.8.1] — 2026-10-30
+
+Documentation only; no script, number or test contract changes.
+
+- **nozzle-load: connector reference corrected from the first live lookups.** `references/tool-reference.md` now states the row identifiers the server actually lists: the API 610 `nozzle` key is a printed row label (for example “Each top nozzle”), never “suction” or “discharge”; `line` is part of every listed key; API 660 `flangeClass` is a string; API 560 keys are `table`, `sizeNps`, `component` (Tubes or Manifolds), `orientation` and `line`. The API 661 header-sum limit (7.1.10.2) is not a served row, so the `limits` slot is read from the copy. A guessed label returns “No row matches that key” and the instruction is `list_keys`, not another guess.
+- **Runbook.** The Codex CLI connector route was exercised 2026-10-30 (`codex mcp add`, `codex mcp login`); the Codex row of `tests/e2e/HOSTS-CHECKLIST.md` records it.
+
 ## [0.8.0] — 2026-10-30
 
 One project basis record consumed by all seven skills (CODEX developer priority 2, workstream B8) and one output status taxonomy with a banner rule (priority 3, workstream B9). Computed numbers for the same inputs are unchanged from 0.7.2; the fixture parity suite is green; result keys are added, never changed. Owner ruling 2026-10-30: unconfirmed inputs (ASSUMED basis items, pipe-support preset values) hold the PASS banner until confirmed. **P.E. confirmation 2026-10-30 (the author, a licensed P.E.):** the four pipe-support ASD wind-guard points of code-basis item 10, the B31.1 / B31.9 0.385 pack-rule stop in pressure-design, and the HYD friction-multiplier note in load-case-builder are confirmed; the "pending" wording from 0.7.2 is replaced in the references, scripts and tests.
