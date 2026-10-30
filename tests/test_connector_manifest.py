@@ -114,12 +114,26 @@ def readme_section(title):
     return rest[:nxt.start()] if nxt else rest
 
 
-def top_changelog_entry():
+def changelog_entries():
+    """[(version, entry text)] in file order."""
     text = read(CHANGELOG)
     heads = list(re.finditer(r"^## \[(\d+\.\d+\.\d+)\][^\n]*$", text, re.MULTILINE))
-    first = heads[0]
-    end = heads[1].start() if len(heads) > 1 else len(text)
-    return first.group(1), text[first.start():end]
+    out = []
+    for i, h in enumerate(heads):
+        end = heads[i + 1].start() if i + 1 < len(heads) else len(text)
+        out.append((h.group(1), text[h.start():end]))
+    return out
+
+
+def top_changelog_entry():
+    return changelog_entries()[0]
+
+
+def changelog_entry(version):
+    for v, entry in changelog_entries():
+        if v == version:
+            return entry
+    raise AssertionError(f"no CHANGELOG entry for {version}")
 
 
 class ConnectorDeclarations(unittest.TestCase):
@@ -431,8 +445,12 @@ class ReadmeAndChangelog(unittest.TestCase):
         self.assertRegex(window, r"(?i)connector")
 
     def test_changelog_top_entry_is_this_version(self):
-        version, entry = top_changelog_entry()
+        version, _entry = top_changelog_entry()
         self.assertEqual(version, self.version)
+
+    def test_changelog_records_the_codex_declaration_change(self):
+        # 0.7.1 removed the Agent Plugins declaration so Codex has nothing to sign in to at install.
+        entry = changelog_entry("0.7.1")
         for needle in (".mcp.json", "Codex", "sign-in", "connector"):
             self.assertIn(needle, entry, needle)
 
