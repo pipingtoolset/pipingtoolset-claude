@@ -15,14 +15,14 @@ explains them; it does not change a ratio or a verdict.
 
 from __future__ import annotations
 
-import re
 from typing import Dict, List, Optional
 
 from . import detailing as DT
 from .aisc import find_shape
 from .bolts import bolt_group, end_plate_no_prying
 from .common import round_half_up
-from .loads import ASD as ASD_TABLE
+from .loads import asd_wind_combo  # noqa: F401  (re-exported: review.asd_wind_combo)
+from .loads import asd_wind_could_govern, asd_wind_margin
 
 SEV_ORDER = {"critical": 0, "major": 1, "minor": 2, "info": 3}
 
@@ -107,7 +107,7 @@ def review(design: dict, env: dict, spec: dict, opt: Optional[dict] = None) -> L
     # 4. checks the parametric engine does not make
     out += _pipe_moments(spec)
     out += _j10_flange_weld_note(env)
-    out += _asd_wind_anchorage(design, env)
+    out += _asd_wind_anchorage(design, env, spec)
     for f in DT.constructability({**design, "connections": spec.get("fabrication")}):
         out.append(_f("minor" if f["severity"] != "violation" else "major",
                       f"Detailing - {f['severity']}", f["message"], f["clause"]))
@@ -191,43 +191,80 @@ def _j10_flange_weld_note(env: dict) -> List[dict]:
     return out
 
 
-_COMBO_ID = re.compile(r"^ASD-(.+?)(?:[+-](?:T)?|\+T)?(?: \(service\))?$")
+def _asd_wind_anchorage(design: dict, env: dict, spec: Optional[dict] = None) -> List[dict]:
+    """Code-basis item 10. In ASD the ACI 318-19 strength-design anchor capacity is converted
+    with a fixed 1/1.5 (R17.5.3). Where a 0.6W combination governs anchorage the implied factor
+    is 1/0.6 = 1.67, so ASD anchorage can be about 10 % unconservative there.
 
+    Owner ruling 2026-10-30 (supersedes item 6 of the 2026-10-26 P.E. rulings, "documented
+    only"; P.E. confirmation pending at PR review): the envelope's automatic guard
+    (optimizer.envelope) now holds such a stage at "manual check required" and the verdict at
+    NOT ISSUABLE. This major finding is kept as defence in depth: it applies the same
+    predicates (loads.asd_wind_combo on the governing combination, loads.asd_wind_could_govern
+    on the stage's recorded worst wind row) independently of the guard, and says whether the
+    guard was applied.
 
-def asd_wind_combo(combo_id: str) -> bool:
-    """True when an envelope combination id names an ASD combination that carries wind.
-
-    Ids are built by loads.combinations as "<method>-<cid>[+|-][+T]", e.g. "ASD-5a+",
-    "ASD-7a-+T"; the cid is looked up in the ASD table so this never depends on the clause text."""
-    m = _COMBO_ID.match(str(combo_id or ""))
-    if not m:
-        return False
-    tag = m.group(1)
-    for cid, _clause, fac in ASD_TABLE:
-        if tag == cid or (tag.startswith(cid) and tag[len(cid):len(cid) + 1] in ("+", "-")):
-            return "W" in fac
-    return False
-
-
-def _asd_wind_anchorage(design: dict, env: dict) -> List[dict]:
-    """P.E. ruling 2026-10-26 (code-basis item 10, deliberately not changed in the engine): in
-    ASD the ACI 318-19 strength-design anchor capacity is converted with a fixed 1/1.5
-    (R17.5.3). Where a 0.6W combination governs anchorage the implied factor is 1/0.6 = 1.67,
-    so ASD anchorage can be about 10 % unconservative there. Recommend LRFD."""
+    Factored mode ("as entered") has no combination ids: unless the spec declares
+    factored_wind: false the guard holds the stage, and this reviewer raises a major finding;
+    with the declaration it raises an info finding naming the engineer's declaration."""
     out = []
+    spec = spec or {}
+    if design.get("method") != "ASD":
+        return out
     for st in env["stages"]:
         if st.get("component") != "anchorage":
             continue
         combo = str(st.get("combo") or "")
-        if not asd_wind_combo(combo):
+        g = st.get("asdWindGuard")
+        if g:
+            guard_txt = (f"Guard applied: stage status '{st['status']}' (engine status "
+                         f"'{g.get('engineStatus', st['status'])}'), verdict NOT ISSUABLE, and the optimizer "
+                         "does not rank this design as passing (owner ruling 2026-10-30, superseding the "
+                         "2026-10-26 'documented only' ruling).")
+        else:
+            guard_txt = (f"Guard NOT applied to this envelope (stage status '{st['status']}'): treat the "
+                         "anchorage as manual check required; do not issue on this result.")
+        if combo == "as entered":
+            fw = spec.get("factored_wind")
+            if fw is False:
+                out.append(_f("info", "ASD anchorage on factored loads declared wind-free",
+                              f"{st['stage']}: {st['governing']} = {st['ratio']} on loads entered as factored, "
+                              "declared to carry no wind term (factored_wind: false), so the ASD wind-anchorage "
+                              "guard was not applied. The declaration is the engineer's; confirm it against "
+                              "the load source before issue.",
+                              "code-basis item 10; ACI 318-19 R17.5.3"))
+                continue
+            what = ("declared to carry wind (factored_wind: true)" if fw is True
+                    else "with no factored_wind declaration, so whether they carry a 0.6W term is unknown")
+            out.append(_f("major", "ASD anchorage on factored loads - wind content " +
+                          ("declared" if fw is True else "not declared"),
+                          f"{st['stage']}: {st['governing']} = {st['ratio']} on loads entered as factored, {what}. "
+                          "Under a 0.6W term the fixed 1/1.5 ACI strength-to-ASD conversion (R17.5.3) implies "
+                          f"1/0.6 = 1.67, so this row can be about 10 % unconservative. {guard_txt}",
+                          "code-basis item 10; ACI 318-19 R17.5.3",
+                          "re-run with method LRFD, or in CAESAR II mode, or set factored_wind: false if "
+                          "the entered loads carry no wind"))
             continue
+        w = st.get("asdWind")
+        near = (not asd_wind_combo(combo) and bool(w) and asd_wind_combo(w.get("combo"))
+                and asd_wind_could_govern(w.get("ratio"), st.get("ratio")))
+        if not asd_wind_combo(combo) and not near:
+            continue
+        if near:
+            row = (f"{st['stage']}: {st['governing']} = {st['ratio']} under {combo} governs, but wind combination "
+                   f"{w['combo']} gives {w['governing']} = {w['ratio']}, and {w['ratio']} x "
+                   f"{round_half_up(asd_wind_margin(), 4)} ((1/0.6)/1.5) reaches the governing ratio, so the "
+                   "wind combination could govern under the 1/0.6 treatment.")
+        else:
+            row = f"{st['stage']}: {st['governing']} = {st['ratio']} under {combo}."
         out.append(_f("major", "ASD anchorage governed by a wind combination",
-                      f"{st['stage']}: {st['governing']} = {st['ratio']} under {combo}. The engine converts the "
+                      f"{row} The engine converts the "
                       "ACI 318-19 strength capacity to allowable with a fixed 1/1.5 (R17.5.3); a 0.6W ASD "
                       "combination implies 1/0.6 = 1.67, so this row can be about 10 % unconservative. "
+                      f"{guard_txt} "
                       "Run the anchorage in LRFD (ACI 318-19 Ch. 17 is strength design) or check the "
                       "wind-governed anchors by hand with the 0.6W / 1.0W pairing.",
-                      "ACI 318-19 R17.5.3; ASCE 7-22 2.4.1",
+                      "ACI 318-19 R17.5.3; ASCE 7-22 2.4.1; code-basis item 10",
                       "re-run with method LRFD for the anchorage verdict"))
     return out
 

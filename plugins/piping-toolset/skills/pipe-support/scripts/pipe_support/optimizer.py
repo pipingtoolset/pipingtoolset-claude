@@ -9,6 +9,18 @@ the worst ratio per stage is kept with the combination that produced it. With LR
 pier that is not anchored into existing concrete is checked at SERVICE level (ASD
 combinations), because soil bearing, overturning and sliding are allowable-stress checks.
 
+ASD wind-anchorage guard (code-basis item 10; owner ruling 2026-10-30, superseding item 6 of
+the 2026-10-26 P.E. rulings, P.E. confirmation pending at PR review): when the design method
+is ASD and an anchorage stage's governing combination carries wind (loads.asd_wind_combo),
+or a wind combination's anchorage ratio raised by the 1/0.6-over-1.5 margin reaches the
+governing ratio (loads.asd_wind_could_govern), or the loads are factored "as entered" and the
+spec does not declare them wind-free (factored_wind: false), the stage status becomes
+"manual check required" instead of "pass" and the envelope status cannot be "pass". The engine ratio is kept unchanged (it is the fixed 1/1.5 conversion of
+ACI R17.5.3); the guard is a status, not a re-factored number. Every alternative the
+optimizer ranks, and the as-drawn seed, go through envelope(), so the same guard applies to
+them: a guarded stage is not "ok" for the anchor tuner and a guarded envelope is not "pass"
+for the final re-check, so a wind-governed ASD anchorage design is never ranked as passing.
+
 Search (per family, lightest first): arm shape, column shape, then the smallest standard
 fillet, base plate thickness and anchor diameter that pass. Screening uses the governing
 combinations only; every finalist is re-run against ALL combinations before it is shown.
@@ -31,6 +43,91 @@ from .assembly import analyze_assembly
 from .common import InputError, round_half_up
 
 STEEL_LB_PER_IN3 = 0.2836
+
+# Output-status word for a stage or envelope a validity guard holds (CODEX taxonomy).
+MANUAL_CHECK = "manual check required"
+
+
+FACTORED_COMBO = "as entered"            # the one demand-set id of factored mode
+
+
+def asd_wind_guard_text(combo: str) -> str:
+    """The verdict text the ASD wind-anchorage guard prints (code-basis item 10)."""
+    return (f"NOT ISSUABLE - ASD anchorage governed by wind combination {combo}: run anchorage in LRFD "
+            "or resolve the ACI strength-to-ASD factor treatment (code-basis item 10)")
+
+
+def asd_factored_guard_text() -> str:
+    """Verdict text when ASD anchorage runs on factored loads whose wind content is undeclared."""
+    return ("NOT ISSUABLE - ASD anchorage on factored loads with undeclared wind content: set "
+            "factored_wind in the spec, run anchorage in LRFD or resolve the ACI strength-to-ASD "
+            "factor treatment (code-basis item 10)")
+
+
+# Guard triggers (the "trigger" key of a guard), code-basis item 10.
+TRIGGERS = {
+    "governing": "the governing combination carries wind",
+    "near-governing": "a wind combination's ratio x (1/0.6)/1.5 reaches the governing non-wind ratio",
+    "factored-declared": "factored loads declared to carry wind (factored_wind: true)",
+    "factored-undeclared": "factored loads whose wind content is not declared (factored_wind absent)",
+}
+
+
+def _asd_wind_guard(design: dict, stages: List[dict], spec: Optional[dict] = None,
+                    wind_rows: Optional[Dict[str, dict]] = None) -> List[dict]:
+    """Apply the ASD wind-anchorage guard to the enveloped stages in place; return the guards.
+
+    A "pass" anchorage stage the guard holds becomes MANUAL_CHECK; a "fail" stays "fail" (a
+    failure is the stronger verdict) but still carries the guard. Triggers (TRIGGERS):
+    governing - the stage's governing combination carries wind (loads.asd_wind_combo);
+    near-governing - the worst wind combination for the stage (wind_rows) could govern
+    under the 1/0.6 treatment (loads.asd_wind_could_govern); factored-declared /
+    factored-undeclared - factored mode, unless the spec declares factored_wind: false."""
+    guards: List[dict] = []
+    if design.get("method") != "ASD":
+        return guards
+    spec = spec or {}
+    wind_rows = wind_rows or {}
+    factored = spec.get("_factoredSets") is not None
+    fw = spec.get("factored_wind")
+    for st in stages:
+        if st["component"] != "anchorage" or st["status"] not in ("pass", "fail"):
+            continue
+        w = wind_rows.get(st["stage"])
+        g = {"stage": st["stage"], "check": st["governing"], "ratio": st["ratio"], "combo": st["combo"]}
+        if factored or st["combo"] == FACTORED_COMBO:
+            if fw is False:
+                continue
+            trig = "factored-declared" if fw is True else "factored-undeclared"
+            reason = (asd_wind_guard_text(f"{FACTORED_COMBO} (factored_wind: true)") if fw is True
+                      else asd_factored_guard_text())
+        elif L.asd_wind_combo(st["combo"]):
+            trig, reason = "governing", asd_wind_guard_text(st["combo"])
+        elif w and L.asd_wind_could_govern(w["ratio"], st["ratio"]):
+            trig, reason = "near-governing", asd_wind_guard_text(w["combo"])
+            g = {"stage": st["stage"], "check": w["governing"], "ratio": w["ratio"], "combo": w["combo"],
+                 "stageCheck": st["governing"], "stageRatio": st["ratio"], "stageCombo": st["combo"],
+                 "margin": round_half_up(L.asd_wind_margin(), 4)}
+        else:
+            continue
+        st["engineStatus"] = st["status"]
+        if st["status"] == "pass":
+            st["status"] = MANUAL_CHECK
+        g.update({"status": st["status"], "engineStatus": st["engineStatus"], "trigger": trig,
+                  "basis": TRIGGERS[trig], "reason": reason})
+        st["asdWindGuard"] = g
+        guards.append(g)
+    return guards
+
+
+def _env_status(stages: Sequence[dict]) -> str:
+    """fail > manual check required > pass, over the enveloped stages."""
+    words = {s["status"] for s in stages}
+    if "fail" in words:
+        return "fail"
+    if MANUAL_CHECK in words:
+        return MANUAL_CHECK
+    return "pass"
 
 # Stocked sizes common in pipe-support fabrication (preference list, not a code limit).
 STOCK = {
@@ -106,6 +203,8 @@ def envelope(design: dict, sets: Sequence[dict], spec: dict,
              service_sets: Optional[Sequence[dict]] = None) -> dict:
     """Run the assembly for every combination; keep the worst ratio per stage."""
     per_stage: Dict[str, dict] = {}
+    wind_rows: Dict[str, dict] = {}            # ASD: worst wind combination per anchorage stage
+    asd = design.get("method") == "ASD"
     runs = []
     warnings: List[str] = []
     for s in sets:
@@ -115,6 +214,11 @@ def envelope(design: dict, sets: Sequence[dict], spec: dict,
         for st in res["output"]["stages"]:
             if service_sets is not None and st["component"] == "pier":
                 continue
+            if asd and st["component"] == "anchorage" and L.asd_wind_combo(s["id"]):
+                cw = wind_rows.get(st["stage"])
+                if cw is None or _gt(st["ratio"], cw["ratio"]):
+                    wind_rows[st["stage"]] = {"combo": s["id"], "ratio": st["ratio"],
+                                              "governing": st["governing"], "status": st["status"]}
             cur = per_stage.get(st["stage"])
             if cur is None or _gt(st["ratio"], cur["ratio"]):
                 per_stage[st["stage"]] = {"stage": st["stage"], "component": st["component"],
@@ -140,9 +244,14 @@ def envelope(design: dict, sets: Sequence[dict], spec: dict,
     gov_run = gov["run"] if gov else runs[0][1]
     for st in stages:
         st.pop("run", None)
+    for st in stages:
+        if st["stage"] in wind_rows and not L.asd_wind_combo(st["combo"]):
+            st["asdWind"] = dict(wind_rows[st["stage"]])   # the wind row the reviewer re-checks
+    guards = _asd_wind_guard(design, stages, spec, wind_rows)
     return {"stages": stages,
             "warnings": list(dict.fromkeys(warnings)),
-            "status": "fail" if any(s["status"] == "fail" for s in stages) else "pass",
+            "status": _env_status(stages),
+            "guards": guards,
             "governingRatio": gov["ratio"] if gov else 0.0,
             "governingStage": gov["stage"] if gov else "-",
             "governingCheck": gov["governing"] if gov else "-",
@@ -170,7 +279,8 @@ def _stage_ok(env: dict, component: str, arm_index: Optional[int] = None, limit:
     rows = [s for s in env["stages"] if s["component"] == component]
     if arm_index is not None and component == "arm":
         rows = [s for s in rows if s["stage"].startswith(f"Arm {arm_index + 1} ")]
-    return bool(rows) and all(s["status"] != "fail" and _key(s["ratio"]) <= limit for s in rows)
+    return bool(rows) and all(s["status"] not in ("fail", MANUAL_CHECK) and _key(s["ratio"]) <= limit
+                              for s in rows)
 
 
 def _weld_ok(env: dict, limit: float = 1.0) -> bool:
@@ -257,13 +367,18 @@ def optimize(design: dict, spec: dict) -> dict:
     for (af, arms_ok), (cf, cols_ok) in itertools.product(arm_choices, col_choices):
         pairs = sorted(itertools.product(arms_ok, cols_ok), key=lambda p: _pair_weight(design, *p))
         got = None
+        guarded: List[str] = []
         for arm, col in pairs:                     # lightest pairing whose connections also work
-            got = _complete(design, arm, col, screen, all_sets, spec, limit, has_column)
+            got = _complete(design, arm, col, screen, all_sets, spec, limit, has_column, guarded)
             if got:
                 break
         if not got:
             log.append(f"{af} arm / {cf} column: none of the {len(pairs)} lightest member-passing "
                        "pairings also passes its welds (strength + J2.2b), plate and anchors - dropped.")
+            if guarded:
+                log.append(f"{af} arm / {cf} column: held by the ASD wind-anchorage guard (anchorage governed by "
+                           f"{', '.join(dict.fromkeys(guarded))}; {MANUAL_CHECK}, code-basis item 10) - "
+                           "not ranked as passing; re-run in LRFD.")
             continue
         d, env = got
         candidates.append({"design": d, "envelope": env, "families": (af, cf)})
@@ -274,6 +389,10 @@ def optimize(design: dict, spec: dict) -> dict:
         if env0["status"] == "pass" and _key(env0["governingRatio"]) <= limit and _weld_ok(env0, limit):
             candidates.append({"design": copy.deepcopy(design), "envelope": env0, "families": ("as drawn", ""),
                                "asDrawn": True})
+        elif env0.get("guards"):
+            log.append("As-drawn design not offered: ASD anchorage governed by wind combination "
+                       f"{', '.join(dict.fromkeys(g['combo'] for g in env0['guards']))} "
+                       f"({MANUAL_CHECK}, code-basis item 10).")
     except (InputError, ValueError, ZeroDivisionError):
         pass
     for c in candidates:
@@ -293,8 +412,20 @@ def _pair_weight(design, arm, col):
     return w
 
 
-def _complete(design, arm, col, screen, all_sets, spec, limit, has_column):
-    """Tune fillet, plate and anchors for one arm/column pair; then the full re-check."""
+def _complete(design, arm, col, screen, all_sets, spec, limit, has_column, guarded=None):
+    """Tune fillet, plate and anchors for one arm/column pair; then the full re-check.
+
+    `guarded` (a list) collects the combination ids of any ASD wind-anchorage guard that
+    held the pairing, so the search log can say why it was dropped."""
+    if guarded is None:
+        guarded = []
+
+    def anchors_ok(e):
+        ok = _stage_ok(e, "anchorage", None, limit)
+        if not ok and e.get("guards") and _ratio_ok_ignoring_guard(e, "anchorage", limit):
+            guarded.extend(g["combo"] for g in e["guards"])
+        return ok
+
     d = copy.deepcopy(design)
     for a in d["arms"]:
         a["shape"] = arm
@@ -313,13 +444,23 @@ def _complete(design, arm, col, screen, all_sets, spec, limit, has_column):
             return None
         da, d = tune_list(d, screen, spec, ANCHORS,
                           lambda x, v: x["baseplate"].__setitem__("anchorDiameter", v),
-                          lambda e: _stage_ok(e, "anchorage", None, limit))
+                          anchors_ok)
         if da is None:
             return None
     env = envelope(d, all_sets, spec, _service(spec, d))
     if env["status"] != "pass" or _key(env["governingRatio"]) > limit or not _weld_ok(env, limit):
+        if env["status"] == MANUAL_CHECK:
+            guarded.extend(g["combo"] for g in env["guards"])
         return None
     return d, env
+
+
+def _ratio_ok_ignoring_guard(env: dict, component: str, limit: float) -> bool:
+    """True when a component's rows pass on engine status and ratio alone, i.e. only the
+    ASD wind-anchorage guard holds them (used for the search log, never for ranking)."""
+    rows = [s for s in env["stages"] if s["component"] == component]
+    return bool(rows) and all(s.get("engineStatus", s["status"]) != "fail" and _key(s["ratio"]) <= limit
+                              for s in rows)
 
 
 def _gov_for_pipe(p, spec, method):

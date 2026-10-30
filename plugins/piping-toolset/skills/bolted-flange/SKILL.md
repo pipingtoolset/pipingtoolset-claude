@@ -55,7 +55,7 @@ Run `connections.flange-equivalent-pressure`: Pe = P + 16|M|/(pi G^3) + 4F/(pi G
 - The rating is the B16.5 rating **at design temperature**. Owner practice may require a lower percentage of it. PIP PNC00004 3.2.10 allows the equivalent pressure method but sets no acceptance value; the owner does.
 - The moment is **in-lbf** in the tool (`M_in_lbf`); `M_ft_lbf` is converted. Give exactly one.
 
-If the screen passes with margin, say the joint passes the screen and the detailed analysis is optional unless the owner requires it. If it fails, the detailed analysis follows. **A screen failure is not a joint failure.**
+If Pe is within the rating with margin, say it is within the screen and the detailed analysis is optional unless the owner requires it. If it fails, the detailed analysis follows. **A screen failure is not a joint failure.**
 
 ## Step 3 - Detailed VIII-2 4.16 analysis
 
@@ -66,9 +66,9 @@ Run `aux.app2-flange-integral` for the operating case (design temperature allowa
 - If neither `Fax` nor `Mext` is given the run is pressure-only (Peq = P); the tool warns. Give the loads.
 - Peq also reaches the gasket-seating case (Am includes Wm1/Sb), which is conservative; the seating result moves with the external loads.
 - Supply **Sn**. Without it the 2.5 Sn cap is unchecked and the tool warns.
-- Hub factors F, V, f default to a closed-form series that is a reconstruction, not Code text. For a sealed calc, have the user read F, V, f from the VIII-2 Table 4.16.5 equations or figures and pass `F_override`, `V_override`, `f_override`. The Table 4.16.5 curve-fit option is not shipped (`hubFactorMethod` other than `series` exits 2).
+- Hub factors F, V, f default to a closed-form series that is a reconstruction, not Code text, so the run is graded `screening` (label "screening / reconstructed factors") and carries the banner `SCREENING / RECONSTRUCTED FACTORS`. Only when the user reads F, V, f from the VIII-2 Table 4.16.5 equations or figures and passes all three of `F_override`, `V_override`, `f_override` is it graded `calculated` (a loose flange uses no hub factor and is `calculated`); a partial override stays `screening` and names the factors still on the series. The Table 4.16.5 curve-fit option is not shipped (`hubFactorMethod` other than `series` exits 2).
 - The moment `Mext` is in **ft-lbf** in this module (use `Mext_in_lbf` for in-lbf). The bolt-spacing correction scales the stress moments, not the rigidity moment.
-- "Pass" means the tool's pass rule, not acceptance. A failing result names what failed; report all of it.
+- Relay `report_word`, never the machine `status`. Report all of a failing result. On a `screening` run write no PASS or issue-grade wording: give ratios and "within" or "exceeds", banner first. Status taxonomy: calculated / screening / manual check required / pointer only / not checked. The Step 2 screen is always `screening`.
 
 Equations in engine order, symbols and the loose/integral differences: [references/app2-engine.md](references/app2-engine.md).
 
@@ -100,7 +100,7 @@ python scripts/bolted_flange.py aux.app2-flange-integral --input-file job.json
 | `connections.flange-equivalent-pressure` | Pe, utilization against the rating (the screen) |
 | `aux.app2-flange-integral` | VIII-2 4.16 bolt loads, moments, stresses, rigidity (integral and loose) |
 
-Each call prints `{module, status, output, warnings, citation, inputs, user_supplied}`; exit code 2 means bad input. Fields, outputs, and status meaning: [references/tool-reference.md](references/tool-reference.md).
+Each call prints `{module, status, output, warnings, citation, inputs, user_supplied}`; `--format sheet` prints a markdown block headed by the grade banner instead. Exit code 2 means bad input. Fields, outputs, and status meaning: [references/tool-reference.md](references/tool-reference.md).
 
 ---
 
@@ -126,7 +126,7 @@ Command, Pe, rated pressure, utilization, status, warnings. State: leakage scree
 
 ## 5. Step 3 - Detailed analysis
 Operating and gasket seating cases: Peq, Am vs Ab, moments, SH SR ST and averages vs allowables,
-J, Bsc, hub-factor source (series or override). Both cases, all checks.
+J, Bsc, result grade and banner, hub-factor basis per factor (series or override). Both cases, all checks.
 
 ## 6. Findings and assumptions
 Every warning, ASSUMED item, unchecked cap, method not computed (Step 4), anything that would

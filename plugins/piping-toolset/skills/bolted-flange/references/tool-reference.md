@@ -45,6 +45,8 @@ Outputs, in engine order: Peq, momentTerm, forceTerm, b, H, Hp, Wm1, Wm2, Am, Ab
 
 Equations and symbols: [app2-engine.md](app2-engine.md).
 
+Result-grade keys (added after `governing`; no engine value changes): `result_grade` (`screening` or `calculated`), `grade_label` ("screening / reconstructed factors" or "calculated"), `factor_basis` (`{F, V, f}` each `series`, `override`, or `not used` for a loose flange), `banner`, `grade_note`. Rule: `screening` whenever any hub factor the flange type uses came from the series; `calculated` only when `F_override`, `V_override` and `f_override` were all supplied, or the flange is loose. The banner is also the first entry in `warnings`; a partial override adds an entry naming the factors still on the series. The screen carries `result_grade` `screening` (label "screening (leakage screen, not a stress check)") and a `banner`, always. Taxonomy: calculated / screening / manual check required / pointer only / not checked.
+
 The importable function `app2_flange_integral` falls back to engine default moduli (named `ENGINE_DEFAULT_E_DESIGN` and `ENGINE_DEFAULT_E_AMBIENT` in the script) when E is omitted. They exist only so the ported function reproduces the engine fixtures that omit E. They are not recommended values and not table lines; the command line refuses to run without `Edesign` and `Eambient`.
 
 Compression: pass `Fax` = max(F, 0) to follow VIII-2 4.16.13 (FA is the tensile net-section force only). Omitting both `Fax` and `Mext` gives a pressure-only result (Peq = P) and the tool warns.
@@ -55,7 +57,7 @@ Compression: pass `Fax` = max(F, 0) to follow VIII-2 4.16.13 (FA is the tensile 
 { "module", "status", "output", "warnings", "citation", "inputs", "user_supplied" }
 ```
 
-`user_supplied` lists the inputs present in the call that are code, table or project values the user must be able to cite. When the call carried `code_values`, the envelope also has `code_value_provenance` (below). `status` `na` means a value with no pass/fail. Exit code 2 with a one-line `input error: ...` message means bad input; fix it, never retry with guessed values.
+`status` is the engine's machine word (`pass` / `fail` / `na`) and stays as the fixtures assert it. It is not the report wording: on a `screening` run state the result as "within" or "exceeds" with the ratios, never PASS. The output key `report_word` carries that wording ("within" / "exceeds" for the screen, "tool rule met" / "tool rule not met" for the detailed analysis): relay it, not `status`. `--format sheet` prints a markdown calc-sheet block (banner, grade, factor basis, results, findings) that does this; the default `--format json` prints the envelope. `user_supplied` lists the inputs present in the call that are code, table or project values the user must be able to cite. When the call carried `code_values`, the envelope also has `code_value_provenance` (below). `status` `na` means a value with no pass/fail. Exit code 2 with a one-line `input error: ...` message means bad input; fix it, never retry with guessed values.
 
 ## Pre-flight (before the engine)
 
@@ -75,6 +77,7 @@ Warnings added (quote them in the findings):
 - `M_ft_lbf` converted to in-lbf; compression taken as F = 0 on the screen; compression reducing Peq on the detailed module; no `Fax` or `Mext` given (pressure-only);
 - external loads raising the analysed pressure, and that this is not an Appendix 2 / 4.16 construction;
 - defaults applied (b, boltDia, SnAmbient, rigidityFactor, hubFactorMethod);
+- the result-grade banner (`SCREENING / RECONSTRUCTED FACTORS` or the issue-grade line) as the first finding, and for a partial override the factors still on the series;
 - Sn not supplied (2.5 Sn cap unchecked); hub-factor overrides in use;
 - bolt area inadequate; bolt-spacing correction applied; radial hub clearance not positive; rigidity J above 1; a loose flange reporting zero hub and radial stress.
 

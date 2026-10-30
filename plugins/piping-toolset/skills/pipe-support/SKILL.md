@@ -62,8 +62,15 @@ capacity, ratio or alternative itself.** Every number in a response comes from a
    `python scripts/support_calc.py spec.json --report calc.md --json result.json`.
    Script paths below are relative to this skill's directory. Call them by their full path from wherever the session is working; do not change into the skill folder (in Cowork it is a read-only mount and the working directory is the outputs folder). Write `job.json` and every output file to the working directory, never into the skill folder, so the user can open and download them.
    - **Exit 0:** every combination passes and there is no critical review finding.
-   - **Exit 3:** strength passes but a critical finding stands (for example pipe moments the
-     model cannot carry). The report banner says so; never present it as a clean pass.
+   - **Exit 3:** not issuable although no limit state fails. Either a critical finding stands
+     (for example pipe moments the model cannot carry), or a validity guard holds a stage at
+     **manual check required**: in ASD, an anchorage stage governed by a wind combination,
+     or one a wind combination could govern under the 1/0.6 treatment, or (factored mode) one
+     whose loads are not declared wind-free with `factored_wind: false`
+     (`references/code-basis.md` item 10). The guard's verdict line reads "NOT ISSUABLE - ASD
+     anchorage governed by wind combination `<id>`: run anchorage in LRFD or resolve the ACI
+     strength-to-ASD factor treatment (code-basis item 10)" and has no PASS banner. Never
+     present exit 3 as a clean pass.
    - **Exit 2:** a limit state fails.
    - **Exit 1:** the spec is defective.
 4. **Review like a checker** (`references/review-protocol.md`). Lead with the verdict and
@@ -73,7 +80,8 @@ capacity, ratio or alternative itself.** Every number in a response comes from a
    information.
 5. **Optimise.** This works in CAESAR II mode and in factored mode. Present the ranked
    alternatives table from the run, not a list you made up. Every alternative passes every
-   combination and the weld base-metal (J4) and column-flange (J10.1) checks.
+   combination and the weld base-metal (J4) and column-flange (J10.1) checks, and none has an
+   anchorage stage held by the ASD wind guard.
    Explain *why* each one ranks where it does (weight, field work, stocked sizes), what
    governs it, and what changes in the field (bolted versus welded, fewer families, standard
    plate). If the user wants reserve margin, re-run with `optimize.maxRatio` (for example 0.85).
@@ -94,6 +102,11 @@ capacity, ratio or alternative itself.** Every number in a response comes from a
 - **Pipe moments.** The parametric assemblies carry pipe forces, not moments. If the
   restraint report has moments, the review raises a critical finding. Say so plainly and
   recommend a frame model, or confirm the restraint is a simple support.
+- **Status words.** A stage, a compliance row and the envelope read *pass*, *fail* or
+  *manual check required*. Report a *manual check required* stage as held, with its
+  reason, never as a pass. The ASD wind-anchorage guard (owner ruling 2026-10-30, pending
+  P.E. confirmation) is the one guard today: recommend the LRFD re-run. In ASD with wind
+  governing the anchorage the optimizer can return no alternative; the search log says why.
 - **Service versus strength.** Soil bearing, overturning and sliding are service-level
   checks. With LRFD and a gravity pier, the envelope runs those checks on the ASD
   combinations automatically. Tell the user.

@@ -61,6 +61,11 @@ def run(module: str, inputs: dict) -> dict:
     return bf.REGISTRY[module](dict(inputs))
 
 
+def engine_numbers(output: dict) -> dict:
+    """The output without the result-grade keys (those are added keys; every engine value stays)."""
+    return {k: v for k, v in output.items() if k not in bf.GRADE_KEYS}
+
+
 class Rounding(unittest.TestCase):
 
     def test_half_up_on_exact_decimal_halves(self):
@@ -410,7 +415,9 @@ class HubFactorOverrides(unittest.TestCase):
         s = self._series()
         base = run("aux.app2-flange-integral", self.CASE)
         over = run("aux.app2-flange-integral", dict(self.CASE, F_override=s["F"], V_override=s["V"], f_override=s["f"]))
-        self.assertEqual(over["output"], base["output"])
+        self.assertEqual(engine_numbers(over["output"]), engine_numbers(base["output"]))
+        self.assertEqual(over["output"]["result_grade"], "calculated")
+        self.assertEqual(base["output"]["result_grade"], "screening")
         self.assertEqual(over["status"], base["status"])
         self.assertEqual(parity.run_case(lambda i: run("aux.app2-flange-integral", i),
                                          dict(parity.load("aux.app2-flange-integral")["cases"][0],
@@ -420,7 +427,8 @@ class HubFactorOverrides(unittest.TestCase):
         s = self._series()
         base = run("aux.app2-flange-integral", self.CASE)["output"]
         one = run("aux.app2-flange-integral", dict(self.CASE, F_override=s["F"]))["output"]
-        self.assertEqual(one, base)
+        self.assertEqual(engine_numbers(one), engine_numbers(base))
+        self.assertEqual(one["factor_basis"], {"F": "override", "V": "series", "f": "series"})
         moved = run("aux.app2-flange-integral", dict(self.CASE, F_override=s["F"] * 1.2))["output"]
         self.assertAlmostEqual(moved["F"], round(s["F"] * 1.2, 4), delta=1e-4)
         self.assertNotEqual(moved["e"], base["e"])
@@ -439,7 +447,7 @@ class HubFactorOverrides(unittest.TestCase):
 
     def test_no_override_means_no_override_warning(self):
         res = run("aux.app2-flange-integral", self.CASE)
-        self.assertFalse(any("override" in w for w in res["warnings"]))
+        self.assertFalse(any("override(s) in use" in w for w in res["warnings"]))
 
 
 class HubFactorMethods(unittest.TestCase):

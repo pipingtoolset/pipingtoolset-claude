@@ -8,6 +8,61 @@ keep a defect until the plugin is updated, so each such entry names the skill, t
 affected inputs and the release that fixed it. GitHub Releases carry the same
 label and are the recall channel.
 
+## [0.7.2] — 2026-10-30
+
+Executable validity gates and honest result grades in three skills (CODEX review findings P1-3, P1-4 and P1-5, 2026-10-29). For inputs inside every gate the computed numbers are unchanged from 0.7.1; the fixture parity suite is green. Owner and P.E. rulings taken 2026-10-30 at review: the B31.3 0.385 thick-wall trigger is applied to B31.1 modules as a disclosed pack rule that stops the run; the pipe-support ASD wind guard ships as built: the governing-combination trigger plus the near-governing hold (a wind combination whose anchorage ratio times 1.111 reaches the governor) and the factored-mode hold unless the spec declares `factored_wind: false`, every one of them a hold and never a release, with the P.E. confirming the four points listed in code-basis.md item 10 at review; a loose-type flange is graded calculated with the caveat line.
+
+- pressure-design: thin-wall validity gate (CODEX P1-3). `piping.b313-wall-thickness`, `piping.b311-wall-thickness`, `piping.b31-allowable-pressure` and `piping.bend-thickness` now report a `validity` object: P_over_SE (P/(S*E)) against 0.385, and the thickness against D/6.
+  - MAWP uses the computed allowable pressure, times Mf for B31.12.
+  - B31.1 compares tm, per its Do/tm < 6 note.
+  - Bends use the intrados thickness.
+- pressure-design: when either limit trips, `status` and `result_grade` are "manual check required", `output` is empty, and the numbers appear only under `equation_value` as an "equation value, not a design basis".
+  - A banner names the clause: B31.3 para. 304.1.2(b), B31.12 para. IP-3.2.1(b), or B31.1's y-table note.
+  - B31.1 states no P/(S*E) limit. The pack also stops B31.1 / B31.9 runs at the 0.385 trigger as a pack rule, pending P.E. confirmation at PR review; the clause text says so.
+  - A tripped run still exits 0, so callers must read `status` / `result_grade`.
+  - A valid run carries `result_grade` "calculated".
+- pressure-design: W is now part of the input contract (CODEX P1-3).
+  - Where the code and edition's equation carries W (B31.3 Table 302.3.5 / 302.3.5-1; B31.1 Table 102.4.7-1 from the 2018 edition), a run exits 2 when W is omitted with no `W_basis`, or when W = 1.0 has no `W_basis`. The one-line message names the table and edition to read.
+  - For B31.1-2016 straight pipe and MAWP, the para. 104.1.1 route decides. Eq. (7) of para. 104.1.2 (no W) covers seamless pipe or pipe below the creep range; para. 104.1.4 Eq. (11) (S*E*W, Table 102.4.7) covers longitudinal- or spiral-welded pipe in the creep range. W or a `W_basis` naming the route is required.
+  - On B31.1-2016, a W below 1.0 is recorded as the 104.1.4 route. A basis alone is recorded as Eq. (7), with a sheet warning that names the 104.1.4 limit.
+  - B31.9, B31.12 and B31.1-2016 bend equations carry no W; the run records that and needs no basis.
+- pressure-design: new text inputs: `W_basis` (seamless | below creep range per table note | longitudinal weld, confirmed | free text), `edition`, and `code` (MAWP and bend only).
+  - A `W_basis` of "seamless" with E below 1 is warned.
+  - The new `weld_factor_basis` records W, its basis, its source and, for B31.1-2016, the route. `defaults_applied` no longer contains W.
+- pressure-design: the gates live in the CLI/envelope layer only. The engine functions are unchanged, so fixture parity holds, and computed numbers and status words for valid inputs are unchanged. No vendored fixture case trips a gate.
+- pressure-design: SKILL.md and modules.md updated.
+  - The SKILL.md interview now asks for W and its basis and passes `edition`.
+  - The calc sheet shows no PASS, schedule or margin on a "manual check required" run.
+  - modules.md sections 1-3, 5 and 6 document the gates and the B31.1-2016 route. The MAWP equation there now shows W.
+  - The b313 example carries `W_basis` and edition 2022.
+- tests: new tests/test_pressure_design_gates.py (37 tests); tests/test_pressure_design.py updated for the `W_basis` contract.
+- bolted-flange: the detailed VIII-2 4.16 / App 2 result is now graded. `aux.app2-flange-integral` output gains `factor_basis` (F, V, f each `series`, `override` or `not used`), `result_grade`, `grade_label`, `banner`, `grade_note` and `report_word`. The grade is `screening` (label "screening / reconstructed factors") whenever any hub factor the flange type uses came from the open-source series reconstruction, and `calculated` only when `F_override`, `V_override` and `f_override` were all supplied. A loose flange uses no hub factor and is `calculated`. A partial override stays `screening` and names the factors still on the series. (CODEX P1-4; owner ruling 2026-10-27 kept: series shipped with provenance plus overrides.)
+- bolted-flange: the banner `SCREENING / RECONSTRUCTED FACTORS: F, V, f from the open-source series reconstruction; supply F_override, V_override, f_override read from VIII-2 Table 4.16.5 for an issue-grade result` is the first finding of every screening run. An issue-grade banner prints only on a `calculated` run, and it states that only the hub-factor basis is closed and that the Peq external-load treatment and defaulted inputs still need review. New `--format sheet` option prints a markdown calc-sheet block headed by the banner, with ratios and "within" / "exceeds" wording and no PASS or issue wording on a screening run.
+- bolted-flange: new output key `report_word` ("within" / "exceeds" for the screen, "tool rule met" / "tool rule not met" for the detailed analysis) is the wording to relay. The machine `status` word (pass / fail / na) is unchanged because the fixtures assert it.
+- bolted-flange: the pressure-equivalent screen now reports `result_grade` `screening` and a banner on every run (it is a leakage screen by definition).
+- bolted-flange: result keys are added only. Fixture parity for `aux.app2-flange-integral` and `connections.flange-equivalent-pressure` is unchanged.
+- bolted-flange docs: SKILL.md, app2-engine.md (new "Result grade" subsection of the hub-factor provenance), method-ladder.md (grade per rung; "passes the screen" wording replaced by "within the screen"), rejection-checklist.md (item 5 reworded, item 15 amended, new item 21) and tool-reference.md state the grade rule and the taxonomy calculated / screening / manual check required / pointer only / not checked.
+- tests: 34 new tests in tests/test_bolted_flange_grade.py; two existing hub-override tests now compare engine numbers with the grade keys excluded.
+- **pipe-support: ASD wind-anchorage guard (CODEX P1-5, UNCONSERVATIVE-FIX).** In ASD the envelope holds an anchorage stage at **manual check required**, not pass, and the envelope can no longer pass, when any of these holds:
+  - **governing:** the stage's governing combination carries wind (ASCE 7-22 2.4.1 5a / 6a / 7a and their ± / +T variants);
+  - **near-governing:** a non-wind combination governs, but the worst wind combination's anchorage ratio x (1/0.6)/1.5 = 1.111 reaches the governing ratio, so wind could govern under the 1/0.6 treatment. Ties are included;
+  - **factored mode:** loads are factored "as entered" and the spec does not declare them wind-free with `factored_wind: false`.
+- **Verdict and exit code.** The verdict reads "NOT ISSUABLE - ASD anchorage governed by wind combination <id>: run anchorage in LRFD or resolve the ACI strength-to-ASD factor treatment (code-basis item 10)". On undeclared factored loads it reads "NOT ISSUABLE - ASD anchorage on factored loads with undeclared wind content: ...". Either way it names the held stage and check and prints no PASS banner. `support_calc.py` exits 3.
+- **Why.** The fixed 1/1.5 ACI 318-19 R17.5.3 strength-to-ASD conversion implies 1/0.6 = 1.67 under 0.6W, so ASD anchorage could be about 10 % unconservative. Up to 0.7.1 a PASS could be printed there, including where seismic governed by less than the 1.111 margin over a wind combination (ps-201 ASD, WIN x2.2, EQ x1.6: 0.9494 seismic against 0.9249 wind), and on factored ASD loads.
+- **Unchanged.** The engine ratio is not changed. A wind-held ASD failure stays FAIL. Also unchanged: LRFD anchorage; ASD anchorage governed by a non-wind combination (dead, dead + thermal, seismic, hydrotest) with no wind combination inside the 1.111 margin; and factored ASD anchorage declared `factored_wind: false`.
+- **Exit code 3 changes meaning.** It now means "not issuable although no limit state fails": a critical review finding, or a validity guard holding a stage. Callers that read exit 3 as "critical finding" only must also read the verdict line.
+- **Optimizer.** It applies the same guard. Every alternative and the as-drawn seed go through the guarded envelope, so an ASD wind-held anchorage design is never ranked as passing. The search log says which pairings the guard held.
+- **Reviewer finding kept as defence in depth.** The major finding "ASD anchorage governed by a wind combination" stays. It now applies the governing and near-governing predicates on its own, names the wind row, and says whether the guard was applied. Factored ASD anchorage raises a major finding when wind content is undeclared or declared, and an info finding naming the engineer's `factored_wind: false` declaration.
+- **New spec key `factored_wind`** (true / false, factored mode only; any other value is a spec error, exit 1).
+- **New JSON output fields:** `envelope.guards[]` `{stage, check, ratio, combo, status, engineStatus, trigger, basis, reason}`, plus `stageCheck` / `stageRatio` / `stageCombo` / `margin` for a near-governing guard. Stage fields: `engineStatus`, `asdWindGuard`, `asdWind` (worst wind row).
+- **Shared predicates:** `loads.asd_wind_combo` (moved from `review.py`; `review.asd_wind_combo` still resolves), `loads.asd_wind_could_govern` and `loads.asd_wind_margin`.
+- **Ruling:** this supersedes item 6 of the 2026-10-26 P.E. rulings ("documented only"), per the owner ruling of 2026-10-30. It is **pending P.E. confirmation at PR review**. Code-basis item 10 is rewritten to read in one place and lists four P.E. confirmation points:
+  - (a) the trigger is coarse: any WIN case usually makes 5a govern;
+  - (b) the 6a 0.45W pairing gets no separate margin;
+  - (c) factored-mode ASD anchorage is held unless declared wind-free;
+  - (d) exit 3 is reused.
+- **Unchanged outputs:** goldens and parity fixtures are untouched. The ps-101 and ps-201 examples (both LRFD) give identical verdicts.
+
 ## [0.7.1] — 2026-10-30
 
 Two **UNCONSERVATIVE-FIX** corrections in the load-case-builder skill (CODEX review findings P1-1 and P1-2, 2026-10-29), the Codex install made consistent with the “optional connector” copy, and the plugin-side copy for the API nozzle tables the connector now serves at Ultimate. Every other skill's numbers are unchanged. Installed copies of 0.7.0 and earlier keep the load-case defects until updated; this release is the recall notice.

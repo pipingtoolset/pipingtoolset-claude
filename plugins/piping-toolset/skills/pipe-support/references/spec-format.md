@@ -51,11 +51,29 @@ are counted twice.
 Factored mode: put `{tag, offset, vertical (+ down), transverse, longitudinal}` (kip) on
 `arms[].pipes`. They are used exactly as entered, with no combinations applied.
 
+`factored_wind` (top level, `true` / `false`, factored mode only; ignored with a note in
+CAESAR II mode): whether the entered factored loads carry a wind term. With `"method":
+"ASD"` and the key absent or `true`, the ASD wind-anchorage guard holds every anchorage stage
+at "manual check required" (code-basis item 10); `false` is the engineer's declaration that
+they carry none, and the anchorage is reported on its ratio with an info finding. Any other
+value is a spec error (exit 1). LRFD ignores it.
+
 ## Outputs
 
 - `--report` writes Markdown. `--json` writes the full result document: design, envelope
   per stage with the governing combination, findings, compliance matrix, optimizer and
   bolted alternative.
+- `envelope.status` and each `envelope.stages[].status` are `"pass"`, `"fail"` or
+  `"manual check required"` (a stage can also be `"na"`). `envelope.guards` lists every
+  validity guard applied, as `{stage, check, ratio, combo, status, engineStatus, trigger,
+  basis, reason}` (`trigger`: `governing`, `near-governing`, `factored-declared` or
+  `factored-undeclared`; a near-governing guard gives the wind row in `check` / `ratio` /
+  `combo` and adds `stageCheck`, `stageRatio`, `stageCombo` and `margin`); it is `[]` when
+  none applied. A guarded stage also carries `engineStatus` (the engine's own pass / fail)
+  and `asdWindGuard` (the same object). An ASD anchorage stage whose governing combination
+  is not a wind combination carries `asdWind` `{combo, ratio, governing, status}`, its worst
+  wind row, when one was run. Today's one guard is ASD anchorage under wind (code-basis
+  item 10). One spec key is new: `factored_wind` (above).
 - Non-finite numbers are written as the strings `"Infinity"`, `"-Infinity"` and `"NaN"`.
   An infinite soil ratio means the resultant is outside the footing.
 

@@ -18,8 +18,11 @@ tOrder = tm / (1 − mill tolerance)         nominal wall to order
 | **S, E, W, Y** | psi, –, –, – | **user-supplied** table values |
 | c | in. | corrosion + erosion + mechanical allowances |
 | millTolerance | fraction | material specification |
+| `W_basis`, `edition` | text | basis inputs, recorded on the sheet and never used in the equation (see below) |
 
-**Validity.** Eq. (3a) is the thin-wall form for t < D/6. The script warns when t ≥ D/6. The code's thick-wall trigger is also **P/(S·E) > 0.385** — the script does **not** test that, so compute it by hand and report it. Past either limit the clause calls for special consideration, and the number from this equation is not a design basis.
+**Validity gate.** Eq. (3a) is the thin-wall form: B31.3 para. 304.1.2(b) calls for special consideration of theory of failure, fatigue and thermal stress when **t ≥ D/6 or P/(S·E) > 0.385**. The script tests both and reports them in a `validity` object: `P_over_SE` (P/(S·E), W not included, as the clause writes it), `P_over_SE_limit` 0.385, `P_over_SE_exceeds`, `thickness` (t), `D_over_6`, `t_over_D6`, `thin_wall_valid` and the `clause`. Inside both limits the run carries `result_grade` `calculated` and the numbers are unchanged. When either trips, the run **stops as a design basis**: `status` and `result_grade` are `manual check required`, `output` is empty, the numbers move to `equation_value` labelled "equation value, not a design basis", and `banner` (also the first warning) names the trigger and the clause. Write no PASS and no schedule on such a run: report the ratio, the equation value as an equation value, and that the thickness needs the special-consideration treatment of 304.1.2(b), outside this script.
+
+**W and its basis.** Eq. (3a) carries W in every B31.3 edition this pack covers. `W` is a required input; **W = 1.0 is accepted only with `W_basis`**, a short reason recorded on the sheet: `seamless`, `below creep range per table note`, `longitudinal weld, confirmed`, or free text. W = 1.0 with no `W_basis` (and no cited `code_values` entry for W) exits 2 with the table to read: Table 302.3.5 through the 2022 edition, Table 302.3.5-1 in 2024 (para. 302.3.5(e)); give `edition` and the message names the one for that year. A reduced W (below 1.0) runs without a basis; cite its table line in section 3. The envelope's `weld_factor_basis` records W, the basis and where it came from; `defaults_applied` never holds W.
 
 **Report:** t, tm, tOrder, and the selected nominal wall (next section). State that tOrder already includes the mill under-tolerance and that `c` is the sum of every allowance.
 
@@ -32,7 +35,11 @@ tm     = P·D / [ 2·(S·E·W + P·y) ] + A
 tOrder = tm / (1 − mill tolerance)
 ```
 
-The module's `t` is the pressure term before the allowance and `tm = t + A`. **W** is a live multiplicative term in Eq. (7) from the 2018 edition on; omitting it is equivalent to W = 1.0, which the script applies silently if the field is absent — watch `defaults_applied`, and confirm from the table notes whether W = 1.0 is justified at the design temperature. User-supplied: **S, E, W, y**. The same thin-wall limits apply (t < D/6, P/(S·E) ≤ 0.385 — hand-check the second).
+The module's `t` is the pressure term before the allowance and `tm = t + A`. User-supplied: **S, E, W, y**.
+
+**W and its basis.** W is a live multiplicative term in Eq. (7) from the 2018 edition on (para. 102.4.7, Table 102.4.7-1). For those editions, and when `edition` is not given, W omitted with no `W_basis`, or W = 1.0 with no `W_basis`, exits 2 naming Table 102.4.7-1 and the edition; W omitted with a `W_basis` is applied as 1.0 on that basis and shown in `inputs`. In **B31.1-2016** para. 104.1.1 picks the equation: Eq. (7) of para. 104.1.2 (no W) for seamless pipe or pipe below the creep range, Eq. (11) of para. 104.1.4 (S·E·W, the engine's own form) for longitudinal- or spiral-welded pipe in the creep range, with W from Table 102.4.7. Because that route can require W, a 2016 run still needs W or a `W_basis` naming the route (exit 2 otherwise, naming para. 104.1.1 and Table 102.4.7). A W below 1.0 is recorded as the para. 104.1.4 route; W = 1.0 or a basis alone is recorded as para. 104.1.2 and a warning puts the para. 104.1.4 limit on the sheet. Any other year is treated as carrying W.
+
+**Validity gate.** B31.1 reads the thick-wall case as Do/tm < 6: the general note to the y table (Table 104.1.2-1; Table 104.1.2(A) in 2016) replaces y there, and this script does not apply that note. The `validity` object therefore compares **tm** (not t) with D/6. B31.1 states no P/(S·E) limit; the pack also stops the run at the B31.3 304.1.2(b) trigger, P/(S·E) > 0.385, as a pack rule pending P.E. confirmation (not a B31.1 requirement), and the `clause` says so. A trip gives `manual check required` exactly as in section 1.
 
 ## 3. Schedule check and allowable pressure (MAWP)
 
@@ -40,7 +47,7 @@ Module `piping.b31-allowable-pressure`. Citation: B31.3 para. 304.1.2 Eq. (3a), 
 
 ```
 tp = t_nominal·(1 − mill tolerance) − A          thickness available for pressure
-P  = 2·S·E·Mf·tp / ( D − 2·y·tp )
+P  = 2·S·E·W·Mf·tp / ( D − 2·y·tp )
 ```
 
 Workflow for a schedule check:
@@ -49,7 +56,11 @@ Workflow for a schedule check:
 2. Ask the user to read the nominal wall of the candidate standard wall (ASME B36.10M / B36.19M, or the mill's data) for this NPS. **Do not supply it.** With the connector it comes from `get_pipe_dimensions` and is recorded as connector-supplied.
 3. Check nominal ≥ tOrder. Then run this module with the selected nominal wall to report the actual allowable pressure and compare to design pressure. The margin is the finding.
 
-The coefficient field is named `y` in this module for both codes: enter Y (B31.3, Table 304.1.1) or y (B31.1, Table 104.1.2(A)) there and say which on the sheet. `Mf` is the B31.12 hydrogen material performance factor; use 1.0 for every other code. Enter the weld joint strength reduction factor `W` (B31.3 Table 302.3.5-1 / B31.1 Table 102.4.7-1; confirm the table name in your copy) whenever the pipe is welded and W can be below 1.0 — it multiplies `S·E` exactly as in the thickness equation. It defaults to 1.0, which is also the value for codes with no W term (B31.9, B31.12); say on the sheet when the default was used. If no thickness remains after tolerance and allowances the module returns `fail` with allowable pressure 0.
+The coefficient field is named `y` in this module for both codes: enter Y (B31.3, Table 304.1.1) or y (B31.1, Table 104.1.2(A) / 104.1.2-1) there and say which on the sheet. `Mf` is the B31.12 hydrogen material performance factor; use 1.0 for every other code. If no thickness remains after tolerance and allowances the module returns `fail` with allowable pressure 0, and no validity gate is applied.
+
+**Code, W and its basis.** Give `code` (`B31.3`, `B31.1`, `B31.9` or `B31.12`) and `edition`. W multiplies `S·E` exactly as in the thickness equation. For B31.3, for B31.1 from 2018, and when `code` is not given, W omitted or W = 1.0 needs `W_basis` (exit 2 otherwise, naming B31.3 Table 302.3.5 / 302.3.5-1 or B31.1 Table 102.4.7-1). B31.9 and B31.12 equations have no W term: the run records that and needs no basis; a W below 1.0 entered for them is applied and warned as conservative. B31.1-2016 follows the para. 104.1.1 route of section 2.
+
+**Validity gate.** The `validity` object reports `P_over_SE` with P = the **computed allowable pressure** (times Mf for B31.12, as B31.12 para. IP-3.2.1(b) writes it), against 0.385, and the **nominal wall t** against D/6 (the engine's own check, conservative against tp). Either trip gives `manual check required`: the allowable pressure is then an equation value, not a design basis, and is not compared with the design pressure as a pass.
 
 ## 4. Branch connection reinforcement — area replacement
 
@@ -87,7 +98,7 @@ I_sidewall  = 1
 tm(I) = P·D / ( 2·[ S·E·W / I + P·y ] ) + A
 ```
 
-`R` is the bend radius to the **centerline**. User-supplied: **S, E, W** and the coefficient (field `y`; Y for B31.3, y for B31.1). The module reports the required minimum thickness at the intrados, extrados and sidewall. These are the thicknesses required **after bending**: the intrados requirement is the largest, but the extrados thins during forming, so the *pre-bend* wall must be chosen against the bending process's predicted thinning. The script does not predict that thinning; get it from the bender and state the source. A warning appears for R/D < 1 — tight radii need the bending procedure confirmed.
+`R` is the bend radius to the **centerline**. User-supplied: **S, E, W** and the coefficient (field `y`; Y for B31.3, y for B31.1). Give `code` (`B31.3` or `B31.1`) and `edition`: W omitted or W = 1.0 needs `W_basis` as in sections 1 and 2 (B31.1-2016 Eq. (3) has no W). Eq. (3c) is the straight-pipe equation with S·E·W divided by I, so the same thin-wall gate applies: `validity` reports P/(S·E) against 0.385 and the intrados pressure thickness (tmIntrados − A, the largest on the bend) against D/6, and a trip gives `manual check required`. The module reports the required minimum thickness at the intrados, extrados and sidewall. These are the thicknesses required **after bending**: the intrados requirement is the largest, but the extrados thins during forming, so the *pre-bend* wall must be chosen against the bending process's predicted thinning. The script does not predict that thinning; get it from the bender and state the source. A warning appears for R/D < 1 — tight radii need the bending procedure confirmed.
 
 ## 6. Mitered bends — allowable pressure
 
@@ -104,7 +115,7 @@ Single miter, θ > 22.5°:
 
 The script implements exactly these branches (B31.3 ¶304.2.3); verify the equation numbering in your edition. For a single miter, `Pm2` is not evaluated and is reported as `null` in the output.
 
-`Tc` is the wall available for pressure (thickness less tolerance and allowances), `r2` the mean pipe radius, `R1` the effective bend radius to the centerline, `θ` the miter half-angle (the angle of cut), and `miters` the number of cuts. User-supplied: **S, E, W**. The result names the governing equation.
+`Tc` is the wall available for pressure (thickness less tolerance and allowances), `r2` the mean pipe radius, `R1` the effective bend radius to the centerline, `θ` the miter half-angle (the angle of cut), and `miters` the number of cuts. User-supplied: **S, E, W**; W omitted or W = 1.0 needs `W_basis` (B31.3 Table 302.3.5 / 302.3.5-1). The result names the governing equation. Eq. (4a)–(4c) are not the 304.1.2 straight-pipe equation and the clause states no D/6 or P/(S·E) limit for them, so this module carries no thin-wall `validity` gate.
 
 The script does **not** check the clause's minimum `R1` for a multiple miter, which depends on a tabulated size-dependent value — have the user check it on their copy. A multiple miter with θ > 22.5° is flagged as outside Eq. (4a)/(4b); treat those as single miters.
 

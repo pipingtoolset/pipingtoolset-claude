@@ -35,6 +35,7 @@ Units in: lb and ft-lb (CAESAR II English defaults) or kip / kip-in; out: kip, k
 
 from __future__ import annotations
 
+import re
 from typing import Dict, List, Optional, Sequence, Tuple
 
 from .common import InputError
@@ -71,6 +72,50 @@ ASD = [
     ("0.6D", "ASCE 7-22 2.4.1 (7a) D factor with W not acting; 2.4.4 T", {"D": 0.6}),
 ]
 REVERSING = ("W", "Eh")
+
+_COMBO_ID = re.compile(r"^ASD-(.+?)(?:[+-](?:T)?|\+T)?(?: \(service\))?$")
+
+
+def asd_wind_combo(combo_id: str) -> bool:
+    """True when an envelope combination id names an ASD combination that carries wind.
+
+    Ids are built by combinations() as "<method>-<cid>[+|-][+T]", e.g. "ASD-5a+",
+    "ASD-7a-+T"; the cid is looked up in the ASD table so this never depends on the clause
+    text. One source for the envelope's ASD wind-anchorage guard (optimizer.envelope) and the
+    reviewer's defence-in-depth finding (review._asd_wind_anchorage); code-basis item 10."""
+    m = _COMBO_ID.match(str(combo_id or ""))
+    if not m:
+        return False
+    tag = m.group(1)
+    for cid, _clause, fac in ASD:
+        if tag == cid or (tag.startswith(cid) and tag[len(cid):len(cid) + 1] in ("+", "-")):
+            return "W" in fac
+    return False
+
+
+# The wind-anchorage factor margin (code-basis item 10). ASCE 7-22 2.4.1 (5a) carries 0.6W in
+# ASD where 2.3.1 (4a)/(5a) carry 1.0W in LRFD, so a wind-governed ASD anchorage implies a
+# strength-to-ASD factor of 1/0.6; the engine converts with the fixed ACI 318-19 R17.5.3
+# value (baseplate._ASD_ANCHOR_FACTOR). Their quotient bounds how much a wind combination's
+# ASD anchorage ratio can be understated; equation constants, not table values.
+ASD_WIND_LOAD_FACTOR = 0.6
+
+
+def asd_wind_margin() -> float:
+    """(1/0.6) / 1.5 = 1.111...: the most a wind combination's ASD anchorage ratio can be
+    understated by the fixed 1/1.5 conversion (code-basis item 10)."""
+    from .baseplate import _ASD_ANCHOR_FACTOR
+    return (1.0 / ASD_WIND_LOAD_FACTOR) / _ASD_ANCHOR_FACTOR
+
+
+def asd_wind_could_govern(wind_ratio, governing_ratio) -> bool:
+    """True when an ASD wind combination's anchorage ratio, raised by asd_wind_margin(), reaches
+    the governing (non-wind) ratio: under the 1/0.6 treatment that wind combination could
+    govern. Covers a near-governing wind combination and a tie the envelope broke in favour of
+    an earlier non-wind id. Non-numeric ratios (an infinite string) never trigger it."""
+    if not isinstance(wind_ratio, (int, float)) or not isinstance(governing_ratio, (int, float)):
+        return False
+    return wind_ratio * asd_wind_margin() >= governing_ratio
 
 
 def _vec(v, name: str) -> Vec:

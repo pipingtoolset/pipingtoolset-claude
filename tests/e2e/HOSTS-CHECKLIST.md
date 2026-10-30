@@ -1,4 +1,4 @@
-# Phase 2: host verification runbook (plugin 0.7.1)
+# Phase 2: host verification runbook (plugin 0.7.2)
 
 Copy-paste runbook for proving the same plugin installs, shows its mark, and runs its scripts in
 every host it claims. Sibling of `COWORK-CHECKLIST.md`. Fill the results table at the bottom as
@@ -35,10 +35,10 @@ Pass criteria, unchanged from `PROMPTS.md`:
 Run in PowerShell from any folder.
 
 ```powershell
-gh release view v0.7.1 --repo pipingtoolset/pipingtoolset-claude --json tagName,assets --jq '.tagName, (.assets[].name)'
+gh release view v0.7.2 --repo pipingtoolset/pipingtoolset-claude --json tagName,assets --jq '.tagName, (.assets[].name)'
 ```
 
-Expect `v0.7.1` and three assets: `piping-toolset.plugin`, `piping-toolset.zip`,
+Expect `v0.7.2` and three assets: `piping-toolset.plugin`, `piping-toolset.zip`,
 `piping-toolset-skills.zip`. If the tag or assets are missing, stop: push the tag and let CI
 attach them.
 
@@ -111,7 +111,7 @@ claude plugin install piping-toolset@pipingtoolset
 claude plugin details piping-toolset
 ```
 
-Expect `Skills (7)` listing the seven names and version `0.7.1`. Then, headless, from any empty
+Expect `Skills (7)` listing the seven names and version `0.7.2`. Then, headless, from any empty
 folder:
 
 ```powershell
@@ -135,8 +135,8 @@ may appear. Disconnect the server in `/mcp` and repeat E2: the refusal must hold
 
 ## 3. Claude Cowork (Claude desktop app, Windows)
 
-1. Download `piping-toolset.plugin` from the v0.7.1 release
-   (`https://github.com/pipingtoolset/pipingtoolset-claude/releases/download/v0.7.1/piping-toolset.plugin`).
+1. Download `piping-toolset.plugin` from the v0.7.2 release
+   (`https://github.com/pipingtoolset/pipingtoolset-claude/releases/download/v0.7.2/piping-toolset.plugin`).
 2. If an earlier version is installed, remove it first in Settings › Plugins.
 3. Drag the file into a new Cowork chat, press **Accept**.
 4. Check in the plugin list: the grid-elbow mark (not a generic icon), display name
@@ -185,11 +185,11 @@ $pipe-support Check support PS-201: CSA type 1 t-post, W6X15 column 8 ft, W6X15 
 
 Record E1, E2, E9. Note which Python Codex used (`python --version` in the same shell).
 
-Connector row (Codex). From 0.7.1 the plugin declares no server for Codex: the Agent Plugins
+Connector row (Codex). From 0.7.2 the plugin declares no server for Codex: the Agent Plugins
 connector file was removed after the 0.7.0 install test showed a sign-in prompt at install.
 `.agents/plugins/marketplace.json` still sets `authentication` to `ON_INSTALL`, the only value the
 OpenAI plugin docs list (read 2026-10-28); with no server declared there is nothing to authenticate
-at install. Install 0.7.1 from the tag and expect NO sign-in prompt. If one still appears, the policy
+at install. Install 0.7.2 from the tag and expect NO sign-in prompt. If one still appears, the policy
 value is the next suspect: record the exact prompt text and screenshot it, and do not change the
 value until the docs list another. Then check what Codex lists, and add the server by hand, which is
 how the connector reaches Codex:
@@ -227,7 +227,7 @@ whether the listing block fixed the icon and name.
    must be visible. If the numbers appear with no command, the app did arithmetic in its head and
    the row fails (record it; that is a finding, not a defect in the plugin).
 4. New conversation, paste E2. Expect the refusal.
-5. Connector row: from 0.7.1 the plugin declares no server for this app, so expect the plugin page
+5. Connector row: from 0.7.2 the plugin declares no server for this app, so expect the plugin page
    to list no `pipingtoolset-data` and no sign-in prompt at install (record either if seen). Add the
    server as a developer-mode connector with the URL `https://pipingtoolset.com/mcp` and OAuth,
    ask for a worked example of a data-free module (open, no sign-in) and for an allowable stress
@@ -245,7 +245,7 @@ Do not press Submit in this phase; the goal is to see every automated check pass
    it carried the `interface` block from the root `plugin.json`: `displayName` PipingToolset,
    `shortDescription`, `developerName`, `category` Productivity, `logo` and `composerIcon`
    pointing at `assets/`. The converted package should show no MCP servers (the Agent Plugins
-   connector file was removed in 0.7.1); if it shows one, record it as a finding.
+   connector file was removed in 0.7.2); if it shows one, record it as a finding.
 3. Check the **category** dropdown in the dashboard. If **Productivity** is not an offered
    value, note the closest one here and change `category` in both
    `plugins/piping-toolset/plugin.json` and `.agents/plugins/marketplace.json` (the test keeps
@@ -299,7 +299,7 @@ Not automated; account settings, so done by hand.
 | Cursor / Copilot CLI (§7) | | | | | | | | n/a | | |
 
 For the Codex CLI and ChatGPT desktop rows, write "no sign-in prompt at install: yes / no" in Notes
-(the 0.7.1 gate for the connector copy to stay true in those hosts).
+(the 0.7.2 gate for the connector copy to stay true in those hosts).
 
 When every row you ran is filled, commit this file as the Phase 2 record and move to Phase 3
 (listings, in the order of `docs/research/cross-platform-distribution-2026-10-27.md` §7).
