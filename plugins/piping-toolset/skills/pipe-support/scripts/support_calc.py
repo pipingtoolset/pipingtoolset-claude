@@ -34,10 +34,13 @@ CODE VALUES (optional `code_values` block in the spec)
   and "code_value_applied" {name: {value, unit}}, and the Markdown report gains a "Code-table
   values" table. Nothing here reaches a network.
 
-Exit codes: 0 every combination passes and no critical review finding; 3 every
-combination passes but a critical review finding stands (e.g. pipe moments the model
-cannot carry); 2 a limit state fails, or the code_values block cannot be applied (message
-"input error: ..." on stderr, no verdict); 1 the spec is defective.
+Exit codes: 0 every combination passes and no critical review finding; 3 not issuable
+although no limit state fails: a critical review finding stands (e.g. pipe moments the model
+cannot carry), or a validity guard holds a stage at "manual check required" (ASD anchorage
+governed by a wind combination, code-basis item 10: the verdict line reads "NOT ISSUABLE -
+ASD anchorage governed by wind combination <id>: ..." and never PASS); 2 a limit state
+fails, or the code_values block cannot be applied (message "input error: ..." on stderr, no
+verdict); 1 the spec is defective.
 Standard library only (Python 3.9+).
 """
 
@@ -351,6 +354,8 @@ def run(spec: dict, optimize: bool = True) -> dict:
         raise CodeValuesError(str(exc)) from None
     design = resolve_design(spec)
     method = design["method"]
+    if "factored_wind" in spec and not isinstance(spec["factored_wind"], bool):
+        raise InputError("factored_wind: give true or false (do the factored loads carry a wind term?)")
     doc = {"spec": spec, "design": design, "notes": list(cv_notes),
            "assumed": list(spec.get("assumed", [])) + preset_provenance(spec)}
     if spec.get("pipes"):
@@ -370,6 +375,9 @@ def run(spec: dict, optimize: bool = True) -> dict:
         doc["categoryMap"] = cmap
         run_spec = spec
         env = O.envelope(design, sets, spec, O._service(spec, design))
+        if "factored_wind" in spec:
+            doc["notes"].append("factored_wind is read in factored mode only; ignored here (CAESAR II mode "
+                                "builds the combinations, so the wind guard sees them).")
     else:
         doc["loadMode"] = "factored"
         run_spec = factored_spec(spec, design)
@@ -422,15 +430,15 @@ def main(argv=None) -> int:
             fh.write(R.to_json(doc))
     env = doc["envelope"]
     crit = doc["criticalFindings"]
-    head = "FAIL" if env["status"] != "pass" else (f"PASS WITH {crit} CRITICAL FINDING(S)" if crit else "PASS")
-    verdict = (f"{head} - {env['governingStage']} / {env['governingCheck']} = "
-               f"{env['governingRatio']} ({env['governingCombo']})")
-    verdict = verdict.replace("\u2014", "-").encode("ascii", "replace").decode("ascii")
     if a.quiet:
-        print(verdict)
+        print(R.cli_verdict(doc))
     else:
         sys.stdout.buffer.write(md.encode("utf-8"))
-    return 2 if env["status"] != "pass" else (3 if crit else 0)
+    if env["status"] == "fail":
+        return 2
+    if env["status"] != "pass" or crit:
+        return 3                            # critical finding, or a guard: manual check required
+    return 0
 
 
 if __name__ == "__main__":

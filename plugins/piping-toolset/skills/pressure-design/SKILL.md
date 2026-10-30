@@ -26,12 +26,12 @@ The user's own licensed copies of the codes are the authority for every clause c
 
 Ask these together, accept a partial answer, and mark every unanswered item **ASSUMED** at the top of the calc sheet. Do not silently default.
 
-1. **Code: B31.1 or B31.3?** They are not interchangeable. Different equation symbols (`Y` in B31.3, `y` in B31.1), different tables, different allowables for the same material.
-2. **Edition year.** It decides which tables hold the inputs, and table names move between editions. As a pointer only: in B31.3 the basic allowable stress table is Table A-1 through the 2022 edition and Table A-1C in 2024, and the quality-factor tables are A-1A / A-1B through 2022 and A-2 / A-3 in 2024. Confirm the table name in your copy (ask the user to check the printed page of their own). Ask for it. If the user cannot give it, proceed with a clearly marked **ASSUMED** edition, but do not present the result as a final calc sheet until the edition is confirmed.
+1. **Code: B31.1 or B31.3?** They are not interchangeable. Different equation symbols (`Y` in B31.3, `y` in B31.1), different tables, different allowables for the same material. The MAWP and bend modules take it as the `code` input (MAWP also B31.9 or B31.12).
+2. **Edition year.** It decides which tables hold the inputs, and table names move between editions. As a pointer only: in B31.3 the basic allowable stress table is Table A-1 through the 2022 edition and Table A-1C in 2024, and the quality-factor tables are A-1A / A-1B through 2022 and A-2 / A-3 in 2024. Confirm the table name in your copy (ask the user to check the printed page of their own). Ask for it and pass it as `edition` (it decides whether the B31.1 equation carries W). If the user cannot give it, proceed with a clearly marked **ASSUMED** edition, but do not present the result as a final calc sheet until the edition is confirmed.
 3. **B31.3 only: fluid service** — Normal, Category D, Category M, or Chapter IX high pressure. This skill covers the Normal-service equations only; for Category M or high-pressure piping say the calc needs the code's additional requirements.
 4. **Design pressure and design temperature**, and whether they are coincident. Design metal temperature, not fluid temperature, selects the allowable stress.
 5. **Material:** specification, grade, **product form** (seamless, ERW, EFW, spiral, cast). Product form sets the quality factor E.
-6. **Joint and weld data:** longitudinal weld type, and whether the elevated-temperature weld strength reduction factor W applies at this temperature. Read the table notes — they carry the temperature thresholds.
+6. **Joint type, W and its basis:** longitudinal weld type; W at the design temperature (B31.3 Table 302.3.5, para. 302.3.5(e); B31.1 Table 102.4.7-1, para. 102.4.7; the notes carry the temperature thresholds); and **why** W is what it is, passed as `W_basis` (`seamless`, `below creep range per table note`, `longitudinal weld, confirmed`, or the user's words). W = 1.0 or no W needs that basis, except where the equation has no W (B31.9, B31.12); B31.1-2016 needs it for the para. 104.1.1 route. Never fill it in yourself.
 7. **Allowances:** corrosion, erosion, thread or groove depth (sum them as `c` in B31.3, `A` in B31.1), and any mechanical allowance.
 8. **Mill under-tolerance** as a fraction, from the pipe material specification the user is buying to.
 9. **Pipe size and candidate schedule** or wall, if the question is "does this work" rather than "what do I need".
@@ -85,7 +85,7 @@ The Engineering Data connector is optional and separate from this plugin; everyt
 ```
 python scripts/pressure_design.py list                      # modules, units, which inputs are user-supplied
 python scripts/pressure_design.py b313-wall-thickness --input-file job.json
-python scripts/pressure_design.py piping.b313-wall-thickness --input '{"P": 1000, "D": 10, "S": 24800, "E": 1, "W": 1, "Y": 0.4, "c": 0.1, "millTolerance": 0.125}'
+python scripts/pressure_design.py piping.b313-wall-thickness --input '{"P": 1000, "D": 10, "S": 24800, "E": 1, "W": 1, "W_basis": "seamless", "edition": "2022", "Y": 0.4, "c": 0.1, "millTolerance": 0.125}'
 ```
 
 The numbers above are placeholders to show the shape of a complete input, not code values. `job.json` holds the same object. Quoting inline JSON on a command line is shell-dependent (PowerShell in particular mangles it), so prefer the file route: write the object to `job.json` in the working directory with the file tool, then pass `--input-file job.json`.
@@ -95,7 +95,9 @@ The numbers above are placeholders to show the shape of a complete input, not co
 - A pre-flight check runs before the engine. It stops physically impossible inputs with exit code 2 (negative pressure or allowance, E or W above 1, Y or y outside 0 to 1, a wall of D/2 or more, allowances that consume the wall, a miter radius R1 that does not exceed r2) and adds warnings for implausible ones (ST/S above 2, a pneumatic factor above 1.33). Quote those warnings in the findings.
 - **US customary only:** psi, in., in.², degrees. The equations are unit-consistent, but the script documents and expects these units.
 - Input names are **case-sensitive** and unknown names are rejected: `Y` (B31.3) and `y` (B31.1) are different fields on different modules.
-- Output is a JSON envelope: `status` (`pass` / `fail` / `na`), `output`, `warnings`, the paragraph `citation`, an echo of `inputs`, `user_supplied` (the table values the user must cite), and `defaults_applied` (for example W taken as 1.0 because it was omitted).
+- Output is a JSON envelope: `status` (`pass` / `fail` / `na`, or `manual check required` when a validity gate trips), `output`, `warnings`, the paragraph `citation`, an echo of `inputs` (the basis texts included), `user_supplied` (the table values the user must cite), `defaults_applied` (never W), and `weld_factor_basis` (W, its basis and source) on every module that carries W.
+- **W gate.** Where the equation carries W, W omitted or W = 1.0 without `W_basis` exits 2 naming the W table and edition. Never retry with a basis the user did not give.
+- **Validity gate** (straight pipe, MAWP, bends): `validity` reports `P_over_SE` against 0.385 and the thickness against D/6. On a trip, `status` is `manual check required`, `output` is empty and the numbers sit in `equation_value` as an **equation value, not a design basis**; quote the `banner` (it names the clause) and write no PASS, schedule or margin. Otherwise `result_grade` is `calculated`. Details: [modules.md](references/modules.md).
 - Exit code 2 with a one-line message means bad input. Fix it; never retry with guessed values.
 - Results are rounded to the precision shown (5 decimals on thickness, 3 on pressure). Quote `warnings` in the findings verbatim.
 
@@ -115,7 +117,7 @@ Each module's equations, inputs, validity limits and reviewer notes are in [refe
 | `piping.miter-allowable-pressure` | Allowable pressure of a single or multiple miter bend | B31.3 304.2.3, Eq. (4a)/(4b)/(4c) | [section 6](references/modules.md#6-mitered-bends--allowable-pressure) |
 | `piping.leak-test-pressure` | Hydrostatic and pneumatic leak test pressure (piping minimum) | B31.3 345.4.2 Eq. (24), 345.5.4; B31.1 137 | [section 7](references/modules.md#7-leak-test-pressure) |
 
-Points that hold across every module: the thin-wall limit P/(S*E) > 0.385 is not tested by the script, so hand-check it and report it; `th` and `tb` for the branch check come from the two wall-thickness runs; the bend module does not predict thinning during forming; the miter module does not check the clause's minimum R1; the leak-test module applies no ceiling on ST/S unless the owner supplies `stressRatioCap` and always warns that flange, valve and equipment limits are separate. The details are in the reference file.
+Points that hold across every module: quote `P_over_SE` from `validity` rather than computing it (the miter module has no such gate); `th` and `tb` for the branch check come from the two wall-thickness runs; the bend module does not predict thinning during forming; the miter module does not check the clause's minimum R1; the leak-test module applies no ceiling on ST/S unless the owner supplies `stressRatioCap` and always warns that flange, valve and equipment limits are separate. The details are in the reference file.
 
 ---
 
@@ -139,6 +141,7 @@ Table of every input with units. Each unanswered or defaulted item flagged ASSUM
 One row per S, E, W, Y (B31.3) or y (B31.1), ST, factors:
 value | code, edition, table | material spec and grade | product form | temperature |
 table notes applied | interpolation arithmetic (if any) | source (user or connector).
+The W row also carries W_basis and weld_factor_basis.basis_source from the envelope.
 "A number with no table line behind it" is a finding against the sheet itself.
 
 ## 4. Calculation
@@ -147,13 +150,17 @@ and its output (status, output, warnings), then the arithmetic restated in words
 for the reviewer.
 
 ## 5. Result against nominal / schedule
+Thin-wall validity first: P_over_SE against 0.385 and the thickness against D/6, from `validity`.
 tOrder vs the selected nominal wall (read by the user from B36.10M / B36.19M or mill data);
 allowable pressure vs design pressure; reinforcement margin; test pressure.
-PASS or FAIL for each, with the margin.
+PASS or FAIL for each, with the margin, only where status is not "manual check required".
+A "manual check required" run shows the banner, the equation value labelled
+"equation value, not a design basis", the clause, and no PASS, schedule or margin.
 
 ## 6. Findings and assumptions
-Every script warning, every ASSUMED item, every hand check (t < D/6, P/(S·E) ≤ 0.385,
-345.2.1(a) yield check, R1 minimum on miters), anything that would change the conclusion.
+Every script warning, every ASSUMED item, the validity result (P_over_SE, t vs D/6) and
+the W basis, every hand check (345.2.1(a) yield check, R1 minimum on miters), anything that
+would change the conclusion.
 
 ## 7. References
 Every paragraph cited, with edition.
@@ -164,10 +171,10 @@ Every paragraph cited, with edition.
 1. **Edition undeclared**, or a table name quoted from a different edition than the one on record.
 2. S taken at the wrong temperature (fluid instead of design metal temperature), or the next-lower-temperature value used without interpolating (non-conservative).
 3. E taken from the wrong product form or joint type.
-4. **W missing** where it applies, or W = 1.0 applied by default and not said.
+4. **W missing** where it applies, or W = 1.0 with no stated basis (`W_basis`) on the sheet.
 5. **Mill under-tolerance omitted** from the ordered thickness, or applied twice.
 6. Allowances: corrosion applied to the wrong side of the equation, or thread depth left out of `c` / `A`.
-7. t ≥ D/6 or P/(S·E) > 0.385 passed over silently.
+7. t ≥ D/6 or P/(S·E) > 0.385 passed over silently, or a `manual check required` run reported as a thickness, a schedule or a PASS.
 8. Schedule claimed adequate without comparing the **nominal** wall to tOrder.
 9. Branch connection with no reinforcement check, or `th` / `tb` copied from a different design condition.
 10. Bend checked at the sidewall only.

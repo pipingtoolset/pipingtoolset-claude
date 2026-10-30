@@ -161,6 +161,18 @@ F, V and f come from one of two sources, chosen per run and stated on the sheet.
 
 The Table 4.16.5 curve-fit option is not shipped, because its coefficients are tabulated code data. `hubFactorMethod` accepts only `series`; any other value exits 2 with a message to use the overrides. The Table 4.16.4 constants in the K terms (8.55246, 1.0472, 1.9448, 0.66845, 5.7169, 1.36136) are equation constants; confirm them on the printed page. The overrides do not change any engine result when absent.
 
+### Result grade (what the provenance does to the report)
+
+The output carries `factor_basis` (F, V and f each `series` or `override`), `result_grade`, `grade_label`, `banner`, `grade_note` and `report_word` ("tool rule met" / "tool rule not met": relay it, not the machine `status`). The keys are added; no number and no `pass` / `fail` status word moves.
+
+| Case | `result_grade` | `grade_label` | Banner |
+|---|---|---|---|
+| Integral, any of F, V, f from the series (the default) | `screening` | screening / reconstructed factors | `SCREENING / RECONSTRUCTED FACTORS: F, V, f from the open-source series reconstruction; supply F_override, V_override, f_override read from VIII-2 Table 4.16.5 for an issue-grade result` |
+| Integral, all three overridden | `calculated` | calculated | `ISSUE-GRADE HUB FACTORS: ...` plus the clause that only the hub-factor basis is closed and the Peq treatment and defaulted inputs still need review (the user read the three values; the Code reading is not checked here) |
+| Loose, no hub factor used (`factor_basis` is `not used`) | `calculated` | calculated | `ISSUE-GRADE FACTOR BASIS: loose-type flange ...` with the same clause |
+
+A partial override is `screening`; `grade_note` and a finding name the factors still on the series (for example "Series factor(s) in use: V, f"). The grade says only that the hub-factor chain is closed. The Peq external-load treatment and the limits below apply to a `calculated` run too. The banner is the first finding of the envelope. A `screening` run prints no PASS or issue-grade wording; report ratios and "within" or "exceeds". Status taxonomy: calculated / screening / manual check required / pointer only / not checked. `--format sheet` prints the banner and the findings as a markdown block.
+
 ## Known limits
 
 - External load treatment is the pressure-equivalent method (equation 0 above), not the Code's Moe.

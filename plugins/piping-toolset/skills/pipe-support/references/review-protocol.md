@@ -15,6 +15,27 @@ clearly what a reviewer would send back.
 
 Label your own findings **[reviewer]** and engine findings **[engine]**.
 
+## Output status words
+
+A stage, a compliance row and the envelope carry one of: **pass**, **fail**, or
+**manual check required** (a validity guard holds the result; the ratio shown is the
+engine's, but it is not a pass). The verdict line is FAIL when any limit state fails; otherwise NOT ISSUABLE
+when a guard holds a stage; otherwise PASS, or PASS (strength) WITH n CRITICAL REVIEW
+FINDING(S). Never present a NOT ISSUABLE or a held stage as a pass, and never soften it to
+"passes with a note". The guard today:
+
+- **ASD anchorage governed by a wind combination** (code-basis item 10; owner ruling
+  2026-10-30, superseding the 2026-10-26 "documented only" ruling; P.E. confirmation pending).
+  Verdict: "NOT ISSUABLE - ASD anchorage governed by wind combination `<id>`: run anchorage in
+  LRFD or resolve the ACI strength-to-ASD factor treatment (code-basis item 10)". The engine
+  also raises the *major* finding "ASD anchorage governed by a wind combination", which says
+  the guard applied. Recommend re-running with `"method": "LRFD"` for the anchorage verdict.
+  The guard also holds the stage when a non-wind combination governs but the worst wind
+  combination's ratio x (1/0.6)/1.5 reaches it (*near-governing*), and, in factored mode,
+  unless the spec sets `factored_wind: false` (the engineer's declaration that the entered
+  loads carry no wind). In factored mode ask whether the entered loads carry 0.6W before
+  accepting that declaration.
+
 ## What to check, in this order
 
 1. **Load path.** Does every load the restraint report shows reach the foundation? Watch
@@ -51,7 +72,10 @@ When the user supplies a support drawing (PDF) or someone else's calculation:
 
 ## Optimizer - presenting alternatives
 
-- Show the ranked table from the run. Every row passed every combination.
+- Show the ranked table from the run. Every row passed every combination, and no row has an
+  anchorage stage held by the ASD wind guard. In ASD with wind governing the anchorage the
+  table can be empty; the search log says the guard held the pairings. Say so and offer the
+  LRFD re-run.
 - Explain the objectives the user chose (weight, field work, stocked sizes) and how each
   option scores on them.
 - Note what each option changes in fabrication and erection.

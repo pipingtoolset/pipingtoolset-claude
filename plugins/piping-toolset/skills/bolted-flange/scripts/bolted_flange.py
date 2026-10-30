@@ -54,13 +54,24 @@ does not change any engine result when the overrides are absent. The Table 4.16.
 in the K terms (8.55246, 1.0472, 1.9448, 0.66845, 5.7169, 1.36136) are equation constants and
 should be confirmed on the printed page.
 
+Result grade. The detailed analysis carries `result_grade`, `grade_label`, `factor_basis`
+(F, V and f each "series", "override", or "not used" for a loose flange), `banner` and
+`grade_note` in its output. The grade is "screening" (label "screening / reconstructed
+factors") whenever any hub factor the flange type uses came from the series, and "calculated"
+only when every hub factor the type uses was supplied by override (a loose flange uses none and
+is "calculated"). The pressure-equivalent screen is "screening" always. The grade adds keys
+only: no number and no pass/fail status word changes. Taxonomy: calculated / screening /
+manual check required / pointer only / not checked.
+
 CLI:
     python bolted_flange.py list
     python bolted_flange.py <module-id> --input '<json>'
     python bolted_flange.py <module-id> --input-file <path.json>
+    python bolted_flange.py <module-id> --input-file <path.json> --format sheet
 
 Output is a JSON envelope {module, status, output, warnings, citation, inputs,
-user_supplied}. Exit code 2 on bad input.
+user_supplied}; `--format sheet` prints a markdown calc-sheet block instead, headed by the
+grade banner, with no acceptance wording on a screening run. Exit code 2 on bad input.
 
 Optional top-level input `code_values`:
     {"code_values": {"ratedPressure": {"value": 1234.5, "unit": "psig",
@@ -107,6 +118,81 @@ _STATUS_WORDS = ("fail", "pass")
 def _verdict(ok) -> str:
     """"pass" when ``ok`` is truthy, otherwise "fail"."""
     return _STATUS_WORDS[1 if ok else 0]
+
+
+# --------------------------------------------------------------------------- result grade
+# Output status words (the pack taxonomy): calculated / screening / manual check required /
+# pointer only / not checked. This module uses the first two. The detailed analysis is
+# "calculated" only when every hub factor its flange type uses was supplied by override
+# (F_override, V_override, f_override, read by the user from VIII-2 Table 4.16.5); any factor
+# taken from the open-source series reconstruction makes the run "screening". The grade is an
+# extra result key. It never changes a number or the pass/fail status word of the engine.
+GRADE_CALCULATED = "calculated"
+GRADE_SCREENING = "screening"
+GRADE_LABEL_RECON = "screening / reconstructed factors"
+GRADE_LABEL_SCREEN = "screening (leakage screen, not a stress check)"
+GRADE_KEYS = ("result_grade", "grade_label", "factor_basis", "banner", "grade_note", "report_word")
+HUB_FACTORS = ("F", "V", "f")
+BANNER_RECON = (
+    "SCREENING / RECONSTRUCTED FACTORS: F, V, f from the open-source series reconstruction; "
+    "supply F_override, V_override, f_override read from VIII-2 Table 4.16.5 for an issue-grade result"
+)
+BANNER_CALCULATED = (
+    "ISSUE-GRADE HUB FACTORS: F, V, f supplied by override, read by the user from VIII-2 Table 4.16.5; "
+    "the hub-factor basis is closed only: the Peq external-load treatment and any defaulted inputs still need review; "
+    "confirm the three values on the printed page and clear the rejection checklist before issue"
+)
+BANNER_LOOSE = (
+    "ISSUE-GRADE FACTOR BASIS: loose-type flange, no hub factors F, V, f are used; "
+    "the factor basis is closed only: the Peq external-load treatment and any defaulted inputs still need review; "
+    "clear the rejection checklist before issue"
+)
+BANNER_SCREEN = (
+    "SCREENING: pressure-equivalent leakage screen, not a stress check; "
+    "a result within the rating does not establish bolt, gasket or flange stress"
+)
+
+
+def grade_hub_factors(hubbed: bool, overridden: Tuple[str, ...]) -> Dict[str, Any]:
+    """Result-grade keys for the detailed analysis from which hub factors came by override."""
+    if not hubbed:
+        basis = {k: "not used" for k in HUB_FACTORS}
+        return {
+            "result_grade": GRADE_CALCULATED,
+            "grade_label": GRADE_CALCULATED,
+            "factor_basis": basis,
+            "banner": BANNER_LOOSE,
+            "grade_note": (
+                "Loose-type flange: the run uses no hub factor F, V or f, so none can come from the series. "
+                "The Peq external-load treatment and the other known limits still apply."
+            ),
+        }
+    basis = {k: ("override" if k in overridden else "series") for k in HUB_FACTORS}
+    series = [k for k in HUB_FACTORS if basis[k] == "series"]
+    given = [k for k in HUB_FACTORS if basis[k] == "override"]
+    if series:
+        note = (
+            "Series factor(s) in use: " + ", ".join(series)
+            + " (supply " + ", ".join(k + "_override" for k in series) + " read from VIII-2 Table 4.16.5 to close). "
+            + ("Override(s) supplied: " + ", ".join(given) + "." if given else "Override(s) supplied: none.")
+        )
+        return {
+            "result_grade": GRADE_SCREENING,
+            "grade_label": GRADE_LABEL_RECON,
+            "factor_basis": basis,
+            "banner": BANNER_RECON,
+            "grade_note": note,
+        }
+    return {
+        "result_grade": GRADE_CALCULATED,
+        "grade_label": GRADE_CALCULATED,
+        "factor_basis": basis,
+        "banner": BANNER_CALCULATED,
+        "grade_note": (
+            "Override(s) supplied: F, V, f. The values are the user's reading of the Code and are not checked here; "
+            "the Peq external-load treatment and the other known limits still apply."
+        ),
+    }
 
 # --------------------------------------------------------------------------- constants
 
@@ -241,6 +327,10 @@ def flange_equivalent_pressure(inp: Dict[str, Any]) -> Dict[str, Any]:
             "forceTerm": round_half_up(force_term, 3),
             "Pe": round_half_up(Pe, 3),
             "utilization": round_half_up(utilization, 4),
+            "result_grade": GRADE_SCREENING,
+            "grade_label": GRADE_LABEL_SCREEN,
+            "banner": BANNER_SCREEN,
+            "report_word": "within" if Pe <= rated else "exceeds",
         },
         _verdict(Pe <= rated),
         warnings,
@@ -458,6 +548,7 @@ def app2_flange_integral(inp: Dict[str, Any]) -> Dict[str, Any]:
     T, Z, Yf, U = sf["T"], sf["Z"], sf["Y"], sf["U"]
     ho = math.sqrt(B * g0) if hubbed else math.sqrt(B * t)
 
+    overrides: Dict[str, float] = {}
     F = 0.0
     V = 0.0
     f = 1.0
@@ -471,7 +562,7 @@ def app2_flange_integral(inp: Dict[str, Any]) -> Dict[str, Any]:
         # plugin-directory scanner holds the plugin as able to send data off the machine.
         x_g = g1 / g0
         x_h = h / ho
-        overrides = {k: _num(inp, k + "_override") for k in ("F", "V", "f") if _has(inp, k + "_override")}
+        overrides = {k: _num(inp, k + "_override") for k in HUB_FACTORS if _has(inp, k + "_override")}
         if len(overrides) < 3:
             hf = hub_factors(x_g, x_h)
             F, V, f = hf["F"], hf["V"], hf["f"]
@@ -559,6 +650,12 @@ def app2_flange_integral(inp: Dict[str, Any]) -> Dict[str, Any]:
     if not hubbed:
         warnings.append("Loose-type flange without a hub: the longitudinal-hub and radial stresses do not apply and are reported as zero.")
 
+    grade = grade_hub_factors(hubbed, tuple(sorted(overrides)))
+    # The grade banner heads the findings list; a partial override also names the factors still on the series.
+    warnings.insert(0, grade["banner"])
+    if grade["result_grade"] == GRADE_SCREENING and overrides:
+        warnings.insert(1, "Result grade screening: " + grade["grade_note"])
+
     return _result(
         "aux.app2-flange-integral",
         {
@@ -602,6 +699,8 @@ def app2_flange_integral(inp: Dict[str, Any]) -> Dict[str, Any]:
             "Joperating": round_half_up(J_op, 4),
             "Jseating": round_half_up(J_seat, 4),
             "governing": governing,
+            **grade,
+            "report_word": "tool rule met" if ok else "tool rule not met",
         },
         _verdict(ok),
         warnings,
@@ -1136,11 +1235,18 @@ def run_module(module: str, inp: Dict[str, Any]) -> Dict[str, Any]:
                 "Set creditCompression true only if the owner agrees to credit it; then run the tensile case separately and report both."
             )
     res = REGISTRY[module](engine_inp)
+    findings = pre_warnings + res["warnings"]
+    banner = res["output"].get("banner")
+    if module == "aux.app2-flange-integral" and banner in res["warnings"]:
+        # The grade banner is the first finding of the detailed analysis, ahead of the pre-flight notes.
+        rest = list(res["warnings"])
+        rest.remove(banner)
+        findings = [banner] + pre_warnings + rest
     envelope = {
         "module": res["module"],
         "status": res["status"],
         "output": _clean_zero(res["output"]),
-        "warnings": pre_warnings + res["warnings"],
+        "warnings": findings,
         "citation": CITATIONS[module],
         "inputs": inp,
         "user_supplied": [k for k in USER_SUPPLIED[module] if k in inp],
@@ -1148,6 +1254,63 @@ def run_module(module: str, inp: Dict[str, Any]) -> Dict[str, Any]:
     if provenance is not None:
         envelope["code_value_provenance"] = provenance
     return envelope
+
+
+# --------------------------------------------------------------------------- calc-sheet rendering
+
+
+def _cell(v: Any) -> str:
+    if isinstance(v, bool):
+        return "yes" if v else "no"
+    if isinstance(v, float):
+        return _js(v)
+    if isinstance(v, dict):
+        return ", ".join(f"{k} {_cell(x)}" for k, x in v.items())
+    return str(v)
+
+
+# Status words for the sheet. The machine status word of the envelope is left alone (the engine
+# fixtures assert it); the sheet states the same fact without the acceptance wording.
+_SHEET_STATUS = {
+    "connections.flange-equivalent-pressure": {
+        "pass": "Pe is within the supplied rating (leakage screen only)",
+        "fail": "Pe exceeds the supplied rating (leakage screen only)",
+    },
+    "aux.app2-flange-integral": {
+        "pass": "tool rule met: Ab >= Am, worst stress utilization <= 1, both J <= 1 (not an acceptance)",
+        "fail": "tool rule not met: Ab >= Am, stress utilization <= 1 or J <= 1 is exceeded (see findings)",
+    },
+}
+
+
+def render_sheet(env: Dict[str, Any]) -> str:
+    """Markdown calc-sheet block for one run. The banner line depends on the result grade."""
+    out = env["output"]
+    module = env["module"]
+    lines = [f"# Bolted Flange Evaluation - {module}", ""]
+    if "banner" in out:
+        lines += [f"**{out['banner']}**", ""]
+    if "result_grade" in out:
+        lines.append(f"Result grade: {out['grade_label']}")
+        if "factor_basis" in out:
+            lines.append("Hub factor basis: " + "; ".join(f"{k} {v}" for k, v in out["factor_basis"].items()))
+        if out.get("grade_note"):
+            lines.append(out["grade_note"])
+        lines.append("")
+    words = _SHEET_STATUS.get(module)
+    if words and env["status"] in words:
+        lines += [f"Tool status: {words[env['status']]}", ""]
+    scalars = [(k, v) for k, v in out.items() if not isinstance(v, dict) and k not in GRADE_KEYS]
+    lines += ["## Results", "", "| Quantity | Value |", "|---|---|"]
+    lines += [f"| {k} | {_cell(v)} |" for k, v in scalars]
+    for k, v in out.items():
+        if isinstance(v, dict) and k not in GRADE_KEYS:
+            lines += ["", f"## {k}", "", "| Quantity | Value |", "|---|---|"]
+            lines += [f"| {kk} | {_cell(vv)} |" for kk, vv in v.items()]
+    lines += ["", "## Findings", ""]
+    lines += [f"- {w}" for w in env["warnings"]] or ["- none"]
+    lines += ["", f"Citation: {env['citation']}", ""]
+    return "\n".join(lines)
 
 
 # --------------------------------------------------------------------------- CLI
@@ -1166,6 +1329,8 @@ def main(argv: Optional[List[str]] = None) -> int:
     ap.add_argument("module", help="module id, or `list`")
     ap.add_argument("--input", help="inline JSON object")
     ap.add_argument("--input-file", help="path to a JSON file")
+    ap.add_argument("--format", choices=("json", "sheet"), default="json",
+                    help="json (default): the envelope; sheet: a markdown calc-sheet block with the result-grade banner")
     try:
         args = ap.parse_args(argv)
     except SystemExit as exc:  # argparse exits 2 itself on usage errors
@@ -1188,7 +1353,11 @@ def main(argv: Optional[List[str]] = None) -> int:
             data = json.loads(raw)
         except json.JSONDecodeError as exc:
             return _fail(f"invalid JSON: {exc}")
-        print(json.dumps(run_module(args.module, data), indent=2))
+        env = run_module(args.module, data)
+        if args.format == "sheet":
+            sys.stdout.write(render_sheet(env))
+        else:
+            print(json.dumps(env, indent=2))
         return 0
     except (ValueError, OSError, ArithmeticError) as exc:
         return _fail(str(exc))

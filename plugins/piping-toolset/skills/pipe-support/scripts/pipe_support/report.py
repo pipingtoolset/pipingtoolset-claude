@@ -14,6 +14,7 @@ import json
 from typing import Dict, List, Optional
 
 from .aisc import OMEGA, PHI
+from .optimizer import MANUAL_CHECK, asd_wind_guard_text
 
 
 # The two report banner words, chosen by truth value rather than a conditional expression
@@ -28,6 +29,60 @@ def _verdict(ok) -> str:
 
 def _verdict_label(ok) -> str:
     return _STATUS_LABELS[1 if ok else 0]
+
+def _first_guard(env: dict) -> Optional[dict]:
+    """The guard on the highest-ratio guarded stage, or None."""
+    gs = env.get("guards") or []
+    return max(gs, key=lambda g: _f(g["ratio"])) if gs else None
+
+
+def guard_headline(env: dict) -> Optional[str]:
+    """NOT ISSUABLE headline when the ASD wind-anchorage guard holds the envelope, else None.
+
+    Wind-combination guards (governing / near-governing) share one headline naming every
+    wind combination; a factored-mode guard carries its own reason text."""
+    gs = env.get("guards") or []
+    if not gs:
+        return None
+    combos = [g["combo"] for g in gs if g.get("trigger", "governing") in ("governing", "near-governing")]
+    parts = [asd_wind_guard_text(", ".join(dict.fromkeys(combos)))] if combos else []
+    parts += [g["reason"] for g in gs if g.get("trigger", "governing") not in ("governing", "near-governing")]
+    return "; ".join(dict.fromkeys(parts))
+
+
+def guard_held_text(g: dict) -> str:
+    """What the guard held, for the banner and the stage section (one sentence fragment)."""
+    trig = g.get("trigger", "governing")
+    if trig == "near-governing":
+        return (f"{g['stage']} / {g['check']} = {_n(g['ratio'])} under wind combination {g['combo']}; the "
+                f"engine's governing row is {g['stageCheck']} = {_n(g['stageRatio'])} under {g['stageCombo']}, "
+                f"and {_n(g['ratio'])} x {g['margin']} ((1/0.6)/1.5) reaches it, so the wind combination could "
+                "govern")
+    if trig in ("factored-declared", "factored-undeclared"):
+        return (f"{g['stage']} / {g['check']} = {_n(g['ratio'])} on loads as entered ({g['basis']})")
+    return f"{g['stage']} / {g['check']} = {_n(g['ratio'])} under {g['combo']}"
+
+
+def cli_verdict(doc: dict) -> str:
+    """The one-line verdict support_calc prints with --quiet (ASCII only).
+
+    fail -> FAIL; guard (manual check required) -> NOT ISSUABLE naming the guarded stage and
+    check, never PASS; otherwise PASS, or PASS WITH n CRITICAL FINDING(S)."""
+    env = doc["envelope"]
+    crit = doc["criticalFindings"]
+    g = _first_guard(env)
+    if env["status"] == MANUAL_CHECK and g:
+        line = f"{guard_headline(env)} - {g['stage']} / {g['check']} = {g['ratio']} ({g['combo']})"
+        if crit:
+            line += f"; plus {crit} critical finding(s)"
+    else:
+        head = _verdict_label(env["status"] == "pass")
+        if head == "PASS" and crit:
+            head = f"PASS WITH {crit} CRITICAL FINDING(S)"
+        line = (f"{head} - {env['governingStage']} / {env['governingCheck']} = "
+                f"{env['governingRatio']} ({env['governingCombo']})")
+    return line.replace("\u2014", "-").encode("ascii", "replace").decode("ascii")
+
 
 SEV_ICON = {"critical": "CRITICAL", "major": "MAJOR", "minor": "minor", "info": "info"}
 CONFIG = {"t-post": "T-post (single column, top arm)", "multi-tier": "Multi-tier (single column, several arms)",
@@ -73,8 +128,15 @@ def compliance_matrix(env: dict, extras: Optional[dict] = None) -> List[dict]:
         else:
             vals = [s for s in env["stages"] if s["component"] in comps]
             worst = max((s["ratio"] for s in vals), default=None, key=_f)
-            st = "not in model" if worst is None else \
-                ("fail" if any(s["status"] == "fail" for s in vals) else "pass")
+            words = {s["status"] for s in vals}
+            if worst is None:
+                st = "not in model"
+            elif "fail" in words:
+                st = "fail"
+            elif MANUAL_CHECK in words:
+                st = MANUAL_CHECK
+            else:
+                st = "pass"
         rows.append({"area": name, "clauses": clauses, "worst": worst, "status": st})
     for k, v in (extras or {}).items():
         rows.append({"area": k, "clauses": v.get("clauses", ""), "worst": v.get("worst", "-"),
@@ -121,8 +183,31 @@ def markdown(doc: dict) -> str:
         verdict = f"PASS (strength) WITH {crit} CRITICAL REVIEW FINDING(S) - not issuable until resolved"
     run_txt = "loads as entered" if doc.get("loadMode") == "factored" else \
         f"combination {env['governingCombo']}; {env['combosRun']} combinations run"
-    L += [f"> **{verdict}** - governing: {env['governingStage']} / {env['governingCheck']} = "
-          f"**{_n(env['governingRatio'])}** ({run_txt})", ""]
+    g = _first_guard(env)
+    if env["status"] == MANUAL_CHECK and g:
+        line = (f"> **{guard_headline(env)}** - held: {guard_held_text(g)} ({MANUAL_CHECK}); highest ratio: "
+                f"{env['governingStage']} / "
+                f"{env['governingCheck']} = **{_n(env['governingRatio'])}** ({run_txt})")
+        if crit:
+            line += f"; plus {crit} critical review finding(s)"
+        L += [line, ""]
+    else:
+        L += [f"> **{verdict}** - governing: {env['governingStage']} / {env['governingCheck']} = "
+              f"**{_n(env['governingRatio'])}** ({run_txt})", ""]
+        if g:
+            L += [f"> Also {guard_headline(env)}.", ""]
+    if g:
+        L += ["**Validity guard - ASD anchorage under wind** (code-basis item 10; owner ruling 2026-10-30, "
+              "superseding item 6 of the 2026-10-26 P.E. rulings; P.E. confirmation pending). The ACI 318-19 "
+              "strength-design anchor capacity is converted to ASD with a fixed 1/1.5 (R17.5.3); under a 0.6W "
+              "combination the implied factor is 1/0.6 = 1.67, so the anchorage ratio shown can be about 10 % "
+              "unconservative. The ratio is the engine's, unchanged; the stage is held at "
+              f"\"{MANUAL_CHECK}\" until the anchorage is run in LRFD or the factor treatment is resolved. "
+              "The guard holds a stage when its governing ASD combination carries wind, when a wind "
+              "combination's ratio x (1/0.6)/1.5 reaches the governing non-wind ratio, or, on factored "
+              "loads, unless the spec declares them wind-free (factored_wind: false). Held here: "
+              + "; ".join(f"{guard_held_text(x)} [{x.get('trigger', 'governing')}]"
+                          for x in env.get("guards") or []) + ".", ""]
 
     L += ["## Design basis", ""]
     if m == "LRFD":
@@ -202,6 +287,10 @@ def markdown(doc: dict) -> str:
     for st in env["stages"]:
         L += [f"### {st['stage']} - {st['status'].upper()} (max UR {_n(st['ratio'])}"
               + ("" if factored else f", combination {st['combo']}") + ")", ""]
+        if st.get("asdWindGuard"):
+            sg = st["asdWindGuard"]
+            L += [f"Held by the ASD wind-anchorage guard: engine status {sg['engineStatus']} at the fixed 1/1.5 "
+                  f"conversion; {guard_held_text(sg)} - {MANUAL_CHECK} (code-basis item 10).", ""]
         L += _table(["Limit state", "Demand", "Capacity", "Unit", "Ratio", "Clause"],
                     [[c["label"] + (" (advisory)" if c.get("advisory") else ""), _n(c["demand"]),
                       _n(c["capacity"]), unit(c["label"], st["component"]), _n(c["ratio"]),

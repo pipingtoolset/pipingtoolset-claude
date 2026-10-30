@@ -41,6 +41,12 @@ def run(module: str, inputs: dict) -> dict:
     return pd.REGISTRY[module](dict(inputs))
 
 
+def with_basis(module: str, inputs: dict) -> dict:
+    """A run_module / CLI job: a module whose equation carries W also gets a W_basis (0.7.2 W gate).
+    The engine functions (run above) never see it."""
+    return dict(inputs, W_basis="seamless") if module in pd.W_MODULES else dict(inputs)
+
+
 class Parity(unittest.TestCase):
     """One method per module so a failure names the module."""
 
@@ -458,7 +464,8 @@ class CommandLine(unittest.TestCase):
 
     def test_run_fixture_input(self):
         case = parity.load("piping.b313-wall-thickness")["cases"][0]
-        r = self._run("piping.b313-wall-thickness", "--input", json.dumps(case["input"]))
+        job = with_basis("piping.b313-wall-thickness", case["input"])
+        r = self._run("piping.b313-wall-thickness", "--input", json.dumps(job))
         self.assertEqual(r.returncode, 0, r.stderr)
         env = json.loads(r.stdout)
         self.assertEqual(env["module"], "piping.b313-wall-thickness")
@@ -466,15 +473,16 @@ class CommandLine(unittest.TestCase):
         for key, want in case["expect"].items():
             self.assertAlmostEqual(env["output"][key], want, delta=case["tol"], msg=key)
         self.assertEqual(env["citation"], pd.CITATIONS["piping.b313-wall-thickness"])
-        self.assertEqual(env["inputs"], case["input"])
+        self.assertEqual(env["inputs"], job)
         self.assertEqual(env["user_supplied"], ["S", "E", "W", "Y"])
         self.assertIn("warnings", env)
+        self.assertEqual(env["result_grade"], "calculated")
 
     def test_short_module_name_and_input_file(self):
         path = os.path.join(ROOT, "tests", "_pressure_design_cli_input.json")
         try:
             with open(path, "w", encoding="utf-8") as fh:
-                json.dump(HandDerived.B313, fh)
+                json.dump(with_basis("piping.b313-wall-thickness", HandDerived.B313), fh)
             r = self._run("b313-wall-thickness", "--input-file", path)
         finally:
             if os.path.exists(path):
@@ -482,22 +490,25 @@ class CommandLine(unittest.TestCase):
         self.assertEqual(r.returncode, 0, r.stderr)
         self.assertAlmostEqual(json.loads(r.stdout)["output"]["tOrder"], 752 / 2205, delta=TOL)
 
-    def test_defaults_applied_is_reported(self):
+    def test_omitted_w_is_never_a_silent_default(self):
         inp = dict(P=800, D=6, S=20000, E=0.8, y=0.4, A=0.05, millTolerance=0.125)
         r = self._run("piping.b311-wall-thickness", "--input", json.dumps(inp))
+        self.assertEqual((r.returncode, r.stdout), (2, ""))
+        self.assertIn("Table 102.4.7-1", r.stderr)
+        r = self._run("piping.b311-wall-thickness", "--input", json.dumps(dict(inp, W_basis="seamless")))
         self.assertEqual(r.returncode, 0, r.stderr)
         env = json.loads(r.stdout)
-        self.assertEqual(env["defaults_applied"], {"W": 1.0})
-        self.assertNotIn("W", env["user_supplied"])
+        self.assertEqual(env["defaults_applied"], {})
+        self.assertEqual((env["weld_factor_basis"]["W"], env["weld_factor_basis"]["basis"]), (1.0, "seamless"))
 
     def test_single_miter_reports_pm2_as_null(self):
-        inp = dict(S=18000, E=1, W=1, Tc=0.2, r2=5, R1=15, thetaDeg=30, miters=1)
+        inp = dict(S=18000, E=1, W=1, W_basis="seamless", Tc=0.2, r2=5, R1=15, thetaDeg=30, miters=1)
         r = self._run("piping.miter-allowable-pressure", "--input", json.dumps(inp))
         self.assertEqual(r.returncode, 0, r.stderr)
         self.assertIsNone(json.loads(r.stdout)["output"]["Pm2"])
 
     def test_multi_miter_keeps_numeric_pm2(self):
-        inp = dict(S=18000, E=1, W=1, Tc=0.2, r2=5, R1=15, thetaDeg=15, miters=3)
+        inp = dict(S=18000, E=1, W=1, W_basis="seamless", Tc=0.2, r2=5, R1=15, thetaDeg=15, miters=3)
         r = self._run("piping.miter-allowable-pressure", "--input", json.dumps(inp))
         self.assertAlmostEqual(json.loads(r.stdout)["output"]["Pm2"], 576.0, delta=1e-3)
 
@@ -603,9 +614,18 @@ class CodeValues(unittest.TestCase):
     """The optional top-level code_values input, the contract shared by the calculator scripts."""
 
     MOD = "piping.b313-wall-thickness"
-    B313 = HandDerived.B313
+    B313 = dict(HandDerived.B313, W_basis="seamless")
     ENVELOPE_KEYS = {"module", "status", "output", "warnings", "citation", "inputs", "user_supplied",
                      "defaults_applied"}
+
+    def _keys(self, module):
+        """The envelope keys of a valid run: W modules add weld_factor_basis, gated ones validity."""
+        keys = set(self.ENVELOPE_KEYS)
+        if module in pd.W_MODULES:
+            keys.add("weld_factor_basis")
+        if module in pd.GATED_MODULES:
+            keys |= {"validity", "result_grade"}
+        return keys
 
     def _cli(self, inputs: dict) -> subprocess.CompletedProcess:
         return subprocess.run([sys.executable, CLI, self.MOD, "--input", json.dumps(inputs)],
@@ -619,7 +639,7 @@ class CodeValues(unittest.TestCase):
 
     def test_every_module_filled_run_equals_the_explicit_run(self):
         for module in pd.REGISTRY:
-            base = dict(parity.load(module)["cases"][0]["input"])
+            base = with_basis(module, parity.load(module)["cases"][0]["input"])
             names = [n for n in pd.user_supplied_names(module) or ["c", "Th"]     # branch-reinforcement has none
                      if isinstance(base.get(n), (int, float)) and not isinstance(base.get(n), bool)]
             self.assertTrue(names, module)
@@ -631,7 +651,7 @@ class CodeValues(unittest.TestCase):
 
     def test_each_user_supplied_input_can_be_filled_on_its_own(self):
         for module in pd.REGISTRY:
-            base = dict(parity.load(module)["cases"][0]["input"])
+            base = with_basis(module, parity.load(module)["cases"][0]["input"])
             want = pd.run_module(module, dict(base))
             for name in pd.user_supplied_names(module):
                 if not isinstance(base.get(name), (int, float)) or isinstance(base.get(name), bool):
@@ -727,18 +747,20 @@ class CodeValues(unittest.TestCase):
 
     def test_absent_code_values_changes_nothing(self):
         for module in pd.REGISTRY:
-            base = dict(parity.load(module)["cases"][0]["input"])
+            base = with_basis(module, parity.load(module)["cases"][0]["input"])
             env = pd.run_module(module, dict(base))
-            self.assertEqual(set(env), self.ENVELOPE_KEYS, module)
+            self.assertEqual(set(env), self._keys(module), module)
             self.assertNotIn("code_value_provenance", env, module)
-            self.assertEqual(env["inputs"], base, module)
+            # inputs shows the values used: an omitted W stated by W_basis is echoed as 1.0
+            used = dict(base, W=1.0) if module in pd.W_MODULES and "W" not in base else base
+            self.assertEqual(env["inputs"], used, module)
             # a null block is treated as absent
             nulled = pd.run_module(module, dict(base, code_values=None))
             self.assertEqual(nulled, env, module)
 
     def test_an_empty_block_changes_nothing(self):
         for module in pd.REGISTRY:
-            base = dict(parity.load(module)["cases"][0]["input"])
+            base = with_basis(module, parity.load(module)["cases"][0]["input"])
             self.assertEqual(pd.run_module(module, dict(base, code_values={})), pd.run_module(module, dict(base)), module)
 
     def test_the_caller_dict_is_not_modified(self):

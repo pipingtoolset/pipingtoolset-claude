@@ -5,17 +5,29 @@ The order of the ladder is fixed. Each rung answers a different question, and no
 ## Why the pressure-equivalent screen runs first
 
 1. It needs almost nothing: the load, the design pressure, the gasket reaction diameter G and the rating the user already holds. It can be run at the first review of a restraint summary, before the flange is fully specified.
-2. It is conservative, so a pass is informative. A pass says the loads are small enough that the joint can be reported as passing the screen; the detailed analysis is optional unless the owner requires it.
+2. It is conservative, so a result within the rating is informative. It says the loads are small enough that Pe is within the screen (graded `screening`, reported "within"); the detailed analysis is optional unless the owner requires it.
 3. A failure is not a verdict. The screen converts the moment to an equivalent axial pressure load. The detailed analysis then asks the questions the screen cannot: bolt area, gasket seating, flange stress and rigidity.
 4. It is always reported, even when the detailed analysis is also run. A reviewer who sees only the detailed result cannot tell whether the quick check was skipped.
 
 ## The rungs
 
-| Rung | Question it answers | What a pass proves | What it does not prove |
+| Rung | Question it answers | What a within-rating result proves | What it does not prove |
 |---|---|---|---|
 | 1. Pressure-equivalent screen (`connections.flange-equivalent-pressure`) | Is the combined load, expressed as a pressure, within the flange rating (or the owner's percentage of it)? | The loads are within a conservative envelope of the rating basis | Bolt stress, gasket seating, flange stress, rigidity, creep relaxation, assembly bolt load. It is not a stress check |
 | 2. Detailed VIII-2 4.16 analysis (`aux.app2-flange-integral`) | Do the bolts, hub, ring and rigidity hold at design pressure plus the equivalent external load, in both the operating and the seating case? | Bolt area adequacy and flange stresses against allowables under a pressure-equivalent treatment of the external loads | That the pressure-equivalent treatment is the Code's own external-moment treatment (it is not); fatigue; leakage rate of a specific gasket |
 | 3. Interaction methods (named, not computed) | Is the joint acceptable by a published criterion for standard flanges (UG-44(b) / 4.16.12, NC-3658.3) or by a different model (EN 1591-1)? | Per the method's own conditions | Anything outside those conditions |
+
+## Result grade of each rung
+
+Status taxonomy used across the pack: calculated / screening / manual check required / pointer only / not checked.
+
+| Rung | `result_grade` |
+|---|---|
+| 1. Pressure-equivalent screen | `screening` always. It is a leakage screen by definition (see the table above), whatever the inputs |
+| 2. Detailed VIII-2 4.16 analysis | `screening` (label "screening / reconstructed factors") while any hub factor F, V or f the flange type uses came from the open-source series; `calculated` only when `F_override`, `V_override` and `f_override` were all supplied (a loose flange uses no hub factor and is `calculated`) |
+| 3. Interaction methods | `not checked`: named on the sheet, not computed |
+
+A `screening` result carries the banner `SCREENING / RECONSTRUCTED FACTORS` and no PASS or issue-grade wording. Rung 1 within the screen and rung 2 being `screening` are different statements; report each with its own grade.
 
 ## The screen, derived
 

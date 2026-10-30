@@ -79,12 +79,64 @@ verdict.
 9. **Pier with a resultant outside the footing** returns an infinite soil ratio. That means
    "footing too small", not a numerical fault.
 
-10. **ASD anchorage** converts the ACI 318-19 (strength-design) anchor capacity to an allowable
-    value with a fixed 1/1.5 (R17.5.3). For a wind-governed ASD combination (0.6W) the
-    implied factor is 1/0.6 = 1.67, so ASD anchorage can be about 10 % unconservative there.
-    Run anchorage in **LRFD**, or check wind-governed anchors by hand. **Kept as is by P.E.
-    ruling (2026-10-26)**; since 0.3.2 the reviewer raises a *major* finding whenever an ASD
-    anchorage stage is governed by a wind combination.
+10. **ASD anchorage under wind - GUARDED in the engine (owner ruling 2026-10-30; plugin 0.7.2;
+    P.E. confirmation pending at PR review).**
+    - *The issue.* ASD anchorage converts the ACI 318-19 (strength-design) anchor capacity to
+      an allowable value with a fixed 1/1.5 (R17.5.3). For a wind-governed ASD combination
+      (0.6W) the implied factor is 1/0.6 = 1.67, so ASD anchorage can be about 10 %
+      unconservative there.
+    - *Ruling superseded.* Item 6 of the 2026-10-26 P.E. rulings kept this "documented only":
+      the engine was not changed and, from 0.3.2, the reviewer raised a *major* finding, but a
+      PASS could still be printed on a wind-governed ASD combination. The 2026-10-30 owner
+      ruling supersedes it: an automatic guard now **blocks** an ASD anchorage pass when a wind
+      combination governs.
+    - *What the guard does.* When the design method is ASD, an anchorage stage is held when
+      any of these holds (the `trigger` key of the guard):
+      1. *governing* - its governing combination carries wind (`loads.asd_wind_combo`, the
+         one predicate the envelope and the reviewer share; ASCE 7-22 2.4.1 combinations 5a,
+         6a, 7a and their ± and +T variants);
+      2. *near-governing* - a non-wind combination governs, but the worst wind combination's
+         anchorage ratio times (1/0.6)/1.5 = 1.111 reaches the governing ratio
+         (`loads.asd_wind_could_govern`), so under the 1/0.6 treatment the wind combination
+         could govern. This also covers a tie the envelope broke in favour of an earlier
+         non-wind id. Example (test `NearGoverningWind`): seismic ASD-8-+T governs at 0.9494,
+         wind ASD-5a-+T gives 0.9249, and 0.9249 x 1.111 = 1.028; before this rule a plain
+         PASS was printed;
+      3. *factored* - the loads are factored "as entered" (no combination ids) and the spec
+         does not set `factored_wind: false`. `factored_wind: true` is held with the wind
+         headline; an absent key is held with "NOT ISSUABLE - ASD anchorage on factored loads
+         with undeclared wind content: ...". `false` is the engineer's declaration that the
+         entered loads carry no wind term; the reviewer then raises an *info* finding naming it.
+
+      The held stage's status becomes **manual check required** instead of pass, and the
+      envelope status cannot be pass. The verdict line reads "NOT ISSUABLE - ASD anchorage governed by
+      wind combination `<id>`: run anchorage in LRFD or resolve the ACI strength-to-ASD factor
+      treatment (code-basis item 10)", names the held stage and check, and carries no PASS
+      banner; `support_calc.py` exits 3. The ratio shown is the engine's, unchanged (the guard
+      is a status, not a re-factored number). A wind-governed ASD anchorage that already fails
+      stays fail and carries the guard note. The optimizer evaluates every alternative and the
+      as-drawn seed through the same envelope, so a guarded design is never ranked as
+      passing; its search log says which pairings the guard held.
+    - *Unchanged.* LRFD anchorage, and ASD anchorage governed by a non-wind combination (dead,
+      dead + thermal, seismic 2.4.5 8-10, hydrotest) with no wind combination inside the
+      1.111 margin, are not touched (ps-201 in ASD, WIN x1.0, EQ x1.6: seismic 0.9494 against
+      wind 0.6841, not held). The reviewer's *major*
+      finding stays as defence in depth and now says whether the guard was applied.
+    - *Not seen by the guard.* A factored-mode spec that declares `factored_wind: false`
+      when the loads do carry wind: the declaration is taken as given (info finding).
+    - *P.E. confirmation points (PR review).* (a) The trigger is coarse: combination 5a
+      (1.0D + 0.6W) is at least as large as 1a whenever any horizontal WIN case exists, so the
+      guard fires on almost every ASD support with a WIN case, even when W is small and the
+      fixed 1/1.5 is conservative for the mixed D + W demand (ps-201 in ASD with WIN x0.1
+      and no EQ: anchorage 0.5382 under ASD-5a-+T against 0.5221 under ASD-1a+T, held). A
+      refinement by wind share needs a ruling on the factor treatment. (b) The near-governing
+      margin uses the 5a pairing 1/0.6; combination 6a carries 0.45W and is not given a
+      separate margin. (c) Factored mode holds ASD anchorage unless `factored_wind: false` is
+      declared. (d) The guard reuses exit 3, now "not issuable although no limit state fails"
+      (critical finding or a guard); a caller that read 3 as "critical finding" only must
+      also read the verdict line.
+    - *To clear it.* Run the anchorage in **LRFD** (ACI 318-19 Ch. 17 is strength design), or
+      resolve the strength-to-ASD factor treatment for the wind-governed anchors by hand.
 
 11. **J10.1 loaded width** for an open-shape arm is tw + 2w, the footprint of the two web or
     leg fillets, and the clause says so. If the arm **flanges** are also welded to the column,
@@ -99,4 +151,6 @@ verdict.
   needed for some anchorage designs. Map a case scaled by Ω0 as `Eh` and re-run.
 - **Torsion** (H3) of the column under longitudinal pipe loads: reported, not checked.
 
-Report items 10 and 11 to the user whenever the design is close to a limit in that element.
+Report item 11 to the user whenever the design is close to a limit in that element. Report
+item 10 whenever the method is ASD and anchorage is in the model: the guard holds the verdict
+when wind governs, whatever the ratio.

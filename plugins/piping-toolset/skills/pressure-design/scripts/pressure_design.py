@@ -47,7 +47,29 @@ USAGE
     python pressure_design.py piping.b313-wall-thickness --input '{"P": 500, ...}'
     python pressure_design.py b313-wall-thickness --input-file job.json
 
-    Exit status: 0 = calculated, 2 = bad input (one-line message on stderr).
+    Exit status: 0 = the run completed, 2 = bad input (one-line message on stderr). Exit 0 does
+    not mean a design basis: a tripped validity gate also exits 0, so callers must read
+    "status" / "result_grade" ("manual check required" carries no design value).
+
+GATES (CLI layer; the engine functions and their fixture outputs are unchanged)
+    W basis. Where the code and edition's equation carries W (B31.3 Eq. (3a), (3c), (4a)-(4c);
+    B31.1 Eq. (7), (9), (3) from the 2018 edition), W is part of the contract: W omitted and
+    no W_basis, or W = 1.0 with no W_basis (and no cited code_values entry for W), exits 2 with
+    the W table and edition to read. W omitted with a W_basis is applied as 1.0 on that basis.
+    B31.9 and B31.12 equations carry no W; the run records that and needs no basis. B31.1-2016
+    straight pipe is gated by the para. 104.1.1 route: Eq. (7) (no W) for seamless pipe or pipe
+    below the creep range, para. 104.1.4 Eq. (11) (with W) for welded pipe in the creep range;
+    W or a W_basis naming the route is required and the route is warned on the sheet.
+    "weld_factor_basis" records the outcome; "defaults_applied" never holds W.
+    Thin-wall validity. Straight-pipe thickness (B31.3, B31.1), the MAWP inverse and the bend
+    thickness carry "validity": P_over_SE (P/(S*E); the computed allowable pressure for MAWP;
+    times Mf for B31.12) against 0.385 and the thickness against D/6. When either trips the
+    envelope "status" and "result_grade" are "manual check required", "output" is empty, and
+    the engine's numbers move to "equation_value" labelled "equation value, not a design
+    basis", with the clause that calls for special consideration in "banner" and "warnings".
+    A valid run carries "result_grade": "calculated" and unchanged numbers and status.
+    Basis inputs W_basis, edition and code (the last for the MAWP and bend modules) are text,
+    echoed in "inputs" and never passed to the equations.
 
     A job file may carry comment keys: a top-level key that starts with an underscore
     (for example "_note") is dropped before the inputs are read. See examples/.
@@ -68,6 +90,7 @@ import argparse
 import copy
 import json
 import math
+import re
 import sys
 from decimal import Decimal, ROUND_HALF_UP
 from typing import Any, Callable, Dict, List, Optional
@@ -114,7 +137,7 @@ FIELDS: Dict[str, List[Field]] = {
         ("D", "in", True, False, "Pipe outside diameter"),
         ("S", "psi", True, True, "Basic allowable stress at design temperature (Appendix A table, by edition)"),
         ("E", "-", True, True, "Quality factor E (Appendix A quality-factor tables, by edition)"),
-        ("W", "-", True, True, "Weld joint strength reduction factor W (Table 302.3.5)"),
+        ("W", "-", True, True, "Weld joint strength reduction factor W (Table 302.3.5; 302.3.5-1 in 2024). W = 1.0 needs W_basis"),
         ("Y", "-", True, True, "Coefficient Y (Table 304.1.1)"),
         ("c", "in", True, False, "Sum of mechanical + corrosion + erosion allowances"),
         ("millTolerance", "fraction", True, False, "Mill under-tolerance as a fraction, e.g. 0.125"),
@@ -124,7 +147,7 @@ FIELDS: Dict[str, List[Field]] = {
         ("D", "in", True, False, "Pipe outside diameter"),
         ("S", "psi", True, True, "Allowable stress at design temperature (Appendix A)"),
         ("E", "-", True, True, "Quality / joint factor E"),
-        ("W", "-", False, True, "Weld strength reduction factor W (para. 102.4.7); default 1.0 - confirm it applies"),
+        ("W", "-", False, True, "Weld strength reduction factor W (para. 102.4.7, Table 102.4.7-1). Omitted or 1.0 needs W_basis where the edition's Eq. (7) carries W"),
         ("y", "-", True, True, "Temperature coefficient y (Table 104.1.2(A))"),
         ("A", "in", True, False, "Additional thickness (mechanical, corrosion, erosion, threading)"),
         ("millTolerance", "fraction", True, False, "Mill under-tolerance as a fraction, e.g. 0.125"),
@@ -136,7 +159,7 @@ FIELDS: Dict[str, List[Field]] = {
         ("A", "in", True, False, "Additional thickness allowance (corrosion, threading, ...)"),
         ("S", "psi", True, True, "Allowable stress at design temperature"),
         ("E", "-", True, True, "Quality / joint factor E"),
-        ("W", "-", False, True, "Weld joint strength reduction factor W (B31.3 Table 302.3.5-1 / B31.1 Table 102.4.7-1); default 1.0 - codes without W (B31.9, B31.12) use 1.0"),
+        ("W", "-", False, True, "Weld joint strength reduction factor W (B31.3 Table 302.3.5 / 302.3.5-1, B31.1 Table 102.4.7-1). Omitted or 1.0 needs W_basis unless code is B31.9 / B31.12 (no W term)"),
         ("y", "-", True, True, "Temperature coefficient y / Y"),
         ("Mf", "-", True, True, "Material performance factor (B31.12 hydrogen only; 1.0 otherwise)"),
     ],
@@ -159,14 +182,14 @@ FIELDS: Dict[str, List[Field]] = {
         ("R", "in", True, False, "Bend radius to the pipe centerline"),
         ("S", "psi", True, True, "Allowable stress at design temperature"),
         ("E", "-", True, True, "Quality / joint factor E"),
-        ("W", "-", False, True, "Weld joint strength reduction factor W; default 1.0 - confirm it applies"),
+        ("W", "-", False, True, "Weld joint strength reduction factor W. Omitted or 1.0 needs W_basis where the equation carries W"),
         ("y", "-", True, True, "Temperature coefficient y / Y"),
         ("A", "in", True, False, "Additional thickness allowance"),
     ],
     "piping.miter-allowable-pressure": [
         ("S", "psi", True, True, "Allowable stress at design temperature"),
         ("E", "-", True, True, "Quality / joint factor E"),
-        ("W", "-", False, True, "Weld joint strength reduction factor W; default 1.0 - confirm it applies"),
+        ("W", "-", False, True, "Weld joint strength reduction factor W. Omitted or 1.0 needs W_basis where the equation carries W"),
         ("Tc", "in", True, False, "Wall available for pressure (nominal - mill tolerance - allowances)"),
         ("r2", "in", True, False, "Mean pipe radius, (D - T)/2"),
         ("R1", "in", True, False, "Effective miter bend radius (centerline)"),
@@ -815,6 +838,266 @@ def validate(module: str, inputs: Any) -> List[str]:
 
 
 # --------------------------------------------------------------------------- #
+# Validity gates and the W basis (CLI / envelope layer only). The engine functions above are
+# untouched, so every fixture case gives the same numbers and status words; these gates read
+# the engine's result and the inputs and decide whether that result may be used as a design
+# basis. Output status words (the pack taxonomy): calculated / screening / manual check
+# required / pointer only / not checked. This layer uses "calculated" and "manual check
+# required".
+# --------------------------------------------------------------------------- #
+
+# The thick-wall trigger stated in the running text of B31.3 para. 304.1.2(b) (and B31.12
+# para. IP-3.2.1(b) with Mf): an equation constant, not a table value.
+THIN_WALL_LIMIT = 0.385
+LABEL_EQUATION_VALUE = "equation value, not a design basis"
+GRADE_CALCULATED = "calculated"
+GRADE_MANUAL = "manual check required"
+
+# Modules whose equation can carry W, and the subset that applies the straight-pipe thin-wall
+# basis (Eq. (3a) / Eq. (7) / their inverse / the I-factor form of the same equation).
+W_MODULES = ("piping.b313-wall-thickness", "piping.b311-wall-thickness", "piping.b31-allowable-pressure",
+             "piping.bend-thickness", "piping.miter-allowable-pressure")
+GATED_MODULES = ("piping.b313-wall-thickness", "piping.b311-wall-thickness", "piping.b31-allowable-pressure",
+                 "piping.bend-thickness")
+FIXED_CODE = {"piping.b313-wall-thickness": "B31.3", "piping.b311-wall-thickness": "B31.1",
+              "piping.miter-allowable-pressure": "B31.3"}
+CODE_CHOICES = {"piping.b31-allowable-pressure": ("B31.3", "B31.1", "B31.9", "B31.12"),
+                "piping.bend-thickness": ("B31.3", "B31.1")}
+W_BASIS_EXAMPLES = ("seamless", "below creep range per table note", "longitudinal weld, confirmed")
+_W_BASIS_HINT = " | ".join(W_BASIS_EXAMPLES) + " | free text"
+
+# Basis inputs: strings the CLI reads and records; they never reach the engine functions.
+#   (name, description)
+BASIS_FIELDS: Dict[str, List[tuple]] = {}
+for _m in W_MODULES:
+    BASIS_FIELDS[_m] = [
+        ("W_basis", "Why W is what it is, recorded on the sheet: " + _W_BASIS_HINT
+         + ". Required when W is omitted or W = 1.0 and the edition's equation carries W"),
+        ("edition", "Code edition year of record, e.g. 2022 (decides whether the B31.1 equation carries W)"),
+    ]
+    if _m in CODE_CHOICES:
+        BASIS_FIELDS[_m].append(("code", "Code of record: " + " | ".join(CODE_CHOICES[_m])
+                                 + " (omitted: treated as an equation that carries W)"))
+del _m
+
+
+def _edition_year(edition: Any) -> Optional[int]:
+    """The four-digit year in an edition input (2022, "2022", "B31.1-2016"), or None."""
+    if edition is None:
+        return None
+    hits = re.findall(r"(?<!\d)((?:19|20)\d\d)(?!\d)", str(edition))
+    return int(hits[-1]) if hits else None
+
+
+def split_basis(module: str, inputs: dict) -> tuple:
+    """(engine inputs without the basis strings, basis dict). Rejects malformed basis values."""
+    names = [f[0] for f in BASIS_FIELDS.get(module, [])]
+    basis = {n: inputs[n] for n in names if inputs.get(n) is not None}
+    engine = {k: v for k, v in inputs.items() if k not in names}
+    wb = basis.get("W_basis")
+    if wb is not None and (not isinstance(wb, str) or not wb.strip()):
+        raise ValueError(f"W_basis must be a non-empty string ({_W_BASIS_HINT})")
+    ed = basis.get("edition")
+    if ed is not None and (isinstance(ed, bool) or not isinstance(ed, (str, int)) or not str(ed).strip()):
+        raise ValueError("edition must be a year or a string such as \"2022\"")
+    if "code" in basis:
+        raw = basis["code"]
+        norm = re.sub(r"^ASME", "", raw.replace(" ", "").upper()) if isinstance(raw, str) else None
+        choices = CODE_CHOICES[module]
+        if norm not in choices:
+            raise ValueError(f"code must be one of {', '.join(choices)} for {module}")
+        basis["code"] = norm
+    return engine, basis
+
+
+def _w_table(code: Optional[str], year: Optional[int]) -> str:
+    """Pointer to the W table and paragraph for a code and edition (table names only, no values)."""
+    if code == "B31.1":
+        if year == 2016:
+            return "B31.1 Table 102.4.7 (para. 102.4.7)"
+        return "B31.1 Table 102.4.7-1 (para. 102.4.7)"
+    if code == "B31.3":
+        if year is not None and year >= 2024:
+            return "B31.3 Table 302.3.5-1 (para. 302.3.5(e))"
+        if year is not None:
+            return "B31.3 Table 302.3.5 (para. 302.3.5(e))"
+        return "B31.3 Table 302.3.5 (Table 302.3.5-1 from the 2024 edition; para. 302.3.5(e))"
+    return ("B31.3 Table 302.3.5 / 302.3.5-1 (para. 302.3.5(e)) or B31.1 Table 102.4.7-1 "
+            "(para. 102.4.7), by the code of record")
+
+
+# B31.1-2016 straight pipe: para. 104.1.1 picks the equation by construction and temperature.
+# Eq. (7)/(9) of para. 104.1.2 (no W) cover seamless pipe and pipe below the creep range; Eq.
+# (11)/(12) and the design-pressure form of para. 104.1.4 (S*E*W, the engine's own form) cover
+# longitudinal- or spiral-welded pipe in the creep range. The route can therefore require W.
+ROUTE_2016 = "route"
+_ROUTE_2016_TEXT = ("B31.1-2016 para. 104.1.1: seamless pipe and pipe below the creep range take para. 104.1.2 "
+                    "Eq. (7) (no W); longitudinal- or spiral-welded pipe in the creep range takes para. 104.1.4 "
+                    "Eq. (11) with W from B31.1 Table 102.4.7 (para. 102.4.7)")
+
+
+def _w_route(module: str, basis: dict) -> tuple:
+    """(code or None, year or None, carries, reason). carries: True (the equation carries W),
+    False (it has none; reason says why) or ROUTE_2016 (B31.1-2016 straight pipe: the para.
+    104.1.1 route decides, so W is gated like an equation that carries it)."""
+    code = FIXED_CODE.get(module, basis.get("code"))
+    year = _edition_year(basis.get("edition"))
+    if code in ("B31.9", "B31.12"):
+        return code, year, False, f"the {code} pressure-design equation has no W term"
+    if code == "B31.1" and year == 2016:
+        if module == "piping.bend-thickness":
+            return code, year, False, "B31.1-2016 para. 102.4.5 Eq. (3) has no W term"
+        return code, year, ROUTE_2016, _ROUTE_2016_TEXT
+    return code, year, True, None
+
+
+def w_gate(module: str, inputs: dict, basis: dict, provenance: Optional[dict]) -> tuple:
+    """Enforce the W rule. Returns (engine inputs, record, warnings); raises ValueError (exit 2).
+
+    Where the code and edition's equation carries W: W and W_basis both absent stops the run
+    with the table to read; W = 1.0 needs W_basis (or a cited code_values entry for W); W
+    omitted with a W_basis is applied as 1.0 on that basis and shown in inputs. Where the
+    equation has no W the run records that and needs no basis."""
+    code, year, carries, reason = _w_route(module, basis)
+    W = inputs.get("W")
+    if W is not None and (isinstance(W, bool) or not isinstance(W, (int, float))):
+        raise ValueError("input 'W' must be a number")
+    wb = basis.get("W_basis")
+    cited = (provenance or {}).get("W")
+    where = f"{code}-{year}" if (code and year) else f"{code or 'the code'} edition of record"
+    warnings: List[str] = []
+    record: Dict[str, Any] = {"code": code, "edition": basis.get("edition"), "W_in_equation": carries}
+    if not carries:
+        record.update(W=W, basis=wb or reason, basis_source="W_basis" if wb else "equation has no W", note=reason)
+        if W is not None and float(W) != 1.0:
+            warnings.append(f"W = {_js_num(float(W))} applied although {reason}; the result is conservative.")
+        return inputs, record, warnings
+    table = _w_table(code, year)
+    if carries == ROUTE_2016:
+        if W is None and wb is None:
+            raise ValueError(f"W or W_basis is required for {module} under {where}: {reason}; give W, or "
+                             f"W_basis naming the route ({_W_BASIS_HINT})")
+        if W is not None and float(W) == 1.0 and wb is None and cited is None:
+            raise ValueError(f"W = 1.0 needs W_basis for {module} under {where}: {reason} ({_W_BASIS_HINT})")
+        creep_weld = W is not None and float(W) < 1.0
+        record.update(W_in_equation=creep_weld, note=reason,
+                      route=("para. 104.1.4 Eq. (11) (S*E*W)" if creep_weld else
+                             "para. 104.1.2 Eq. (7), or para. 104.1.4 Eq. (11) at W = 1.0 (the same numbers), "
+                             "on the stated basis"))
+        if not creep_weld:
+            warnings.append(f"B31.1-2016: para. 104.1.2 Eq. (7) applies only to seamless pipe or pipe below the "
+                            f"creep range (para. 104.1.1); longitudinal- or spiral-welded pipe in the creep range is "
+                            f"para. 104.1.4 with W from {table}. Basis recorded: {wb or 'cited W'}.")
+    elif W is None and wb is None:
+        raise ValueError(f"W is required for {module}: read W from {table} for {where} at the design "
+                         f"temperature, or give W_basis ({_W_BASIS_HINT})")
+    elif W is not None and float(W) == 1.0 and wb is None and cited is None:
+        raise ValueError(f"W = 1.0 needs W_basis for {module}: confirm it from {table} for {where} ({_W_BASIS_HINT})")
+    if W is None:
+        inputs = dict(inputs, W=1.0)
+        record.update(W=1.0, basis=wb, basis_source="W_basis (W omitted, applied as 1.0)")
+    elif wb is not None:
+        record.update(W=W, basis=wb, basis_source="W_basis")
+    elif cited is not None:
+        c = cited.get("citation") or {}
+        record.update(W=W, basis="cited: " + ", ".join(str(c[k]) for k in ("standard", "edition", "table", "row", "column")
+                                                    if c.get(k)), basis_source="code_values citation")
+    else:
+        record.update(W=W, basis=None, basis_source="reduced W supplied; cite its table line in section 3")
+    record["table"] = table
+    E = inputs.get("E")
+    if (isinstance(wb, str) and wb.strip().lower() == "seamless" and isinstance(E, (int, float))
+            and not isinstance(E, bool) and float(E) < 1.0):
+        warnings.append(f"W_basis says seamless but E = {_js_num(float(E))} is below 1, which points to a welded "
+                        f"or cast product form; confirm the joint type, E and W against the code edition of record.")
+    return inputs, record, warnings
+
+
+_CLAUSE_B313 = ("B31.3 para. 304.1.2(b): for t >= D/6 or P/(S*E) > 0.385 the pressure design thickness requires "
+                "special consideration of theory of failure, effects of fatigue and thermal stress")
+_CLAUSE_B311 = ("B31.1 para. 104.1.2: for Do/tm < 6 the general note to the y table (Table 104.1.2-1; Table "
+                "104.1.2(A) in 2016) replaces y, which this script does not apply; B31.1 states no P/(S*E) limit, "
+                "so the pack also stops the run at the B31.3 para. 304.1.2(b) trigger, P/(S*E) > 0.385 (a pack "
+                "rule pending P.E. confirmation, not a B31.1 requirement)")
+
+
+def _clause(module: str, code: Optional[str]) -> str:
+    """The clause a tripped thick-wall gate sends the user to (paragraph pointers only)."""
+    if module == "piping.bend-thickness":
+        if code == "B31.1":
+            return "B31.1 para. 102.4.5 on the para. 104.1.2 basis. " + _CLAUSE_B311
+        if code == "B31.3":
+            return "B31.3 para. 304.2.1 on the para. 304.1.2 basis. " + _CLAUSE_B313
+        return ("B31.3 para. 304.2.1 / B31.1 para. 102.4.5 on the straight-pipe basis. "
+                + _CLAUSE_B313 + ". " + _CLAUSE_B311)
+    if code == "B31.12":
+        return ("B31.12 para. IP-3.2.1(b): for t >= D/6 or P/(S*E*Mf) > 0.385 the pressure design thickness "
+                "requires special consideration")
+    if code == "B31.1":
+        return _CLAUSE_B311
+    if code == "B31.3":
+        return _CLAUSE_B313
+    if code == "B31.9":
+        return "B31.9 on the B31.1 equations. " + _CLAUSE_B311
+    return _CLAUSE_B313 + ". " + _CLAUSE_B311
+
+
+def validity_gate(module: str, inputs: dict, result: dict, code: Optional[str]) -> Optional[dict]:
+    """The thin-wall validity object for a gated module, or None.
+
+    P_over_SE = P/(S*E) (times Mf for B31.12); for the MAWP module P is the computed allowable
+    pressure. The thickness compared with D/6: B31.3 t (the Eq. (3a) pressure design thickness);
+    B31.1 tm, since its note reads Do/tm; MAWP the nominal wall t (the engine's own check,
+    conservative); bends the intrados pressure thickness, the largest on the bend."""
+    if module not in GATED_MODULES:
+        return None
+    out = result["output"]
+    S, E, D = inputs["S"], inputs["E"], inputs["D"]
+    with_mf = module == "piping.b31-allowable-pressure" and code == "B31.12"
+    SE = S * E * (inputs["Mf"] if with_mf else 1.0)
+    if module == "piping.b31-allowable-pressure":
+        P = float(out["allowablePressure"])
+        thick, checked = inputs["t"], "t (nominal wall)"
+    elif module == "piping.bend-thickness":
+        P = inputs["P"]
+        thick, checked = out["tmIntrados"] - inputs["A"], "tmIntrados - A (intrados pressure thickness)"
+    elif module == "piping.b311-wall-thickness":
+        P = inputs["P"]
+        thick, checked = out["tm"], "tm (B31.1 reads Do/tm)"
+    else:
+        P = inputs["P"]
+        thick, checked = out["t"], "t (pressure design thickness)"
+    ratio = P / SE
+    t_trip = thick >= D / 6
+    r_trip = ratio > THIN_WALL_LIMIT
+    return {
+        "P_over_SE": round_half_up(ratio, 5),
+        "P_over_SE_limit": THIN_WALL_LIMIT,
+        "P_over_SE_exceeds": r_trip,
+        "P_basis": "computed allowable pressure" if module == "piping.b31-allowable-pressure" else "design pressure P",
+        "SE_includes_Mf": with_mf,
+        "thickness_checked": checked,
+        "thickness": round_half_up(thick, 5),
+        "D_over_6": round_half_up(D / 6, 5),
+        "t_over_D6": t_trip,
+        "thin_wall_valid": not (t_trip or r_trip),
+        "clause": _clause(module, code),
+    }
+
+
+def _banner(module: str, validity: dict) -> str:
+    trips = []
+    if validity["t_over_D6"]:
+        trips.append(f"{validity['thickness_checked'].split(' ')[0]} >= D/6 ({_js_num(validity['thickness'])} >= "
+                     f"{_js_num(validity['D_over_6'])} in)")
+    if validity["P_over_SE_exceeds"]:
+        trips.append(f"P/(S*E) = {_js_num(validity['P_over_SE'])} > {_js_num(THIN_WALL_LIMIT)}")
+    what = "pressure" if module == "piping.b31-allowable-pressure" else "thickness"
+    return (f"MANUAL CHECK REQUIRED: {' and '.join(trips)}. Outside the thin-wall basis of this equation; the "
+            f"{what} under equation_value is an {LABEL_EQUATION_VALUE}. {validity['clause']}.")
+
+
+# --------------------------------------------------------------------------- #
 # CLI
 # --------------------------------------------------------------------------- #
 
@@ -835,16 +1118,23 @@ def user_supplied_names(module: str) -> List[str]:
 
 
 def run_module(module: str, inputs: dict) -> dict:
+    """Run one module behind the pre-flight check and the two gates.
+
+    Order: code_values fill; split off the basis strings (W_basis, edition, code); the W gate
+    (exit 2 when W must be read); validate(); the engine; the thin-wall validity gate. A
+    tripped gate makes the envelope status "manual check required", empties "output" and moves
+    the engine's numbers to "equation_value" with the label "equation value, not a design
+    basis". The engine's numbers themselves are never changed."""
     inputs, provenance, cv_notes = apply_code_values(inputs, module, _cv_fields(module))
-    pre_warnings = cv_notes + validate(module, inputs)
+    inputs, basis = split_basis(module, inputs)
+    w_record, w_warnings = None, []
+    if module in W_MODULES:
+        inputs, w_record, w_warnings = w_gate(module, inputs, basis, provenance)
+    pre_warnings = cv_notes + w_warnings + validate(module, inputs)
     result = REGISTRY[module](dict(inputs))
     output = dict(result["output"])
     if module == "piping.miter-allowable-pressure" and inputs.get("miters") == 1:
         output["Pm2"] = None          # not evaluated for a single miter (the engine reports 0.0)
-    defaults = {}
-    for name, _u, required, _us, _d in FIELDS[module]:
-        if not required and name in ("W",) and inputs.get(name) is None:
-            defaults[name] = 1.0
     present_supplied = [n for n in user_supplied_names(module) if inputs.get(n) is not None]
     envelope = {
         "module": result["module"],
@@ -852,10 +1142,25 @@ def run_module(module: str, inputs: dict) -> dict:
         "output": output,
         "warnings": pre_warnings + result["warnings"],
         "citation": CITATIONS[module],
-        "inputs": inputs,
+        "inputs": dict(inputs, **basis),
         "user_supplied": present_supplied,
-        "defaults_applied": defaults,
+        # W is never defaulted silently: the W gate either has a value, a stated basis, or an
+        # equation without W, and records which in weld_factor_basis.
+        "defaults_applied": {},
     }
+    if w_record is not None:
+        envelope["weld_factor_basis"] = w_record
+    code = w_record["code"] if w_record is not None else None
+    validity = validity_gate(module, inputs, result, code) if result["status"] == "na" else None
+    if validity is not None:
+        envelope["validity"] = validity
+        if validity["thin_wall_valid"]:
+            envelope["result_grade"] = GRADE_CALCULATED
+        else:
+            banner = _banner(module, validity)
+            envelope.update(status=GRADE_MANUAL, result_grade=GRADE_MANUAL, banner=banner, output={},
+                            equation_value={"label": LABEL_EQUATION_VALUE, "values": output})
+            envelope["warnings"] = [banner] + envelope["warnings"]
     if provenance is not None:
         envelope["code_value_provenance"] = provenance
     return envelope
@@ -873,9 +1178,15 @@ def render_list() -> str:
             tag = "required" if required else "optional"
             mark = " [S]" if us else ""
             lines.append(f"    {name:<14}{units:<9}{tag:<9}{mark:<5}{desc}")
+        for name, desc in BASIS_FIELDS.get(module, []):
+            lines.append(f"    {name:<14}{'text':<9}{'basis':<9}{'':<5}{desc}")
         lines.append("")
     lines.append("Any input above may instead come from the optional top-level object code_values: "
                  "{name: {value, unit, citation{standard, edition, table, row, column?}, source: connector|user}}.")
+    lines.append("basis = a text input recorded on the sheet, never passed to the equation. Where the code and "
+                 "edition's equation carries W, a run with W omitted or W = 1.0 and no W_basis exits 2. A run "
+                 "outside the thin-wall basis (t >= D/6 or P/(S*E) > 0.385) returns status "
+                 "'manual check required' with the numbers as an equation value, not a design basis.")
     return "\n".join(lines).rstrip() + "\n"
 
 
@@ -887,6 +1198,9 @@ def list_json() -> dict:
                 {"name": n, "units": u, "required": r, "user_supplied": us, "description": d}
                 for n, u, r, us, d in FIELDS[m]
             ],
+            "basis_fields": [{"name": n, "units": "text", "required": False, "description": d}
+                             for n, d in BASIS_FIELDS.get(m, [])],
+            "validity_gate": m in GATED_MODULES,
         }
         for m in REGISTRY
     }

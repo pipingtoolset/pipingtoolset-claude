@@ -4,6 +4,8 @@
   "D": 6.625,
   "E": 0.77,
   "W": 0.88,
+  "W_basis": "longitudinal weld, confirmed",
+  "edition": "2022",
   "c": 0.0625,
   "millTolerance": 0.125,
   "code_values": {
