@@ -8,6 +8,12 @@ keep a defect until the plugin is updated, so each such entry names the skill, t
 affected inputs and the release that fixed it. GitHub Releases carry the same
 label and are the recall channel.
 
+## [0.8.2] — 2026-10-31
+
+Documentation only; no script, number or test contract changes.
+
+- **The "no code tables" claim now matches what ships.** The manifests said the skills "embed no code tables", but `pipe-support` has always bundled the AISC 360-22 tables (J2.3/J2.4/J2.5, J3.2, J3.3, J3.4) and the AISC Shapes Database v16, both published free by AISC, plus the ASCE 7-22 load-combination factors and the ACI 318-19 Ch. 17 factors. Its `references/code-basis.md` already disclosed them. The manifest description now reads "no ASME/API/PIP tables are embedded"; ROADMAP rule 1 and the README name the pipe-support exception. No ASME, API or PIP value is, or was, embedded.
+
 ## [0.8.1] — 2026-10-30
 
 Documentation only; no script, number or test contract changes.

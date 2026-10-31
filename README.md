@@ -43,7 +43,9 @@ works without it.
    ASCE 7 coefficients: the skill names the table, row and edition and takes the value from one of
    two places, your own copy of the standard or, if you have enabled the optional connector and your
    plan covers the table, a connector lookup that arrives with its citation. Asking it for "just the
-   number" with neither is a pinned test, and the answer is no.
+   number" with neither is a pinned test, and the answer is no. The one exception is `pipe-support`,
+   which bundles the AISC 360-22 tables and the AISC Shapes Database (both published free by AISC) and
+   the ASCE 7-22 and ACI 318-19 factors it uses; its `references/code-basis.md` lists every one.
 3. **The edition is an input, never a silent default.** Anything you leave unanswered is marked
    ASSUMED on the calc sheet.
 
@@ -335,8 +337,10 @@ or screening with an unresolved reconstructed factor; the status word is printed
 
 ## What the skills will not do
 
-They never reproduce tabulated code values from memory or from a file in the plugin: a value comes
-from your own copy of the standard or, if you enable the optional connector, from a cited lookup.
+They never reproduce tabulated ASME, API or PIP values from memory or from a file in the plugin: a value
+comes from your own copy of the standard or, if you enable the optional connector, from a cited lookup.
+`pipe-support` is the disclosed exception for AISC 360-22, the AISC Shapes Database, and the ASCE 7-22
+and ACI 318-19 factors (see its `references/code-basis.md`).
 They do not replace a flexibility analysis in CAESAR II or AutoPIPE; `stress-screening` is a hand
 check of what the program applied. Results are engineering aids. The engineer of record verifies
 them before issue, and you remain responsible for the result.
