@@ -23,7 +23,7 @@ One plugin, `piping-toolset` (display name **PipingToolset**), with seven skills
 
 ## Rules every skill in this pack follows
 
-1. **No tabulated code values**, ever — allowables, moduli, SIFs, spans, ASCE 7 coefficients, PIP tables. Name the table, row and edition; the user reads it from their licensed copy.
+1. **No tabulated ASME, API or PIP values**, ever — allowables, moduli, SIFs, spans, ASCE 7 hazard coefficients, PIP tables. Name the table, row and edition; the user reads it from their licensed copy. The one disclosed exception is pipe-support, which embeds the AISC 360-22 tables and the AISC Shapes Database (both published free by AISC), the ASCE 7-22 load-combination factors and the ACI 318-19 Ch. 17 factors its equations need; each is listed in `skills/pipe-support/references/code-basis.md`.
 2. **One engine.** Every script that computes a code equation reproduces the pipingtoolset.com calculation engine's fixture cases exactly (`tests/fixtures/calc-core`, refreshed with `tools/sync_fixtures.py`); a red parity test blocks release.
 3. **Edition is an input**, never a silent default; unanswered basis items are marked ASSUMED.
 4. **Every number a skill states comes from a script run**, including side comparisons.

@@ -1,8 +1,8 @@
 {
   "name": "piping-toolset",
   "displayName": "PipingToolset",
-  "version": "0.8.1",
-  "description": "Seven ASME B31.1 / B31.3 piping skills by pipingtoolset.com: pressure design, stress screening, CAESAR II / AutoPIPE load cases, PDF isometric to PCF, pipe support checks (AISC 360-22, ACI 318-19, ASCE 7-22), equipment nozzle loads (API 610 / 617 / 660 / 661 / 560 / 650, NEMA SM-23, PVP2011-57100) and bolted flanges (BPVC VIII-2 Part 4.16). A script computes every number; the skills embed no code tables. An optional connector serves cited ASME and API table values to signed-in paid accounts.",
+  "version": "0.8.2",
+  "description": "Seven ASME B31.1 / B31.3 piping skills by pipingtoolset.com: pressure design, stress screening, CAESAR II / AutoPIPE load cases, PDF isometric to PCF, pipe support checks (AISC 360-22, ACI 318-19, ASCE 7-22), equipment nozzle loads (API 610 / 617 / 660 / 661 / 560 / 650, NEMA SM-23, PVP2011-57100) and bolted flanges (BPVC VIII-2 Part 4.16). A script computes every number; no ASME/API/PIP tables are embedded. An optional connector serves cited ASME and API table values to signed-in paid accounts.",
   "author": {
     "name": "Flexible Piping Solutions LLC",
     "url": "https://pipingtoolset.com"
