@@ -1,7 +1,7 @@
 {
   "source": "pipecalcpro packages/calc-core/src/structural (PiperSTR engine)",
-  "calc_core_commit": "04be653900e8780728a1012c2e5e222bd09480b2",
-  "calc_core_branch": "claude/asme-standards-compliance-6fa490",
+  "calc_core_commit": "465618356681fbbb8d5ae6821ea9c5c8fa691f89",
+  "calc_core_branch": "main",
   "generators": [
     "gen-goldens.mts",
     "gen-assembly-goldens.mts",

@@ -1,6 +1,6 @@
 {
   "source": "pipecalcpro packages/calc-core/fixtures",
-  "calc_core_commit": "04be653900e8780728a1012c2e5e222bd09480b2",
+  "calc_core_commit": "465618356681fbbb8d5ae6821ea9c5c8fa691f89",
   "modules": {
     "aux.app2-flange-integral": {
       "skill": "bolted-flange",

@@ -10,7 +10,7 @@ label and are the recall channel.
 
 ## [0.9.0] — 2026-11-01
 
-**UNCONSERVATIVE-FIX (pipe-support).** The skill is re-ported to the PiperSTR engine at pipecalcpro `04be653` (CHANGELOG-CALC 2026-11-01), under the one-engine rule. The anchorage now runs to ACI CODE-318-25 by default, with ACI 318-19 selectable. The AISC 360-22 member and weld checks are corrected clause by clause. Up to 0.8.2 every fillet weld took the Eq. J2-5 directional factor of up to 1.5 unconditionally, which overstated weld capacity by up to 50 %. Several member limit states were also missing or too high. **Re-run any pipe-support result from 0.8.2 or earlier.** No other skill changes.
+**UNCONSERVATIVE-FIX (pipe-support).** The skill is re-ported to the PiperSTR engine at pipecalcpro main `4656183` (pipingtoolset/pipecalcpro#181, merged 2026-11-01; engine content identical to the PR head `04be653`; CHANGELOG-CALC 2026-11-01), under the one-engine rule. The anchorage now runs to ACI CODE-318-25 by default, with ACI 318-19 selectable. The AISC 360-22 member and weld checks are corrected clause by clause. Up to 0.8.2 every fillet weld took the Eq. J2-5 directional factor of up to 1.5 unconditionally, which overstated weld capacity by up to 50 %. Several member limit states were also missing or too high. **Re-run any pipe-support result from 0.8.2 or earlier.** No other skill changes.
 
 ### pipe-support: ACI anchorage
 - **ACI CODE-318-25 is the default.** New input `baseplate.aciEdition`: "318-25" (the default) or "318-19". 318-19 reproduces earlier results, except where they were wrong under either edition. Every clause string names the edition that was run, and the pier stage cites the same edition.
@@ -73,7 +73,7 @@ label and are the recall channel.
 - The ASD wind finding, the report title block, the compliance matrix and the design-basis table name the edition that was run and the project-basis 1/1.5.
 
 ### Tests and tooling
-- **Goldens regenerated from the engine at `04be653`,** with the vendored generators extended for every new input. Case counts: weld 72 → 89, base plate 70 → 121, pier 43 → 49, assembly 130 → 143, member 96 → 145.
+- **Goldens regenerated from the engine at `04be653`** (byte-identical at the merge commit `4656183`), with the vendored generators extended for every new input. Case counts: weld 72 → 89, base plate 70 → 121, pier 43 → 49, assembly 130 → 143, member 96 → 145.
 - **The calc-core fixtures are re-synced:** fillet weld 7, base plate 8, member 16.
 - **PS-101** is re-baselined on its weld, anchorage and member-shear rows. The verdict is unchanged.
 - **New test file `tests/test_pipe_support_aci318_25.py`** covers the preset numbers, the edition factors, kds and the Category finding.

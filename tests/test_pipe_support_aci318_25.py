@@ -1,5 +1,5 @@
 """Plugin 0.9.0: ACI CODE-318-25 anchorage (ACI 318-19 selectable) and the AISC 360-22
-conformance port from the PiperSTR engine (pipecalcpro 04be653, CHANGELOG-CALC 2026-11-01).
+conformance port from the PiperSTR engine (pipecalcpro main 4656183, PR #181, CHANGELOG-CALC 2026-11-01).
 
 The parity goldens prove the port reproduces the engine case by case; these tests pin the
 headline numbers the engine changelog states, the edition switch, and the reviewer finding
