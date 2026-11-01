@@ -107,6 +107,24 @@ const weld: Case[] = [
   { ...W, size: 0.25, basePartThickness: 0.1875, Vparallel: 1, alongEdge: false },
   { ...W, size: 0.125, basePartThickness: 0.4, Vparallel: 2, alongEdge: false },                   // min-size warning still emitted
   { ...W, size: 0.375, basePartThickness: 0.375, baseMetalThickness: 0.1875, baseFu: 58, baseFy: 36, Vparallel: 4, alongEdge: false },
+  // 2026-11-01 AISC 360-22 conformance: kds = 1.0 default, strain-compatibility opt-in, J2.2b(c)/(d), J4-3
+  { ...W, Vtransverse: 10, strainCompatibility: "linear-through-cg" },                              // Eq. J2-5 1.5
+  { ...W, Vtransverse: 10, Vparallel: 10, strainCompatibility: "linear-through-cg" },
+  { ...W, pattern: "two-parallel", depth: 6, Vtransverse: 3, strainCompatibility: "linear-through-cg" },
+  { ...W, pattern: "two-parallel", depth: 6, Vtransverse: 3, M: 40, strainCompatibility: "linear-through-cg" }, // ignored: moment
+  { ...W, pattern: "all-round", depth: 8, width: 6, Vtransverse: 4, strainCompatibility: "linear-through-cg" },   // ignored: all-round
+  { ...W, Vtransverse: 10, strainCompatibility: "none" },
+  { ...W, method: "ASD", Vtransverse: 10, strainCompatibility: "linear-through-cg" },
+  { ...W, depth: 40, Vparallel: 10 },                                                              // l/w 160 > 100, advisory
+  { ...W, depth: 40, Vparallel: 10, endLoaded: true },                                             // Eq. J2-1 beta
+  { ...W, depth: 90, Vparallel: 10, endLoaded: true },                                             // > 300w: 180w
+  { ...W, pattern: "two-parallel", depth: 60, Vparallel: 10, endLoaded: true, method: "ASD" },
+  { ...W, depth: 0.75, Vtransverse: 2, size: 0.25 },                                               // L < 4w: wEff = L/4
+  { ...W, pattern: "all-round", depth: 8, width: 0.75, Vtransverse: 2 },                           // short side < 4w
+  { ...W, pattern: "all-round", depth: 8, width: 0.75, length: 34, Vtransverse: 2 },               // override scales the side
+  { ...W, size: 0.25, basePartThickness: 0.75, baseFu: 58, baseFy: 36, Vparallel: 20 },            // J4-3 governs the shear row
+  { ...W, size: 0.25, basePartThickness: 0.75, baseFu: 58, baseFy: 50, Vparallel: 20, method: "ASD" },
+  { ...W, size: 0.25, basePartThickness: 0.75, baseFu: 58, baseFy: 55, Vparallel: 20 },            // high Fy: J4-4 governs
   // errors
   { ...W, size: 0 },
   { ...W, FEXX: 0 },
@@ -190,6 +208,58 @@ const baseplate: Case[] = [
   bp({ fc: 3000, plateFy: 50 }),
   bp({ fc: 6000, method: "ASD", plateFy: 50 }),
   bp({ anchorSpacingLength: 6, anchorSpacingWidth: 6, anchorEdgeDistance: 5 }),
+  // 2026-11-01 ACI CODE-318-25 (default) vs 318-19, and the corrections that apply under both
+  bp({ aciEdition: "318-19" }),
+  bp({ aciEdition: "318-19", bondStrength: 1000 }),
+  bp({ aciEdition: "318-19" }, CI),
+  bp({ aciEdition: "318-19", method: "LRFD" }, CI),
+  bp({ aciEdition: "318-25", anchorCategory: 1 }),
+  bp({ anchorCategory: 2, bondStrength: 1000 }),
+  bp({ anchorCategory: 3, bondStrength: 1000 }),
+  bp({ anchorCategory: 1, supplementaryReinforcement: true, bondStrength: 1000 }),
+  bp({ anchorCategory: 2, supplementaryReinforcement: true }),
+  bp({ supplementaryReinforcement: true }, CI),
+  bp({ anchorageRedundancy: "redundant", anchorCategory: 1, bondStrength: 1000 }),
+  bp({ anchorageRedundancy: "nonredundant" }),
+  bp({ anchorageRedundancy: "redundant", aciEdition: "318-19" }),
+  bp({ anchorageRedundancy: "redundant" }, CI),
+  bp({ ductile: false, aciEdition: "318-19" }),
+  bp({ ductile: false, anchorCategory: 1 }, CI),
+  bp({ anchorFya: 36 }),                                                    // 1.9 fya = 68.4 > 58: no cap
+  bp({ anchorFuta: 150 }),                                                  // 125 ksi cap, no fya
+  bp({ anchorFuta: 125, anchorFya: 50 }),                                   // 1.9 fya = 95 caps
+  bp({ anchorFuta: 125, anchorFya: 50, aciEdition: "318-19" }),
+  bp({ groutPad: true, V: 4 }),
+  bp({ groutPad: true, V: 4, aciEdition: "318-19" }, CI),
+  bp({ applyCompressionField: true }),                                      // edges < 1.5 hef: not applied
+  bp({ applyCompressionField: true, pierLength: 48, pierWidth: 48, anchorEdgeDistance: 19.5, anchorEmbedment: 6, anchorCategory: 1 }),
+  bp({ applyCompressionField: true, pierLength: 48, pierWidth: 48, anchorEdgeDistance: 19.5, anchorEmbedment: 6, P: 0, uplift: 4 }),
+  bp({ applyCompressionField: true, pierLength: 48, pierWidth: 48, anchorEdgeDistance: 19.5, anchorEmbedment: 6, P: 60, M: 0 }),
+  bp({ applyCompressionField: true, pierLength: 48, pierWidth: 48, anchorEdgeDistance: 19.5, anchorEmbedment: 6, aciEdition: "318-19" }),
+  bp({ applyCompressionField: true, pierLength: 60, pierWidth: 60, anchorEdgeDistance: 25.5, anchorEmbedment: 3, P: 1, M: 75 }),  // z >= 1.5hef
+  bp({ applyCompressionField: true, pierLength: 48, pierWidth: 48, anchorEdgeDistance: 19.5, anchorEmbedment: 10, P: 20, M: 120 }, CI),
+  bp({ bondStrength: 800, bondStrengthUncracked: 1500 }),                   // group bond, cracked: tau_cr
+  bp({ bondStrength: 800, bondStrengthUncracked: 1500, cracked: false }),   // tau_uncr
+  bp({ bondStrength: 800, bondStrengthUncracked: 1500, cracked: false, cac: 9, V: 3 }),
+  bp({ bondStrength: 800, bondStrengthUncracked: 1500, V: 3, pierLength: 48, pierWidth: 48, anchorEdgeDistance: 19.5 }),  // pryout min(Nag, Ncbg)
+  bp({ bondStrength: 800, V: 3 }),                                          // single-anchor Nba, pryout NagAll
+  bp({ bondStrength: 300, V: 3, anchorCategory: 1 }),                       // Nag governs pryout
+  bp({ bondStrength: 800, bondStrengthUncracked: 1500, aciEdition: "318-19", V: 3 }),
+  bp({ anchorCount: 2, bondStrength: 800, bondStrengthUncracked: 1500 }),   // single tension anchor
+  bp({ anchorEdgeDistance: 1.5, anchorEmbedment: 6, anchorSpacingWidth: 6 }, CI),   // Nsbg, s < 6 ca1
+  bp({ anchorEdgeDistance: 1.5, anchorEmbedment: 6, anchorSpacingWidth: 6, aciEdition: "318-19" }, CI),
+  bp({ anchorEdgeDistance: 1.5, anchorEmbedment: 6, pierWidth: 12, anchorSpacingWidth: 9 }, CI),  // ca2 < 3 ca1 factor
+  bp({ anchorEdgeDistance: 1.5, anchorEmbedment: 6, anchorCount: 2 }, CI),
+  bp({ anchorEdgeDistance: 2, pierLength: 20, pierWidth: 13, V: 2 }),      // psi_ed,V < 1
+  bp({ anchorEdgeDistance: 2, pierLength: 20, pierWidth: 13, V: 2, aciEdition: "318-19" }),
+  bp({ pierLength: 48, pierWidth: 48, anchorEdgeDistance: 19.5, anchorSpacingLength: 3, anchorSpacingWidth: 3, anchorEmbedment: 6 }),  // ANc = n ANco
+  bp({ cracked: false, anchorType: "post-installed-mechanical", anchorEmbedment: 5 }),   // psi_c,N 1.4
+  bp({ cracked: false, aciEdition: "318-19" }),
+  bp({ V: 6, M: 40, P: 5 }),                                                // concrete + steel interaction
+  bp({ V: 6, M: 40, P: 5, aciEdition: "318-19" }),
+  bp({ V: 1, uplift: 6, P: 0, M: 0, anchorCategory: 1 }),
+  bp({ method: "ASD", anchorCategory: 2, V: 2 }),
+  bp({ lambda: 0.75, anchorCategory: 1, bondStrength: 900, bondStrengthUncracked: 1600, cracked: false }),
   // errors
   bp({ plateLength: 0 }),
   bp({ plateThickness: 0 }),
@@ -245,6 +315,13 @@ const pier: Case[] = [
   pr({ footingLength: 12, footingWidth: 12 }),                                         // footing smaller than pier
   pr({ footingLength: 72, footingWidth: 40, M: 300, P: 25 }),
   pr({ allowableBearing: 0.5 }),
+  // 2026-11-01: ACI CODE-318-25 labels (318-19 selectable), lambda and the lambda_s size effect
+  pr({ aciEdition: "318-19" }),
+  pr({ aciEdition: "318-25", footingThickness: 18, P: 120, M: 0, footingLength: 60, footingWidth: 60 }),   // dEff 14: lambda_s < 1
+  pr({ aciEdition: "318-19", footingThickness: 18, P: 120, M: 0, footingLength: 60, footingWidth: 60, method: "LRFD" }),
+  pr({ lambda: 0.75, footingThickness: 18, P: 120, M: 0, footingLength: 60, footingWidth: 60 }),
+  pr({ footingThickness: 30, P: 300, M: 0, footingLength: 84, footingWidth: 84, method: "LRFD" }),
+  pr({ lambda: 0.85, aciEdition: "318-19", footingThickness: 5, P: 80, M: 0 }),
   // errors
   pr({ pierLength: 0 }),
   pr({ pierHeight: 0 }),

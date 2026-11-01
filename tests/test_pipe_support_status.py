@@ -39,6 +39,16 @@ def load(name):
     with open(os.path.join(EX, name), encoding="utf-8") as fh:
         s = json.load(fh)
     s["optimize"] = False
+    return _esr_category(s, name)
+
+
+def _esr_category(s, name):
+    """ps-201 leaves the ACI 355.2/355.4 Anchor Category unset, so at the ACI CODE-318-25 default
+    the engine takes Category 3 (psi_a 0.60) and the anchorage FAILS (1.1356 LRFD; 0.9.0). Tests whose
+    subject is not the anchorage enter Category 1, as an engineer would from the anchor's ESR;
+    PS201Category3 in test_pipe_support_skill.py runs the example as shipped."""
+    if name == "ps-201-caesar.json":
+        s.setdefault("design", {}).setdefault("baseplate", {})["anchorCategory"] = 1
     return s
 
 
@@ -55,7 +65,7 @@ def ps201(**edit):
                 p["loads"]["SDS"] = edit["sds"]
     if edit.get("own_anchor") or edit.get("clean"):
         s["design"]["baseplate"] = {"bondStrength": 800, "anchorFuta": 58, "anchorType": "post-installed-adhesive",
-                                    "anchorEmbedment": 8, "fc": 4000}
+                                    "anchorEmbedment": 8, "fc": 4000, "anchorCategory": 1}
     if edit.get("clean"):
         s.pop("assumed")                 # no ASSUMED item and no preset value: nothing to confirm
     return s
@@ -68,6 +78,7 @@ def asd_wind(wind=1.5):
     """The 0.7.2 guard case: ps-201 in ASD, WIN x1.5, no EQ (anchorage held under ASD-5a-+T)."""
     s = load("ps-201-caesar.json")
     s["design"]["method"] = "ASD"
+    s["design"]["baseplate"]["aciEdition"] = "318-19"   # the guard scenario lives on 318-19 numbers (0.9.0)
     for p in s["pipes"]:
         c = p["loads"]["cases"]
         c["WIN"] = [x * wind for x in c["WIN"]]

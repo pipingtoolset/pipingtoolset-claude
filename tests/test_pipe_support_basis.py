@@ -37,7 +37,17 @@ SCHEMA = "pipingtoolset.project-basis/1"
 
 def load(name):
     with open(os.path.join(EX, name), encoding="utf-8") as fh:
-        return json.load(fh)
+        return _esr_category(json.load(fh), name)
+
+
+def _esr_category(s, name):
+    """ps-201 leaves the ACI 355.2/355.4 Anchor Category unset, so at the ACI CODE-318-25 default
+    the engine takes Category 3 (psi_a 0.60) and the anchorage FAILS (1.1356 LRFD; 0.9.0). Tests whose
+    subject is not the anchorage enter Category 1, as an engineer would from the anchor's ESR;
+    PS201Category3 in test_pipe_support_skill.py runs the example as shipped."""
+    if name == "ps-201-caesar.json":
+        s.setdefault("design", {}).setdefault("baseplate", {})["anchorCategory"] = 1
+    return s
 
 
 def caesar():

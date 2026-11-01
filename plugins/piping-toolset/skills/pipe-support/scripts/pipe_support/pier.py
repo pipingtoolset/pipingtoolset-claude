@@ -1,7 +1,7 @@
 """Concrete pier and soil-bearing checks - the bottom of the pipe-support load path.
 
-Exact port of the Piping Toolset PiperSTR engine's ``pier-soil`` TypeScript module. ACI 318-19 for the
-concrete (punching shear), classical stability mechanics for the soil interface (bearing,
+Exact port of the Piping Toolset PiperSTR engine's ``pier-soil`` TypeScript module. ACI CODE-318-25 (default)
+or ACI 318-19 for the concrete (punching shear, bearing), classical stability mechanics for the soil interface (bearing,
 overturning, sliding). Soil properties are geotechnical-report values and are ALWAYS
 user-supplied - nothing is assumed.
 
@@ -16,6 +16,7 @@ from __future__ import annotations
 import math
 
 from .common import InputError, result, round_half_up, verdict
+from .baseplate import aci_label
 from .jsmath import div, jmax, jmin, js_num, nn, sqrt, truthy
 
 MODULE = "structural.pier-soil"
@@ -146,7 +147,9 @@ def pier_soil(input):
             checks.append(_row(f"Sliding (FS {js_num(slidingFS)})", slidingFS * V, slidingResistance,
                                "Resistance = mu·N + c·A (user-supplied soil properties)"))
 
-    # --- punching (two-way) shear on the footing, ACI 318-19 22.6 ----------------
+    # --- punching (two-way) shear on the footing, ACI 22.6 ------------------------
+    ACI = aci_label(nn(input, "aciEdition", "318-25"))
+    lam_c = nn(input, "lambda", 1.0)
     plateLength = input.get("plateLength")
     plateWidth = input.get("plateWidth")
     if Tf > 0 and truthy(plateLength) and truthy(plateWidth):
@@ -156,8 +159,11 @@ def pier_soil(input):
         bo = 2 * (c1 + dEff) + 2 * (c2 + dEff)  # critical perimeter at d/2
         beta = div(jmax(c1, c2), jmin(c1, c2))
         alphaS = 40  # interior column
+        # Size-effect factor lambda_s = sqrt(2 / (1 + d/10)) <= 1 (22.5.5.1.3, both editions),
+        # applied with lambda to all three expressions.
+        lambdaS = jmin(1, sqrt(2 / (1 + dEff / 10)))
         # ACI 22.6.5.2 - the least of the three expressions.
-        vc = jmin(
+        vc = lambdaS * lam_c * jmin(
             4 * sqrt(fc),
             (2 + div(4, beta)) * sqrt(fc),
             (2 + div(alphaS * dEff, bo)) * sqrt(fc),
@@ -166,13 +172,14 @@ def pier_soil(input):
         # Punching demand is the column load less the soil pressure inside the perimeter.
         insideAreaFt2 = ((c1 + dEff) * (c2 + dEff)) / _IN2_PER_FT2
         Vpunch = jmax(0, P - jmin(qMax, allowableBearing) * insideAreaFt2)
-        checks.append(_row("Punching (two-way) shear", Vpunch, phiVc, "ACI 318-19 22.6.5.2"))
+        checks.append(_row("Punching (two-way) shear", Vpunch, phiVc,
+                           f"{ACI} Table 22.6.5.2 (lambda_s = {js_num(round_half_up(lambdaS, 4))}, 22.5.5.1.3; alpha_s = 40 interior, 22.6.5.3)"))
     elif Tf > 0:
         warnings.append("Footing thickness given without a base-plate footprint — the punching-shear check was skipped.")
 
     # --- pier bearing on the footing ---------------------------------------------
     pierBearing = (0.65 if method == "LRFD" else 1 / 2.31) * 0.85 * (fc / 1000) * (Lp * Bp)
-    checks.append(_row("Pier concrete bearing", P, pierBearing, "ACI 318-19 14.5.6.2 / AISC J8"))
+    checks.append(_row("Pier concrete bearing", P, pierBearing, f"{ACI} Table 22.8.3.2 (0.85·f'c·A1, no A2 gain), phi = 0.65 (Table 21.2.1(d)) / AISC J8"))
 
     if Tf == 0:
         warnings.append("No footing modelled — the pier is taken as bearing directly on soil. Add a footing thickness and plan size to include punching shear and spread-footing bearing.")

@@ -1,6 +1,6 @@
 {
   "source": "pipecalcpro packages/calc-core/fixtures",
-  "calc_core_commit": "ba271e822d3abd759fc13b2bdbd8e27fa4908d97",
+  "calc_core_commit": "465618356681fbbb8d5ae6821ea9c5c8fa691f89",
   "modules": {
     "aux.app2-flange-integral": {
       "skill": "bolted-flange",
@@ -103,20 +103,20 @@
     "structural.aisc-member": {
       "skill": "pipe-support",
       "source_file": "piperstr-member.json",
-      "source_sha256": "37a9b874c84b8d2f9d1b405d31e67657cf067b76bcbd24618b9f831a46a95222",
-      "cases": 15
+      "source_sha256": "32af1853a2f1bddfab5a8178bbf919136674e14ba5851b653a8847596061cee3",
+      "cases": 16
     },
     "structural.baseplate-anchorage": {
       "skill": "pipe-support",
       "source_file": "piperstr-baseplate.json",
-      "source_sha256": "508c4a081b147ecf769f0a13ada5846d012a2dda82d4b1c4c6881245ac5230c2",
-      "cases": 6
+      "source_sha256": "939ec7998e1eeb6738bedee393978ac256a558ff63b13e9c8efd4e191c6ba495",
+      "cases": 8
     },
     "structural.fillet-weld": {
       "skill": "pipe-support",
       "source_file": "piperstr-weld.json",
-      "source_sha256": "8113690a2fed54c0017c7309501a319d2d64efcb2509ad36d7a61260bcbd077b",
-      "cases": 6
+      "source_sha256": "3078b5a8d6c9c5419f66701d0f14ccfdc5328b29ddf502f76d1227acf268713b",
+      "cases": 7
     },
     "structural.pier-soil": {
       "skill": "pipe-support",

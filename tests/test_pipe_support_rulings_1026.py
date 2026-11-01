@@ -63,7 +63,7 @@ class J4Warning(unittest.TestCase):
         hits = [w for w in r["warnings"] if w.startswith("Base metal governs over the weld metal")]
         self.assertEqual(len(hits), 1)
         self.assertAlmostEqual(check(stage(r, "Arm 1 to column weld"), "tension yielding")["ratio"], 0.831, places=3)
-        self.assertLess(check(stage(r, "Column to base plate weld"), "shear rupture")["ratio"], 0.5)
+        self.assertLess(check(stage(r, "Column to base plate weld"), "Base-metal shear")["ratio"], 0.5)
 
 
 class J10LoadedWidth(unittest.TestCase):
@@ -107,23 +107,24 @@ class PsiCpN(unittest.TestCase):
         self.assertFalse(any("cac" in w for w in warns))
 
     def test_default_cac_two_hef_with_warning(self):
-        # hand: cac = 8.5; psi_cp,N = max(3.5/8.5, 6.375/8.5) = 0.75; psi_c,N = 1.25 -> x0.9375
+        # hand: cac = 8.5; psi_cp,N = max(3.5/8.5, 6.375/8.5) = 0.75; psi_c,N = 1.4 (17.6.2.5.1,
+        # post-installed with kc = 17; 1.25 before 0.9.0) -> x1.05
         cracked = self.breakout()[0]
         cap, clause, warns = self.breakout(cracked=False)
-        self.assertAlmostEqual(cap / cracked, 1.25 * 0.75, places=4)
+        self.assertAlmostEqual(cap / cracked, 1.4 * 0.75, places=4)
         self.assertIn("psi_cp,N = 0.75 (17.6.2.6, cac = 8.5 in)", clause)
         self.assertTrue(any("Table 17.9.5 default cac = 2·hef = 8.5 in" in w for w in warns))
 
     def test_esr_cac(self):
         cracked = self.breakout()[0]
         cap, clause, warns = self.breakout(cracked=False, cac=7)
-        self.assertAlmostEqual(cap / cracked, 1.25 * 6.375 / 7, places=4)
+        self.assertAlmostEqual(cap / cracked, 1.4 * 6.375 / 7, places=4)
         self.assertIn("psi_cp,N = 0.9107", clause)
         self.assertFalse(any("Table 17.9.5" in w for w in warns))
 
     def test_unity_cases(self):
         cracked = self.breakout()[0]
-        self.assertAlmostEqual(self.breakout(cracked=False, cac=3)[0] / cracked, 1.25, places=4)
+        self.assertAlmostEqual(self.breakout(cracked=False, cac=3)[0] / cracked, 1.4, places=4)
         ci = self.breakout(anchorType="cast-in")[0]
         cap, clause, _ = self.breakout(anchorType="cast-in", cracked=False)
         self.assertAlmostEqual(cap / ci, 1.25, places=4)

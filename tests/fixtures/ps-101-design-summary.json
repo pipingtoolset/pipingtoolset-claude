@@ -1,5 +1,5 @@
 {
-  "source": "PS-101 PiperSTR Design Summary Report (pipingtoolset.com, 2026-10-23), transcribed value by value; re-baselined for plugin 0.3.1 / the engine weld fix: the two weld stages, the verdict and the weld warnings follow the corrected engine (J4 split by direction, t/2 per line on open arms, thinner part joined). Every other stage still matches the published report. Report rounds to 3 decimals.",
+  "source": "PS-101 PiperSTR Design Summary Report (pipingtoolset.com, 2026-10-23), transcribed value by value; re-baselined for plugin 0.3.1 / the engine weld fix: the two weld stages, the verdict and the weld warnings follow the corrected engine (J4 split by direction, t/2 per line on open arms, thinner part joined). Every other stage still matches the published report. Report rounds to 3 decimals. Re-baselined again for plugin 0.9.0 (ACI CODE-318-25 anchorage by default, AISC 360-22 conformance: weld kds 1.0, J4-3 base-metal shear, G6 minor-axis shear): the weld, anchorage and member-shear rows follow the engine at pipecalcpro main 4656183 (PR #181); the verdict is unchanged (arm weld J4-1 0.831).",
   "tol": 0.0005,
   "input": {
     "method": "LRFD",
@@ -101,9 +101,9 @@
           ],
           [
             "Flexure, minor axis",
-            0,
+            0.0,
             150.514,
-            0,
+            0.0,
             "F6-2 (noncompact flange)"
           ],
           [
@@ -115,22 +115,22 @@
           ],
           [
             "Shear, minor axis",
-            0,
+            0.0,
             60.552,
-            0,
-            "G7 (flange shear, weak axis)"
+            0.0,
+            "G6-1 (minor-axis shear, flanges)"
           ],
           [
             "Combined axial + flexure",
             0.108,
-            1,
+            1.0,
             0.108,
             "H1-1b (Pr/Pc = 0.003)"
           ],
           [
             "Slenderness KL/r (E2 advisory)",
             34.759,
-            200,
+            200.0,
             0.174,
             "E2 recommended limit 200"
           ],
@@ -150,9 +150,9 @@
           [
             "Fillet weld stress",
             3.069,
-            8.351,
-            0.368,
-            "AISC J2-4 with the J2.4(b) directional increase"
+            5.568,
+            0.551,
+            "AISC J2.4(a) Eq. J2-4 (kds per Eq. J2-5 where permitted)"
           ],
           [
             "Base-metal tension yielding",
@@ -169,11 +169,11 @@
             "AISC J4-2"
           ],
           [
-            "Base-metal shear rupture",
+            "Base-metal shear",
             0.225,
-            3.002,
-            0.075,
-            "AISC J4-4"
+            2.484,
+            0.091,
+            "AISC lower of J4-3 (1.00·0.60·Fy·t) and J4-4 (0.75·0.6·Fu·t), direct shear, t = 0.23/2 = 0.115 in per line (both faces of the arm element)"
           ]
         ]
       },
@@ -197,9 +197,9 @@
           ],
           [
             "Flexure, minor axis",
-            0,
+            0.0,
             150.514,
-            0,
+            0.0,
             "F6-2 (noncompact flange)"
           ],
           [
@@ -211,22 +211,22 @@
           ],
           [
             "Shear, minor axis",
-            0,
+            0.0,
             60.552,
-            0,
-            "G7 (flange shear, weak axis)"
+            0.0,
+            "G6-1 (minor-axis shear, flanges)"
           ],
           [
             "Combined axial + flexure",
             0.266,
-            1,
+            1.0,
             0.266,
             "H1-1b (Pr/Pc = 0.052)"
           ],
           [
             "Slenderness KL/r (E2 advisory)",
             139.035,
-            200,
+            200.0,
             0.695,
             "E2 recommended limit 200"
           ]
@@ -234,14 +234,14 @@
       },
       {
         "component": "weld",
-        "ratio": 0.224,
+        "ratio": 0.3,
         "checks": [
           [
             "Fillet weld stress",
             1.668,
-            8.351,
-            0.2,
-            "AISC J2-4 with the J2.4(b) directional increase"
+            5.568,
+            0.3,
+            "AISC J2.4(a) Eq. J2-4 (kds per Eq. J2-5 where permitted)"
           ],
           [
             "Base-metal tension yielding",
@@ -258,11 +258,11 @@
             "AISC J4-2"
           ],
           [
-            "Base-metal shear rupture",
+            "Base-metal shear",
             0.019,
-            6.003,
-            0.003,
-            "AISC J4-4"
+            4.968,
+            0.004,
+            "AISC lower of J4-3 (1.00·0.60·Fy·t) and J4-4 (0.75·0.6·Fu·t), direct shear, t = 0.23 in per line"
           ]
         ]
       },
@@ -275,7 +275,7 @@
             2.7,
             636.48,
             0.004,
-            "AISC J8-2 / ACI 318-19 14.5.6.2"
+            "AISC J8-2 / ACI CODE-318-25 Table 22.8.3.2, phi = 0.65 (Table 21.2.1(d))"
           ],
           [
             "Base plate yield (bearing interface)",
@@ -295,56 +295,63 @@
       },
       {
         "component": "anchorage",
-        "ratio": 0.251,
+        "ratio": 0.45,
         "checks": [
           [
             "Anchor rod tensile (steel)",
             2.375,
             14.549,
             0.163,
-            "ACI 318-19 17.6.1.2"
+            "ACI CODE-318-25 17.6.1.2, phi = 0.75 (ACI CODE-318-25 Table 21.2.1 (nonredundant))"
           ],
           [
             "Anchor rod shear (steel)",
             0.113,
             7.566,
             0.015,
-            "ACI 318-19 17.7.1.2b"
+            "ACI CODE-318-25 17.7.1.2b, phi = 0.65 (ACI CODE-318-25 Table 21.2.1 (nonredundant))"
           ],
           [
             "Concrete breakout (tension)",
             4.75,
-            18.956,
-            0.251,
-            "ACI 318-19 17.6.2.1b"
+            10.561,
+            0.45,
+            "ACI CODE-318-25 17.6.2.1b, psi_a = 0.6 (Table 17.5.4.1), phi = 0.65 (ACI CODE-318-25 Table 21.2.1 (nonredundant))"
           ],
           [
             "Adhesive bond strength",
             2.375,
-            9.802,
-            0.242,
-            "ACI 318-19 17.6.5.2.2b"
+            5.881,
+            0.404,
+            "ACI CODE-318-25 17.6.5.2.1 single anchor (tau = 800 psi, user-supplied, psi_a = 0.6 (Table 17.5.4.1)), phi = 0.65 (ACI CODE-318-25 Table 21.2.1 (nonredundant))"
           ],
           [
             "Concrete breakout (shear)",
             0.45,
-            6.762,
-            0.067,
-            "ACI 318-19 17.7.2.1b"
+            6.194,
+            0.073,
+            "ACI CODE-318-25 17.7.2.1b (psi_ed,V = 0.9, ca2 = 4.5 in, psi_a = 0.95 (Table 17.5.4.1)), phi = 0.75 (ACI CODE-318-25 Table 21.2.1 (nonredundant))"
           ],
           [
             "Concrete pryout (shear)",
             0.45,
-            37.913,
-            0.012,
-            "ACI 318-19 17.7.3.1b"
+            24.372,
+            0.018,
+            "ACI CODE-318-25 17.7.3.1b (Ncpg = min(Nag, Ncbg) = Ncbg, 17.7.3.1.2), phi = 0.75 (ACI CODE-318-25 Table 21.2.1 (nonredundant))"
           ],
           [
-            "Tension-shear interaction",
-            0.251,
-            1,
-            0.251,
-            "ACI 318-19 17.8.3"
+            "Tension-shear interaction (concrete)",
+            0.277,
+            1.0,
+            0.277,
+            "ACI CODE-318-25 17.8.3: (0.4497)^(5/3) + (0.0726)^(5/3) <= 1"
+          ],
+          [
+            "Tension-shear interaction (steel)",
+            0.027,
+            1.0,
+            0.027,
+            "ACI CODE-318-25 17.8.4: (0.1632)^2 + (0.0149)^2 <= 1"
           ]
         ]
       },
@@ -357,7 +364,7 @@
             2.7,
             1272.96,
             0.002,
-            "ACI 318-19 14.5.6.2 / AISC J8"
+            "ACI CODE-318-25 Table 22.8.3.2 (0.85·f'c·A1, no A2 gain), phi = 0.65 (Table 21.2.1(d)) / AISC J8"
           ]
         ]
       }

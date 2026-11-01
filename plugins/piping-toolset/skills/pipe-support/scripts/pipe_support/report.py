@@ -14,6 +14,7 @@ import json
 from typing import Dict, List, Optional
 
 from .aisc import OMEGA, PHI
+from .baseplate import aci_label
 from .optimizer import MANUAL_CHECK, asd_wind_guard_text
 
 
@@ -113,15 +114,20 @@ def _table(head: List[str], rows: List[List]) -> List[str]:
     return out
 
 
-def compliance_matrix(env: dict, extras: Optional[dict] = None) -> List[dict]:
+def aci_of(design: dict) -> str:
+    """Report label of the ACI edition the anchorage and pier ran to (ACI CODE-318-25 by default)."""
+    return aci_label((design.get("baseplate") or {}).get("aciEdition") or "318-25")
+
+
+def compliance_matrix(env: dict, extras: Optional[dict] = None, aci: str = "ACI CODE-318-25") -> List[dict]:
     """One row per code area with the worst ratio and verdict found in it."""
     areas = [
         ("ASCE 7-22 Ch. 2 load combinations", None, "2.3.1, 2.3.4, 2.3.6, 2.4.1, 2.4.4, 2.4.5"),
-        ("AISC 360-22 Ch. D/E/F/G/H - members", ("arm", "column"), "D2, E3-E7, F2-F11, G2-G7, H1"),
-        ("AISC 360-22 J2 - welds", ("weld",), "J2.2b, J2.4, Table J2.4, Table J2.5"),
+        ("AISC 360-22 Ch. D/E/F/G/H - members", ("arm", "column"), "D2-D3, E3-E7, F2-F10, G2-G6, H1"),
+        ("AISC 360-22 J2 - welds", ("weld",), "J2.2b, J2.4(a), Table J2.4, Table J2.5, J4"),
         ("AISC Design Guide 1 / J8 - base plate", ("baseplate",), "DG1 3.1, 3.4; J8"),
-        ("ACI 318-19 Ch. 17 - anchorage", ("anchorage",), "17.6, 17.7, 17.8"),
-        ("ACI 318-19 / soil - pier and foundation", ("pier",), "14.5.6, 22.6; stability"),
+        (f"{aci} Ch. 17 - anchorage", ("anchorage",), "17.5.4, 17.6, 17.7, 17.8; Table 21.2.1"),
+        (f"{aci} / soil - pier and foundation", ("pier",), "Table 22.8.3.2, 22.5.5.1.3, 22.6; stability"),
         ("Serviceability - deflection", ("deflection",), "span / limit"),
     ]
     rows = []
@@ -178,13 +184,14 @@ def unit(label: str, component: str) -> str:
 def markdown(doc: dict) -> str:
     d, env, spec = doc["design"], doc["envelope"], doc["spec"]
     m = d["method"]
+    aci = aci_of(d)
     L: List[str] = []
     L += [f"# Pipe Support Calculation - {d.get('tag') or spec.get('tag') or 'support'}", ""]
     rs = doc.get("_status") or {}
     held = not rs.get("banner_allowed", True)
     if rs.get("line"):
         L += [rs["line"], ""]
-    tb = [["Support tag", d.get("tag") or "-", "Design code", "AISC 360-22 / ACI 318-19 / ASCE 7-22"],
+    tb = [["Support tag", d.get("tag") or "-", "Design code", f"AISC 360-22 / {aci} / ASCE 7-22"],
           ["Configuration", CONFIG.get(d["type"], d["type"]), "Design method", m],
           ["Project", spec.get("project", "-"), "Unit system", "US customary (in, kip, ksi)"],
           ["Calc by", spec.get("calcBy", "-"), "Date", spec.get("date") or _dt.date.today().isoformat()]]
@@ -214,8 +221,9 @@ def markdown(doc: dict) -> str:
             L += [f"> Also {guard_headline(env)}.", ""]
     if g:
         L += ["**Validity guard - ASD anchorage under wind** (code-basis item 10; owner ruling 2026-10-30, "
-              "superseding item 6 of the 2026-10-26 P.E. rulings; P.E. confirmed 2026-10-30). The ACI 318-19 "
-              "strength-design anchor capacity is converted to ASD with a fixed 1/1.5 (R17.5.3); under a 0.6W "
+              f"superseding item 6 of the 2026-10-26 P.E. rulings; P.E. confirmed 2026-10-30). The {aci} "
+              "strength-design anchor capacity is converted to ASD with a fixed 1/1.5 (a project basis per the "
+              "owner P.E. ruling of 2026-10-26, not an ACI provision); under a 0.6W "
               "combination the implied factor is 1/0.6 = 1.67, so the anchorage ratio shown can be about 10 % "
               "unconservative. The ratio is the engine's, unchanged; the stage is held at "
               f"\"{MANUAL_CHECK}\" until the anchorage is run in LRFD or the factor treatment is resolved. "
@@ -231,11 +239,12 @@ def markdown(doc: dict) -> str:
     if m == "LRFD":
         rows = [["phi_t tension yielding", PHI.get("tensionYield", 0.9)], ["phi_c compression", PHI.get("compression", 0.9)],
                 ["phi_b flexure", PHI.get("flexure", 0.9)], ["phi_v shear", "0.90 / 1.00 (G2.1(a))"],
-                ["phi weld (J2.4)", 0.75], ["ACI anchors (17.5.3)", "0.75 / 0.65 steel; 0.70 concrete"]]
+                ["phi weld (J2.4)", 0.75], ["ACI anchors", "0.75 / 0.65 steel; concrete 0.65 nonredundant / 0.75 redundant tension, 0.75 shear (Table 21.2.1); psi_a per Table 17.5.4.1"
+                 if aci == "ACI CODE-318-25" else "0.75 / 0.65 steel; 0.70 concrete (ACI 318-19 17.5.3)"]]
     else:
         rows = [["Omega_t tension yielding", OMEGA.get("tensionYield", 1.67)], ["Omega_c compression", OMEGA.get("compression", 1.67)],
                 ["Omega_b flexure", OMEGA.get("flexure", 1.67)], ["Omega_v shear", "1.67 / 1.50 (G2.1(a))"],
-                ["Omega weld (J2.4)", 2.00], ["ACI anchors", "LRFD strength / 1.5 for service demands (R17.5.3)"]]
+                ["Omega weld (J2.4)", 2.00], ["ACI anchors", "LRFD strength / 1.5 for service demands (project basis, P.E. ruling 2026-10-26)"]]
     mat = d["material"]
     L += _table(["Factor", "Value"], rows) + [""]
     L += ["G2.1(a): rolled I-shapes with h/tw <= 2.24 sqrt(E/Fy) take phi_v = 1.00 / Omega_v = 1.50.", ""]

@@ -1136,7 +1136,7 @@ def run(spec: dict, optimize: bool = True, project_basis_file=None) -> dict:
     doc["boltedAlternative"] = V.bolted_arm_alternative(design, env, method)
     doc["findings"] = V.review(design, env, spec, opt)
     doc["criticalFindings"] = sum(1 for f in doc["findings"] if f["severity"] == "critical")
-    doc["compliance"] = R.compliance_matrix(env)
+    doc["compliance"] = R.compliance_matrix(env, aci=R.aci_of(design))
     if cv_provenance is not None:
         doc["code_value_provenance"] = cv_provenance
         doc["code_value_applied"] = cv_applied

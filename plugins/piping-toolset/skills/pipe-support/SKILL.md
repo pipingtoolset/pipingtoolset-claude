@@ -1,6 +1,6 @@
 ---
 name: pipe-support
-description: "Check a pipe support assembly (arm, column, welds, bolts, base plate, anchor bolts, pier) for CAESAR II restraint loads: ASCE 7-22 combinations, AISC 360-22, ACI 318-19 Ch. 17, AWS D1.1 detailing. Use when the user asks to check, review or optimize a pipe support, t-post, trapeze, goalpost or cantilever arm. Reviews it like a PE and proposes optimized code-passing alternatives with a calc report."
+description: "Check a pipe support assembly (arm, column, welds, bolts, base plate, anchors, pier) for CAESAR II restraint loads: ASCE 7-22 combinations, AISC 360-22, ACI CODE-318-25 or 318-19 Ch. 17, AWS D1.1. Use when the user asks to check, review or optimize a pipe support, t-post, trapeze, goalpost or cantilever arm. Reviews it like a PE and proposes optimized code-passing alternatives with a calc report."
 compatibility: Requires Python 3.9+ (standard library only)
 ---
 
@@ -18,7 +18,8 @@ breakout check). This skill closes all three:
    column-to-base weld → base plate → anchors → pier/soil. Every stage's reactions become
    the next stage's demands, for every combination.
 3. **Connections and detailing** are checked, not assumed: J2 welds, J3/J4 bolts, Design
-   Guide 1 plates, ACI 318-19 Chapter 17 anchors, AWS D1.1 detailing items.
+   Guide 1 plates, ACI CODE-318-25 Chapter 17 anchors (ACI 318-19 selectable with
+   `baseplate.aciEdition`), AWS D1.1 detailing items.
 
 The engine is the pipingtoolset.com **PiperSTR** engine, ported to standard-library Python and
 locked to it by parity tests. That includes a value-for-value reproduction of a published
@@ -31,7 +32,7 @@ capacity, ratio or alternative itself.** Every number in a response comes from a
 | `scripts/support_calc.py` | One spec in → envelope, review findings, optimizer, Markdown report, JSON |
 | `scripts/pipe_support/` | Engine: `aisc` (D/E/F/G/H), `weld`, `bolts` (J3/J4), `detailing` (J2 + D1.1 items), `baseplate` (DG1 + ACI 17), `pier`, `assembly` (cascade), `loads` (ASCE 7-22), `optimizer`, `review`, `report` |
 | `scripts/pipe_support/data/aisc_shapes.json` | Index of the 1,506 AISC shapes (AISC Shapes Database v16 + computed L/HSS/Pipe), with attribution; the rows are in four family-group parts under `data/aisc_shapes/` |
-| `scripts/examples/ps-201-caesar.json` | CAESAR II-mode example (SUS/OPE/WIN/EQ, optimizer on); its CSA preset anchor values and one ASSUMED item make it read MANUAL CHECK REQUIRED and exit 3 until confirmed |
+| `scripts/examples/ps-201-caesar.json` | CAESAR II-mode example (SUS/OPE/WIN/EQ, optimizer on). It enters no Anchor Category, so on the ACI CODE-318-25 default the anchorage takes Category 3 and FAILS (exit 2) with a major review finding; with the ESR Category entered (Category 1: 0.742) its CSA preset anchor values and one ASSUMED item make it read MANUAL CHECK REQUIRED and exit 3 until confirmed |
 | `scripts/examples/ps-101-factored.json` | Factored-mode example; reproduces the PS-101 PiperSTR report |
 | `references/spec-format.md` | Every spec key |
 | `references/review-protocol.md` | How to review a support, a drawing or a calc package; finding severities |
@@ -51,8 +52,13 @@ capacity, ratio or alternative itself.** Every number in a response comes from a
      (SUS, OPE, the pure occasional wind and seismic cases, HYD), with units and the
      vertical axis. Ask for **SDS** if there is a seismic case (Ev = 0.2 SDS D).
    - **Method**: LRFD or ASD. **Materials**: Fy/Fu, FEXX. **Base**: plate, anchor type and
-     size, embedment, f'c, pier size. Post-installed anchors need the product's
-     **ESR values** (bond stress, kc). The engine flags ACI generic defaults.
+     size, embedment, f'c, pier size, and the **ACI edition** (ACI CODE-318-25 by default,
+     `aciEdition: "318-19"` for a legacy project). Post-installed anchors need the product's
+     **ESR values**: bond stress tau_cr (and tau_uncr for the group bond equation), kc and the
+     ACI 355.2 / 355.4 **Anchor Category**. With no Category the engine takes Category 3, the
+     lowest psi_a (Table 17.5.4.1), and the review raises a finding; ask for it. Ask whether
+     the anchorage is redundant (Table 21.2.1; nonredundant is the default), for the rod fya,
+     and whether there is a grout pad. The engine flags ACI generic defaults.
    - **Pier**: anchored into existing concrete, or a gravity pier/footing on soil
      (allowable bearing and friction from the geotech report, always user-supplied).
    - **Fabrication**: is the arm-to-column joint a shop weld, a field weld or bolted? This
@@ -115,6 +121,12 @@ capacity, ratio or alternative itself.** Every number in a response comes from a
   are listed in the report's assumptions as not user-supplied and graded manual check
   required in one `preset inputs` row, as every ASSUMED item is in one `ASSUMED inputs` row;
   either holds the PASS banner. Replace the bond stress with the anchor ESR value before issue.
+- **Anchor Category is never invented.** It is an ESR value. If the user has none, run with it
+  unset (Category 3, conservative), report the finding and say what Category 1 or 2 would need
+  to be confirmed; never enter a Category to make a design pass.
+- **Weld strength uses kds = 1.0** (AISC J2.4(a)). The Eq. J2-5 directional increase is an
+  opt-in of the weld engine for a linear group loaded through its centre of gravity; the
+  assembly's welds all carry moment and never take it.
 
 ## With the Engineering Data connector
 

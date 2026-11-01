@@ -15,8 +15,8 @@ is ASD and an anchorage stage's governing combination carries wind (loads.asd_wi
 or a wind combination's anchorage ratio raised by the 1/0.6-over-1.5 margin reaches the
 governing ratio (loads.asd_wind_could_govern), or the loads are factored "as entered" and the
 spec does not declare them wind-free (factored_wind: false), the stage status becomes
-"manual check required" instead of "pass" and the envelope status cannot be "pass". The engine ratio is kept unchanged (it is the fixed 1/1.5 conversion of
-ACI R17.5.3); the guard is a status, not a re-factored number. Every alternative the
+"manual check required" instead of "pass" and the envelope status cannot be "pass". The engine ratio is kept unchanged (it is the fixed 1/1.5 conversion, a project
+basis per the owner P.E. ruling of 2026-10-26); the guard is a status, not a re-factored number. Every alternative the
 optimizer ranks, and the as-drawn seed, go through envelope(), so the same guard applies to
 them: a guarded stage is not "ok" for the anchor tuner and a guarded envelope is not "pass"
 for the final re-check, so a wind-governed ASD anchorage design is never ranked as passing.

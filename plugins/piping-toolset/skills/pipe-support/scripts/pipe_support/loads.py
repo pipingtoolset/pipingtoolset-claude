@@ -95,8 +95,8 @@ def asd_wind_combo(combo_id: str) -> bool:
 
 # The wind-anchorage factor margin (code-basis item 10). ASCE 7-22 2.4.1 (5a) carries 0.6W in
 # ASD where 2.3.1 (4a)/(5a) carry 1.0W in LRFD, so a wind-governed ASD anchorage implies a
-# strength-to-ASD factor of 1/0.6; the engine converts with the fixed ACI 318-19 R17.5.3
-# value (baseplate._ASD_ANCHOR_FACTOR). Their quotient bounds how much a wind combination's
+# strength-to-ASD factor of 1/0.6; the engine converts with the fixed 1/1.5 project basis (owner
+# P.E. ruling 2026-10-26; baseplate._ASD_ANCHOR_FACTOR), under either ACI edition. Their quotient bounds how much a wind combination's
 # ASD anchorage ratio can be understated; equation constants, not table values.
 ASD_WIND_LOAD_FACTOR = 0.6
 

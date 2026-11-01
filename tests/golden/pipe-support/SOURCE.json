@@ -1,6 +1,6 @@
 {
   "source": "pipecalcpro packages/calc-core/src/structural (PiperSTR engine)",
-  "calc_core_commit": "70e273c7311446846598aa8a3f3c00769f1469ff",
+  "calc_core_commit": "465618356681fbbb8d5ae6821ea9c5c8fa691f89",
   "calc_core_branch": "main",
   "generators": [
     "gen-goldens.mts",
@@ -8,10 +8,10 @@
     "gen-aisc-member-goldens.mts"
   ],
   "goldens": {
-    "weld.json": "a33d36917668d063a2cc03f160b6cf33556ff30c467541cd275a2efd145de27d",
-    "baseplate.json": "9138f793e5cf6e75637638bc7806b6e063de6f614559afe801c060a5755a8b26",
-    "pier.json": "3b0ac8b65858a6cca30adb577e62a211420d349052e2c361ceaa70154ee280db",
-    "assembly.json": "94b7863a4964f8b2025c3f54f2fce708e2513164dd1b5249e3e343b7b6fad904",
-    "aisc-member.json": "b269fba45aa922de6ff88b71ea40ded271d57c2f44d473baac134da4c8642abb"
+    "weld.json": "47461468c85104900de1b17a66c9bd5e99f4e5cbfc4897c79537ed0b85797482",
+    "baseplate.json": "99a18b95acab57167ef42469b4d46dee8ab3f88eb5094f76affb5963ebd7a554",
+    "pier.json": "3f11380949cbd0ad41e0f9b166b0582ccd74fbf6495429c72b632b8caf06ac70",
+    "assembly.json": "5dfd5afa41e063952f1953f15f2727e86c3411ea297a6aa4aaaead72ed97db54",
+    "aisc-member.json": "321fdfaae5d39254d98a03ccb1e5f9c0c0edc703f105ebbab7631dcd582f2e81"
   }
 }

@@ -177,6 +177,20 @@ const cases: C[] = [
   t1({ columnShape: undefined, arms: arm1("ALSO-NOT", [pipe(12, 1, 0.2)]) }),
   t1({ type: "cantilever", columnShape: "NOT-A-SHAPE" }),                                           // cantilever never resolves the column
   t1({ columnShape: undefined, columnHeight: 0 }),                                                   // columnHeight error precedes
+  // --- 2026-11-01: ACI CODE-318-25 anchorage, kds = 1.0 welds, F10.2 angle arms
+  t1({ baseplate: { ...P1.baseplate, aciEdition: "318-19" }, pier: bigPier }),
+  t1({ baseplate: { ...P1.baseplate, aciEdition: "318-19" }, pier: bigPier, method: "ASD" }),
+  t1({ baseplate: { ...P1.baseplate, anchorCategory: 1 }, pier: bigPier }),
+  t1({ baseplate: { ...P1.baseplate, anchorCategory: 2, anchorFya: 36, groutPad: true }, pier: bigPier }),
+  t1({ baseplate: { ...P1.baseplate, anchorageRedundancy: "redundant", anchorCategory: 1 }, pier: bigPier }),
+  t1({ arms: arm1("W6X15", [pipe(12, 8, 10)]), baseplate: { ...P1.baseplate }, pier: bigPier }),                       // 8 / 10 kip
+  t1({ arms: arm1("W6X15", [pipe(12, 8, 10)]), baseplate: { ...P1.baseplate, anchorCategory: 1 }, pier: bigPier }),
+  t1({ arms: arm1("W6X15", [pipe(12, 8, 10)]), baseplate: { ...P1.baseplate, aciEdition: "318-19" }, pier: bigPier }),
+  t1({ baseplate: { ...P1.baseplate, applyCompressionField: true }, pier: bigPier }),
+  t1({ baseplate: { ...P1.baseplate, bondStrengthUncracked: 1500, cracked: false }, pier: bigPier }),
+  t1({ baseplate: { ...cast, aciEdition: "318-19" }, pier: { ...bigPier, aciEdition: "318-19" } }),
+  t2({ arms: [{ shape: "L4X4X1/4", elevation: 96, projection: 36, pipes: [pipe(24, 0.8, 0.2, 0.2)] }, { shape: "L4X4X1/4", elevation: 66, projection: 36, pipes: [pipe(24, 0.6)] }] }),
+  t2({ baseplate: { ...P2.baseplate, aciEdition: "318-19" } }),
   // --- errors
   t1({ arms: [] }),
   t1({ columnHeight: 0 }),
