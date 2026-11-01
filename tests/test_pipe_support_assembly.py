@@ -98,7 +98,7 @@ class GoldenParity(unittest.TestCase):
                 for ck in st["checks"]:
                     labels.add(ck["label"])
                     clauses.append(ck["clause"])
-        self.assertTrue({"Base-metal tension yielding", "Base-metal tension rupture", "Base-metal shear rupture",
+        self.assertTrue({"Base-metal tension yielding", "Base-metal tension rupture", "Base-metal shear",
                          "Column flange local bending"} <= labels)
         joined = " | ".join(clauses)
         for frag in ("(both faces of the arm element)", "in per line", "×0.5 within 10·tf of the column top"):

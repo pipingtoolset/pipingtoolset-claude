@@ -8,6 +8,95 @@ keep a defect until the plugin is updated, so each such entry names the skill, t
 affected inputs and the release that fixed it. GitHub Releases carry the same
 label and are the recall channel.
 
+## [0.9.0] — 2026-11-01
+
+**UNCONSERVATIVE-FIX (pipe-support).** The skill is re-ported to the PiperSTR engine at pipecalcpro `04be653` (CHANGELOG-CALC 2026-11-01), under the one-engine rule. The anchorage now runs to ACI CODE-318-25 by default, with ACI 318-19 selectable. The AISC 360-22 member and weld checks are corrected clause by clause. Up to 0.8.2 every fillet weld took the Eq. J2-5 directional factor of up to 1.5 unconditionally, which overstated weld capacity by up to 50 %. Several member limit states were also missing or too high. **Re-run any pipe-support result from 0.8.2 or earlier.** No other skill changes.
+
+### pipe-support: ACI anchorage
+- **ACI CODE-318-25 is the default.** New input `baseplate.aciEdition`: "318-25" (the default) or "318-19". 318-19 reproduces earlier results, except where they were wrong under either edition. Every clause string names the edition that was run, and the pier stage cites the same edition.
+- **318-25 only:**
+  - φ per Table 21.2.1. Concrete failure in tension takes 0.65 nonredundant or 0.75 redundant (input `anchorageRedundancy`; the default, nonredundant, is warned). Concrete failure in shear takes 0.75.
+  - ψa per Table 17.5.4.1, from the new inputs `anchorCategory` (ACI 355.2 / 355.4, from the ESR) and `supplementaryReinforcement`. **With no Category, the engine takes Category 3** (ψa 0.60, the lowest) and gives a REVIEW warning.
+  - ψcm,N as an opt-in (input `applyCompressionField`). It is never used in pryout.
+  - The tension-shear interaction is split into a concrete row (17.8.3, power 5/3) and a steel row (17.8.4, power 2).
+- **Corrections under both editions:**
+  - Nonductile steel φ is 0.65 / 0.60.
+  - futa is capped at min(1.9·fya, 125 ksi), using the new input `anchorFya`.
+  - A grout pad applies Vsa × 0.80 (new input `groutPad`).
+  - ψed,V now comes from ca2 (it was 1.0).
+  - Side-face blowout applies the (1 + ca2/ca1)/4 factor and Nsbg for the edge row.
+  - Adhesive pryout uses min(Nag, Ncbg).
+  - ANc is capped at n·ANco.
+  - ψc,N is 1.4 for post-installed anchors in uncracked concrete (it was 1.25).
+  - Group bond follows 17.6.5.1b, using the new input `bondStrengthUncracked`. Without it, the check warns that it may be unconservative.
+  - Punching shear applies λs and λ.
+  - Clause labels are corrected.
+- **The ASD anchorage divisor stays 1/1.5.** It is now cited as this project's basis per the owner P.E. ruling of 2026-10-26, not as ACI R17.5.3. The ASD wind guard (code-basis item 10) is unchanged and works under either edition.
+
+### pipe-support: AISC 360-22
+- **Welds:**
+  - kds is 1.0 (J2.4(a)). The Eq. J2-5 increase applies only through the weld engine's opt-in `strainCompatibility: "linear-through-cg"`, on a single or two-parallel group with no moment. It never applies to the assembly's welds, which all carry moment.
+  - Base-metal shear is the lower of J4-3 yielding and J4-4 rupture. The row is renamed "Base-metal shear".
+  - J2.2b(c): a segment shorter than 4w takes an effective size of L/4.
+  - J2.2b(d): end-loaded welds, via the new input `endLoaded`.
+- **Members:**
+  - Compression: E7 uses the axial λr and the three Table E7.1 rows. E4-3 uses Fex for channels. Angles get E4-4 and the optional E5 (input `angleE5`).
+  - Tension: Table D3.1 angle U comes from Case 8 / Case 2 (inputs `nBoltsPerLine`, `connectionEccentricity`, `connectionLength`). It was a silent 0.60.
+  - Flexure:
+    - F3-2 kc applies to every I-shape.
+    - F4 and F5 are added.
+    - F6-4 uses 0.70E.
+    - F7.4 HSS lateral-torsional buckling is added.
+    - F9-6 / F9-8 / F9-9 apply, and F9-18 uses (1.43 − 0.515λ√(Fy/E)).
+    - F10.2 single-angle lateral-torsional buckling applies unless `continuousLTR` is set.
+  - Shear: G2-11, G3, and G6 per flange.
+  - A warning is raised when K defaults to 1.0. Equation numbers follow 360-22, and the K = 2.1 column cites Table C-A-7.1 case (e).
+- **Preset results** (LRFD, A36, the PiperSTR UI default loads; before → after):
+
+  | Preset / stage | 0.8.2 | 0.9.0 |
+  |---|---|---|
+  | CSA Type 1, column-to-base weld | 0.2238 (J4-1) | 0.2996 (fillet, kds 1.0) |
+  | CSA Type 1, anchorage | 0.2506 | 0.4497 (Table 21.2.1 φ 0.65, ψa 0.60 at Category 3) |
+  | CSA Type 1, governing | 0.8314 pass | 0.8314 pass (arm weld J4-1) |
+  | CSA Type 2, arm 1 L4X3X3/8 | 0.5262 | 0.9436 (F10.2) |
+  | CSA Type 2, arm 1 weld | 1.1389 (J4-1) | 1.2341 (fillet) |
+  | CSA Type 2, governing | 1.1389 FAIL | 1.2341 FAIL (still fails at its default loads, as ruled) |
+
+  CSA Type 1 at 8 / 10 kip: the column-to-base weld goes 0.8056 → 1.0783 and the anchorage goes 0.7379 → 1.6101 (concrete interaction). It passes at ESR Category 1.
+- **The examples:**
+  - `ps-101-factored.json` still passes at 0.8314.
+  - `ps-201-caesar.json` enters no Anchor Category, on purpose: it is an ESR value and a P.E. decision. The anchorage therefore FAILS at 1.1356 (LRFD, concrete interaction, combination LRFD-6-+T) and the run exits 2. With Category 1 it reads 0.7423, and the preset values and the ASSUMED item hold the result at MANUAL CHECK REQUIRED (exit 3). As shipped, the optimizer finds no passing alternative, because it never changes the Category.
+
+### Reviewer
+- **New finding "Anchor Category not entered - psi_a taken at Category 3".** It is graded major when the anchorage fails or is within 10 %, because the ESR Category can decide the verdict, and info otherwise. It does not fire on 318-19 or on cast-in anchors. The engine's REVIEW warning is not repeated as a second finding.
+- The single-anchor bond "may be unconservative" warning is graded major.
+- The ASD wind finding, the report title block, the compliance matrix and the design-basis table name the edition that was run and the project-basis 1/1.5.
+
+### Tests and tooling
+- **Goldens regenerated from the engine at `04be653`,** with the vendored generators extended for every new input. Case counts: weld 72 → 89, base plate 70 → 121, pier 43 → 49, assembly 130 → 143, member 96 → 145.
+- **The calc-core fixtures are re-synced:** fillet weld 7, base plate 8, member 16.
+- **PS-101** is re-baselined on its weld, anchorage and member-shear rows. The verdict is unchanged.
+- **New test file `tests/test_pipe_support_aci318_25.py`** covers the preset numbers, the edition factors, kds and the Category finding.
+- **ASD wind-guard and status tests:**
+  - The ASD wind-guard scenarios pin `aciEdition: "318-19"`, because at Category 3 no guard scenario survives on 318-25. The guard is edition-independent, and a new test holds it on the 318-25 default with Category 1.
+  - Tests whose subject is not the anchorage load ps-201 with Category 1.
+
+### Docs
+- `SKILL.md`, `references/code-basis.md` (items 3, 5, 6 and 10 updated; new items 13–16 cover the 318-25 port, the corrections under both editions, AISC conformance and what is deferred), `spec-format.md` and `review-protocol.md` are updated.
+- The manifests (description still within 500 characters), the README, the ROADMAP and the host runbooks are updated.
+
+### Not ported
+These are deferred in the engine itself:
+- λa by failure mode
+- the 318-25 limits and minima (f′c caps, da ≤ 4 in., Table 17.9.2, SDC C–F × 0.75)
+- ψh,V
+- shear lugs
+- G5-2a
+- F10-5b
+- an instantaneous-centre weld solver
+
+The cascade, like the engine, gives arms no `continuousLTR` or `angleE5` input, so angle arms always take F10.2.
+
 ## [0.8.2] — 2026-10-31
 
 Documentation only; no script, number or test contract changes.

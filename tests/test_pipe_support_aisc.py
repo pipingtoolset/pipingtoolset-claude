@@ -85,7 +85,7 @@ class CalcCoreFixture(unittest.TestCase):
         self.assertEqual(fails, [], "\n".join(fails))
 
     def test_case_count(self):
-        self.assertEqual(len(parity.load("structural.aisc-member")["cases"]), 15)  # +1 WT5X11 stem-in-compression (0.3.2)
+        self.assertEqual(len(parity.load("structural.aisc-member")["cases"]), 16)  # +1 WT5X11 stem-in-compression (0.3.2), +1 L4X3X3/8 continuousLTR (0.9.0)
 
 
 class Goldens(unittest.TestCase):
@@ -135,9 +135,13 @@ class Goldens(unittest.TestCase):
         self.assertEqual({c["input"]["method"] for c in ok}, {"LRFD", "ASD"})
         clauses = " | ".join(ch["clause"] for c in ok for ch in c["output"]["output"]["checks"])
         for frag in ("F2-1 (yielding)", "F2-2 (inelastic LTB)", "F2-3 (elastic LTB)", "F3-1", "F3-2", "F4", "F5-1",
-                     "F6-1", "F6-2", "F7-2", "F7-3", "F7-5", "F8-1", "F8-2", "F8-3", "F9", "F10-1", "F10-6",
+                     "F6-1", "F6-2", "F7-2", "F7-3", "F7-6", "F8-1", "F8-2", "F8-3", "F9", "F10-1", "F10-6",
                      "F10-7", "E3-2 inelastic", "E3-3 elastic", "E4-2", "E4-3", "E7 effective area", "E7-7",
-                     "G2-1", "G2.1(a)", "G4", "G6-1", "G7", "D2-1", "D2-2", "H1-1a", "H1-1b"):
+                     "G2-1", "G2.1(a)", "G4", "G6-1", "D2-1", "D2-2", "H1-1a", "H1-1b",
+                     # 360-22 conformance (0.9.0)
+                     "F4-1", "F4-2", "F4-3", "F4-13", "F4-14", "F5-2", "F5-7", "F7-8", "F7-9", "F9-6", "F9-7",
+                     "F9-14", "F9-15", "F9-16", "F10-2", "F10-3", "F10-5a", "F10 principal", "E4-4", "E5-1",
+                     "E5-2", "E5-3", "E5-4", "Fex for a channel", "G3-1", "G5-1", "Case 8", "Case 2"):
             self.assertIn(frag, clauses, frag)
         outs = [c["output"]["output"] for c in ok]
         self.assertTrue(any(o["interactionEquation"] == "H1-1a" for o in outs))

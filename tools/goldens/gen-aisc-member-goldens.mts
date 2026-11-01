@@ -107,6 +107,56 @@ add("round HSS slender flexure + E7-7", sec("HSS12.75X0.188", { tw: 0.06, htw: d
 add("round HSS D/t beyond E7", sec("HSS12.75X0.188", { d: 20, tw: 0.06, htw: del, A: 3.7, Ix: 180, Sx: 18, Zx: 24, rx: 7, Iy: 180, Sy: 18, Zy: 24, ry: 7 }), HSS, "ASD", { Lx: 300, demand: { P: 4, Mx: 80 } });
 add("PIPE4STD no J", sec("PIPE4STD", { J: del }), HSS, "LRFD", { Lx: 72, demand: { P: 20 } });
 
+// ---- 2026-11-01 AISC 360-22 conformance
+add("L4X3X3/8 ASD continuousLTR", sec("L4X3X3/8"), A36, "ASD", { Lx: 48, Lb: 48, continuousLTR: true, demand: { P: 3, Mx: 144, Vx: 0.5 } });
+add("L4X3X3/8 LRFD F10.2 principal", sec("L4X3X3/8"), A36, "LRFD", { Lx: 48, Lb: 48, demand: { Mx: 60, My: 10 } });
+add("L4X4X1/4 equal leg geometric", sec("L4X4X1/4"), A36, "LRFD", { Lx: 60, Lb: 60, demand: { Mx: 40 } });
+add("L4X4X1/4 equal leg + axial", sec("L4X4X1/4"), A36, "LRFD", { Lx: 60, Lb: 60, Kx: 1, Ky: 1, demand: { P: 5, Mx: 20 } });
+add("L4X4X1/4 equal leg Cb 2 capped", sec("L4X4X1/4"), A36, "LRFD", { Lx: 60, Lb: 60, Cb: 2, demand: { Mx: 40 } });
+add("L8X8X1/2 long Lb F10-3", sec("L8X8X1/2"), A36, "LRFD", { Lx: 400, Lb: 400, demand: { Mx: 100 } });
+add("L4X3X3/8 E5 planar long leg", sec("L4X3X3/8"), A36, "LRFD", { Lx: 72, angleE5: { conditionsMet: true, truss: "planar", connectedLeg: "long" }, demand: { P: 20 } });
+add("L4X3X3/8 E5 planar short leg", sec("L4X3X3/8"), A36, "LRFD", { Lx: 72, angleE5: { conditionsMet: true, truss: "planar", connectedLeg: "short" }, demand: { P: 20 } });
+add("L4X3X3/8 E5 space long leg", sec("L4X3X3/8"), A36, "ASD", { Lx: 120, angleE5: { conditionsMet: true, truss: "space", connectedLeg: "long" }, demand: { P: 8 } });
+add("L4X3X3/8 E5 space short leg L", sec("L4X3X3/8"), A36, "LRFD", { Lx: 60, angleE5: { conditionsMet: true, truss: "space", connectedLeg: "short", L: 50 }, demand: { P: 10 } });
+add("L4X4X1/4 E5 planar equal", sec("L4X4X1/4"), A36, "LRFD", { Lx: 100, Kx: 1, Ky: 1, angleE5: { conditionsMet: true, truss: "planar", connectedLeg: "short" }, demand: { P: 10 } });
+add("L8X4X1/2 E5 ratio >= 1.7", sec("L8X4X1/2"), A36, "LRFD", { Lx: 96, angleE5: { conditionsMet: true, truss: "planar", connectedLeg: "long" }, demand: { P: 20 } });
+add("L2X2X1/8 E5 KL/r > 200", sec("L2X2X1/8"), A36, "LRFD", { Lx: 120, angleE5: { conditionsMet: true, truss: "planar", connectedLeg: "long" }, demand: { P: 1 } });
+add("L4X3X3/8 E5 not met", sec("L4X3X3/8"), A36, "LRFD", { Lx: 72, angleE5: { conditionsMet: false, truss: "planar", connectedLeg: "long" }, demand: { P: 20 } });
+add("L6X6X5/16 E4-4 FTB", sec("L6X6X5/16"), A36, "LRFD", { Lx: 30, Kx: 1, Ky: 1, demand: { P: 30 } });
+add("L4X3X3/8 tension 4 bolts", sec("L4X3X3/8"), A36, "LRFD", { Lx: 48, nBoltsPerLine: 4, demand: { P: 30, axialTension: true } });
+add("L4X3X3/8 tension 3 bolts", sec("L4X3X3/8"), A36, "LRFD", { Lx: 48, nBoltsPerLine: 3, demand: { P: 30, axialTension: true } });
+add("L4X3X3/8 tension 2 bolts + Case 2", sec("L4X3X3/8"), A36, "LRFD", { Lx: 48, nBoltsPerLine: 2, connectionEccentricity: 0.78, connectionLength: 6, demand: { P: 30, axialTension: true } });
+add("L4X3X3/8 tension Case 2 short", sec("L4X3X3/8"), A36, "ASD", { Lx: 48, connectionEccentricity: 0.78, connectionLength: 1.2, demand: { P: 20, axialTension: true } });
+add("L4X3X3/8 tension 2 bolts only", sec("L4X3X3/8"), A36, "LRFD", { Lx: 48, nBoltsPerLine: 2, demand: { P: 30, axialTension: true } });
+add("C10X15.3 E4-3 channel Fex", sec("C10X15.3"), A36, "LRFD", { Lx: 120, Ly: 40, Lz: 120, Kx: 1, Ky: 1, demand: { P: 30 } });
+add("WT6X15 E4-3 + flexure", sec("WT6X15"), A36, "LRFD", { Lx: 96, Kx: 2.1, Ky: 2.1, demand: { P: 8, Mx: 60 } });
+add("WT6X15 no ro H ybar fallback", sec("WT6X15", { ro: del, H: del }), A36, "LRFD", { Lx: 96, Kx: 1, Ky: 1, demand: { P: 8 } });
+add("WT6X15 no shear-centre data", sec("WT6X15", { ro: del, H: del, ybar: del }), A36, "LRFD", { Lx: 96, Kx: 1, Ky: 1, demand: { P: 8 } });
+add("WT6X15 stem tension F9-6 band", sec("WT6X15"), A36, "LRFD", { Lx: 120, Lb: 120, stemInCompression: false, demand: { Mx: 60 } });
+add("WT6X15 stem tension elastic F9-7", sec("WT6X15"), A36, "LRFD", { Lx: 600, Lb: 600, stemInCompression: false, demand: { Mx: 30 } });
+add("WT6X15 minor G6 one flange", sec("WT6X15"), A36, "LRFD", { Lx: 60, demand: { My: 30, Vy: 10, Vx: 5 } });
+add("HSS12X4X3/16 F7.4 LTB", sec("HSS12X4X3/16"), HSS, "LRFD", { Lx: 600, Lb: 600, demand: { Mx: 300 } });
+add("HSS12X4X1/4 F7.4 very long Lb", sec("HSS12X4X1/4"), HSS, "LRFD", { Lx: 6000, Lb: 6000, demand: { Mx: 100 } });
+add("HSS12X12X3/16 slender E7 row b", sec("HSS12X12X3/16"), HSS, "LRFD", { Lx: 120, Kx: 1, Ky: 1, demand: { P: 100 } });
+add("W14X90 noncompact flange F3-1 kc", sec("W14X90"), A992, "LRFD", { Lx: 60, Lb: 60, demand: { Mx: 2000 } });
+add("W12X40 slender flange F3-2 kc rolled", sec("W12X40", { bf2tf: 30 }), A992, "LRFD", { Lx: 60, Lb: 10, demand: { Mx: 500 } });
+add("W12X40 F4 long Lb elastic", sec("W12X40", { htw: 110 }), A992, "LRFD", { Lx: 600, Lb: 600, demand: { Mx: 300 } });
+add("W12X40 F4 slender flange", sec("W12X40", { htw: 110, bf2tf: 30 }), A992, "LRFD", { Lx: 60, Lb: 60, demand: { Mx: 300 } });
+add("W12X40 F5 inelastic LTB", sec("W12X40", { htw: 170 }), A992, "LRFD", { Lx: 150, Lb: 150, demand: { Mx: 300 } });
+add("W12X40 F5 elastic LTB + FLB", sec("W12X40", { htw: 170, bf2tf: 14 }), A992, "LRFD", { Lx: 600, Lb: 600, demand: { Mx: 300 } });
+add("W12X40 F6-4 slender minor", sec("W12X40", { bf2tf: 30 }), A992, "LRFD", { Lx: 60, demand: { My: 50 } });
+add("W12X40 G2-11 slender web shear", sec("W12X40", { htw: 200, builtUp: true }), A992, "LRFD", { Lx: 60, demand: { Vx: 50 } });
+add("C10X15.3 G6 bf/tf", sec("C10X15.3", { bf2tf: 40 }), A36, "LRFD", { Lx: 60, demand: { Vy: 10 } });
+add("W12X40 K given (no K warning)", sec("W12X40"), A992, "LRFD", { Lx: 120, Kx: 1.0, Ky: 1.0, demand: { P: 100 } });
+add("W12X40 Kx only", sec("W12X40"), A992, "LRFD", { Lx: 120, Kx: 2.1, demand: { P: 100 } });
+add("W12X40 Ky only", sec("W12X40"), A992, "LRFD", { Lx: 120, Ky: 2.1, demand: { P: 100 } });
+add("L6X6X5/16 A992 E4-4 governs", sec("L6X6X5/16"), A992, "LRFD", { Lx: 30, Kx: 1, Ky: 1, demand: { P: 30 } });
+add("L8X8X1/2 A992 E4-4 short", sec("L8X8X1/2"), A992, "ASD", { Lx: 20, Kx: 1, Ky: 1, demand: { P: 30 } });
+add("WT6X15 stem compression Lb 600 F9-13", sec("WT6X15"), A36, "LRFD", { Lx: 600, Lb: 600, stemInCompression: true, demand: { Mx: 10 } });
+add("WT6X15 stem tension Lb 3000 F9-7", sec("WT6X15"), A36, "LRFD", { Lx: 3000, Lb: 3000, stemInCompression: false, demand: { Mx: 5 } });
+add("WT6X15 slender flange F9-15", sec("WT6X15", { bf2tf: 30 }), A36, "LRFD", { Lx: 60, Lb: 1, stemInCompression: false, demand: { Mx: 20 } });
+add("W12X40 F4 noncompact flange F4-13", sec("W12X40", { htw: 110, bf2tf: 14 }), A992, "LRFD", { Lx: 60, Lb: 1, demand: { Mx: 300 } });
+add("W12X40 F5 slender flange F5-7", sec("W12X40", { htw: 170, bf2tf: 30 }), A992, "LRFD", { Lx: 60, Lb: 1, demand: { Mx: 300 } });
 const rep = (_k: string, v: unknown) =>
   typeof v === "number" && !Number.isFinite(v) ? String(v) : v;
 

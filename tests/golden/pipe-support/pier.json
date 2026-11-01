@@ -60,7 +60,7 @@
             "demand": 9.8032,
             "capacity": 80.9543,
             "ratio": 0.1211,
-            "clause": "ACI 318-19 22.6.5.2",
+            "clause": "ACI CODE-318-25 Table 22.6.5.2 (lambda_s = 1, 22.5.5.1.3; alpha_s = 40 interior, 22.6.5.3)",
             "status": "pass"
           },
           {
@@ -68,7 +68,7 @@
             "demand": 15,
             "capacity": 376.7965,
             "ratio": 0.0398,
-            "clause": "ACI 318-19 14.5.6.2 / AISC J8",
+            "clause": "ACI CODE-318-25 Table 22.8.3.2 (0.85·f'c·A1, no A2 gain), phi = 0.65 (Table 21.2.1(d)) / AISC J8",
             "status": "pass"
           }
         ],
@@ -137,7 +137,7 @@
             "demand": 9.8032,
             "capacity": 121.4315,
             "ratio": 0.0807,
-            "clause": "ACI 318-19 22.6.5.2",
+            "clause": "ACI CODE-318-25 Table 22.6.5.2 (lambda_s = 1, 22.5.5.1.3; alpha_s = 40 interior, 22.6.5.3)",
             "status": "pass"
           },
           {
@@ -145,7 +145,7 @@
             "demand": 15,
             "capacity": 565.76,
             "ratio": 0.0265,
-            "clause": "ACI 318-19 14.5.6.2 / AISC J8",
+            "clause": "ACI CODE-318-25 Table 22.8.3.2 (0.85·f'c·A1, no A2 gain), phi = 0.65 (Table 21.2.1(d)) / AISC J8",
             "status": "pass"
           }
         ],
@@ -216,7 +216,7 @@
             "demand": 0,
             "capacity": 80.9543,
             "ratio": 0,
-            "clause": "ACI 318-19 22.6.5.2",
+            "clause": "ACI CODE-318-25 Table 22.6.5.2 (lambda_s = 1, 22.5.5.1.3; alpha_s = 40 interior, 22.6.5.3)",
             "status": "na"
           },
           {
@@ -224,7 +224,7 @@
             "demand": 2.7,
             "capacity": 376.7965,
             "ratio": 0.0072,
-            "clause": "ACI 318-19 14.5.6.2 / AISC J8",
+            "clause": "ACI CODE-318-25 Table 22.8.3.2 (0.85·f'c·A1, no A2 gain), phi = 0.65 (Table 21.2.1(d)) / AISC J8",
             "status": "pass"
           }
         ],
@@ -295,7 +295,7 @@
             "demand": 0,
             "capacity": 121.4315,
             "ratio": 0,
-            "clause": "ACI 318-19 22.6.5.2",
+            "clause": "ACI CODE-318-25 Table 22.6.5.2 (lambda_s = 1, 22.5.5.1.3; alpha_s = 40 interior, 22.6.5.3)",
             "status": "na"
           },
           {
@@ -303,7 +303,7 @@
             "demand": 2.7,
             "capacity": 565.76,
             "ratio": 0.0048,
-            "clause": "ACI 318-19 14.5.6.2 / AISC J8",
+            "clause": "ACI CODE-318-25 Table 22.8.3.2 (0.85·f'c·A1, no A2 gain), phi = 0.65 (Table 21.2.1(d)) / AISC J8",
             "status": "pass"
           }
         ],
@@ -375,7 +375,7 @@
             "demand": 0,
             "capacity": 80.9543,
             "ratio": 0,
-            "clause": "ACI 318-19 22.6.5.2",
+            "clause": "ACI CODE-318-25 Table 22.6.5.2 (lambda_s = 1, 22.5.5.1.3; alpha_s = 40 interior, 22.6.5.3)",
             "status": "na"
           },
           {
@@ -383,7 +383,7 @@
             "demand": 2,
             "capacity": 376.7965,
             "ratio": 0.0053,
-            "clause": "ACI 318-19 14.5.6.2 / AISC J8",
+            "clause": "ACI CODE-318-25 Table 22.8.3.2 (0.85·f'c·A1, no A2 gain), phi = 0.65 (Table 21.2.1(d)) / AISC J8",
             "status": "pass"
           }
         ],
@@ -455,7 +455,7 @@
             "demand": 0,
             "capacity": 80.9543,
             "ratio": 0,
-            "clause": "ACI 318-19 22.6.5.2",
+            "clause": "ACI CODE-318-25 Table 22.6.5.2 (lambda_s = 1, 22.5.5.1.3; alpha_s = 40 interior, 22.6.5.3)",
             "status": "na"
           },
           {
@@ -463,7 +463,7 @@
             "demand": 0,
             "capacity": 376.7965,
             "ratio": 0,
-            "clause": "ACI 318-19 14.5.6.2 / AISC J8",
+            "clause": "ACI CODE-318-25 Table 22.8.3.2 (0.85·f'c·A1, no A2 gain), phi = 0.65 (Table 21.2.1(d)) / AISC J8",
             "status": "na"
           }
         ],
@@ -535,7 +535,7 @@
             "demand": 0,
             "capacity": 80.9543,
             "ratio": 0,
-            "clause": "ACI 318-19 22.6.5.2",
+            "clause": "ACI CODE-318-25 Table 22.6.5.2 (lambda_s = 1, 22.5.5.1.3; alpha_s = 40 interior, 22.6.5.3)",
             "status": "na"
           },
           {
@@ -543,7 +543,7 @@
             "demand": 0,
             "capacity": 376.7965,
             "ratio": 0,
-            "clause": "ACI 318-19 14.5.6.2 / AISC J8",
+            "clause": "ACI CODE-318-25 Table 22.8.3.2 (0.85·f'c·A1, no A2 gain), phi = 0.65 (Table 21.2.1(d)) / AISC J8",
             "status": "na"
           }
         ],
@@ -587,7 +587,7 @@
             "demand": 2.7,
             "capacity": 376.7965,
             "ratio": 0.0072,
-            "clause": "ACI 318-19 14.5.6.2 / AISC J8",
+            "clause": "ACI CODE-318-25 Table 22.8.3.2 (0.85·f'c·A1, no A2 gain), phi = 0.65 (Table 21.2.1(d)) / AISC J8",
             "status": "pass"
           }
         ],
@@ -636,7 +636,7 @@
             "demand": 10,
             "capacity": 80.9543,
             "ratio": 0.1235,
-            "clause": "ACI 318-19 22.6.5.2",
+            "clause": "ACI CODE-318-25 Table 22.6.5.2 (lambda_s = 1, 22.5.5.1.3; alpha_s = 40 interior, 22.6.5.3)",
             "status": "pass"
           },
           {
@@ -644,7 +644,7 @@
             "demand": 10,
             "capacity": 376.7965,
             "ratio": 0.0265,
-            "clause": "ACI 318-19 14.5.6.2 / AISC J8",
+            "clause": "ACI CODE-318-25 Table 22.8.3.2 (0.85·f'c·A1, no A2 gain), phi = 0.65 (Table 21.2.1(d)) / AISC J8",
             "status": "pass"
           }
         ],
@@ -692,7 +692,7 @@
             "demand": 10,
             "capacity": 565.76,
             "ratio": 0.0177,
-            "clause": "ACI 318-19 14.5.6.2 / AISC J8",
+            "clause": "ACI CODE-318-25 Table 22.8.3.2 (0.85·f'c·A1, no A2 gain), phi = 0.65 (Table 21.2.1(d)) / AISC J8",
             "status": "pass"
           }
         ],
@@ -766,7 +766,7 @@
             "demand": 7.1083,
             "capacity": 80.9543,
             "ratio": 0.0878,
-            "clause": "ACI 318-19 22.6.5.2",
+            "clause": "ACI CODE-318-25 Table 22.6.5.2 (lambda_s = 1, 22.5.5.1.3; alpha_s = 40 interior, 22.6.5.3)",
             "status": "pass"
           },
           {
@@ -774,7 +774,7 @@
             "demand": 15,
             "capacity": 376.7965,
             "ratio": 0.0398,
-            "clause": "ACI 318-19 14.5.6.2 / AISC J8",
+            "clause": "ACI CODE-318-25 Table 22.8.3.2 (0.85·f'c·A1, no A2 gain), phi = 0.65 (Table 21.2.1(d)) / AISC J8",
             "status": "pass"
           }
         ],
@@ -838,7 +838,7 @@
             "demand": 7.1083,
             "capacity": 80.9543,
             "ratio": 0.0878,
-            "clause": "ACI 318-19 22.6.5.2",
+            "clause": "ACI CODE-318-25 Table 22.6.5.2 (lambda_s = 1, 22.5.5.1.3; alpha_s = 40 interior, 22.6.5.3)",
             "status": "pass"
           },
           {
@@ -846,7 +846,7 @@
             "demand": 15,
             "capacity": 376.7965,
             "ratio": 0.0398,
-            "clause": "ACI 318-19 14.5.6.2 / AISC J8",
+            "clause": "ACI CODE-318-25 Table 22.8.3.2 (0.85·f'c·A1, no A2 gain), phi = 0.65 (Table 21.2.1(d)) / AISC J8",
             "status": "pass"
           }
         ],
@@ -919,7 +919,7 @@
             "demand": 7.1083,
             "capacity": 80.9543,
             "ratio": 0.0878,
-            "clause": "ACI 318-19 22.6.5.2",
+            "clause": "ACI CODE-318-25 Table 22.6.5.2 (lambda_s = 1, 22.5.5.1.3; alpha_s = 40 interior, 22.6.5.3)",
             "status": "pass"
           },
           {
@@ -927,7 +927,7 @@
             "demand": 15,
             "capacity": 376.7965,
             "ratio": 0.0398,
-            "clause": "ACI 318-19 14.5.6.2 / AISC J8",
+            "clause": "ACI CODE-318-25 Table 22.8.3.2 (0.85·f'c·A1, no A2 gain), phi = 0.65 (Table 21.2.1(d)) / AISC J8",
             "status": "pass"
           }
         ],
@@ -999,7 +999,7 @@
             "demand": 7.1083,
             "capacity": 80.9543,
             "ratio": 0.0878,
-            "clause": "ACI 318-19 22.6.5.2",
+            "clause": "ACI CODE-318-25 Table 22.6.5.2 (lambda_s = 1, 22.5.5.1.3; alpha_s = 40 interior, 22.6.5.3)",
             "status": "pass"
           },
           {
@@ -1007,7 +1007,7 @@
             "demand": 15,
             "capacity": 376.7965,
             "ratio": 0.0398,
-            "clause": "ACI 318-19 14.5.6.2 / AISC J8",
+            "clause": "ACI CODE-318-25 Table 22.8.3.2 (0.85·f'c·A1, no A2 gain), phi = 0.65 (Table 21.2.1(d)) / AISC J8",
             "status": "pass"
           }
         ],
@@ -1078,7 +1078,7 @@
             "demand": 6.6667,
             "capacity": 80.9543,
             "ratio": 0.0824,
-            "clause": "ACI 318-19 22.6.5.2",
+            "clause": "ACI CODE-318-25 Table 22.6.5.2 (lambda_s = 1, 22.5.5.1.3; alpha_s = 40 interior, 22.6.5.3)",
             "status": "pass"
           },
           {
@@ -1086,7 +1086,7 @@
             "demand": 15,
             "capacity": 376.7965,
             "ratio": 0.0398,
-            "clause": "ACI 318-19 14.5.6.2 / AISC J8",
+            "clause": "ACI CODE-318-25 Table 22.8.3.2 (0.85·f'c·A1, no A2 gain), phi = 0.65 (Table 21.2.1(d)) / AISC J8",
             "status": "pass"
           }
         ],
@@ -1159,7 +1159,7 @@
             "demand": 7.1083,
             "capacity": 80.9543,
             "ratio": 0.0878,
-            "clause": "ACI 318-19 22.6.5.2",
+            "clause": "ACI CODE-318-25 Table 22.6.5.2 (lambda_s = 1, 22.5.5.1.3; alpha_s = 40 interior, 22.6.5.3)",
             "status": "pass"
           },
           {
@@ -1167,7 +1167,7 @@
             "demand": 15,
             "capacity": 376.7965,
             "ratio": 0.0398,
-            "clause": "ACI 318-19 14.5.6.2 / AISC J8",
+            "clause": "ACI CODE-318-25 Table 22.8.3.2 (0.85·f'c·A1, no A2 gain), phi = 0.65 (Table 21.2.1(d)) / AISC J8",
             "status": "pass"
           }
         ],
@@ -1240,7 +1240,7 @@
             "demand": 7.1083,
             "capacity": 80.9543,
             "ratio": 0.0878,
-            "clause": "ACI 318-19 22.6.5.2",
+            "clause": "ACI CODE-318-25 Table 22.6.5.2 (lambda_s = 1, 22.5.5.1.3; alpha_s = 40 interior, 22.6.5.3)",
             "status": "pass"
           },
           {
@@ -1248,7 +1248,7 @@
             "demand": 15,
             "capacity": 376.7965,
             "ratio": 0.0398,
-            "clause": "ACI 318-19 14.5.6.2 / AISC J8",
+            "clause": "ACI CODE-318-25 Table 22.8.3.2 (0.85·f'c·A1, no A2 gain), phi = 0.65 (Table 21.2.1(d)) / AISC J8",
             "status": "pass"
           }
         ],
@@ -1321,7 +1321,7 @@
             "demand": 11.2231,
             "capacity": 80.9543,
             "ratio": 0.1386,
-            "clause": "ACI 318-19 22.6.5.2",
+            "clause": "ACI CODE-318-25 Table 22.6.5.2 (lambda_s = 1, 22.5.5.1.3; alpha_s = 40 interior, 22.6.5.3)",
             "status": "pass"
           },
           {
@@ -1329,7 +1329,7 @@
             "demand": 15,
             "capacity": 376.7965,
             "ratio": 0.0398,
-            "clause": "ACI 318-19 14.5.6.2 / AISC J8",
+            "clause": "ACI CODE-318-25 Table 22.8.3.2 (0.85·f'c·A1, no A2 gain), phi = 0.65 (Table 21.2.1(d)) / AISC J8",
             "status": "pass"
           }
         ],
@@ -1400,7 +1400,7 @@
             "demand": 8.1805,
             "capacity": 80.9543,
             "ratio": 0.1011,
-            "clause": "ACI 318-19 22.6.5.2",
+            "clause": "ACI CODE-318-25 Table 22.6.5.2 (lambda_s = 1, 22.5.5.1.3; alpha_s = 40 interior, 22.6.5.3)",
             "status": "pass"
           },
           {
@@ -1408,7 +1408,7 @@
             "demand": 15,
             "capacity": 376.7965,
             "ratio": 0.0398,
-            "clause": "ACI 318-19 14.5.6.2 / AISC J8",
+            "clause": "ACI CODE-318-25 Table 22.8.3.2 (0.85·f'c·A1, no A2 gain), phi = 0.65 (Table 21.2.1(d)) / AISC J8",
             "status": "pass"
           }
         ],
@@ -1480,7 +1480,7 @@
             "demand": 9.8032,
             "capacity": 80.9543,
             "ratio": 0.1211,
-            "clause": "ACI 318-19 22.6.5.2",
+            "clause": "ACI CODE-318-25 Table 22.6.5.2 (lambda_s = 1, 22.5.5.1.3; alpha_s = 40 interior, 22.6.5.3)",
             "status": "pass"
           },
           {
@@ -1488,7 +1488,7 @@
             "demand": 15,
             "capacity": 376.7965,
             "ratio": 0.0398,
-            "clause": "ACI 318-19 14.5.6.2 / AISC J8",
+            "clause": "ACI CODE-318-25 Table 22.8.3.2 (0.85·f'c·A1, no A2 gain), phi = 0.65 (Table 21.2.1(d)) / AISC J8",
             "status": "pass"
           }
         ],
@@ -1555,7 +1555,7 @@
             "demand": 6,
             "capacity": 376.7965,
             "ratio": 0.0159,
-            "clause": "ACI 318-19 14.5.6.2 / AISC J8",
+            "clause": "ACI CODE-318-25 Table 22.8.3.2 (0.85·f'c·A1, no A2 gain), phi = 0.65 (Table 21.2.1(d)) / AISC J8",
             "status": "pass"
           }
         ],
@@ -1625,7 +1625,7 @@
             "demand": 6,
             "capacity": 565.76,
             "ratio": 0.0106,
-            "clause": "ACI 318-19 14.5.6.2 / AISC J8",
+            "clause": "ACI CODE-318-25 Table 22.8.3.2 (0.85·f'c·A1, no A2 gain), phi = 0.65 (Table 21.2.1(d)) / AISC J8",
             "status": "pass"
           }
         ],
@@ -1696,7 +1696,7 @@
             "demand": 15,
             "capacity": 376.7965,
             "ratio": 0.0398,
-            "clause": "ACI 318-19 14.5.6.2 / AISC J8",
+            "clause": "ACI CODE-318-25 Table 22.8.3.2 (0.85·f'c·A1, no A2 gain), phi = 0.65 (Table 21.2.1(d)) / AISC J8",
             "status": "pass"
           }
         ],
@@ -1767,7 +1767,7 @@
             "demand": 15,
             "capacity": 376.7965,
             "ratio": 0.0398,
-            "clause": "ACI 318-19 14.5.6.2 / AISC J8",
+            "clause": "ACI CODE-318-25 Table 22.8.3.2 (0.85·f'c·A1, no A2 gain), phi = 0.65 (Table 21.2.1(d)) / AISC J8",
             "status": "pass"
           }
         ],
@@ -1838,7 +1838,7 @@
             "demand": 76.4792,
             "capacity": 4.5537,
             "ratio": 16.795,
-            "clause": "ACI 318-19 22.6.5.2",
+            "clause": "ACI CODE-318-25 Table 22.6.5.2 (lambda_s = 1, 22.5.5.1.3; alpha_s = 40 interior, 22.6.5.3)",
             "status": "fail"
           },
           {
@@ -1846,7 +1846,7 @@
             "demand": 80,
             "capacity": 376.7965,
             "ratio": 0.2123,
-            "clause": "ACI 318-19 14.5.6.2 / AISC J8",
+            "clause": "ACI CODE-318-25 Table 22.8.3.2 (0.85·f'c·A1, no A2 gain), phi = 0.65 (Table 21.2.1(d)) / AISC J8",
             "status": "pass"
           }
         ],
@@ -1915,7 +1915,7 @@
             "demand": 56.4792,
             "capacity": 4.5537,
             "ratio": 12.403,
-            "clause": "ACI 318-19 22.6.5.2",
+            "clause": "ACI CODE-318-25 Table 22.6.5.2 (lambda_s = 1, 22.5.5.1.3; alpha_s = 40 interior, 22.6.5.3)",
             "status": "fail"
           },
           {
@@ -1923,7 +1923,7 @@
             "demand": 60,
             "capacity": 376.7965,
             "ratio": 0.1592,
-            "clause": "ACI 318-19 14.5.6.2 / AISC J8",
+            "clause": "ACI CODE-318-25 Table 22.8.3.2 (0.85·f'c·A1, no A2 gain), phi = 0.65 (Table 21.2.1(d)) / AISC J8",
             "status": "pass"
           }
         ],
@@ -1990,9 +1990,9 @@
           {
             "label": "Punching (two-way) shear",
             "demand": 105.9167,
-            "capacity": 184.1711,
-            "ratio": 0.5751,
-            "clause": "ACI 318-19 22.6.5.2",
+            "capacity": 168.1244,
+            "ratio": 0.63,
+            "clause": "ACI CODE-318-25 Table 22.6.5.2 (lambda_s = 0.9129, 22.5.5.1.3; alpha_s = 40 interior, 22.6.5.3)",
             "status": "pass"
           },
           {
@@ -2000,7 +2000,7 @@
             "demand": 120,
             "capacity": 376.7965,
             "ratio": 0.3185,
-            "clause": "ACI 318-19 14.5.6.2 / AISC J8",
+            "clause": "ACI CODE-318-25 Table 22.8.3.2 (0.85·f'c·A1, no A2 gain), phi = 0.65 (Table 21.2.1(d)) / AISC J8",
             "status": "pass"
           }
         ],
@@ -2067,9 +2067,9 @@
           {
             "label": "Punching (two-way) shear",
             "demand": 105.9167,
-            "capacity": 276.2566,
-            "ratio": 0.3834,
-            "clause": "ACI 318-19 22.6.5.2",
+            "capacity": 252.1866,
+            "ratio": 0.42,
+            "clause": "ACI CODE-318-25 Table 22.6.5.2 (lambda_s = 0.9129, 22.5.5.1.3; alpha_s = 40 interior, 22.6.5.3)",
             "status": "pass"
           },
           {
@@ -2077,7 +2077,7 @@
             "demand": 120,
             "capacity": 565.76,
             "ratio": 0.2121,
-            "clause": "ACI 318-19 14.5.6.2 / AISC J8",
+            "clause": "ACI CODE-318-25 Table 22.8.3.2 (0.85·f'c·A1, no A2 gain), phi = 0.65 (Table 21.2.1(d)) / AISC J8",
             "status": "pass"
           }
         ],
@@ -2148,7 +2148,7 @@
             "demand": 31.6519,
             "capacity": 80.1448,
             "ratio": 0.3949,
-            "clause": "ACI 318-19 22.6.5.2",
+            "clause": "ACI CODE-318-25 Table 22.6.5.2 (lambda_s = 1, 22.5.5.1.3; alpha_s = 40 interior, 22.6.5.3)",
             "status": "pass"
           },
           {
@@ -2156,7 +2156,7 @@
             "demand": 40,
             "capacity": 376.7965,
             "ratio": 0.1062,
-            "clause": "ACI 318-19 14.5.6.2 / AISC J8",
+            "clause": "ACI CODE-318-25 Table 22.8.3.2 (0.85·f'c·A1, no A2 gain), phi = 0.65 (Table 21.2.1(d)) / AISC J8",
             "status": "pass"
           }
         ],
@@ -2225,7 +2225,7 @@
             "demand": 31.6519,
             "capacity": 120.2171,
             "ratio": 0.2633,
-            "clause": "ACI 318-19 22.6.5.2",
+            "clause": "ACI CODE-318-25 Table 22.6.5.2 (lambda_s = 1, 22.5.5.1.3; alpha_s = 40 interior, 22.6.5.3)",
             "status": "pass"
           },
           {
@@ -2233,7 +2233,7 @@
             "demand": 40,
             "capacity": 565.76,
             "ratio": 0.0707,
-            "clause": "ACI 318-19 14.5.6.2 / AISC J8",
+            "clause": "ACI CODE-318-25 Table 22.8.3.2 (0.85·f'c·A1, no A2 gain), phi = 0.65 (Table 21.2.1(d)) / AISC J8",
             "status": "pass"
           }
         ],
@@ -2304,7 +2304,7 @@
             "demand": 391.6667,
             "capacity": 80.9543,
             "ratio": 4.8381,
-            "clause": "ACI 318-19 22.6.5.2",
+            "clause": "ACI CODE-318-25 Table 22.6.5.2 (lambda_s = 1, 22.5.5.1.3; alpha_s = 40 interior, 22.6.5.3)",
             "status": "fail"
           },
           {
@@ -2312,7 +2312,7 @@
             "demand": 400,
             "capacity": 376.7965,
             "ratio": 1.0616,
-            "clause": "ACI 318-19 14.5.6.2 / AISC J8",
+            "clause": "ACI CODE-318-25 Table 22.8.3.2 (0.85·f'c·A1, no A2 gain), phi = 0.65 (Table 21.2.1(d)) / AISC J8",
             "status": "fail"
           }
         ],
@@ -2381,7 +2381,7 @@
             "demand": 1722.2222,
             "capacity": 80.9543,
             "ratio": 21.274,
-            "clause": "ACI 318-19 22.6.5.2",
+            "clause": "ACI CODE-318-25 Table 22.6.5.2 (lambda_s = 1, 22.5.5.1.3; alpha_s = 40 interior, 22.6.5.3)",
             "status": "fail"
           },
           {
@@ -2389,7 +2389,7 @@
             "demand": 2000,
             "capacity": 376.7965,
             "ratio": 5.3079,
-            "clause": "ACI 318-19 14.5.6.2 / AISC J8",
+            "clause": "ACI CODE-318-25 Table 22.8.3.2 (0.85·f'c·A1, no A2 gain), phi = 0.65 (Table 21.2.1(d)) / AISC J8",
             "status": "fail"
           }
         ],
@@ -2458,7 +2458,7 @@
             "demand": 0,
             "capacity": 80.9543,
             "ratio": 0,
-            "clause": "ACI 318-19 22.6.5.2",
+            "clause": "ACI CODE-318-25 Table 22.6.5.2 (lambda_s = 1, 22.5.5.1.3; alpha_s = 40 interior, 22.6.5.3)",
             "status": "na"
           },
           {
@@ -2466,7 +2466,7 @@
             "demand": 0,
             "capacity": 376.7965,
             "ratio": 0,
-            "clause": "ACI 318-19 14.5.6.2 / AISC J8",
+            "clause": "ACI CODE-318-25 Table 22.8.3.2 (0.85·f'c·A1, no A2 gain), phi = 0.65 (Table 21.2.1(d)) / AISC J8",
             "status": "na"
           }
         ],
@@ -2533,7 +2533,7 @@
             "demand": 0,
             "capacity": 376.7965,
             "ratio": 0,
-            "clause": "ACI 318-19 14.5.6.2 / AISC J8",
+            "clause": "ACI CODE-318-25 Table 22.8.3.2 (0.85·f'c·A1, no A2 gain), phi = 0.65 (Table 21.2.1(d)) / AISC J8",
             "status": "na"
           }
         ],
@@ -2604,7 +2604,7 @@
             "demand": 9.022,
             "capacity": 80.9543,
             "ratio": 0.1114,
-            "clause": "ACI 318-19 22.6.5.2",
+            "clause": "ACI CODE-318-25 Table 22.6.5.2 (lambda_s = 1, 22.5.5.1.3; alpha_s = 40 interior, 22.6.5.3)",
             "status": "pass"
           },
           {
@@ -2612,7 +2612,7 @@
             "demand": 15,
             "capacity": 376.7965,
             "ratio": 0.0398,
-            "clause": "ACI 318-19 14.5.6.2 / AISC J8",
+            "clause": "ACI CODE-318-25 Table 22.8.3.2 (0.85·f'c·A1, no A2 gain), phi = 0.65 (Table 21.2.1(d)) / AISC J8",
             "status": "pass"
           }
         ],
@@ -2681,7 +2681,7 @@
             "demand": 6.6667,
             "capacity": 80.9543,
             "ratio": 0.0824,
-            "clause": "ACI 318-19 22.6.5.2",
+            "clause": "ACI CODE-318-25 Table 22.6.5.2 (lambda_s = 1, 22.5.5.1.3; alpha_s = 40 interior, 22.6.5.3)",
             "status": "pass"
           },
           {
@@ -2689,7 +2689,7 @@
             "demand": 15,
             "capacity": 376.7965,
             "ratio": 0.0398,
-            "clause": "ACI 318-19 14.5.6.2 / AISC J8",
+            "clause": "ACI CODE-318-25 Table 22.8.3.2 (0.85·f'c·A1, no A2 gain), phi = 0.65 (Table 21.2.1(d)) / AISC J8",
             "status": "pass"
           }
         ],
@@ -2760,7 +2760,7 @@
             "demand": 6.6667,
             "capacity": 80.9543,
             "ratio": 0.0824,
-            "clause": "ACI 318-19 22.6.5.2",
+            "clause": "ACI CODE-318-25 Table 22.6.5.2 (lambda_s = 1, 22.5.5.1.3; alpha_s = 40 interior, 22.6.5.3)",
             "status": "pass"
           },
           {
@@ -2768,7 +2768,7 @@
             "demand": 15,
             "capacity": 376.7965,
             "ratio": 0.0398,
-            "clause": "ACI 318-19 14.5.6.2 / AISC J8",
+            "clause": "ACI CODE-318-25 Table 22.8.3.2 (0.85·f'c·A1, no A2 gain), phi = 0.65 (Table 21.2.1(d)) / AISC J8",
             "status": "pass"
           }
         ],
@@ -2839,7 +2839,7 @@
             "demand": 17.5648,
             "capacity": 80.9543,
             "ratio": 0.217,
-            "clause": "ACI 318-19 22.6.5.2",
+            "clause": "ACI CODE-318-25 Table 22.6.5.2 (lambda_s = 1, 22.5.5.1.3; alpha_s = 40 interior, 22.6.5.3)",
             "status": "pass"
           },
           {
@@ -2847,7 +2847,7 @@
             "demand": 25,
             "capacity": 376.7965,
             "ratio": 0.0663,
-            "clause": "ACI 318-19 14.5.6.2 / AISC J8",
+            "clause": "ACI CODE-318-25 Table 22.8.3.2 (0.85·f'c·A1, no A2 gain), phi = 0.65 (Table 21.2.1(d)) / AISC J8",
             "status": "pass"
           }
         ],
@@ -2916,7 +2916,7 @@
             "demand": 13.6111,
             "capacity": 80.9543,
             "ratio": 0.1681,
-            "clause": "ACI 318-19 22.6.5.2",
+            "clause": "ACI CODE-318-25 Table 22.6.5.2 (lambda_s = 1, 22.5.5.1.3; alpha_s = 40 interior, 22.6.5.3)",
             "status": "pass"
           },
           {
@@ -2924,12 +2924,484 @@
             "demand": 15,
             "capacity": 376.7965,
             "ratio": 0.0398,
-            "clause": "ACI 318-19 14.5.6.2 / AISC J8",
+            "clause": "ACI CODE-318-25 Table 22.8.3.2 (0.85·f'c·A1, no A2 gain), phi = 0.65 (Table 21.2.1(d)) / AISC J8",
             "status": "pass"
           }
         ],
         "governingRatio": 3.7417,
         "governingCheck": "Soil bearing pressure"
+      },
+      "status": "fail",
+      "warnings": []
+    },
+    {
+      "input": {
+        "method": "ASD",
+        "pierLength": 16,
+        "pierWidth": 16,
+        "pierHeight": 24,
+        "fc": 4000,
+        "footingLength": 48,
+        "footingWidth": 48,
+        "footingThickness": 12,
+        "allowableBearing": 3,
+        "frictionCoefficient": 0.35,
+        "plateLength": 12,
+        "plateWidth": 12,
+        "P": 15,
+        "M": 96,
+        "V": 0,
+        "aciEdition": "318-19"
+      },
+      "output": {
+        "selfWeight": 2.9333,
+        "totalVertical": 17.9333,
+        "totalMoment": 96,
+        "eccentricity": 5.3532,
+        "kern": 8,
+        "soilPressureMax": 1.8708,
+        "soilPressureMin": 0.3708,
+        "partialBearing": false,
+        "overturningRatio": 0.3346,
+        "slidingRatio": 0,
+        "checks": [
+          {
+            "label": "Soil bearing pressure",
+            "demand": 1.8708,
+            "capacity": 3,
+            "ratio": 0.6236,
+            "clause": "Service-level bearing vs the geotechnical allowable",
+            "status": "pass"
+          },
+          {
+            "label": "Overturning (FS 1.5)",
+            "demand": 144,
+            "capacity": 430.4,
+            "ratio": 0.3346,
+            "clause": "Gravity stability — resisting moment = N·L/2 about the toe",
+            "status": "pass"
+          },
+          {
+            "label": "Sliding (FS 1.5)",
+            "demand": 0,
+            "capacity": 6.2767,
+            "ratio": 0,
+            "clause": "Resistance = mu·N + c·A (user-supplied soil properties)",
+            "status": "na"
+          },
+          {
+            "label": "Punching (two-way) shear",
+            "demand": 9.8032,
+            "capacity": 80.9543,
+            "ratio": 0.1211,
+            "clause": "ACI 318-19 Table 22.6.5.2 (lambda_s = 1, 22.5.5.1.3; alpha_s = 40 interior, 22.6.5.3)",
+            "status": "pass"
+          },
+          {
+            "label": "Pier concrete bearing",
+            "demand": 15,
+            "capacity": 376.7965,
+            "ratio": 0.0398,
+            "clause": "ACI 318-19 Table 22.8.3.2 (0.85·f'c·A1, no A2 gain), phi = 0.65 (Table 21.2.1(d)) / AISC J8",
+            "status": "pass"
+          }
+        ],
+        "governingRatio": 0.6236,
+        "governingCheck": "Soil bearing pressure"
+      },
+      "status": "pass",
+      "warnings": []
+    },
+    {
+      "input": {
+        "method": "ASD",
+        "pierLength": 16,
+        "pierWidth": 16,
+        "pierHeight": 24,
+        "fc": 4000,
+        "footingLength": 60,
+        "footingWidth": 60,
+        "footingThickness": 18,
+        "allowableBearing": 3,
+        "frictionCoefficient": 0.35,
+        "plateLength": 12,
+        "plateWidth": 12,
+        "P": 120,
+        "M": 0,
+        "V": 0,
+        "aciEdition": "318-25"
+      },
+      "output": {
+        "selfWeight": 6.1583,
+        "totalVertical": 126.1583,
+        "totalMoment": 0,
+        "eccentricity": 0,
+        "kern": 10,
+        "soilPressureMax": 5.0463,
+        "soilPressureMin": 5.0463,
+        "partialBearing": false,
+        "overturningRatio": 0,
+        "slidingRatio": 0,
+        "checks": [
+          {
+            "label": "Soil bearing pressure",
+            "demand": 5.0463,
+            "capacity": 3,
+            "ratio": 1.6821,
+            "clause": "Service-level bearing vs the geotechnical allowable",
+            "status": "fail"
+          },
+          {
+            "label": "Overturning (FS 1.5)",
+            "demand": 0,
+            "capacity": 3784.75,
+            "ratio": 0,
+            "clause": "Gravity stability — resisting moment = N·L/2 about the toe",
+            "status": "na"
+          },
+          {
+            "label": "Sliding (FS 1.5)",
+            "demand": 0,
+            "capacity": 44.1554,
+            "ratio": 0,
+            "clause": "Resistance = mu·N + c·A (user-supplied soil properties)",
+            "status": "na"
+          },
+          {
+            "label": "Punching (two-way) shear",
+            "demand": 105.9167,
+            "capacity": 168.1244,
+            "ratio": 0.63,
+            "clause": "ACI CODE-318-25 Table 22.6.5.2 (lambda_s = 0.9129, 22.5.5.1.3; alpha_s = 40 interior, 22.6.5.3)",
+            "status": "pass"
+          },
+          {
+            "label": "Pier concrete bearing",
+            "demand": 120,
+            "capacity": 376.7965,
+            "ratio": 0.3185,
+            "clause": "ACI CODE-318-25 Table 22.8.3.2 (0.85·f'c·A1, no A2 gain), phi = 0.65 (Table 21.2.1(d)) / AISC J8",
+            "status": "pass"
+          }
+        ],
+        "governingRatio": 1.6821,
+        "governingCheck": "Soil bearing pressure"
+      },
+      "status": "fail",
+      "warnings": []
+    },
+    {
+      "input": {
+        "method": "LRFD",
+        "pierLength": 16,
+        "pierWidth": 16,
+        "pierHeight": 24,
+        "fc": 4000,
+        "footingLength": 60,
+        "footingWidth": 60,
+        "footingThickness": 18,
+        "allowableBearing": 3,
+        "frictionCoefficient": 0.35,
+        "plateLength": 12,
+        "plateWidth": 12,
+        "P": 120,
+        "M": 0,
+        "V": 0,
+        "aciEdition": "318-19"
+      },
+      "output": {
+        "selfWeight": 6.1583,
+        "totalVertical": 126.1583,
+        "totalMoment": 0,
+        "eccentricity": 0,
+        "kern": 10,
+        "soilPressureMax": 5.0463,
+        "soilPressureMin": 5.0463,
+        "partialBearing": false,
+        "overturningRatio": 0,
+        "slidingRatio": 0,
+        "checks": [
+          {
+            "label": "Soil bearing pressure",
+            "demand": 5.0463,
+            "capacity": 3,
+            "ratio": 1.6821,
+            "clause": "Service-level bearing vs the geotechnical allowable",
+            "status": "fail"
+          },
+          {
+            "label": "Overturning (FS 1.5)",
+            "demand": 0,
+            "capacity": 3784.75,
+            "ratio": 0,
+            "clause": "Gravity stability — resisting moment = N·L/2 about the toe",
+            "status": "na"
+          },
+          {
+            "label": "Sliding (FS 1.5)",
+            "demand": 0,
+            "capacity": 44.1554,
+            "ratio": 0,
+            "clause": "Resistance = mu·N + c·A (user-supplied soil properties)",
+            "status": "na"
+          },
+          {
+            "label": "Punching (two-way) shear",
+            "demand": 105.9167,
+            "capacity": 252.1866,
+            "ratio": 0.42,
+            "clause": "ACI 318-19 Table 22.6.5.2 (lambda_s = 0.9129, 22.5.5.1.3; alpha_s = 40 interior, 22.6.5.3)",
+            "status": "pass"
+          },
+          {
+            "label": "Pier concrete bearing",
+            "demand": 120,
+            "capacity": 565.76,
+            "ratio": 0.2121,
+            "clause": "ACI 318-19 Table 22.8.3.2 (0.85·f'c·A1, no A2 gain), phi = 0.65 (Table 21.2.1(d)) / AISC J8",
+            "status": "pass"
+          }
+        ],
+        "governingRatio": 1.6821,
+        "governingCheck": "Soil bearing pressure"
+      },
+      "status": "fail",
+      "warnings": [
+        "Soil bearing, overturning and sliding are evaluated at SERVICE level against the allowable bearing and the stated factors of safety — pass service (unfactored) demands for those, not LRFD-factored loads."
+      ]
+    },
+    {
+      "input": {
+        "method": "ASD",
+        "pierLength": 16,
+        "pierWidth": 16,
+        "pierHeight": 24,
+        "fc": 4000,
+        "footingLength": 60,
+        "footingWidth": 60,
+        "footingThickness": 18,
+        "allowableBearing": 3,
+        "frictionCoefficient": 0.35,
+        "plateLength": 12,
+        "plateWidth": 12,
+        "P": 120,
+        "M": 0,
+        "V": 0,
+        "lambda": 0.75
+      },
+      "output": {
+        "selfWeight": 6.1583,
+        "totalVertical": 126.1583,
+        "totalMoment": 0,
+        "eccentricity": 0,
+        "kern": 10,
+        "soilPressureMax": 5.0463,
+        "soilPressureMin": 5.0463,
+        "partialBearing": false,
+        "overturningRatio": 0,
+        "slidingRatio": 0,
+        "checks": [
+          {
+            "label": "Soil bearing pressure",
+            "demand": 5.0463,
+            "capacity": 3,
+            "ratio": 1.6821,
+            "clause": "Service-level bearing vs the geotechnical allowable",
+            "status": "fail"
+          },
+          {
+            "label": "Overturning (FS 1.5)",
+            "demand": 0,
+            "capacity": 3784.75,
+            "ratio": 0,
+            "clause": "Gravity stability — resisting moment = N·L/2 about the toe",
+            "status": "na"
+          },
+          {
+            "label": "Sliding (FS 1.5)",
+            "demand": 0,
+            "capacity": 44.1554,
+            "ratio": 0,
+            "clause": "Resistance = mu·N + c·A (user-supplied soil properties)",
+            "status": "na"
+          },
+          {
+            "label": "Punching (two-way) shear",
+            "demand": 105.9167,
+            "capacity": 126.0933,
+            "ratio": 0.84,
+            "clause": "ACI CODE-318-25 Table 22.6.5.2 (lambda_s = 0.9129, 22.5.5.1.3; alpha_s = 40 interior, 22.6.5.3)",
+            "status": "pass"
+          },
+          {
+            "label": "Pier concrete bearing",
+            "demand": 120,
+            "capacity": 376.7965,
+            "ratio": 0.3185,
+            "clause": "ACI CODE-318-25 Table 22.8.3.2 (0.85·f'c·A1, no A2 gain), phi = 0.65 (Table 21.2.1(d)) / AISC J8",
+            "status": "pass"
+          }
+        ],
+        "governingRatio": 1.6821,
+        "governingCheck": "Soil bearing pressure"
+      },
+      "status": "fail",
+      "warnings": []
+    },
+    {
+      "input": {
+        "method": "LRFD",
+        "pierLength": 16,
+        "pierWidth": 16,
+        "pierHeight": 24,
+        "fc": 4000,
+        "footingLength": 84,
+        "footingWidth": 84,
+        "footingThickness": 30,
+        "allowableBearing": 3,
+        "frictionCoefficient": 0.35,
+        "plateLength": 12,
+        "plateWidth": 12,
+        "P": 300,
+        "M": 0,
+        "V": 0
+      },
+      "output": {
+        "selfWeight": 18.9083,
+        "totalVertical": 318.9083,
+        "totalMoment": 0,
+        "eccentricity": 0,
+        "kern": 14,
+        "soilPressureMax": 6.5083,
+        "soilPressureMin": 6.5083,
+        "partialBearing": false,
+        "overturningRatio": 0,
+        "slidingRatio": 0,
+        "checks": [
+          {
+            "label": "Soil bearing pressure",
+            "demand": 6.5083,
+            "capacity": 3,
+            "ratio": 2.1694,
+            "clause": "Service-level bearing vs the geotechnical allowable",
+            "status": "fail"
+          },
+          {
+            "label": "Overturning (FS 1.5)",
+            "demand": 0,
+            "capacity": 13394.15,
+            "ratio": 0,
+            "clause": "Gravity stability — resisting moment = N·L/2 about the toe",
+            "status": "na"
+          },
+          {
+            "label": "Sliding (FS 1.5)",
+            "demand": 0,
+            "capacity": 111.6179,
+            "ratio": 0,
+            "clause": "Resistance = mu·N + c·A (user-supplied soil properties)",
+            "status": "na"
+          },
+          {
+            "label": "Punching (two-way) shear",
+            "demand": 269.9167,
+            "capacity": 558.8972,
+            "ratio": 0.4829,
+            "clause": "ACI CODE-318-25 Table 22.6.5.2 (lambda_s = 0.7454, 22.5.5.1.3; alpha_s = 40 interior, 22.6.5.3)",
+            "status": "pass"
+          },
+          {
+            "label": "Pier concrete bearing",
+            "demand": 300,
+            "capacity": 565.76,
+            "ratio": 0.5303,
+            "clause": "ACI CODE-318-25 Table 22.8.3.2 (0.85·f'c·A1, no A2 gain), phi = 0.65 (Table 21.2.1(d)) / AISC J8",
+            "status": "pass"
+          }
+        ],
+        "governingRatio": 2.1694,
+        "governingCheck": "Soil bearing pressure"
+      },
+      "status": "fail",
+      "warnings": [
+        "Soil bearing, overturning and sliding are evaluated at SERVICE level against the allowable bearing and the stated factors of safety — pass service (unfactored) demands for those, not LRFD-factored loads."
+      ]
+    },
+    {
+      "input": {
+        "method": "ASD",
+        "pierLength": 16,
+        "pierWidth": 16,
+        "pierHeight": 24,
+        "fc": 4000,
+        "footingLength": 48,
+        "footingWidth": 48,
+        "footingThickness": 5,
+        "allowableBearing": 3,
+        "frictionCoefficient": 0.35,
+        "plateLength": 12,
+        "plateWidth": 12,
+        "P": 80,
+        "M": 0,
+        "V": 0,
+        "lambda": 0.85,
+        "aciEdition": "318-19"
+      },
+      "output": {
+        "selfWeight": 1.5333,
+        "totalVertical": 81.5333,
+        "totalMoment": 0,
+        "eccentricity": 0,
+        "kern": 8,
+        "soilPressureMax": 5.0958,
+        "soilPressureMin": 5.0958,
+        "partialBearing": false,
+        "overturningRatio": 0,
+        "slidingRatio": 0,
+        "checks": [
+          {
+            "label": "Soil bearing pressure",
+            "demand": 5.0958,
+            "capacity": 3,
+            "ratio": 1.6986,
+            "clause": "Service-level bearing vs the geotechnical allowable",
+            "status": "fail"
+          },
+          {
+            "label": "Overturning (FS 1.5)",
+            "demand": 0,
+            "capacity": 1956.8,
+            "ratio": 0,
+            "clause": "Gravity stability — resisting moment = N·L/2 about the toe",
+            "status": "na"
+          },
+          {
+            "label": "Sliding (FS 1.5)",
+            "demand": 0,
+            "capacity": 28.5367,
+            "ratio": 0,
+            "clause": "Resistance = mu·N + c·A (user-supplied soil properties)",
+            "status": "na"
+          },
+          {
+            "label": "Punching (two-way) shear",
+            "demand": 76.4792,
+            "capacity": 3.8706,
+            "ratio": 19.7589,
+            "clause": "ACI 318-19 Table 22.6.5.2 (lambda_s = 1, 22.5.5.1.3; alpha_s = 40 interior, 22.6.5.3)",
+            "status": "fail"
+          },
+          {
+            "label": "Pier concrete bearing",
+            "demand": 80,
+            "capacity": 376.7965,
+            "ratio": 0.2123,
+            "clause": "ACI 318-19 Table 22.8.3.2 (0.85·f'c·A1, no A2 gain), phi = 0.65 (Table 21.2.1(d)) / AISC J8",
+            "status": "pass"
+          }
+        ],
+        "governingRatio": 19.7589,
+        "governingCheck": "Punching (two-way) shear"
       },
       "status": "fail",
       "warnings": []

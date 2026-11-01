@@ -28,7 +28,7 @@ works without it.
 | `pressure-design` | Code-basis interview, then wall thickness, allowable pressure, branch reinforcement, bends, miters and leak-test pressure to B31.3 / B31.1, with a calc sheet that shows the edition, the equation and every input |
 | `stress-screening` | Sustained, occasional and expansion hand checks, the f factor by edition, which document supplies the SIFs, the formal-analysis exemption, support spans and spring variability |
 | `load-case-builder` | Complete B31.1 / B31.3 static load case sets for CAESAR II and AutoPIPE, generated symbolically so references never go stale, with a QC gate and a report extraction matrix |
-| `pipe-support` | Pipe support assemblies (arm, column, welds, bolts, base plate, anchors, pier) checked for CAESAR II restraint loads: ASCE 7-22 combinations, AISC 360-22, ACI 318-19 Chapter 17 and AWS D1.1 detailing, with a PE-style review, ranked code-passing alternatives (lighter, less field work, stocked sizes) and an engineer-ready calc report. The pipingtoolset.com PiperSTR engine, verified against a published PiperSTR report value for value |
+| `pipe-support` | Pipe support assemblies (arm, column, welds, bolts, base plate, anchors, pier) checked for CAESAR II restraint loads: ASCE 7-22 combinations, AISC 360-22, ACI CODE-318-25 Chapter 17 (ACI 318-19 selectable) and AWS D1.1 detailing, with a PE-style review, ranked code-passing alternatives (lighter, less field work, stocked sizes) and an engineer-ready calc report. The pipingtoolset.com PiperSTR engine, verified against a published PiperSTR report value for value |
 | `iso-to-pcf` | PDF stress isometrics to a clean CAESAR II PCF: Claude transcribes the drawing, a script builds the geometry in exact fractions (bend tangents, branches, sloped profiles) and a validator catches orphan nodes, zero-length elements and off-line supports before import |
 | `nozzle-load` | Piping forces and moments on equipment nozzles, checked the way the vendor will: API 610 Table 5 and Annex F for pumps, the API 617 / 611 / 612 and NEMA SM-23 combined form for compressors and turbines, API 660 / 661 / 560 per-component and header-sum checks for exchangers and heaters, API 650 Annex P ordinates for tank shells, and the PVP2011-57100 method as the default for a pressure vessel with no API allowable. The user reads every table row; the script applies the scaling rules and the ratios. PIP RECE002 design-stage margins as an owner practice |
 | `bolted-flange` | Piping loads on a bolted flanged joint in a fixed order: the pressure-equivalent screen first, always, against the B16.5 rating the user reads, then the BPVC Section VIII Division 2 Part 4.16 analysis (the Appendix 2 method) for integral and loose flanges, with bolt area, hub, radial and tangential stresses and rigidity. Flange dimensions, gasket factors, ratings and allowables all come from the user's copies |
@@ -45,7 +45,7 @@ works without it.
    plan covers the table, a connector lookup that arrives with its citation. Asking it for "just the
    number" with neither is a pinned test, and the answer is no. The one exception is `pipe-support`,
    which bundles the AISC 360-22 tables and the AISC Shapes Database (both published free by AISC) and
-   the ASCE 7-22 and ACI 318-19 factors it uses; its `references/code-basis.md` lists every one.
+   the ASCE 7-22 and ACI CODE-318-25 / 318-19 factors it uses; its `references/code-basis.md` lists every one.
 3. **The edition is an input, never a silent default.** Anything you leave unanswered is marked
    ASSUMED on the calc sheet.
 
@@ -340,7 +340,7 @@ or screening with an unresolved reconstructed factor; the status word is printed
 They never reproduce tabulated ASME, API or PIP values from memory or from a file in the plugin: a value
 comes from your own copy of the standard or, if you enable the optional connector, from a cited lookup.
 `pipe-support` is the disclosed exception for AISC 360-22, the AISC Shapes Database, and the ASCE 7-22
-and ACI 318-19 factors (see its `references/code-basis.md`).
+and ACI CODE-318-25 / 318-19 factors (see its `references/code-basis.md`).
 They do not replace a flexibility analysis in CAESAR II or AutoPIPE; `stress-screening` is a hand
 check of what the program applied. Results are engineering aids. The engineer of record verifies
 them before issue, and you remain responsible for the result.

@@ -371,12 +371,15 @@
           "J": 0.116455,
           "Cw": 0.133301,
           "ro": 1.97971,
+          "xbar": 0.78184,
+          "ybar": 1.28184,
           "Iz": 1.03014,
           "Iw": 4.85398,
           "Sz": 0.684261,
           "Sw": 1.75989,
           "rz": 0.643932,
-          "rw": 1.39779
+          "rw": 1.39779,
+          "alpha": 0.503424
         },
         "material": {
           "Fy": 36,
@@ -390,6 +393,63 @@
           "Mx": 40,
           "Vx": 0.5
         }
+      },
+      "expect": {
+        "label": "L4X3X3/8",
+        "method": "ASD",
+        "interaction": 1.5401,
+        "interactionEquation": "H1-1b",
+        "governingRatio": 1.5401,
+        "governingCheck": "Combined axial + flexure"
+      },
+      "status": "fail",
+      "tol": 0.0001
+    },
+    {
+      "input": {
+        "section": {
+          "label": "L4X3X3/8",
+          "kind": "L",
+          "A": 2.48438,
+          "d": 4,
+          "bf": 3,
+          "tw": 0.375,
+          "tf": 0.375,
+          "htw": 10.6667,
+          "Ix": 3.96403,
+          "Zx": 2.63818,
+          "Sx": 1.45835,
+          "rx": 1.26317,
+          "Iy": 1.92009,
+          "Zy": 1.55663,
+          "Sy": 0.865622,
+          "ry": 0.879128,
+          "J": 0.116455,
+          "Cw": 0.133301,
+          "ro": 1.97971,
+          "xbar": 0.78184,
+          "ybar": 1.28184,
+          "Iz": 1.03014,
+          "Iw": 4.85398,
+          "Sz": 0.684261,
+          "Sw": 1.75989,
+          "rz": 0.643932,
+          "rw": 1.39779,
+          "alpha": 0.503424
+        },
+        "material": {
+          "Fy": 36,
+          "Fu": 58
+        },
+        "method": "ASD",
+        "Lx": 48,
+        "Lb": 48,
+        "demand": {
+          "P": 0.5,
+          "Mx": 40,
+          "Vx": 0.5
+        },
+        "continuousLTR": true
       },
       "expect": {
         "label": "L4X3X3/8",
@@ -486,9 +546,9 @@
       "expect": {
         "label": "HSS12X12X3/16",
         "method": "LRFD",
-        "interaction": 0.2281,
+        "interaction": 0.2892,
         "interactionEquation": "H1-1a",
-        "governingRatio": 0.2281,
+        "governingRatio": 0.2892,
         "governingCheck": "Axial compression"
       },
       "status": "pass",
@@ -563,7 +623,8 @@
           "rts": 0.698,
           "ho": 6.63,
           "ro": 3.02,
-          "H": 0.845
+          "H": 0.845,
+          "xbar": 0.541
         },
         "material": {
           "Fy": 36,
@@ -611,7 +672,8 @@
           "J": 0.228,
           "Cw": 0.267,
           "ro": 2.54,
-          "H": 0.83
+          "H": 0.83,
+          "ybar": 1.27
         },
         "material": {
           "Fy": 50,
@@ -628,9 +690,9 @@
       "expect": {
         "label": "WT6X15",
         "method": "LRFD",
-        "interaction": 0.5722,
+        "interaction": 0.5761,
         "interactionEquation": "H1-1b",
-        "governingRatio": 0.5722,
+        "governingRatio": 0.5761,
         "governingCheck": "Combined axial + flexure"
       },
       "status": "pass",
@@ -710,7 +772,8 @@
           "J": 0.119,
           "Cw": 0.107,
           "ro": 2.16,
-          "H": 0.83
+          "H": 0.83,
+          "ybar": 1.07
         },
         "material": {
           "Fy": 36,

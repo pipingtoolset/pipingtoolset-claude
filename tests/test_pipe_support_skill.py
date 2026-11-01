@@ -36,7 +36,17 @@ EX = os.path.join(SCRIPTS, "examples")
 
 def load(name):
     with open(os.path.join(EX, name), encoding="utf-8") as fh:
-        return json.load(fh)
+        return _esr_category(json.load(fh), name)
+
+
+def _esr_category(s, name):
+    """ps-201 leaves the ACI 355.2/355.4 Anchor Category unset, so at the ACI CODE-318-25 default
+    the engine takes Category 3 (psi_a 0.60) and the anchorage FAILS (1.1356 LRFD; 0.9.0). Tests whose
+    subject is not the anchorage enter Category 1, as an engineer would from the anchor's ESR;
+    PS201Category3 in test_pipe_support_skill.py runs the example as shipped."""
+    if name == "ps-201-caesar.json":
+        s.setdefault("design", {}).setdefault("baseplate", {})["anchorCategory"] = 1
+    return s
 
 
 # ------------------------------------------------------------------ loads
@@ -271,8 +281,9 @@ class EndToEnd(unittest.TestCase):
         # itself, so the 0.3.0 [cross-check] row is retired.
         st = [x for x in self.doc["envelope"]["stages"] if x["component"] == "weld" and "base" in x["stage"].lower()][0]
         rows = {c["label"]: c for c in st["checks"]}
-        self.assertIn("Base-metal shear rupture", rows)
-        self.assertAlmostEqual(rows["Base-metal shear rupture"]["capacity"], 0.75 * 0.6 * 58 * 0.23, places=3)
+        self.assertIn("Base-metal shear", rows)
+        # 0.9.0: the lower of J4-3 yielding (1.00 x 0.6 Fy t) and J4-4 rupture (0.75 x 0.6 Fu t)
+        self.assertAlmostEqual(rows["Base-metal shear"]["capacity"], min(1.00 * 0.6 * 36, 0.75 * 0.6 * 58) * 0.23, places=3)
         labels = [c["label"] for s in self.doc["envelope"]["stages"] for c in s["checks"]]
         self.assertFalse([l for l in labels if "cross-check" in l])
         self.assertFalse([f for f in self.doc["findings"] if f.get("source") == "cross-check"])
@@ -329,7 +340,7 @@ class SkillContent(unittest.TestCase):
         self.assertEqual([ln.split(":", 1)[0] for ln in head.splitlines()[1:]], ["name", "description", "compatibility"])
         desc = self.text.split("description: ", 1)[1].split("\n", 1)[0].strip('"')
         self.assertLessEqual(len(desc), 400)
-        for t in ("CAESAR II", "ASCE 7-22", "AISC 360-22", "ACI 318-19", "AWS D1.1", "optimized"):
+        for t in ("CAESAR II", "ASCE 7-22", "AISC 360-22", "ACI CODE-318-25", "AWS D1.1", "optimized"):
             self.assertIn(t, desc)
 
     def test_shipped_files_referenced(self):

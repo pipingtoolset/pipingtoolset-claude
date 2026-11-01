@@ -203,9 +203,10 @@ def constructability(assembly: dict) -> List[dict]:
                            "AISC Design Guide 1 practice"))
     if da and bp.get("anchorEdgeDistance") and bp["anchorEdgeDistance"] < 6 * da and \
             bp.get("anchorType", "cast-in") == "cast-in":
-        out.append(finding("advisory", "Cast-in anchor edge distance < 6 da: check ACI 318-19 17.9.2 "
+        aci = "ACI 318-19" if bp.get("aciEdition") == "318-19" else "ACI CODE-318-25"
+        out.append(finding("advisory", f"Cast-in anchor edge distance < 6 da: check {aci} 17.9.2 "
                            "minimum edge distance if the anchors will be torqued",
-                           "ACI 318-19 17.9.2"))
+                           f"{aci} 17.9.2"))
     if (assembly.get("connections") or {}).get("armToColumn") == "field-weld":
         out.append(finding("constructability", "Arm-to-column joint welded in the field: consider "
                            "a shop-welded arm with a bolted field splice", "fabrication practice"))

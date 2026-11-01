@@ -3,6 +3,7 @@
   "cases": [
     {
       "input": {
+        "aciEdition": "318-19",
         "columnDepth": 5.99,
         "columnWidth": 5.99,
         "plateLength": 12,
@@ -44,6 +45,7 @@
     },
     {
       "input": {
+        "aciEdition": "318-19",
         "columnDepth": 5.99,
         "columnWidth": 5.99,
         "plateLength": 12,
@@ -86,6 +88,7 @@
     },
     {
       "input": {
+        "aciEdition": "318-19",
         "columnDepth": 5.99,
         "columnWidth": 5.99,
         "plateLength": 12,
@@ -127,6 +130,7 @@
     },
     {
       "input": {
+        "aciEdition": "318-19",
         "columnDepth": 5.99,
         "columnWidth": 5.99,
         "plateLength": 12,
@@ -169,6 +173,7 @@
     },
     {
       "input": {
+        "aciEdition": "318-19",
         "columnDepth": 5.99,
         "columnWidth": 5.99,
         "plateLength": 12,
@@ -212,6 +217,7 @@
     },
     {
       "input": {
+        "aciEdition": "318-19",
         "columnDepth": 5.99,
         "columnWidth": 5.99,
         "plateLength": 12,
@@ -249,6 +255,95 @@
         "governingCheck": "Base plate yield (bearing interface)"
       },
       "status": "fail",
+      "tol": 0.0001
+    },
+    {
+      "input": {
+        "aciEdition": "318-25",
+        "columnDepth": 5.99,
+        "columnWidth": 5.99,
+        "plateLength": 12,
+        "plateWidth": 12,
+        "plateThickness": 1.5,
+        "plateFy": 36,
+        "fc": 4000,
+        "pierLength": 24,
+        "pierWidth": 24,
+        "anchorCount": 4,
+        "anchorEmbedment": 6,
+        "anchorFuta": 58,
+        "anchorFya": 36,
+        "anchorSpacingLength": 9,
+        "anchorSpacingWidth": 9,
+        "anchorEdgeDistance": 7.5,
+        "method": "LRFD",
+        "anchorType": "cast-in",
+        "anchorDiameter": 1,
+        "anchorageRedundancy": "redundant",
+        "P": 10,
+        "M": 300,
+        "V": 2
+      },
+      "expect": {
+        "A1": 144,
+        "A2": 576,
+        "bearingRatio": 2,
+        "bearingCapacity": 636.48,
+        "bearingPressure": 4.42,
+        "eccentricity": 30,
+        "requiredThickness": 1.0701,
+        "cantilever": 3.604,
+        "anchorTension": 11.9441,
+        "anchorShear": 0.5,
+        "governingRatio": 0.7717,
+        "governingCheck": "Concrete breakout (tension)"
+      },
+      "status": "pass",
+      "tol": 0.0001
+    },
+    {
+      "input": {
+        "aciEdition": "318-25",
+        "columnDepth": 5.99,
+        "columnWidth": 5.99,
+        "plateLength": 12,
+        "plateWidth": 12,
+        "plateThickness": 1.5,
+        "plateFy": 36,
+        "fc": 4000,
+        "pierLength": 24,
+        "pierWidth": 24,
+        "anchorCount": 4,
+        "anchorEmbedment": 6,
+        "anchorFuta": 58,
+        "anchorFya": 36,
+        "anchorSpacingLength": 9,
+        "anchorSpacingWidth": 9,
+        "anchorEdgeDistance": 7.5,
+        "method": "LRFD",
+        "anchorType": "post-installed-adhesive",
+        "anchorDiameter": 0.75,
+        "anchorCategory": 1,
+        "anchorageRedundancy": "nonredundant",
+        "P": 10,
+        "M": 180,
+        "V": 2
+      },
+      "expect": {
+        "A1": 144,
+        "A2": 576,
+        "bearingRatio": 2,
+        "bearingCapacity": 636.48,
+        "bearingPressure": 4.42,
+        "eccentricity": 18,
+        "requiredThickness": 0.8741,
+        "cantilever": 3.604,
+        "anchorTension": 5.9287,
+        "anchorShear": 0.5,
+        "governingRatio": 0.6974,
+        "governingCheck": "Concrete breakout (tension)"
+      },
+      "status": "pass",
       "tol": 0.0001
     }
   ]

@@ -19,6 +19,7 @@ from typing import Dict, List, Optional
 
 from . import detailing as DT
 from .aisc import find_shape
+from .baseplate import aci_label
 from .bolts import bolt_group, end_plate_no_prying
 from .common import round_half_up
 from .loads import asd_wind_combo  # noqa: F401  (re-exported: review.asd_wind_combo)
@@ -94,7 +95,11 @@ def review(design: dict, env: dict, spec: dict, opt: Optional[dict] = None) -> L
     for w in dict.fromkeys(env.get("warnings") or env["governingRun"]["warnings"]):
         sev = "info"
         lw = w.lower()
-        if "exceeds the j2.2b maximum" in lw:
+        if lw.startswith("review: post-installed anchor with no aci 355.2/355.4 anchor category"):
+            continue                      # raised once, with the verdict it drives, by _anchor_category
+        if "may be unconservative" in lw:
+            sev = "major"
+        elif "exceeds the j2.2b maximum" in lw:
             sev = "major"
         elif "below the table j2.4 minimum" in lw:
             sev = "major"
@@ -107,6 +112,7 @@ def review(design: dict, env: dict, spec: dict, opt: Optional[dict] = None) -> L
     # 4. checks the parametric engine does not make
     out += _pipe_moments(spec)
     out += _j10_flange_weld_note(env)
+    out += _anchor_category(design, env)
     out += _asd_wind_anchorage(design, env, spec)
     for f in DT.constructability({**design, "connections": spec.get("fabrication")}):
         out.append(_f("minor" if f["severity"] != "violation" else "major",
@@ -191,9 +197,42 @@ def _j10_flange_weld_note(env: dict) -> List[dict]:
     return out
 
 
+def _aci(design: dict) -> str:
+    """Report label of the ACI edition the anchorage ran to (ACI CODE-318-25 unless 318-19 is set)."""
+    return aci_label((design.get("baseplate") or {}).get("aciEdition") or "318-25")
+
+
+def _anchor_category(design: dict, env: dict) -> List[dict]:
+    """ACI CODE-318-25 Table 17.5.4.1: psi_a depends on the ACI 355.2/355.4 Anchor Category of a
+    post-installed anchor, a product value from its ESR. With none entered the engine takes
+    Category 3 (psi_a = 0.60 in tension), the lowest. That is conservative, so the finding is
+    info while the anchorage passes; it is major when the anchorage fails or is within 10 % of
+    its limit, because the entered Category may decide the verdict."""
+    bp = design.get("baseplate") or {}
+    if not bp or (bp.get("aciEdition") or "318-25") != "318-25" or bp.get("anchorType") == "cast-in":
+        return []
+    if bp.get("anchorCategory") is not None:
+        return []
+    st = next((x for x in env["stages"] if x.get("component") == "anchorage"), None)
+    if st is None:
+        return []
+    r = _num(st["ratio"])
+    sev = "major" if (st["status"] == "fail" or r >= 0.9) else "info"
+    return [_f(sev, "Anchor Category not entered - psi_a taken at Category 3",
+               f"{st['stage']}: {st['governing']} = {st['ratio']} under {st['combo']} with psi_a for ACI 355.2/355.4 "
+               "Category 3 (0.60 tension without supplementary reinforcement), the lowest value, because no "
+               f"anchorCategory was entered for the {bp.get('anchorType', 'post-installed')} anchors. The Category "
+               "is a product value from the anchor's ICC-ES evaluation report (ESR); Category 1 gives psi_a = 0.85 "
+               "and Category 2 gives 0.75.",
+               "ACI CODE-318-25 Table 17.5.4.1; 17.5.4",
+               "enter design.baseplate.anchorCategory from the ESR and re-run"
+               + (" - the verdict may change" if sev == "major" else ""))]
+
+
 def _asd_wind_anchorage(design: dict, env: dict, spec: Optional[dict] = None) -> List[dict]:
-    """Code-basis item 10. In ASD the ACI 318-19 strength-design anchor capacity is converted
-    with a fixed 1/1.5 (R17.5.3). Where a 0.6W combination governs anchorage the implied factor
+    """Code-basis item 10. In ASD the ACI strength-design anchor capacity is converted with a
+    fixed 1/1.5 - a project basis per the owner P.E. ruling of 2026-10-26, not an ACI provision
+    (ACI prints no ASD conversion). Where a 0.6W combination governs anchorage the implied factor
     is 1/0.6 = 1.67, so ASD anchorage can be about 10 % unconservative there.
 
     Owner ruling 2026-10-30 (supersedes item 6 of the 2026-10-26 P.E. rulings, "documented
@@ -211,6 +250,8 @@ def _asd_wind_anchorage(design: dict, env: dict, spec: Optional[dict] = None) ->
     spec = spec or {}
     if design.get("method") != "ASD":
         return out
+    aci = _aci(design)
+    basis = f"code-basis item 10; {aci} Ch. 17 strength design; ASD 1/1.5 project basis (P.E. ruling 2026-10-26)"
     for st in env["stages"]:
         if st.get("component") != "anchorage":
             continue
@@ -232,16 +273,16 @@ def _asd_wind_anchorage(design: dict, env: dict, spec: Optional[dict] = None) ->
                               "declared to carry no wind term (factored_wind: false), so the ASD wind-anchorage "
                               "guard was not applied. The declaration is the engineer's; confirm it against "
                               "the load source before issue.",
-                              "code-basis item 10; ACI 318-19 R17.5.3"))
+                              basis))
                 continue
             what = ("declared to carry wind (factored_wind: true)" if fw is True
                     else "with no factored_wind declaration, so whether they carry a 0.6W term is unknown")
             out.append(_f("major", "ASD anchorage on factored loads - wind content " +
                           ("declared" if fw is True else "not declared"),
                           f"{st['stage']}: {st['governing']} = {st['ratio']} on loads entered as factored, {what}. "
-                          "Under a 0.6W term the fixed 1/1.5 ACI strength-to-ASD conversion (R17.5.3) implies "
+                          "Under a 0.6W term the fixed 1/1.5 ACI strength-to-ASD conversion (the project basis) implies "
                           f"1/0.6 = 1.67, so this row can be about 10 % unconservative. {guard_txt}",
-                          "code-basis item 10; ACI 318-19 R17.5.3",
+                          basis,
                           "re-run with method LRFD, or in CAESAR II mode, or set factored_wind: false if "
                           "the entered loads carry no wind"))
             continue
@@ -259,12 +300,13 @@ def _asd_wind_anchorage(design: dict, env: dict, spec: Optional[dict] = None) ->
             row = f"{st['stage']}: {st['governing']} = {st['ratio']} under {combo}."
         out.append(_f("major", "ASD anchorage governed by a wind combination",
                       f"{row} The engine converts the "
-                      "ACI 318-19 strength capacity to allowable with a fixed 1/1.5 (R17.5.3); a 0.6W ASD "
+                      f"{aci} strength capacity to allowable with a fixed 1/1.5 (a project basis per the owner "
+                      "P.E. ruling of 2026-10-26, not an ACI provision); a 0.6W ASD "
                       "combination implies 1/0.6 = 1.67, so this row can be about 10 % unconservative. "
                       f"{guard_txt} "
-                      "Run the anchorage in LRFD (ACI 318-19 Ch. 17 is strength design) or check the "
+                      f"Run the anchorage in LRFD ({aci} Ch. 17 is strength design) or check the "
                       "wind-governed anchors by hand with the 0.6W / 1.0W pairing.",
-                      "ACI 318-19 R17.5.3; ASCE 7-22 2.4.1; code-basis item 10",
+                      f"{aci} Ch. 17; ASCE 7-22 2.4.1; code-basis item 10 (ASD 1/1.5 project basis, P.E. ruling 2026-10-26)",
                       "re-run with method LRFD for the anchorage verdict"))
     return out
 

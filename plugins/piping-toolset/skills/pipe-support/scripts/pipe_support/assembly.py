@@ -9,7 +9,7 @@ a standard structural pipe support and returns every limit state in a single env
           -> column member check with the accumulated axial + biaxial moment
             -> column-to-base-plate weld
               -> base plate bearing / yield (Design Guide 1)
-                -> anchor steel, breakout, pullout, blowout, pryout (ACI 318-19 Ch.17)
+                -> anchor steel, breakout, pullout, blowout, pryout (ACI CODE-318-25 Ch.17; 318-19 selectable)
                   -> pier bearing, soil pressure, overturning, sliding, punching
 
 Every stage's reactions become the next stage's demands. Statics only (determinate
@@ -168,7 +168,7 @@ def _weld_checks(res: Dict[str, Any], t_note: str) -> List[Dict[str, Any]]:
     checks: List[Dict[str, Any]] = [{
         "label": "Fillet weld stress", "demand": o["demandPerInch"],
         "capacity": o["designPerInch"], "ratio": o["ratio"],
-        "clause": "AISC J2-4 with the J2.4(b) directional increase",
+        "clause": "AISC J2.4(a) Eq. J2-4 (kds per Eq. J2-5 where permitted)",
         "status": verdict(o["ratio"] <= 1.0),
     }]
 
@@ -183,8 +183,8 @@ def _weld_checks(res: Dict[str, Any], t_note: str) -> List[Dict[str, Any]]:
         "AISC J4-1 (0.9·Fy·t, normal component)")
     row("Base-metal tension rupture", o["normalPerInch"], o["baseTensionRupturePerInch"],
         "AISC J4-2 (0.75·Fu·t, normal component)")
-    row("Base-metal shear rupture", o["shearPerInch"], o["baseMetalPerInch"],
-        "AISC J4-4 (0.75·0.6·Fu·t, direct shear)")
+    row("Base-metal shear", o["shearPerInch"], o["baseMetalPerInch"],
+        "AISC lower of J4-3 (1.00·0.60·Fy·t) and J4-4 (0.75·0.6·Fu·t), direct shear")
     return checks
 
 
@@ -333,7 +333,7 @@ def analyze_assembly(inp: Dict[str, Any],
                                       "header", hdr_res, hdr_res["output"]["checks"]))
 
         # Arm-to-column weld: two parallel fillets down the arm depth. The two horizontal components ride
-        # as one parallel shear resultant - that forgoes any J2.4(b) directional increase on them, which is
+        # as one parallel shear resultant - that forgoes any J2.4(a) Eq. J2-5 directional increase on them, which is
         # the conservative side. Base part = the thinner of the arm's welded element (web, leg or wall) and
         # the column flange it lands on. A T-joint, so the J2.2b along-an-edge maximum does not apply.
         # J4 thickness per weld line: open shape -> t/2 (both lines on one web/leg); HSS/Pipe -> full wall;
@@ -460,7 +460,7 @@ def analyze_assembly(inp: Dict[str, Any],
 
         if _num(inp, "columnK", 2.1) == 2.1:
             warnings.append(
-                "Column K = 2.1 assumed (fixed base, free top — AISC Table C-A-7.1 case f). If the support is "
+                "Column K = 2.1 assumed (fixed base, free top — AISC Table C-A-7.1 case (e)). If the support is "
                 "braced or framed at the top, supply the lower K that applies.")
 
         # Column-to-base-plate weld, all round the column footprint. The base part is the column's thinnest
@@ -514,7 +514,8 @@ def analyze_assembly(inp: Dict[str, Any],
         # 6. Pier and soil
         # ==================================================================
         if pier is not None:
-            ps_in = dict(pier)
+            ps_in = {"aciEdition": (baseplate or {}).get("aciEdition")}
+            ps_in.update(pier)
             ps_in.update({
                 "method": method,
                 "P": colAxial, "M": biaxial_equivalent(pier["pierLength"], pier["pierWidth"]), "V": colShear,
@@ -599,6 +600,10 @@ CSA_PRESETS: Dict[str, Dict[str, Any]] = {
             "anchorCount": 4, "anchorDiameter": 0.75, "anchorEmbedment": 8, "anchorFuta": 58,
             "anchorSpacingLength": 15, "anchorSpacingWidth": 15, "anchorEdgeDistance": 4.5,
             "bondStrength": 800,
+            # A single-column base: failure of the anchorage collapses the support. The Anchor
+            # Category is an ESR value and a P.E. decision, so it is deliberately not set: the
+            # engine takes Category 3 (psi_a = 0.60) with a REVIEW warning.
+            "anchorageRedundancy": "nonredundant",
         },
         "pier": {
             "pierLength": 24, "pierWidth": 24, "pierHeight": 24, "fc": 4000,
@@ -621,6 +626,10 @@ CSA_PRESETS: Dict[str, Dict[str, Any]] = {
             "anchorCount": 4, "anchorDiameter": 0.75, "anchorEmbedment": 8, "anchorFuta": 58,
             "anchorSpacingLength": 15, "anchorSpacingWidth": 15, "anchorEdgeDistance": 4.5,
             "bondStrength": 800,
+            # A single-column base: failure of the anchorage collapses the support. The Anchor
+            # Category is an ESR value and a P.E. decision, so it is deliberately not set: the
+            # engine takes Category 3 (psi_a = 0.60) with a REVIEW warning.
+            "anchorageRedundancy": "nonredundant",
         },
         "pier": {
             "pierLength": 24, "pierWidth": 24, "pierHeight": 24, "fc": 4000,

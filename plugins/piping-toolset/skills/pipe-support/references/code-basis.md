@@ -7,7 +7,7 @@
 | ASCE/SEI 7 | 2022 | Load combinations 2.3.1, 2.3.4, 2.3.6, 2.4.1, 2.4.4, 2.4.5; Ev = 0.2 SDS D (12.4.2.2) |
 | AISC 360 | 2022 | Members (B4, D, E, F, G, H), welds (J2), bolts (J3), affected elements (J4), bearing (J8) |
 | AISC Design Guide 1 | 3rd ed. method | Base plate bearing and yielding |
-| ACI 318 | 2019 | Anchoring to concrete (Ch. 17), bearing (14.5.6), pier |
+| ACI 318 | CODE-318-25 (default); 318-19 selectable with `baseplate.aciEdition: "318-19"` | Anchoring to concrete (Ch. 17, φ from Table 21.2.1), bearing (Table 22.8.3.2), pier punching (22.6, λs 22.5.5.1.3). Every clause string names the edition actually run |
 | AWS D1.1 | governing edition, user-confirmed | Prequalified joints, WPS, matching filler, inspection: **cited by topic only** |
 
 ## What is embedded, and what the user supplies
@@ -16,10 +16,11 @@
   - AISC 360-22 equations, resistance and safety factors.
   - Table J2.4 / J2.3 size limits, Table J2.5 weld strengths, Table J3.2 bolt stresses, Table J3.3 standard holes and Table J3.4 edge distances. The AISC Specification is published free by AISC.
   - The ASCE 7-22 combination factors, verified against the Standard's text.
-  - ACI 318-19 Ch. 17 equations, φ factors and generic cast-in values. The engine flags these generic values when they are used.
+  - ACI CODE-318-25 Ch. 17 equations, the Table 21.2.1 φ factors, the Table 17.5.4.1 ψa factors and generic cast-in values; for ACI 318-19 the 17.5.3 φ set. The engine flags the generic values when they are used. The ψa table is the code's Category-to-factor map; the Category itself is a product value and is never embedded.
 - **AISC shapes:** the AISC Shapes Database v16 (free from AISC) for rolled shapes. L, HSS and Pipe are computed from nominal geometry (HSS/Pipe design wall 0.93 t_nom). See the attribution in `data/aisc_shapes.json` (the index) and in each part under `data/aisc_shapes/`. Confirm final selections against the Manual.
 - **Always supplied by the user:**
-  - Post-installed anchor product values (bond stress τ, kc, edge and spacing limits) from the ESR.
+  - Post-installed anchor product values from the ESR: bond stress τcr (and τuncr for the group bond equation), the ACI 355.2 / 355.4 Anchor Category, kc, edge and spacing limits, cac.
+  - The anchor rod fya (for the futa ≤ min(1.9·fya, 125 ksi) limit) and whether the anchorage is redundant (Table 21.2.1) or passes through a grout pad.
   - Soil properties (bearing, friction, cohesion) from the geotech report.
   - SDS.
   - Slip-critical pretension Tb (Table J3.1) and slip class.
@@ -56,13 +57,17 @@ verdict.
    `cac` is a new base-plate input from the anchor's ESR; omitted, the Table 17.9.5 default
    (adhesive 2·hef, mechanical 4·hef) is used with a warning. Cracked concrete - the default -
    and cast-in anchors stay at 1.0, so no earlier result moves unless `cracked: false` was set.
+   From 0.9.0 the companion ψc,N for post-installed anchors with kc = 17 in uncracked concrete
+   is 1.4 (17.6.2.5.1; it was 1.25, the cast-in value), so those breakout capacities rise by 12 %.
 4. **Base plate: the 17.6.2.1.2 reduced hef** uses the pier edge distances, not ca1.
-5. **Fillet weld: L/w < 4** warns but does not reduce anything. J2.2b limits the effective
-   *size* to 1/4 of the length; the engine's warning text speaks of the effective length.
+5. **Fillet weld: L/w < 4 - FIXED (engine 2026-11-01; plugin 0.9.0).** Up to 0.8.2 the engine
+   warned and reduced nothing. A weld segment shorter than 4w now takes an effective size of
+   L/4 for its throat, J2.2b(c), and the warning says so. Applied to every line of the group,
+   which is conservative when only the short sides of an all-round weld are short.
 6. **WT flexure, stem orientation - FIXED (engine 2026-10-26; plugin 0.3.2, UNCONSERVATIVE-FIX).**
    Up to 0.3.1 F9 was always evaluated with the stem in tension (Mp = min(Fy·Zx, 1.6·My), B > 0).
    A flange-up WT arm hogs at the column face with its stem in compression, where F9 gives
-   Mp = My, B < 0 in F9-5 and the F9.4 stem local-buckling limit - on a WT5X11 at Lb = 24 in
+   Mp = My, B < 0 (F9-12 in 360-22 numbering) and the F9.4 stem local-buckling limit - on a WT5X11 at Lb = 24 in
    that is φMn 89.2 → 55.7 kip-in. `stemOrientation` is a new per-arm input: "down" (flange up,
    the usual detail, the default) or "up". The cascade maps it per member: cantilever arm →
    stem down is compression; goalpost / trapeze header (sagging) → stem down is tension. A WT
@@ -81,8 +86,10 @@ verdict.
 
 10. **ASD anchorage under wind - GUARDED in the engine (owner ruling 2026-10-30; plugin 0.7.2;
     confirmed 2026-10-30 by the author, a licensed P.E.).**
-    - *The issue.* ASD anchorage converts the ACI 318-19 (strength-design) anchor capacity to
-      an allowable value with a fixed 1/1.5 (R17.5.3). For a wind-governed ASD combination
+    - *The issue.* ASD anchorage converts the ACI (strength-design) anchor capacity to an
+      allowable value with a fixed 1/1.5. ACI prints no ASD conversion: the 1/1.5 is this
+      project's basis per the owner P.E. ruling of 2026-10-26 (it was cited as ACI R17.5.3 up to
+      0.8.2), the same under ACI CODE-318-25 and 318-19. For a wind-governed ASD combination
       (0.6W) the implied factor is 1/0.6 = 1.67, so ASD anchorage can be about 10 %
       unconservative there.
     - *Ruling superseded.* Item 6 of the 2026-10-26 P.E. rulings kept this "documented only":
@@ -99,9 +106,9 @@ verdict.
          anchorage ratio times (1/0.6)/1.5 = 1.111 reaches the governing ratio
          (`loads.asd_wind_could_govern`), so under the 1/0.6 treatment the wind combination
          could govern. This also covers a tie the envelope broke in favour of an earlier
-         non-wind id. Example (test `NearGoverningWind`): seismic ASD-8-+T governs at 0.9494,
-         wind ASD-5a-+T gives 0.9249, and 0.9249 x 1.111 = 1.028; before this rule a plain
-         PASS was printed;
+         non-wind id. Example (test `NearGoverningWind`, on ACI 318-19): seismic ASD-8-+T
+         governs at 0.9713, wind ASD-5a-+T gives 0.9462, and 0.9462 x 1.111 = 1.051 (0.9494 /
+         0.9249 before the 0.9.0 corrections); before this rule a plain PASS was printed;
       3. *factored* - the loads are factored "as entered" (no combination ids) and the spec
          does not set `factored_wind: false`. `factored_wind: true` is held with the wind
          headline; an absent key is held with "NOT ISSUABLE - ASD anchorage on factored loads
@@ -119,15 +126,15 @@ verdict.
       passing; its search log says which pairings the guard held.
     - *Unchanged.* LRFD anchorage, and ASD anchorage governed by a non-wind combination (dead,
       dead + thermal, seismic 2.4.5 8-10, hydrotest) with no wind combination inside the
-      1.111 margin, are not touched (ps-201 in ASD, WIN x1.0, EQ x1.6: seismic 0.9494 against
-      wind 0.6841, not held). The reviewer's *major*
+      1.111 margin, are not touched (ps-201 in ASD on ACI 318-19, WIN x1.0, EQ x1.6: seismic
+      0.9713 against wind 0.6841, not held). The reviewer's *major*
       finding stays as defence in depth and now says whether the guard was applied.
     - *Not seen by the guard.* A factored-mode spec that declares `factored_wind: false`
       when the loads do carry wind: the declaration is taken as given (info finding).
     - *P.E. confirmation points (confirmed 2026-10-30 by the author, a licensed P.E.).* (a) The trigger is coarse: combination 5a
       (1.0D + 0.6W) is at least as large as 1a whenever any horizontal WIN case exists, so the
       guard fires on almost every ASD support with a WIN case, even when W is small and the
-      fixed 1/1.5 is conservative for the mixed D + W demand (ps-201 in ASD with WIN x0.1
+      fixed 1/1.5 is conservative for the mixed D + W demand (ps-201 in ASD on ACI 318-19 with WIN x0.1
       and no EQ: anchorage 0.5382 under ASD-5a-+T against 0.5221 under ASD-1a+T, held). A
       refinement by wind share needs a ruling on the factor treatment. (b) The near-governing
       margin uses the 5a pairing 1/0.6; combination 6a carries 0.45W and is not given a
@@ -135,7 +142,7 @@ verdict.
       declared. (d) The guard reuses exit 3, now "not issuable although no limit state fails"
       (critical finding or a guard); a caller that read 3 as "critical finding" only must
       also read the verdict line.
-    - *To clear it.* Run the anchorage in **LRFD** (ACI 318-19 Ch. 17 is strength design), or
+    - *To clear it.* Run the anchorage in **LRFD** (ACI Ch. 17 is strength design), or
       resolve the strength-to-ASD factor treatment for the wind-governed anchors by hand.
 
 11. **J10.1 loaded width** for an open-shape arm is tw + 2w, the footprint of the two web or
@@ -144,6 +151,62 @@ verdict.
     re-checked with that detail. Kept by P.E. ruling (2026-10-26); the reviewer notes it.
 12. **"Base metal governs over the weld metal (AISC J4)"** is only raised when the base-metal
     ratio is ≥ 0.5 (engine 2026-10-26). The J4 rows are always in the stage table.
+13. **ACI CODE-318-25 anchorage - DEFAULT from 0.9.0 (engine 2026-11-01).** `baseplate.aciEdition`
+    is "318-25" unless set to "318-19", which reproduces legacy projects except where the old
+    result was wrong under either edition (item 14). 318-25 only:
+    - φ per Table 21.2.1: concrete failure in tension (breakout, pullout, side-face blowout,
+      bond) 0.65 nonredundant / 0.75 redundant (`anchorageRedundancy`, default nonredundant,
+      warned); concrete failure in shear 0.75. 318-19 keeps 0.70 concrete / 0.65 bond.
+    - ψa per Table 17.5.4.1 on every concrete failure mode, from `anchorCategory` (post-installed)
+      and `supplementaryReinforcement`. **With no Category the engine takes Category 3** (ψa =
+      0.60 in tension, the lowest) and warns "REVIEW"; the reviewer raises *Anchor Category not
+      entered* - **major** when the anchorage fails or is within 10 % (the Category may decide the
+      verdict), info otherwise. The CSA presets and the ps-201 example leave it unset on purpose:
+      it is an ESR value and a P.E. decision. ps-201 therefore FAILS anchorage at 1.1356 (LRFD,
+      concrete interaction) as shipped and passes at 0.7423 with Category 1.
+    - ψcm,N (17.6.2.7) is an opt-in credit (`applyCompressionField`), taken only with every edge
+      ≥ 1.5·hef, no net uplift and C/T > 0.8 from the bearing solve; never used in pryout, and
+      the result says why when it is not applied.
+    - Tension-shear interaction: concrete 17.8.3 (5/3 power) and steel 17.8.4 (power 2) as two
+      rows, replacing the 318-19 trilinear 0.2 / 1.2 row.
+14. **ACI corrections under both editions - FIXED (engine 2026-11-01; plugin 0.9.0).** Nonductile
+    steel φ 0.65 / 0.60; futa ≤ min(1.9·fya, 125 ksi) (`anchorFya`; without it only the 125 ksi
+    cap, warned); grout pad Vsa x 0.80 (`groutPad`); ψed,V from ca2 (it was 1.0); side-face
+    blowout (1 + ca2/ca1)/4 and Nsbg for the edge row; adhesive pryout on min(Nag, Ncbg); ANc ≤
+    n·ANco; ψc,N 1.4 for post-installed anchors (item 3); group bond 17.6.5.1b with
+    `bondStrengthUncracked` (without it the single-anchor check warns that it may be
+    unconservative, which the reviewer grades major); punching λs (22.5.5.1.3) and λ; clause
+    labels 17.6.2.1.4, 17.6.2.2.1, 17.7.2.1.3, 17.6.5.2.1, Table 22.8.3.2.
+15. **AISC 360-22 conformance - FIXED (engine 2026-11-01; plugin 0.9.0, UNCONSERVATIVE-FIX).**
+    - *Welds.* kds = 1.0 (J2.4(a), "all other conditions"); the Eq. J2-5 increase only with the
+      weld engine's `strainCompatibility: "linear-through-cg"` on a single or two-parallel group
+      with M = 0, never all-round. It was applied to every weld - up to 50 % unconservative on the
+      column-to-base weld. Base-metal shear is the lower of J4-3 yielding (φ 1.00 / Ω 1.50) and
+      J4-4 rupture (about 17 % lower for A36), labelled "Base-metal shear". J2.2b(c) (item 5) and
+      J2.2b(d): `endLoaded` applies β (Eq. J2-1) and the 180w cap; otherwise a warning above 100w.
+      The assembly's welds carry moment, so they never take kds > 1.
+    - *Compression.* E7 with the Table B4.1a axial λr and the three Table E7.1 rows; E4-3 with
+      Fex for channels and ro/H from the shapes data (tee shear centre from ybar, warned
+      without it); single angles E4-4 flexural-torsional buckling when b/t > 0.71√(E/Fy) and the
+      optional E5 effective slenderness (`angleE5`), otherwise concentric E3 with a Chapter H
+      warning.
+    - *Tension.* Table D3.1 U for angles from Case 8 (`nBoltsPerLine`) or Case 2
+      (`connectionEccentricity`, `connectionLength`) with the D3 floor; without data the D3
+      floor on the shorter leg, warned (it was a silent 0.60).
+    - *Flexure.* F3-2 kc for every I-shape; F4 (noncompact web) and F5 (slender web); F6-4 at
+      0.70E; F7.4 HSS LTB; F9-6 / F9-8 / F9-9 for a stem in tension and F9-18 at
+      (1.43 - 0.515λ√(Fy/E)); F10.2 single-angle LTB unless `continuousLTR` (Cb ≤ 1.5), with
+      principal-axis resolution for unequal legs or axial compression. **Angle arms in the
+      assembly always take F10.2** (the cascade has no restraint input): the CSA Type 2 L4X3X3/8
+      arm moves 0.5262 → 0.9436.
+    - *Shear.* G2-11 (Cv2); G3 kv 1.2 for tee stems and angle legs; G4-1; G5-1 with G5-2b; G6 per
+      flange (bf/tf for channels, one flange for tees).
+    - *Other.* A warning when K defaults to 1.0 on a compression member; 360-22 equation
+      numbers; Table C-A-7.1 case (e) for the K = 2.1 column.
+16. **Deferred in the engine (not ported because not implemented there).** λa by failure mode;
+    the 318-25 limits and minima (f′c caps, da ≤ 4 in., Table 17.9.2, SDC C-F x 0.75); ψh,V;
+    shear lugs; G5-2a; F10-5b; the J2.4(b) Eq. J2-6 concentric form and an instantaneous-centre
+    weld solver (kds stays 1.0, the conservative side).
 
 ## Not generated - supply by hand when they apply
 

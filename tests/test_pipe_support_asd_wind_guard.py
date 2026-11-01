@@ -46,11 +46,16 @@ def example():
         return json.load(fh)
 
 
-def case(method, wind=1.5, eq=False, optimize=False, arm=None):
+def case(method, wind=1.5, eq=False, optimize=False, arm=None, aci="318-19"):
     """ps-201 with the method set, WIN scaled by `wind` (None drops it), EQ dropped (False),
     kept (True) or scaled (a number), and optionally the arm shape changed."""
     s = example()
     s["design"]["method"] = method
+    # The guard is about the ASD 1/1.5 project basis, which is the same under either ACI edition.
+    # These scenarios were built on ACI 318-19 numbers; at the 318-25 default with the Category 3
+    # fallback the ps-201 anchorage fails outright and no guard scenario survives, so the edition
+    # is pinned (0.9.0). GuardOn31825 covers the default edition.
+    s["design"]["baseplate"] = {"aciEdition": aci}
     if arm:
         for a in s["design"]["arms"]:
             a["shape"] = arm
@@ -107,21 +112,21 @@ class GuardFires(unittest.TestCase):
         self.assertTrue(LD.asd_wind_combo(st["combo"]))
         self.assertEqual(st["status"], GUARD)
         self.assertEqual(st["engineStatus"], "pass")
-        self.assertAlmostEqual(st["ratio"], 0.7653, places=4)          # engine number, not re-factored
+        self.assertAlmostEqual(st["ratio"], 0.8149, places=4)          # engine number, not re-factored
         self.assertEqual(st["asdWindGuard"]["reason"], HEAD)
 
     def test_envelope_cannot_pass(self):
         env = self.doc["envelope"]
         self.assertEqual(env["status"], GUARD)
         self.assertEqual([g["stage"] for g in env["guards"]], ["Anchorage"])
-        self.assertEqual(env["guards"][0]["check"], "Concrete breakout (tension)")
+        self.assertEqual(env["guards"][0]["check"], "Tension-shear interaction")
         others = [s for s in env["stages"] if s["component"] != "anchorage"]
         self.assertTrue(all(s["status"] == "pass" for s in others))   # only the guard holds it
 
     def test_cli_verdict_names_the_stage_and_exits_3_without_pass(self):
         code, line = cli(self.spec)
         self.assertEqual(code, 3)
-        self.assertTrue(line.startswith(HEAD + " - Anchorage / Concrete breakout (tension) = 0.7653 (ASD-5a-+T)"),
+        self.assertTrue(line.startswith(HEAD + " - Anchorage / Tension-shear interaction = 0.8149 (ASD-5a-+T)"),
                         line)
         self.assertNotIn("PASS", line)
         self.assertEqual(R.cli_verdict(self.doc), line)
@@ -129,11 +134,11 @@ class GuardFires(unittest.TestCase):
     def test_report_banner_and_stage_say_manual_check_required(self):
         md = R.markdown(self.doc)
         banners = [ln for ln in md.splitlines() if ln.startswith("> ")]
-        self.assertTrue(banners[0].startswith(f"> **{HEAD}** - held: Anchorage / Concrete breakout (tension)"))
+        self.assertTrue(banners[0].startswith(f"> **{HEAD}** - held: Anchorage / Tension-shear interaction"))
         self.assertFalse([b for b in banners if "PASS" in b], banners)
-        self.assertIn("### Anchorage - MANUAL CHECK REQUIRED (max UR 0.765, combination ASD-5a-+T)", md)
+        self.assertIn("### Anchorage - MANUAL CHECK REQUIRED (max UR 0.815, combination ASD-5a-+T)", md)
         self.assertIn("**Validity guard - ASD anchorage under wind** (code-basis item 10; owner ruling 2026-10-30", md)
-        self.assertIn("| ACI 318-19 Ch. 17 - anchorage | 17.6, 17.7, 17.8 | 0.765 | manual check required |", md)
+        self.assertIn("| ACI 318-19 Ch. 17 - anchorage | 17.5.4, 17.6, 17.7, 17.8; Table 21.2.1 | 0.815 | manual check required |", md)
         self.assertIn("manual check required", [r["status"] for r in self.doc["compliance"]])
 
     def test_major_finding_kept_and_says_the_guard_applied(self):
@@ -155,6 +160,26 @@ class GuardFires(unittest.TestCase):
         self.assertEqual(code, 2)
         self.assertTrue(line.startswith("FAIL - "), line)
         self.assertIn(f"> Also {HEAD}.", R.markdown(doc))
+
+
+class GuardOn31825(unittest.TestCase):
+    """The guard is edition-independent: on the ACI CODE-318-25 default (0.9.0) with an ESR
+    Category 1 anchor, ps-201 at WIN x1.0 passes the engine on ASD-5a-+T and is still held."""
+
+    def test_held_on_the_default_edition_with_category_1(self):
+        s = case("ASD", wind=1.0, aci="318-25")
+        s["design"]["baseplate"]["anchorCategory"] = 1
+        doc = support_calc.run(s, optimize=False)
+        st = anchorage(doc)
+        self.assertEqual((st["combo"], st["ratio"]), ("ASD-5a-+T", 0.8667))
+        self.assertEqual(st["status"], GUARD)
+        self.assertEqual(st["engineStatus"], "pass")
+        self.assertIn("ACI CODE-318-25", " ".join(c["clause"] for c in st["checks"]))
+
+    def test_category_3_fallback_fails_the_same_case(self):
+        st = anchorage(support_calc.run(case("ASD", wind=1.0, aci="318-25"), optimize=False))
+        self.assertEqual((st["status"], st["ratio"]), ("fail", 1.4651))
+        self.assertEqual(st["governing"], "Tension-shear interaction (concrete)")
 
 
 class GuardDoesNotFire(unittest.TestCase):
@@ -272,8 +297,8 @@ class OneSourceAndDefenceInDepth(unittest.TestCase):
 
 
 class NearGoverningWind(unittest.TestCase):
-    """Audit fix (B7 review): seismic ASD-8-+T governs the anchorage at 0.9494, but wind
-    ASD-5a-+T gives 0.9249 and 0.9249 x (1/0.6)/1.5 = 1.028 reaches it. Before the fix this
+    """Audit fix (B7 review): seismic ASD-8-+T governs the anchorage at 0.9713 (0.9494 before the
+    0.9.0 ACI corrections), but wind ASD-5a-+T gives 0.9462 and 0.9462 x (1/0.6)/1.5 = 1.051 reaches it. Before the fix this
     printed a plain PASS. ps-201 with WIN x2.2, EQ x1.6 and a W6X20 arm (so that only the
     anchorage is in question)."""
 
@@ -291,13 +316,13 @@ class NearGoverningWind(unittest.TestCase):
 
     def test_stage_is_held_although_seismic_governs(self):
         st = anchorage(self.doc)
-        self.assertEqual((st["combo"], st["ratio"]), ("ASD-8-+T", 0.9494))   # engine row unchanged
+        self.assertEqual((st["combo"], st["ratio"]), ("ASD-8-+T", 0.9713))   # engine row unchanged
         self.assertEqual(st["status"], GUARD)
         self.assertEqual(st["engineStatus"], "pass")
         g = st["asdWindGuard"]
         self.assertEqual(g["trigger"], "near-governing")
-        self.assertEqual((g["combo"], g["ratio"]), ("ASD-5a-+T", 0.9249))
-        self.assertEqual((g["stageCombo"], g["stageRatio"]), ("ASD-8-+T", 0.9494))
+        self.assertEqual((g["combo"], g["ratio"]), ("ASD-5a-+T", 0.9462))
+        self.assertEqual((g["stageCombo"], g["stageRatio"]), ("ASD-8-+T", 0.9713))
         self.assertEqual(st["asdWind"]["combo"], "ASD-5a-+T")
         env = self.doc["envelope"]
         self.assertEqual(env["status"], GUARD)
@@ -306,19 +331,19 @@ class NearGoverningWind(unittest.TestCase):
     def test_cli_and_report_say_not_issuable(self):
         code, line = cli(self.spec)
         self.assertEqual(code, 3)
-        self.assertTrue(line.startswith(HEAD + " - Anchorage / Tension-shear interaction = 0.9249 (ASD-5a-+T)"),
+        self.assertTrue(line.startswith(HEAD + " - Anchorage / Tension-shear interaction = 0.9462 (ASD-5a-+T)"),
                         line)
         self.assertNotIn("PASS", line)
         md = R.markdown(self.doc)
         banners = [ln for ln in md.splitlines() if ln.startswith("> ")]
         self.assertFalse([b for b in banners if "PASS" in b], banners)
-        self.assertIn("the engine's governing row is Tension-shear interaction = 0.949 under ASD-8-+T", md)
+        self.assertIn("the engine's governing row is Tension-shear interaction = 0.971 under ASD-8-+T", md)
         self.assertIn("[near-governing]", md)
 
     def test_major_finding_names_the_wind_row(self):
         f = [x for x in self.doc["findings"] if x["title"] == "ASD anchorage governed by a wind combination"]
         self.assertEqual(len(f), 1)
-        self.assertIn("wind combination ASD-5a-+T gives Tension-shear interaction = 0.9249", f[0]["detail"])
+        self.assertIn("wind combination ASD-5a-+T gives Tension-shear interaction = 0.9462", f[0]["detail"])
         self.assertIn("Guard applied", f[0]["detail"])
 
     def test_same_case_in_lrfd_is_not_guarded(self):
@@ -331,7 +356,7 @@ class NearGoverningWind(unittest.TestCase):
         doc = support_calc.run(case("ASD", wind=1.0, eq=1.6, arm="W6X20"), optimize=False)
         st = anchorage(doc)
         self.assertEqual(st["combo"], "ASD-8-+T")
-        self.assertEqual(st["asdWind"]["ratio"], 0.6841)            # 0.6841 x 1.111 = 0.760 < 0.9494
+        self.assertEqual(st["asdWind"]["ratio"], 0.6841)            # 0.6841 x 1.111 = 0.760 < 0.9713
         self.assertEqual(st["status"], "pass")
         self.assertEqual(doc["envelope"]["guards"], [])
 

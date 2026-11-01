@@ -9,9 +9,9 @@ clearly what a reviewer would send back.
 | Severity | Meaning | Examples |
 |---|---|---|
 | **critical** | Fails, or the model cannot carry a load that exists | ratio > 1; pipe moments at an anchor; uplift with no anchorage; the drawing shows a different shape than the calc |
-| **major** | Within 10 % of a limit, a possibly unconservative input, or a detailing violation | 0.9 ≤ UR ≤ 1.0; weld base metal on the wrong part; fillet outside J2.2b limits; ACI default kc used for an adhesive anchor in a final design |
+| **major** | Within 10 % of a limit, a possibly unconservative input, or a detailing violation | 0.9 ≤ UR ≤ 1.0; weld base metal on the wrong part; fillet outside J2.2b limits; ACI default kc used for an adhesive anchor in a final design; adhesive bond without τuncr (single-anchor check, may be unconservative); no Anchor Category entered where the anchorage fails or is within 10 % (Category 3 taken, so the ESR Category may decide the verdict) |
 | **minor** | Advisory, constructability, overdesign | KL/r near 200; UR < 0.4; three shape families on one support; non-standard plate |
-| **info** | Basis items to confirm | K = 2.1, Cb = 1.0, T factor, existing-structure capacity |
+| **info** | Basis items to confirm | K = 2.1, Cb = 1.0, T factor, existing-structure capacity; nonredundant anchorage taken (Table 21.2.1); no Anchor Category on a passing anchorage (Category 3, conservative); anchor fya not entered |
 
 Label your own findings **[reviewer]** and engine findings **[engine]**.
 
