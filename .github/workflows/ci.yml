@@ -90,8 +90,7 @@ jobs:
           if os.environ['REF_TYPE'] == 'tag' and os.environ['REF_NAME'] != tag:
               sys.exit(f"tag {os.environ['REF_NAME']} != plugin version {v}")
           with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
-              f.write(f"tag={tag}
-")
+              print(f"tag={tag}", file=f)
           PY
       - name: Tag main when v<version> does not exist yet
         if: github.ref_type == 'branch'
@@ -112,15 +111,20 @@ jobs:
           TAG: ${{ steps.ver.outputs.tag }}
         run: |
           python - <<'PY'
-          import os, re
+          import os
           v = os.environ['TAG'][1:]
-          text = open('CHANGELOG.md', encoding='utf-8').read()
-          m = re.search(r'^## \[' + re.escape(v) + r'\][^
-]*
-(.*?)(?=^## \[|\Z)', text, re.S | re.M)
-          body = m.group(1).strip() if m else f'See CHANGELOG.md for {v}.'
-          open('dist/RELEASE-NOTES.md', 'w', encoding='utf-8').write(body + '
-')
+          body, keep = [], False
+          for line in open('CHANGELOG.md', encoding='utf-8').read().splitlines():
+              if line.startswith('## ['):
+                  if keep:
+                      break
+                  keep = line.startswith('## [' + v + ']')
+                  continue
+              if keep:
+                  body.append(line)
+          text = chr(10).join(body).strip() or f'See CHANGELOG.md for {v}.'
+          with open('dist/RELEASE-NOTES.md', 'w', encoding='utf-8') as fh:
+              print(text, file=fh)
           PY
       - name: Create the GitHub Release and attach .plugin, .zip and skills zip
         if: env.skip != 'true'
