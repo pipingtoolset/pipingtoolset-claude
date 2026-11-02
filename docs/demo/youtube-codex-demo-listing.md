@@ -1,11 +1,12 @@
 # YouTube listing: PipingToolset for ChatGPT and Codex demo
 
-Built by `edit-tools/build_codex_demo.py` from the five Codex recordings (2026-10-28). Upload
-`PipingToolset_for_ChatGPT_Codex_demo.mp4` (1920x1080, 30 fps, 4:04, silent; re-rendered 2026-11-02, see below) and attach
-`PipingToolset_for_ChatGPT_Codex_demo.srt` as the English subtitle track; the same captions are
-burned in, so the track is for search and accessibility. After publishing, put the video id into
-`VIDEO.id` in `scripts/seo/openai-content.mjs` (pipecalcpro) and the `/openai/` page switches from
-the Claude demo to this one.
+Built by `edit-tools/build_codex_demo.py` from the five Codex recordings (2026-10-28), re-rendered
+2026-11-02 with the ACI CODE-318-25 captions (PR #31). Published 2026-11-02 as a new video,
+**LfTiA0Wv2EA** (1920x1080, 30 fps, 4:05, silent), replacing VHD-XIeQu2s (10-28, 4:12); `VIDEO.id`
+in `scripts/seo/openai-content.mjs` (pipecalcpro) carries it and the `/openai/` page embeds it.
+YouTube title as uploaded: "Piping Toolset for OpenAI ChatGPT & Codex: B31.3 wall thickness, and a
+pipe support check". `PipingToolset_for_ChatGPT_Codex_demo.srt` is the English subtitle track; the
+same captions are burned in, so the track is for search and accessibility.
 
 **Re-render 2026-11-02 (console workstream B12).** The 2026-10-28 cut carried pre-connector page copy
 ("practicing, licensed piping engineer" on the /openai/ page, "What reaches PipingToolset: Nothing"
@@ -74,4 +75,4 @@ The assistant asks. A script computes. You read the table.
 
 ## Playlist / cross-links
 
-Add to the same playlist as the Claude demo (40lcLzIzHEg) and link each video's end screen to the other.
+Add to the same playlist as the Claude demo (FVhnm3sXS-o) and link each video's end screen to the other.
