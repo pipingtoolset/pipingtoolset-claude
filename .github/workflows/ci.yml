@@ -57,7 +57,15 @@ jobs:
           if-no-files-found: error
 
   release:
-    if: startsWith(github.ref, 'refs/tags/v')
+    # Release rule (owner, 2026-11-02): nobody tags by hand. A release PR bumps the
+    # version in the four manifests and adds the `## [x.y.z]` CHANGELOG entry; merging
+    # it releases. On every push to main this job reads the version from
+    # plugins/piping-toolset/.claude-plugin/plugin.json, creates the tag v<version> if
+    # it does not exist yet, then creates the GitHub Release with that CHANGELOG
+    # section as its notes and attaches the packages. A tag created by GITHUB_TOKEN
+    # never re-triggers this workflow, so the release is made in the same run. A tag
+    # pushed by hand (v*) still works: the job then only checks it matches plugin.json.
+    if: github.event_name == 'push' && (startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/heads/main')
     needs: package
     runs-on: ubuntu-24.04
     timeout-minutes: 10
@@ -69,21 +77,58 @@ jobs:
         with:
           name: piping-toolset-plugin
           path: dist
-      - name: Tag matches the plugin version
+      - name: Resolve the release tag from plugin.json
+        id: ver
         env:
-          TAG: ${{ github.ref_name }}
+          REF_NAME: ${{ github.ref_name }}
+          REF_TYPE: ${{ github.ref_type }}
         run: |
           python - <<'PY'
           import json, os, sys
           v = json.load(open('plugins/piping-toolset/.claude-plugin/plugin.json'))['version']
-          sys.exit(0 if os.environ['TAG'] == 'v' + v else f"tag {os.environ['TAG']} != plugin version {v}")
+          tag = 'v' + v
+          if os.environ['REF_TYPE'] == 'tag' and os.environ['REF_NAME'] != tag:
+              sys.exit(f"tag {os.environ['REF_NAME']} != plugin version {v}")
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
+              f.write(f"tag={tag}
+")
           PY
-      - name: Attach .plugin, .zip and skills zip to the GitHub Release
+      - name: Tag main when v<version> does not exist yet
+        if: github.ref_type == 'branch'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAG: ${{ github.ref_name }}
+          TAG: ${{ steps.ver.outputs.tag }}
+        run: |
+          if gh api "repos/${GITHUB_REPOSITORY}/git/ref/tags/${TAG}" >/dev/null 2>&1; then
+            echo "tag ${TAG} already exists; nothing to release"
+            echo "skip=true" >> "$GITHUB_ENV"
+          else
+            gh api -X POST "repos/${GITHUB_REPOSITORY}/git/refs" -f ref="refs/tags/${TAG}" -f sha="${GITHUB_SHA}"
+            echo "created ${TAG} at ${GITHUB_SHA}"
+          fi
+      - name: Release notes from the CHANGELOG section
+        if: env.skip != 'true'
+        env:
+          TAG: ${{ steps.ver.outputs.tag }}
+        run: |
+          python - <<'PY'
+          import os, re
+          v = os.environ['TAG'][1:]
+          text = open('CHANGELOG.md', encoding='utf-8').read()
+          m = re.search(r'^## \[' + re.escape(v) + r'\][^
+]*
+(.*?)(?=^## \[|\Z)', text, re.S | re.M)
+          body = m.group(1).strip() if m else f'See CHANGELOG.md for {v}.'
+          open('dist/RELEASE-NOTES.md', 'w', encoding='utf-8').write(body + '
+')
+          PY
+      - name: Create the GitHub Release and attach .plugin, .zip and skills zip
+        if: env.skip != 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.ver.outputs.tag }}
         run: |
           if ! gh release view "$TAG" >/dev/null 2>&1; then
-            gh release create "$TAG" --verify-tag --generate-notes
+            gh release create "$TAG" --verify-tag --title "$TAG" --notes-file dist/RELEASE-NOTES.md
           fi
           gh release upload "$TAG" dist/piping-toolset.plugin dist/piping-toolset.zip dist/piping-toolset-skills.zip --clobber

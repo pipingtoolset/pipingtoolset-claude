@@ -390,3 +390,7 @@ Copyright © 2026 Flexible Piping Solutions LLC. Licensed under the
 [Apache License, Version 2.0](LICENSE). "Piping Toolset" is a name of Flexible Piping Solutions LLC;
 see [NOTICE](NOTICE). Claude is a product of Anthropic, PBC; ChatGPT and Codex are products of
 OpenAI. This plugin is not affiliated with or endorsed by either.
+
+## Releasing
+
+Nobody tags by hand. A release PR bumps the version in the four manifests (`.claude-plugin/marketplace.json`, `plugins/piping-toolset/.claude-plugin/plugin.json`, `plugins/piping-toolset/plugin.json`, `.agents/plugins/marketplace.json`) and adds the `## [x.y.z] — date` entry to `CHANGELOG.md`. When that PR merges, the `release` job in `.github/workflows/ci.yml` creates the tag `vx.y.z`, publishes the GitHub Release with that CHANGELOG section as its notes, and attaches `piping-toolset.plugin`, `piping-toolset.zip` and `piping-toolset-skills.zip`. A merge that leaves the version unchanged releases nothing.
