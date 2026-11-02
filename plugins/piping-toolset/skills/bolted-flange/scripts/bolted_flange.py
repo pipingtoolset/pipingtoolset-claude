@@ -61,7 +61,7 @@ factors") whenever any hub factor the flange type uses came from the series, and
 only when every hub factor the type uses was supplied by override (a loose flange uses none and
 is "calculated"). The pressure-equivalent screen is "screening" always. The grade adds keys
 only: no number and no pass/fail status word changes. Taxonomy: calculated / screening /
-manual check required / pointer only / not checked.
+manual check required / assumed / pointer only / not checked.
 
 CLI:
     python bolted_flange.py list
@@ -107,8 +107,8 @@ The envelope then gains "project_basis_applied" {schema, fields_used, assumption
 record holds no code-table value: the rating, dimensions, gasket factors and allowables stay inputs.
 
 Result status. Every envelope gains "result_status" (calculated / screening / manual check required /
-pointer only / not checked: the worst word among the "checks" performed; an ASSUMED record item adds
-one "ASSUMED inputs" row graded manual check required), "checks" [{name, result_status, status, note}]
+assumed / pointer only / not checked: the worst word among the "checks" performed; an ASSUMED record item
+adds one "ASSUMED inputs" row graded "assumed"), "checks" [{name, result_status, status, note}]
 and "not_checked" (methods this module never performs, listed and never blocking). Existing "status"
 words and every number are unchanged. The ISSUE-GRADE banner is not printed while the word is manual
 check required or pointer only, or screening with an unresolved reconstructed hub factor.
@@ -470,14 +470,18 @@ def render_basis_section(applied, basis, heading=None):
 # status (pass/fail/na), note[, unresolved_factor]}]. "not checked" rows never drive the envelope;
 # they are listed, and the envelope reads "not checked" only when every row is. A positive banner
 # word (PASS, OK, ISSUE, DELIVERABLE) is printed only when banner_allowed() is true: never under
-# "manual check required" or "pointer only", nor under "screening" when a reconstructed factor in
-# the chain is unresolved. Any ASSUMED input gives one "ASSUMED inputs" row (assumed_inputs_check)
-# graded manual check required, so an unconfirmed input always holds the banner.
+# "manual check required", "assumed" or "pointer only", nor under "screening" when a reconstructed
+# factor in the chain is unresolved. Any ASSUMED input gives one "ASSUMED inputs" row
+# (assumed_inputs_check) graded "assumed" (P.E. ruling 2026-11-02, item 3.5(ii); it was manual check
+# required up to 0.9.0), so an unconfirmed input always holds the banner.
 
-RESULT_STATUS = ("calculated", "screening", "manual check required", "pointer only", "not checked")
-# severity for worst_of (ordering only): manual check required > pointer only > screening > not checked > calculated
-RESULT_STATUS_SEVERITY = {"manual check required": 4, "pointer only": 3, "screening": 2, "not checked": 1,
-                          "calculated": 0}
+RESULT_STATUS = ("calculated", "screening", "manual check required", "assumed", "pointer only", "not checked")
+# severity for worst_of (ordering only):
+#   manual check required > assumed > pointer only > screening > not checked > calculated
+# "assumed" sits just below "manual check required": when a gate has tripped and an input is also
+# unconfirmed, the envelope names the gate; confirming the input alone would not clear it.
+RESULT_STATUS_SEVERITY = {"manual check required": 5, "assumed": 4, "pointer only": 3, "screening": 2,
+                          "not checked": 1, "calculated": 0}
 CHECK_STATUS = ("pass", "fail", "na")
 ASSUMED_CHECK_NAME = "ASSUMED inputs"
 
@@ -522,8 +526,8 @@ def make_check(name, result_status, status=None, note=None, unresolved_factor=Fa
 def assumed_inputs_check(items):
     """The one 'ASSUMED inputs' row for every ASSUMED item (strings or {item[, note]} dicts), or None.
 
-    Graded manual check required, so the envelope follows it and no positive banner prints; the
-    note reads 'confirm before issue: <item>; <item>' (duplicates dropped, order kept).
+    Graded "assumed" (ruling 2026-11-02 3.5(ii)), which holds the banner like manual check
+    required; the note reads 'confirm before issue: <item>; <item>' (duplicates dropped, order kept).
     """
     texts = []
     for it in items or ():
@@ -533,7 +537,7 @@ def assumed_inputs_check(items):
             texts.append(text)
     if not texts:
         return None
-    return make_check(ASSUMED_CHECK_NAME, "manual check required", "na",
+    return make_check(ASSUMED_CHECK_NAME, "assumed", "na",
                       "confirm before issue: " + "; ".join(texts))
 
 
@@ -544,9 +548,9 @@ def not_performed(checks):
 
 
 def banner_allowed(result_status, unresolved_factor=False):
-    """False for manual check required, pointer only, and screening with an unresolved factor."""
+    """False for manual check required, assumed, pointer only, and screening with an unresolved factor."""
     word = _rs_word(result_status)
-    if word in ("manual check required", "pointer only"):
+    if word in ("manual check required", "assumed", "pointer only"):
         return False
     return not (word == "screening" and unresolved_factor)
 
@@ -588,7 +592,7 @@ def _verdict(ok) -> str:
 
 # --------------------------------------------------------------------------- result grade
 # Output status words (the pack taxonomy): calculated / screening / manual check required /
-# pointer only / not checked. The grade keys below use the first two; checks[] uses all five. The detailed analysis is
+# assumed / pointer only / not checked. The grade keys below use the first two; checks[] uses all six. The detailed analysis is
 # "calculated" only when every hub factor its flange type uses was supplied by override
 # (F_override, V_override, f_override, read by the user from VIII-2 Table 4.16.5); any factor
 # taken from the open-source series reconstruction makes the run "screening". The grade is an
@@ -1823,7 +1827,7 @@ def _static_not_checked(module: str, ctx: Dict[str, Any]) -> List[Dict[str, Any]
 
 def build_checks(module: str, out: Dict[str, Any], inp: Dict[str, Any], status: str,
                  ctx: Dict[str, Any]) -> List[Dict[str, Any]]:
-    """checks[] for one run: what the module performed, mapped onto the five result-status words."""
+    """checks[] for one run: what the module performed, mapped onto the six result-status words."""
     checks: List[Dict[str, Any]] = []
     if module == "connections.flange-derive":
         return [make_check("geometry derivation", "calculated", None,
@@ -1889,7 +1893,7 @@ def _apply_status(env: Dict[str, Any], checks: List[Dict[str, Any]], not_checked
     env["not_checked"] = not_checked
     out = env["output"]
     if not checks_banner_allowed(checks) and str(out.get("banner", "")).startswith("ISSUE-GRADE"):
-        blockers = [c for c in checks if c["result_status"] in ("manual check required", "pointer only")]
+        blockers = [c for c in checks if c["result_status"] in ("manual check required", "assumed", "pointer only")]
         new = (banner_word("ISSUE-GRADE", env["result_status"]) + ": "
                + "; ".join(c["name"] + " (" + (c["note"] or "") + ")" for c in blockers)
                + "; no acceptance wording until each is resolved")

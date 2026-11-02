@@ -34,7 +34,7 @@ MAWP = "piping.b31-allowable-pressure"
 BRANCH = "piping.branch-reinforcement"
 MITER = "piping.miter-allowable-pressure"
 LEAK = "piping.leak-test-pressure"
-WORDS = ("calculated", "screening", "manual check required", "pointer only", "not checked")
+WORDS = ("calculated", "screening", "manual check required", "assumed", "pointer only", "not checked")
 POSITIVE = re.compile(r"\b(PASS|OK|ISSUE|DELIVERABLE)\b")
 SCHEMA = "pipingtoolset.project-basis/1"
 
@@ -136,17 +136,17 @@ class EachWord(EnvelopeContract):
         mawp = pd.run_module(MAWP, fixture(MAWP))
         self.assertEqual(words(mawp)[pd.CHECK_DESIGN_P], "not checked")
 
-    def test_an_assumed_item_in_the_record_is_one_manual_check_row(self):
+    def test_an_assumed_item_in_the_record_is_one_assumed_row(self):
         rec = dict(schema=SCHEMA, assumptions=[{"item": "Corrosion allowance per the line list", "status": "ASSUMED"},
                                   {"item": "Mill tolerance 12.5%"},
                                   {"item": "Design pressure per the line list", "status": "confirmed"}])
         for module in pd.REGISTRY:
             env = pd.run_module(module, dict(fixture(module), project_basis=rec))
             rows = [c for c in env["checks"] if c["name"] == "ASSUMED inputs"]
-            self.assertEqual(rows, [{"name": "ASSUMED inputs", "result_status": "manual check required",
+            self.assertEqual(rows, [{"name": "ASSUMED inputs", "result_status": "assumed",
                                      "status": "na", "note": "confirm before issue: Corrosion allowance per the "
                                      "line list; Mill tolerance 12.5%"}], module)
-            self.assertEqual(env["result_status"], "manual check required", module)
+            self.assertEqual(env["result_status"], "assumed", module)
             self.assertFalse(env["banner_allowed"], module)
             self.assertIn("confirm before issue: Corrosion allowance", env["result_status_line"], module)
             self.assertIsNone(POSITIVE.search(env["result_status_line"]), module)

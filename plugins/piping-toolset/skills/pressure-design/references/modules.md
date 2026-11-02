@@ -171,7 +171,7 @@ Rules:
 
 ## Project basis and result status (0.8.0)
 
-The shared record and the five status words are described in [project-basis.md](project-basis.md). This skill's part:
+The shared record and the six status words are described in [project-basis.md](project-basis.md). This skill's part:
 
 **Fill map.** With a `project_basis` object in the job file, or `--project-basis project-basis.json` on the command line (both given with different content exits 2):
 
@@ -192,7 +192,8 @@ The shared record and the five status words are described in [project-basis.md](
 |---|---|
 | calculated | per check: the module's own check ran from the inputs given; the validity gate held; the allowable pressure was compared with a design pressure from the record. As the envelope word: every clean run, since `not checked` rows never set it |
 | screening | branch reinforcement on a B31.1 record: the B31.3 area method used as a screening check (section 4) |
-| manual check required | the thin-wall validity gate tripped; or the record has an ASSUMED item (one `ASSUMED inputs` row, note `confirm before issue: <items>`, `banner_allowed` false); or the record says Category M, High Pressure, or a Chapter VIII / IX route, whose additional requirements this skill does not evaluate. The fluid-service flag also adds a `MANUAL CHECK REQUIRED:` warning, sets `banner` when no gate or pointer banner holds it, and sets `result_grade` to `manual check required` on the gated modules; `status` and `output` keep the engine's words and numbers |
+| manual check required | the thin-wall validity gate tripped; or the record says Category M, High Pressure, or a Chapter VIII / IX route, whose additional requirements this skill does not evaluate. The fluid-service flag also adds a `MANUAL CHECK REQUIRED:` warning, sets `banner` when no gate or pointer banner holds it, and sets `result_grade` to `manual check required` on the gated modules; `status` and `output` keep the engine's words and numbers |
+| assumed | the record has an ASSUMED item: one `ASSUMED inputs` row, note `confirm before issue: <items>`, `banner_allowed` false (0.9.1; manual check required before). A tripped gate or a flagged service outranks it and the line then names both |
 | pointer only | a `code_values` entry `{"mode": "pointer", "citation": {"standard", "table", ...}, "source": "connector"}` with no value: `status` and `result_grade` are `pointer only`, `output` is empty, no equation runs, and `value_pointers` names where to read the value |
 | not checked | the module's known limits: nominal wall against tOrder and external pressure (straight pipe); para. 304.3.2 need for the calculation and adjacent openings (branch); thinning during bending (bend); minimum R1 (miter); para. 345.2.1(a) stress, the para. 345.5.4 90 % limit and component limits (leak test); allowable pressure against design pressure when no record gives one (MAWP, miter) |
 

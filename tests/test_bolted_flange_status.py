@@ -32,7 +32,7 @@ import parity  # noqa: E402
 SCREEN = "connections.flange-equivalent-pressure"
 APP2 = "aux.app2-flange-integral"
 DERIVE = "connections.flange-derive"
-WORDS = {"calculated", "screening", "manual check required", "pointer only", "not checked"}
+WORDS = {"calculated", "screening", "manual check required", "assumed", "pointer only", "not checked"}
 ACCEPT = re.compile(r"\b(pass|passes|passed|passing|ok|issued?|issue-grade|accepted|acceptable|deliverable)\b", re.I)
 
 
@@ -87,7 +87,7 @@ class EveryEnvelopeCarriesTheStatus(unittest.TestCase):
         (APP2, loose_job()),
     )
 
-    def test_the_word_is_one_of_exactly_five(self):
+    def test_the_word_is_one_of_exactly_six(self):
         for module, job in self.JOBS:
             env = bf.run_module(module, dict(job))
             self.assertIn(env["result_status"], WORDS, module)
@@ -261,28 +261,29 @@ class BannerRule(unittest.TestCase):
         self.assertIsNone(ACCEPT.search(text.replace("PNC00004", "")), ACCEPT.findall(text))
         self.assertIn("Result status: pointer only", text)
 
-    def test_an_assumed_record_item_is_one_manual_check_row_and_withholds_the_banner(self):
+    def test_an_assumed_record_item_is_one_assumed_row_and_withholds_the_banner(self):
         rec = record(assumptions=[{"item": "Rating at design temperature not yet read", "status": "ASSUMED"},
                                   {"item": "Gasket factors from the datasheet", "status": "confirmed"},
                                   {"item": "Bolt material per the line class"}],
                      states=[{"key": "DES", "role": "design", "T_F": 300, "P_psig": 300}])
         env, basis = bf.run_with_basis(APP2, dict(closed_job(), project_basis=rec))
         rows = [c for c in env["checks"] if c["name"] == "ASSUMED inputs"]
-        self.assertEqual(rows, [{"name": "ASSUMED inputs", "result_status": "manual check required", "status": "na",
+        self.assertEqual(rows, [{"name": "ASSUMED inputs", "result_status": "assumed", "status": "na",
                                  "note": "confirm before issue: Rating at design temperature not yet read; "
                                          "Bolt material per the line class"}])
-        self.assertEqual(env["result_status"], "manual check required")
+        self.assertEqual(env["result_status"], "assumed")
         banner = env["output"]["banner"]
-        self.assertTrue(banner.startswith("MANUAL CHECK REQUIRED: ASSUMED inputs (confirm before issue: "), banner)
+        self.assertTrue(banner.startswith("ASSUMED: ASSUMED inputs (confirm before issue: "), banner)
         self.assertNotIn("ISSUE-GRADE", banner)
         text = bf.render_sheet(env, basis)
         bare = text.replace("confirm before issue", "")      # the mandated ASSUMED wording, not a banner
         self.assertIsNone(ACCEPT.search(bare), ACCEPT.findall(bare))
-        self.assertIn("Result status: manual check required - ASSUMED inputs: confirm before issue: ", text)
+        self.assertIn("Result status: assumed - ASSUMED inputs: confirm before issue: ", text)
 
     def test_the_banner_rule_follows_the_shared_helper(self):
         cases = (("calculated", False, True), ("not checked", False, True), ("screening", False, True),
-                 ("screening", True, False), ("pointer only", False, False), ("manual check required", False, False))
+                 ("screening", True, False), ("pointer only", False, False), ("assumed", False, False),
+                 ("manual check required", False, False))
         for word, unresolved, allowed in cases:
             self.assertEqual(bf.banner_allowed(word, unresolved), allowed, (word, unresolved))
 

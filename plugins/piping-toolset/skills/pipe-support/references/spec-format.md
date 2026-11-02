@@ -76,7 +76,7 @@ value is a spec error (exit 1). LRFD ignores it.
   wind row, when one was run. Today's one guard is ASD anchorage under wind (code-basis
   item 10). One spec key is new: `factored_wind` (above).
 - `envelope.result_status` is one of `calculated`, `screening`, `manual check required`,
-  `pointer only` or `not checked`: the worst word among the checks performed in `envelope.checks`
+  `assumed`, `pointer only` or `not checked`: the worst word among the checks performed in `envelope.checks`
   (`[{name, result_status, status, note}]`, `status` pass / fail / na); a `not checked` row is
   listed but never sets it. The result document repeats `result_status`. The Markdown report
   prints `Result status: <word> - <reason>` under its title and a "Result status by check"
@@ -88,7 +88,7 @@ value is a spec error (exit 1). LRFD ignores it.
   | A critical review finding the model cannot carry (pipe moments) | manual check required |
   | A seismic case (`EQ`) with no `SDS` on a pipe: Ev taken as zero | manual check required |
   | `SDS` given only as a pointer, a string such as the `get_pointer` id: Ev does not run | pointer only |
-  | `ASSUMED inputs`: one row for every `assumed` item (the record's ASSUMED items join that list), note `confirm before issue: <items>` | manual check required |
+  | `ASSUMED inputs`: one row for every `assumed` item (the record's ASSUMED items join that list), note `confirm before issue: <items>` | assumed (0.9.1; manual check required before; outranked by a manual check required row, which then names it too) |
   | `preset inputs`: one row for the CSA preset anchor or concrete values the run uses (`bondStrength`, `anchorFuta`, `anchorType`, `anchorEmbedment`, `fc`); the stages on them read calculated and name the preset | manual check required |
   | A stage with no demand (`na`) | not checked |
   | Column torsion (H3), seismic overstrength (Em with Omega0), a goalpost / trapeze header without `columnSpacing`, deflection not run, snow / rain / ice / flood loads, AWS D1.1 WPS and inspection | not checked (listed, never the envelope word) |
@@ -96,7 +96,7 @@ value is a spec error (exit 1). LRFD ignores it.
 
   Any other `code_values` slot given as a string (a pointer with no value) exits 2: nothing
   that uses it can run.
-- Banner rule: while `result_status` is manual check required or pointer only, the verdict
+- Banner rule: while `result_status` is manual check required, assumed or pointer only, the verdict
   line and the report banner print that word in capitals (or the guard's NOT ISSUABLE line),
   never PASS, a passing stage heading reads RATIO WITHIN LIMITS, and the CLI exits 3. Exit
   codes: 0 issuable pass; 3 not issuable although no limit state fails (critical finding,

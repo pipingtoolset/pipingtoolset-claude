@@ -144,7 +144,7 @@ output, and a short build note that states:
 - every SKEY substitution and record-type substitution
 - **what the PCF does not carry**, which the analyst sets in CAESAR II after import (the list is
   in `references/caesar-import.md`)
-- the report's `Result status` line, verbatim. While it reads `manual check required`, nothing is issued
+- the report's `Result status` line, verbatim. While it reads `manual check required` or `assumed`, nothing is issued
 
 A PCF is geometry and components. It is not a load case set and not a code check. Say so,
 so nobody mistakes an imported model for one that is ready to run.

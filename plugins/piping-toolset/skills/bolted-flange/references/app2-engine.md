@@ -171,7 +171,7 @@ The output carries `factor_basis` (F, V and f each `series` or `override`), `res
 | Integral, all three overridden | `calculated` | calculated | `ISSUE-GRADE HUB FACTORS: ...` plus the clause that only the hub-factor basis is closed and the Peq treatment and defaulted inputs still need review (the user read the three values; the Code reading is not checked here) |
 | Loose, no hub factor used (`factor_basis` is `not used`) | `calculated` | calculated | `ISSUE-GRADE FACTOR BASIS: loose-type flange ...` with the same clause |
 
-A partial override is `screening`; `grade_note` and a finding name the factors still on the series (for example "Series factor(s) in use: V, f"). The grade says only that the hub-factor chain is closed. The Peq external-load treatment and the limits below apply to a `calculated` run too. The banner is the first finding of the envelope. A `screening` run prints no PASS or issue-grade wording; report ratios and "within" or "exceeds". Status taxonomy: calculated / screening / manual check required / pointer only / not checked. `--format sheet` prints the banner and the findings as a markdown block.
+A partial override is `screening`; `grade_note` and a finding name the factors still on the series (for example "Series factor(s) in use: V, f"). The grade says only that the hub-factor chain is closed. The Peq external-load treatment and the limits below apply to a `calculated` run too. The banner is the first finding of the envelope. A `screening` run prints no PASS or issue-grade wording; report ratios and "within" or "exceeds". Status taxonomy: calculated / screening / manual check required / assumed / pointer only / not checked. `--format sheet` prints the banner and the findings as a markdown block.
 
 ## Known limits
 

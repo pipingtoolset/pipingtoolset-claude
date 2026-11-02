@@ -1,6 +1,6 @@
 """stress-screening: output status taxonomy (plugin 0.8.0, B9).
 
-One test per taxonomy word that this skill can reach, the banner rule, the five-word vocabulary,
+One test per taxonomy word that this skill can reach, the banner rule, the six-word vocabulary,
 and the guarantee that the existing status words and values do not move. Standard library only:
 
     python -m unittest tests.test_stress_screening_status -v
@@ -24,7 +24,7 @@ sys.path.insert(0, os.path.join(ROOT, "tests"))
 import parity  # noqa: E402
 import stress_screening as ss  # noqa: E402
 
-WORDS = {"calculated", "screening", "manual check required", "pointer only", "not checked"}
+WORDS = {"calculated", "screening", "manual check required", "assumed", "pointer only", "not checked"}
 DISP = dict(ii=2.0, io=1.5, Mi=1000, Mo=500, Mt=0, Z=8.0, Sc=20000, Sh=17000, f=1)
 SUST = dict(method="sqrt", P=100, D=6.625, t=0.28, Sb=5000, St=100, Socc=2000, Sh=16000, k=1.33)
 SPAN = dict(w=24, E=1.0e7, S_allow=3000, delta_allow=0.25, Z=10.0, I=40.0)
@@ -48,9 +48,9 @@ def names(env, word):
 
 class Vocabulary(unittest.TestCase):
 
-    def test_the_words_are_exactly_the_five(self):
+    def test_the_words_are_exactly_the_six(self):
         self.assertEqual(set(ss.RESULT_STATUS), WORDS)
-        self.assertEqual(len(ss.RESULT_STATUS), 5)
+        self.assertEqual(len(ss.RESULT_STATUS), 6)
 
     def test_every_module_emits_status_fields_in_the_agreed_shape(self):
         self.assertEqual(set(SAMPLES), set(ss.REGISTRY))
@@ -352,18 +352,18 @@ class PermanentLimitsAndAssumed(unittest.TestCase):
         self.assertTrue([a for a in rec["assumptions"] if a.get("status", "ASSUMED") == "ASSUMED"])
         return rec
 
-    def test_an_assumed_record_item_is_one_manual_check_row_and_holds_the_banner(self):
+    def test_an_assumed_record_item_is_one_assumed_row_and_holds_the_banner(self):
         rec = self._assumed_record()
         items = [a["item"] for a in rec["assumptions"] if a.get("status", "ASSUMED") == "ASSUMED"]
         env = ss.run_module("noncode.pipe-section", dict(OD=6.625, t=0.28, project_basis=rec))
-        self.assertEqual(env["result_status"], "manual check required")
-        self.assertEqual(names(env, "manual check required"), ["ASSUMED inputs"])
+        self.assertEqual(env["result_status"], "assumed")
+        self.assertEqual(names(env, "assumed"), ["ASSUMED inputs"])
         row = next(c for c in env["checks"] if c["name"] == "ASSUMED inputs")
         self.assertEqual(row["note"], "confirm before issue: " + "; ".join(items))
         self.assertIn("confirm before issue: " + items[0], env["result_status_line"])
         env = ss.run_module("piping.sustained-stress", dict(SUST, project_basis=rec))
-        self.assertEqual(env["result_status"], "manual check required")
-        self.assertEqual((env["status"], env["banner"]), ("pass", "MANUAL CHECK REQUIRED"))
+        self.assertEqual(env["result_status"], "assumed")
+        self.assertEqual((env["status"], env["banner"]), ("pass", "ASSUMED"))
 
     def test_an_assumed_item_leaves_a_worse_word_alone(self):
         rec = self._assumed_record()
@@ -377,7 +377,7 @@ class PermanentLimitsAndAssumed(unittest.TestCase):
         env = ss.run_module("noncode.pipe-section", dict(OD=6.625, t=0.28, project_basis=rec))
         self.assertEqual(env["result_status"], "calculated")
 
-    def test_the_basis_command_with_an_assumed_item_is_a_manual_check(self):
+    def test_the_basis_command_with_an_assumed_item_reads_assumed(self):
         import tempfile
         rec = self._assumed_record()
         with tempfile.TemporaryDirectory() as d:
@@ -387,4 +387,4 @@ class PermanentLimitsAndAssumed(unittest.TestCase):
             r = subprocess.run([sys.executable, TOOL, "basis", "--project-basis", path],
                                capture_output=True, text=True, encoding="utf-8")
         self.assertEqual(r.returncode, 0, r.stderr)
-        self.assertEqual(json.loads(r.stdout)["result_status"], "manual check required")
+        self.assertEqual(json.loads(r.stdout)["result_status"], "assumed")

@@ -302,7 +302,7 @@ class AssumedAndSection(unittest.TestCase):
 
     def test_a_warning_and_the_status_line_count_the_assumed_items(self):
         self.assertTrue(any("1 ASSUMED item(s)" in w for w in self.env["warnings"]))
-        self.assertIn("manual check required - confirm before issue: ", self.env["result_status_line"])
+        self.assertIn("assumed - confirm before issue: ", self.env["result_status_line"])
 
     def test_a_record_without_assumptions_says_so(self):
         r, env = run("noncode.pipe-section", {"OD": 6.625, "t": 0.28}, record(assumptions=None))

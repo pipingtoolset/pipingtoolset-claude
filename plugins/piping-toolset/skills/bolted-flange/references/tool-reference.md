@@ -45,7 +45,7 @@ Outputs, in engine order: Peq, momentTerm, forceTerm, b, H, Hp, Wm1, Wm2, Am, Ab
 
 Equations and symbols: [app2-engine.md](app2-engine.md).
 
-Result-grade keys (added after `governing`; no engine value changes): `result_grade` (`screening` or `calculated`), `grade_label` ("screening / reconstructed factors" or "calculated"), `factor_basis` (`{F, V, f}` each `series`, `override`, or `not used` for a loose flange), `banner`, `grade_note`. Rule: `screening` whenever any hub factor the flange type uses came from the series; `calculated` only when `F_override`, `V_override` and `f_override` were all supplied, or the flange is loose. The banner is also the first entry in `warnings`; a partial override adds an entry naming the factors still on the series. The screen carries `result_grade` `screening` (label "screening (leakage screen, not a stress check)") and a `banner`, always. Taxonomy: calculated / screening / manual check required / pointer only / not checked.
+Result-grade keys (added after `governing`; no engine value changes): `result_grade` (`screening` or `calculated`), `grade_label` ("screening / reconstructed factors" or "calculated"), `factor_basis` (`{F, V, f}` each `series`, `override`, or `not used` for a loose flange), `banner`, `grade_note`. Rule: `screening` whenever any hub factor the flange type uses came from the series; `calculated` only when `F_override`, `V_override` and `f_override` were all supplied, or the flange is loose. The banner is also the first entry in `warnings`; a partial override adds an entry naming the factors still on the series. The screen carries `result_grade` `screening` (label "screening (leakage screen, not a stress check)") and a `banner`, always. Taxonomy: calculated / screening / manual check required / assumed / pointer only / not checked.
 
 The importable function `app2_flange_integral` falls back to engine default moduli (named `ENGINE_DEFAULT_E_DESIGN` and `ENGINE_DEFAULT_E_AMBIENT` in the script) when E is omitted. They exist only so the ported function reproduces the engine fixtures that omit E. They are not recommended values and not table lines; the command line refuses to run without `Edesign` and `Eambient`.
 
@@ -127,19 +127,19 @@ Rules:
 
 ## Result status (`result_status`, `checks`, `not_checked`)
 
-Every envelope carries `result_status`, the worst word among the checks it performs (a `not checked` row is listed but never sets it), and `checks`, a list of `{name, result_status, status, note}`. `status` is pass / fail / na as before and no number or `status` value moves. `not_checked` lists, in the same shape, the methods this module never performs; they are listed and never block. Severity, worst first: manual check required, pointer only, screening, not checked, calculated.
+Every envelope carries `result_status`, the worst word among the checks it performs (a `not checked` row is listed but never sets it), and `checks`, a list of `{name, result_status, status, note}`. `status` is pass / fail / na as before and no number or `status` value moves. `not_checked` lists, in the same shape, the methods this module never performs; they are listed and never block. Severity, worst first: manual check required, assumed, pointer only, screening, not checked, calculated.
 
 | Module | Checks and the word each carries |
 |---|---|
 | `connections.flange-derive` | `geometry derivation`: calculated |
 | `connections.flange-equivalent-pressure` | `pressure-equivalent screen`: screening, always (a leakage screen, not a stress check); `owner acceptance (<document>)` when the record gives one: calculated for a fraction, pointer only for a text value (that check does not run) |
 | `aux.app2-flange-integral` | `bolt area Ab >= Am`: calculated; `flange stresses, operating and seating` and `rigidity J <= 1`: screening with the unresolved-factor mark while any hub factor the flange type uses came from the series, otherwise calculated; `hub stress cap 2.5 Sn` and `external loads`: not checked when Sn, or both Fax and Mext, are missing |
-| every module, from the record | `ASSUMED inputs`: one row, manual check required, note `confirm before issue: <items>`, when the record has an ASSUMED item |
+| every module, from the record | `ASSUMED inputs`: one row, assumed (0.9.1; manual check required before), note `confirm before issue: <items>`, when the record has an ASSUMED item |
 | both pressure modules, from the record | `code route`: calculated for B31.3 (304.5.1(b)), not checked for B31.1 (name the VIII-1 edition), manual check required for any other standard; `B31.3 Chapter IX`: manual check required for high pressure service or a Chapter IX route; the `B16.5 2.5.2 advisory` is always listed in `not_checked` (the script embeds no threshold; the note carries the recorded design temperature, or says none was given) |
 
 `not_checked` always names the UG-44(b) / VIII-2 4.16.12 interaction, ASME III NC-3658.3, EN 1591-1 and PCC-1 Appendix O; the detailed module adds the VIII-2 4.16.7.2 Step 9(b) shear check and the Code external-moment term Moe; the screen adds bolt, gasket and flange stress.
 
-Banner rule: while `result_status` is manual check required or pointer only, or screening with an unresolved hub factor, no PASS or issue-grade wording is printed; a calculated run's ISSUE-GRADE banner is replaced by the status word and the blocking checks. `--format sheet` prints `Result status: <word> - <why>` under the banner, then section 1 Basis when a record was given, the checks, the not-checked list and the findings.
+Banner rule: while `result_status` is manual check required, assumed or pointer only, or screening with an unresolved hub factor, no PASS or issue-grade wording is printed; a calculated run's ISSUE-GRADE banner is replaced by the status word and the blocking checks. `--format sheet` prints `Result status: <word> - <why>` under the banner, then section 1 Basis when a record was given, the checks, the not-checked list and the findings.
 
 ## Project basis (`project_basis`, `--project-basis`)
 

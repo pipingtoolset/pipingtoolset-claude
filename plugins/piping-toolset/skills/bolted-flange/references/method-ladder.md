@@ -19,7 +19,7 @@ The order of the ladder is fixed. Each rung answers a different question, and no
 
 ## Result grade of each rung
 
-Status taxonomy used across the pack: calculated / screening / manual check required / pointer only / not checked.
+Status taxonomy used across the pack: calculated / screening / manual check required / assumed / pointer only / not checked.
 
 | Rung | `result_grade` |
 |---|---|

@@ -1,6 +1,6 @@
 """nozzle-load 0.8.0: the output status taxonomy (B9).
 
-Every envelope carries result_status (one of five words), checks[] (name, result_status, status, note),
+Every envelope carries result_status (one of six words), checks[] (name, result_status, status, note),
 a "Result status: <word> - <why>" line for the sheet and a banner word. Existing status words and
 values are unchanged (fixture parity runs in test_nozzle_load.py). The banner rule: no PASS while the
 result status is manual check required, pointer only, or screening with an unresolved factor.
@@ -22,7 +22,7 @@ sys.path.insert(0, os.path.join(SKILL, "scripts"))
 
 import nozzle_load as nl  # noqa: E402
 
-WORDS = ("calculated", "screening", "manual check required", "pointer only", "not checked")
+WORDS = ("calculated", "screening", "manual check required", "assumed", "pointer only", "not checked")
 CHECK_KEYS = {"name", "result_status", "status", "note"}
 DASH = "-"
 
@@ -33,7 +33,7 @@ def six(v=0.0):
 
 def record(assumed=False):
     """The shipped example record; its ASSUMED items are dropped unless assumed=True (they would make
-    every run "manual check required" through the one "ASSUMED inputs" row)."""
+    every run "assumed" through the one "ASSUMED inputs" row)."""
     with open(os.path.join(SKILL, "scripts", "examples", "project-basis.example.json"), encoding="utf-8") as fh:
         rec = json.load(fh)
     if not assumed:
@@ -72,7 +72,7 @@ def names(env, word):
 
 class Envelope(unittest.TestCase):
 
-    def test_every_module_emits_one_of_the_five_words_and_well_formed_checks(self):
+    def test_every_module_emits_one_of_the_six_words_and_well_formed_checks(self):
         self.assertEqual(nl.RESULT_STATUS, WORDS)
         seen = set()
         for module, inp in SAMPLES:
@@ -87,13 +87,14 @@ class Envelope(unittest.TestCase):
             self.assertEqual(env["result_status"], nl.envelope_status(env["checks"]), module)
         self.assertTrue(seen <= set(WORDS))
 
-    def test_the_five_words_are_all_reachable(self):
-        # four as the envelope word; "not checked" as a listed row (it never sets the envelope word)
+    def test_the_six_words_are_all_reachable(self):
+        # five as the envelope word; "not checked" as a listed row (it never sets the envelope word)
         got = {
             run("equipment.nozzle-load-sum", SUM)["result_status"],
             run("equipment.pvp2011-allowables", PVP)["result_status"],
             run("equipment.pvp2011-allowables", dict(PVP, material="aluminium"))["result_status"],
             run("connections.nozzle-load-check", CHECK, project_basis=record())["result_status"],
+            run("connections.nozzle-load-check", CHECK, project_basis=record(assumed=True))["result_status"],
             run("connections.nema-sm23", SM23)["result_status"],
         }
         self.assertEqual(got, set(WORDS) - {"not checked"})
@@ -246,19 +247,19 @@ class ManualCheckRequired(unittest.TestCase):
 
 class AssumedInputs(unittest.TestCase):
 
-    def test_an_assumed_record_item_is_one_manual_check_row_and_holds_the_banner(self):
+    def test_an_assumed_record_item_is_one_assumed_row_and_holds_the_banner(self):
         rec = record(assumed=True)
         items = [a["item"] for a in rec["assumptions"] if a.get("status", "ASSUMED") == "ASSUMED"]
         self.assertTrue(items)
         for module, inp in SAMPLES:
             env = run(module, inp, project_basis=copy.deepcopy(rec))     # outranks the owner pointer row
             rows = [c for c in env["checks"] if c["name"] == "ASSUMED inputs"]
-            self.assertEqual(rows, [{"name": "ASSUMED inputs", "result_status": "manual check required",
+            self.assertEqual(rows, [{"name": "ASSUMED inputs", "result_status": "assumed",
                                      "status": "na", "note": "confirm before issue: " + "; ".join(items)}], module)
-            self.assertEqual(env["result_status"], "manual check required", module)
+            self.assertEqual(env["result_status"], "assumed", module)
             self.assertNotEqual(env["banner"], "PASS", module)
         env = run("connections.nozzle-load-check", CHECK, project_basis=rec, ownerFactor=0.5)
-        self.assertEqual((env["status"], env["banner"]), ("pass", "MANUAL CHECK REQUIRED"))
+        self.assertEqual((env["status"], env["banner"]), ("pass", "ASSUMED"))
         self.assertIn("confirm before issue: " + items[0], env["result_status_line"])
 
 

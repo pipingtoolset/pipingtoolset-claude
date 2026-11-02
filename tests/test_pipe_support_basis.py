@@ -199,7 +199,7 @@ class Fill(unittest.TestCase):
         self.assertEqual(strip(doc["envelope"]), strip(self.want["envelope"]))
         row = [c for c in doc["envelope"]["checks"] if c["name"] == "ASSUMED inputs"]
         self.assertEqual(len(row), 1)
-        self.assertEqual(row[0]["result_status"], "manual check required")
+        self.assertEqual(row[0]["result_status"], "assumed")
         self.assertIn("Loads from the CAESAR II restraint summary at node 1040", row[0]["note"])
         self.assertIn("Corrosion allowance per the line list", row[0]["note"])
         self.assertEqual(doc["spec"]["project"], "Example unit tie-in")

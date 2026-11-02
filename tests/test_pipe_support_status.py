@@ -31,7 +31,7 @@ import support_calc  # noqa: E402
 from pipe_support import optimizer as OP  # noqa: E402
 from pipe_support import report as R  # noqa: E402
 
-WORDS = ("calculated", "screening", "manual check required", "pointer only", "not checked")
+WORDS = ("calculated", "screening", "manual check required", "assumed", "pointer only", "not checked")
 NEW_ENVELOPE_KEYS = ("result_status", "checks")
 
 
@@ -117,7 +117,7 @@ def banners(md):
 
 class Shape(unittest.TestCase):
 
-    def test_every_run_emits_one_of_the_five_words(self):
+    def test_every_run_emits_one_of_the_six_words(self):
         for spec in (ps201(), load("ps-101-factored.json"), asd_wind(), ps201(sds=None), ps201(sds="asce7-22-sds")):
             doc = run(spec)
             env = doc["envelope"]
@@ -200,8 +200,9 @@ class NotChecked(unittest.TestCase):
 
 
 class PresetAndAssumedInputs(unittest.TestCase):
-    """ps-201 runs on CSA preset anchor values and carries one ASSUMED item: each gives one row graded
-    manual check required, so the envelope follows and no PASS banner prints."""
+    """ps-201 runs on CSA preset anchor values and carries one ASSUMED item: the preset row is graded
+    manual check required and the ASSUMED row "assumed" (0.9.1); the envelope takes the worse, manual
+    check required, and no PASS banner prints under either."""
 
     def test_preset_anchor_values_give_one_preset_inputs_row(self):
         doc = run(ps201())
@@ -221,7 +222,7 @@ class PresetAndAssumedInputs(unittest.TestCase):
     def test_the_spec_assumed_item_gives_one_assumed_inputs_row(self):
         doc = run(ps201())
         rows = [c for c in doc["envelope"]["checks"] if c["name"] == "ASSUMED inputs"]
-        self.assertEqual(rows, [{"name": "ASSUMED inputs", "result_status": "manual check required", "status": "na",
+        self.assertEqual(rows, [{"name": "ASSUMED inputs", "result_status": "assumed", "status": "na",
                                  "note": ASSUMED_NOTE}])
 
     def test_ps201_holds_the_banner_and_exits_3(self):
@@ -233,15 +234,27 @@ class PresetAndAssumedInputs(unittest.TestCase):
         self.assertEqual(code, 3)
         self.assertTrue(line.startswith("MANUAL CHECK REQUIRED - "), line)
         self.assertNotIn("PASS", line)
-        self.assertTrue(banners(R.markdown(doc))[0].startswith(
+        banner = banners(R.markdown(doc))[0]
+        self.assertTrue(banner.startswith(
             "> **MANUAL CHECK REQUIRED (strength ratios within limits) - not issuable, held for a manual check: "
-            "ASSUMED inputs"), banners(R.markdown(doc))[0])
+            "preset inputs (confirm before issue: bondStrength = 800"), banner)
+        self.assertIn(", ASSUMED inputs (" + ASSUMED_NOTE + ")", banner)   # the outranked row is still named
 
     def test_user_anchor_values_clear_the_preset_row_and_confirming_clears_the_rest(self):
         doc = run(ps201(own_anchor=True))
         self.assertEqual(stage_check(doc, "anchorage")["result_status"], "calculated")
         self.assertNotIn("preset inputs", [c["name"] for c in doc["envelope"]["checks"]])
-        self.assertEqual(doc["result_status"], "manual check required")            # the ASSUMED item remains
+        self.assertEqual(doc["result_status"], "assumed")            # the ASSUMED item remains (0.9.1 word)
+        self.assertFalse(doc["_status"]["banner_allowed"])
+        self.assertEqual(doc["_status"]["why"], "not issuable until the ASSUMED inputs are confirmed: "
+                         "ASSUMED inputs (" + ASSUMED_NOTE + ")")
+        code, line, _ = cli(ps201(own_anchor=True))
+        self.assertEqual(code, 3)
+        self.assertTrue(line.startswith("ASSUMED - "), line)
+        self.assertNotIn("PASS", line)
+        self.assertTrue(banners(R.markdown(doc))[0].startswith(
+            "> **ASSUMED (strength ratios within limits) - not issuable until the ASSUMED inputs are confirmed: "
+            "ASSUMED inputs ("), banners(R.markdown(doc))[0])
         clean = run(ps201(clean=True))
         self.assertEqual(clean["result_status"], "calculated")
         self.assertTrue(clean["_status"]["banner_allowed"])

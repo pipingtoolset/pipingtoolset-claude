@@ -325,15 +325,17 @@ title.
 | calculated | every input confirmed, no gate tripped, no reconstructed factor |
 | screening | a screening method by definition (flange pressure-equivalent screen, PVP2011 derived set, span screen, flexibility exemption) or a reconstructed factor in the chain |
 | manual check required | a validity gate tripped, or a code-required item the script cannot evaluate for these inputs |
+| assumed | the run stands on an unconfirmed input: every ASSUMED item is in one `ASSUMED inputs` check carrying this word (since 0.9.1) |
 | pointer only | a required value was given only as a pointer; that check did not run |
 | not checked | a check the module does not perform, listed from the skill's known limits; it never sets the result word |
 
 The result word is the worst of the checks the module performs, in the order manual check
-required, pointer only, screening, calculated; `not checked` rows are listed and never set it, so a
-clean run reads `calculated` and the line names what was not performed. Every ASSUMED input (in the
-record or the skill's own list) gives one `ASSUMED inputs` check graded manual check required. No
-skill prints PASS, OK, ISSUE or DELIVERABLE while the word is manual check required or pointer only,
-or screening with an unresolved reconstructed factor; the status word is printed instead.
+required, assumed, pointer only, screening, calculated; `not checked` rows are listed and never set
+it, so a clean run reads `calculated` and the line names what was not performed. Every ASSUMED input
+(in the record or the skill's own list) gives one `ASSUMED inputs` check graded `assumed`, which
+holds the banner exactly as manual check required does. No skill prints PASS, OK, ISSUE or
+DELIVERABLE while the word is manual check required, assumed or pointer only, or screening with an
+unresolved reconstructed factor; the status word is printed instead.
 
 ## What the skills will not do
 

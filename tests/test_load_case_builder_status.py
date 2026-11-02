@@ -23,7 +23,7 @@ sys.path.insert(0, SCRIPTS)
 
 import loadcase_gen as g  # noqa: E402
 
-FIVE = ("calculated", "screening", "manual check required", "pointer only", "not checked")
+FIVE = ("calculated", "screening", "manual check required", "assumed", "pointer only", "not checked")  # six since 0.9.1
 MODEL_ITEMS = {1, 2, 3, 6, 8, 9, 12, 13, 14, 15, 16}
 
 
@@ -60,10 +60,10 @@ def variants() -> dict:
 
 class Vocabulary(unittest.TestCase):
 
-    def test_the_five_words(self):
+    def test_the_six_words(self):
         self.assertEqual(g.RESULT_STATUS, FIVE)
 
-    def test_every_variant_emits_only_the_five_words_and_the_worst(self):
+    def test_every_variant_emits_only_the_six_words_and_the_worst(self):
         for name, spec in variants().items():
             with self.subTest(name):
                 s = build(spec)
@@ -142,30 +142,30 @@ class NotChecked(unittest.TestCase):
 
 class ManualCheckRequired(unittest.TestCase):
 
-    CASES = {
-        "unscaled": "ASSUMED inputs",                 # primary_state and hanger_friction defaulted
-        "unstated-edition": "code edition",
-        "b311": "QC 10 occasional factor",            # k = 1.15 / 1.20 needs the duration
-        "scaled": "QC 11 ASD position",               # B31.3 reduction needs a written direction
+    CASES = {  # variant: (the triggering check, the word it carries)
+        "unscaled": ("ASSUMED inputs", "assumed"),    # primary_state and hanger_friction defaulted (0.9.1 word)
+        "unstated-edition": ("code edition", "manual check required"),
+        "b311": ("QC 10 occasional factor", "manual check required"),   # k = 1.15 / 1.20 needs the duration
+        "scaled": ("QC 11 ASD position", "manual check required"),      # B31.3 reduction needs a written direction
     }
 
     def test_each_trigger(self):
         v = variants()
-        for name, trigger in self.CASES.items():
+        for name, (trigger, word) in self.CASES.items():
             with self.subTest(name):
                 s = build(v[name])
-                self.assertEqual(s.result_status, "manual check required")
-                self.assertEqual(check(s, trigger)["result_status"], "manual check required")
+                self.assertEqual(s.result_status, word)
+                self.assertEqual(check(s, trigger)["result_status"], word)
                 self.assertIn(trigger, s.status_line())
 
-    def test_an_assumed_item_in_the_record_is_a_manual_check(self):
+    def test_an_assumed_item_in_the_record_is_an_assumed_row(self):
         rec = {"schema": "pipingtoolset.project-basis/1",
                "assumptions": [{"item": "Seismic design category per the structural basis", "status": "ASSUMED"}]}
         s = build(dict(declared(), project_basis=rec))
         self.assertEqual(check(s, "ASSUMED inputs"), {
-            "name": "ASSUMED inputs", "result_status": "manual check required", "status": "na",
+            "name": "ASSUMED inputs", "result_status": "assumed", "status": "na",
             "note": "confirm before issue: Seismic design category per the structural basis"})
-        self.assertEqual(s.result_status, "manual check required")
+        self.assertEqual(s.result_status, "assumed")
         rec["assumptions"][0]["status"] = "confirmed"
         s = build(dict(declared(), project_basis=rec))
         self.assertEqual(s.result_status, "calculated")
@@ -202,9 +202,9 @@ class BannerRule(unittest.TestCase):
                     self.assertIn("OK: Maximum Occasional envelope covers every occasional kind present.",
                                   s.findings)
 
-    def test_ok_line_under_manual_check_required(self):
+    def test_ok_line_under_a_held_word(self):
         s = build(fixture("three-state-unscaled.json"))
-        self.assertEqual(s.result_status, "manual check required")
+        self.assertEqual(s.result_status, "assumed")
         self.assertIn("OK: Maximum Occasional envelope covers every occasional kind present.", s.findings)
 
     def test_status_line_is_under_the_title(self):
@@ -223,7 +223,7 @@ class Envelope(unittest.TestCase):
                            text=True, encoding="utf-8")
         self.assertEqual(r.returncode, 0, r.stderr)
         d = json.loads(r.stdout)
-        self.assertEqual(d["result_status"], "manual check required")
+        self.assertEqual(d["result_status"], "assumed")
         self.assertEqual(d["result_status"], g.envelope_status(d["checks"]))
         self.assertEqual(d["total_cases"], 88)              # existing keys and values unchanged
         self.assertTrue(d["qc"]["pass"])
@@ -231,7 +231,7 @@ class Envelope(unittest.TestCase):
     def test_cli_markdown_is_utf8_with_the_status_line(self):
         r = subprocess.run([sys.executable, TOOL, "--example"], capture_output=True)
         self.assertEqual(r.returncode, 0)
-        self.assertIn("Result status: manual check required - ".encode("utf-8"), r.stdout)
+        self.assertIn("Result status: assumed - ".encode("utf-8"), r.stdout)
 
     def test_csv_carries_no_status_line(self):
         r = subprocess.run([sys.executable, TOOL, "--example", "--format", "csv"], capture_output=True,

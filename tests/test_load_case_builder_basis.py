@@ -271,7 +271,7 @@ class AssumedBlock(unittest.TestCase):
         report = g.render_report(build(with_basis(spec)))
         lines = report.splitlines()
         self.assertTrue(lines[0].startswith("## Load case set - B31.3 2022"))
-        self.assertTrue(lines[1].startswith("Result status: manual check required - "))
+        self.assertTrue(lines[1].startswith("Result status: assumed - "))
         top = report.index("**ASSUMED - confirm before issue:**")
         self.assertLess(report.index("### 1 Basis"), top)
         self.assertLess(top, report.index("| L | Combination"))
