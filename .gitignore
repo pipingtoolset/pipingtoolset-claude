@@ -11,3 +11,6 @@ docs/demo/*.mp4
 docs/demo/edit-work/
 docs/demo/edit-work-codex/
 docs/demo/edit-work-claude-silent/
+docs/demo/edit-work-claude-silent-r2/
+docs/demo/edit-work-codex-r2/
+docs/demo/rerender-*/

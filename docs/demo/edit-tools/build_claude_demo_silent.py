@@ -16,8 +16,10 @@ import subprocess
 
 FF = r"C:\Users\matth\AppData\Local\Microsoft\WinGet\Packages\Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe\ffmpeg-9.0.2-full_build\bin\ffmpeg.exe"
 SRC = pathlib.Path(r"C:\dev\projects\pipingtoolset-claude\docs\demo")
-OUT = SRC / "edit-work-claude-silent"
+OUT = SRC / "edit-work-claude-silent-r2"                  # intermediates (gitignored); r2 = the 2026-11-02 cut
 OUT.mkdir(exist_ok=True)
+RELEASE = SRC / "rerender-2026-11-02"                      # the two upload-ready MP4s + SRTs (gitignored)
+RELEASE.mkdir(exist_ok=True)
 for f in ("arial.ttf", "arialbd.ttf"):
     if not (OUT / f).exists():
         shutil.copy(pathlib.Path(r"C:/Windows/Fonts") / f, OUT / f)
@@ -49,6 +51,15 @@ def tag(text, a, b):
     return (f"drawtext=expansion=none:fontfile={FONTB}:textfile='{tf(text)}':fontsize=30:fontcolor=white:box=1:"
             f"boxcolor=0xec3013@0.9:boxborderw=12:x=w-text_w-40:y=40:enable='between(t,{a},{b})'")
 
+STALE_PS = "Recorded on plugin 0.5.x, ACI 318-19 — current release 0.9.0 defaults to ACI CODE-318-25"
+STALE = "Recorded on plugin 0.5.x. Current release: 0.9.0"
+
+def stale(text, a=None, b=None):
+    """Top-left label for footage recorded on an older plugin; never patches the pixels underneath."""
+    en = f":enable='between(t,{a},{b})'" if a is not None else ""
+    return (f"drawtext=expansion=none:fontfile={FONTB}:textfile='{tf(text)}':fontsize=26:fontcolor=white:box=1:"
+            f"boxcolor=0x8a5a00@0.92:boxborderw=12:x=40:y=40{en}")
+
 def run(args):
     if args[-1].endswith('.mp4') and 'seg' in args[-1] and pathlib.Path(args[-1]).exists() and pathlib.Path(args[-1]).stat().st_size > 100000:
         print('skip (exists)', pathlib.Path(args[-1]).name, flush=True); return
@@ -58,9 +69,11 @@ def run(args):
 segments = []
 timeline = 0.0
 subs = []
+marks = []        # (clip name, output start time) for the YouTube chapters
 
-def _collect(caps, dur):
+def _collect(caps, dur, name=''):
     global timeline
+    marks.append((name, timeline))
     for _, text, a, b in caps:
         subs.append((timeline + a, timeline + min(b, dur), text))
     timeline += dur
@@ -80,7 +93,7 @@ def clip(name, src, start=None, end=None, speed=1.0, caps=(), tags=()):
     segments.append(out)
     dur = DUR[src.name] if end is None else end
     dur = (dur - (start or 0)) / speed
-    _collect(caps, dur)
+    _collect(caps, dur, name)
 
 def card(name, dur, lines, sub=None):
     out = SEG / f"{len(segments):02d}_{name}.mp4"
@@ -100,7 +113,7 @@ def card(name, dur, lines, sub=None):
             "-map", "[v]", "-map", "1:a", "-t", str(dur), *ENC, str(out)]
     run(args)
     segments.append(out)
-    _collect((), dur)
+    _collect((), dur, name)
 
 # source durations (ffprobe, 2026-10-28), for the SRT clock when a clip runs to its end
 DUR = {"step1.mp4": 15.3, "step2.mp4": 21.73, "step3.mp4": 28.1, "step4_modified.mp4": 28.4, "step5.mp4": 35.83,
@@ -115,20 +128,29 @@ card("title", 5, [
     ("Install in Claude Cowork, a B31.3 wall thickness check, a refused table value,\nand a pipe support checked and optimized from CAESAR II loads, every number from a script", 30, False),
 ], sub="pipingtoolset.com/claude  ·  free  ·  open source  ·  Apache-2.0  ·  the same plugin ships for ChatGPT and Codex")
 
-clip("step1", S("step1.mp4"), caps=[
-    cap("pipingtoolset.com: the free calculators, and a launcher tier for the plugin that runs inside Claude", 0.5, 8),
-    cap("Seven free skills for Claude Code and Claude Cowork, from a practicing piping engineer", 8, 15),
+# 2026-11-02: the step1-3 browser captures show pre-connector page copy ("practicing, licensed piping engineer",
+# "nothing you type reaches us", "Where your data goes ... nothing you enter reaches PipingToolset"). Those spans are
+# cut here; re-record against the live page. Source seconds kept: step1 0-4.7 and 10.3-14.0; step2 3.0-10.0;
+# step3 14.0-16.8 and 19.2-26.
+clip("step1a", S("step1.mp4"), end=4.7, caps=[
+    cap("pipingtoolset.com: the free calculators that run in your browser.\nThe same engine now runs inside Claude as a free, open-source plugin", 0.3, 4.4, size=34),
 ])
-clip("step2", S("step2.mp4"), caps=[
-    cap("pipingtoolset.com/claude: what a run looks like, the seven skills, the three rules", 0.3, 8),
-    cap("It never quotes a code table value. You read those from your licensed copy.", 8, 14),
-    cap("Where your data goes: the scripts make no network calls. The optional connector sends lookup keys only.", 14, 21.5),
+clip("step1b", S("step1.mp4"), start=10.3, end=14.0, caps=[
+    cap("Seven free skills for Claude Code and Claude Cowork,\nbuilt by the people who build the free calculators at pipingtoolset.com", 0.2, 3.5, size=34),
 ])
-clip("step3", S("step3.mp4"), end=26, caps=[
-    cap("Install: press Download for Cowork (.plugin). One file from the GitHub release, about 400 KB.", 0.5, 12),
-    cap("The plugin needs no account or API key, and has no telemetry.", 12, 24),
+clip("step2", S("step2.mp4"), start=3.0, end=10.0, caps=[
+    cap("pipingtoolset.com/claude: what a run looks like and the seven skills", 0.3, 4.0),
+    cap("How it works: you describe, Claude interviews, a script computes, you read the table", 4.0, 5.9, size=34),
+    cap("It never quotes a code table value. You read those from your licensed copy.", 5.9, 7.0),
 ])
-clip("step4", S("step4_modified.mp4"), caps=[
+clip("step3a", S("step3.mp4"), start=14.0, end=16.8, caps=[
+    cap("Install: download piping-toolset.plugin from the latest GitHub release, about 400 KB", 0.1, 2.8, size=34),
+])
+clip("step3b", S("step3.mp4"), start=19.2, end=26, caps=[
+    cap("Cowork: drag the file into a chat and press Accept. Claude Code: two /plugin commands.", 0.2, 3.2, size=34),
+    cap("The plugin sends nothing to PipingToolset: no network calls, no telemetry, no account.\nThe optional Engineering Data connector sends lookup keys only.", 3.2, 6.8, size=32),
+])
+clip("step4", S("step4_modified.mp4"), tags=[stale(STALE)], caps=[
     cap("Claude desktop app  ›  Settings  ›  Plugins  ›  Add  ›  Upload plugin\n(or drag the file into a Cowork chat and press Accept)", 0.5, 16, size=34),
     cap("PipingToolset by Flexible Piping Solutions LLC, 7 skills: installed and ready to use", 20, 28, size=34),
 ])
@@ -157,26 +179,29 @@ clip("step8", S("step8.mp4"), end=24, caps=[
 ])
 
 # step 9: prompt pasted ~2 s, 76 s of script runs, answer from ~82 s
-clip("step9a", S("step9.mp4"), end=8, caps=[
+clip("step9a", S("step9.mp4"), end=8, tags=[stale(STALE_PS)], caps=[
     cap("Prompt 3: PS-201, CSA type 1 t-post, W6X15 column and arm, two 6 in lines, CAESAR II restraint loads\nSUS / OPE / WIN / EQ, SDS 0.5, LRFD, 4 x 3/4 in adhesive anchors, tau 800 psi from the ESR. Then optimize it.", 0.5, 8, size=30),
 ])
-clip("step9b", S("step9.mp4"), start=8, end=85, speed=X8, tags=[tag("sped up 8x", 0, 9.6)], caps=[
+clip("step9b", S("step9.mp4"), start=8, end=85, speed=X8, tags=[tag("sped up 8x", 0, 9.6), stale(STALE_PS)], caps=[
     cap("Skill loaded: pipe-support. Reads the spec format and the CSA type 1 preset, builds the spec, runs support_calc.py", 0.3, 4.8, size=32),
     cap("Then the plate-geometry sensitivity, the optimizer at a 0.85 cap, the anchor bond check for the smaller bolts,\nand the deliverables staged for your folder", 4.8, 9.6, size=32),
 ])
-clip("step9c", S("step9.mp4"), start=85, caps=[
+clip("step9c", S("step9.mp4"), start=85, tags=[stale(STALE_PS)], caps=[
     cap("PS-201 passes as drawn: all 23 LRFD combinations. Governing: arm-to-column weld base metal, 0.888 under 1.4D + T.\nLoad mapping stated: D = SUS, T = OPE − SUS, W = WIN, Eh = EQ, Ev = 0.2 · SDS · D", 0.5, 6, size=30),
     cap("Things to fix before issue: the preset anchor pattern does not fit the plate, the inputs it took from the preset,\nand column torsion is outside the engine. Then the optimizer pick: W8X10 arm, 7/8 in plate, 5/8 in anchors, 0.834", 6, 12, size=30),
     cap("Four files saved to the PS-201 folder: the as-drawn calc, the optimized calc, the spec and the result JSON", 12, 15.3, size=32),
 ])
-clip("step10", S("step10.mp4"), start=4, end=26, caps=[
+clip("step10", S("step10.mp4"), start=4, end=26, tags=[stale(STALE_PS)], caps=[
     cap("The working folder: PS-201_calc_as-drawn.md, PS-201_calc_optimized-0.85.md, PS-201_spec.json, PS-201_result.json", 0.3, 7, size=32),
     cap("The calc report: design basis and resistance factors, materials, assembly geometry, the ASCE 7-22 combinations,\nevery limit state with demand, capacity, ratio and clause, the compliance matrix and the review findings", 7, 22, size=30),
 ])
-clip("step11", S("step11.mp4"), start=16, end=52, caps=[
-    cap("Open source, Apache-2.0. Every script reproduces the pipingtoolset.com fixture cases; a red parity test blocks a release.", 0.5, 12, size=32),
-    cap("The site's calculation changelog, and the plugin's: an UNCONSERVATIVE-FIX release names the skill,\nthe affected inputs and the fix. Update when you see one.", 12, 24, size=32),
-    cap("pipingtoolset.com/claude   ·   github.com/pipingtoolset/pipingtoolset-claude   ·   the same plugin ships for ChatGPT and Codex", 24, 36, size=32),
+# step11 source 16-19.5 is the PS-201 answer (0.5.x run); 25.3-27.5 scrolls through the pre-connector privacy table, cut
+clip("step11a", S("step11.mp4"), start=16, end=25.3, tags=[stale(STALE_PS, 0, 3.5)], caps=[
+    cap("Open source, Apache-2.0. Every script reproduces the pipingtoolset.com fixture cases; a red parity test blocks a release.", 0.5, 9.0, size=32),
+])
+clip("step11b", S("step11.mp4"), start=27.5, end=52, caps=[
+    cap("The site's calculation changelog, and the plugin's: an UNCONSERVATIVE-FIX release names the skill,\nthe affected inputs and the fix. Update when you see one.", 0.5, 12.5, size=32),
+    cap("pipingtoolset.com/claude   ·   github.com/pipingtoolset/pipingtoolset-claude   ·   the same plugin ships for ChatGPT and Codex", 12.5, 24.5, size=32),
 ])
 card("end", 9, [
     ("pipingtoolset.com/claude", 72, True),
@@ -187,12 +212,14 @@ card("end", 9, [
 # ── concat ────────────────────────────────────────────────────────────────────
 lst = OUT / "concat.txt"
 lst.write_text("".join(f"file '{p.as_posix()}'\n" for p in segments), encoding="utf-8")
-final = SRC / "PipingToolset_for_Claude_demo_silent.mp4"
+final = RELEASE / "PipingToolset_for_Claude_demo_silent.mp4"
 run([FF, "-y", "-v", "error", "-f", "concat", "-safe", "0", "-i", str(lst), "-c", "copy", "-movflags", "+faststart", str(final)])
 
 def _ts(t):
     ms = int(round(t * 1000)); h, ms = divmod(ms, 3600000); m, ms = divmod(ms, 60000); s, ms = divmod(ms, 1000)
     return f"{h:02d}:{m:02d}:{s:02d},{ms:03d}"
-srt = SRC / "PipingToolset_for_Claude_demo_silent.srt"
+srt = RELEASE / "PipingToolset_for_Claude_demo_silent.srt"
 srt.write_text("".join(f"{i}\n{_ts(a)} --> {_ts(b)}\n{t}\n\n" for i, (a, b, t) in enumerate(subs, 1)), encoding="utf-8", newline="\n")
+for _n, _t in marks:
+    print("MARK %-10s %6.1f  %d:%02d" % (_n, _t, int(_t // 60), int(_t % 60)))
 print("FINAL", final, "duration %.1fs" % timeline, "captions", len(subs), "srt", srt)
