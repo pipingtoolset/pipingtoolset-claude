@@ -272,11 +272,18 @@ class PressureEquivalentScreen(unittest.TestCase):
         neg = run("connections.flange-equivalent-pressure", dict(self.BASE, M_in_lbf=-50000))["output"]
         self.assertAlmostEqual(neg["Pe"], 481.972, delta=1e-3)
 
-    def test_compression_is_credited_only_with_a_warning(self):
+    def test_compression_is_not_credited_unless_asked(self):
+        # 0.9.3: the ported function clamps a compressive F itself (engine fixture cases 2 and 3).
         res = run("connections.flange-equivalent-pressure", dict(self.BASE, F=-10000))
+        self.assertEqual(res["output"]["Fapplied"], 0.0)
+        self.assertEqual(res["output"]["forceTerm"], 0.0)
+        self.assertAlmostEqual(res["output"]["Pe"], 100 + 254.648, delta=1e-3)
+        self.assertTrue(any("taken as zero" in w for w in res["warnings"]))
+        res = run("connections.flange-equivalent-pressure", dict(self.BASE, F=-10000, creditCompression=True))
+        self.assertAlmostEqual(res["output"]["Fapplied"], -10000, delta=1e-9)
         self.assertAlmostEqual(res["output"]["forceTerm"], -127.324, delta=1e-3)
         self.assertAlmostEqual(res["output"]["Pe"], 100 + 254.648 - 127.324, delta=1e-3)
-        self.assertTrue(any("Compressive" in w for w in res["warnings"]))
+        self.assertTrue(any("CREDITED" in w for w in res["warnings"]))
 
     def test_engine_errors(self):
         for bad in (dict(G=0), dict(G=-1), dict(ratedPressure=0)):
@@ -541,15 +548,15 @@ class Validate(unittest.TestCase):
         zero = bf.run_module("connections.flange-equivalent-pressure", dict(base, F=0))
         self.assertEqual(clamped["output"], zero["output"])
         self.assertEqual(clamped["output"]["forceTerm"], 0.0)
-        self.assertTrue(any("taken as F = 0" in x for x in clamped["warnings"]))
+        self.assertTrue(any("taken as zero" in x for x in clamped["warnings"]))
         self.assertEqual(clamped["inputs"]["F"], -10000)                       # the record keeps the user's value
         credited = bf.run_module("connections.flange-equivalent-pressure", dict(base, creditCompression=True))
         self.assertLess(credited["output"]["forceTerm"], 0)
         self.assertLess(credited["output"]["Pe"], clamped["output"]["Pe"])
         self.assertTrue(any("Compressive" in x for x in credited["warnings"]))
-        self.assertFalse(any("taken as F = 0" in x for x in credited["warnings"]))
+        self.assertFalse(any("taken as zero" in x for x in credited["warnings"]))
         tens = bf.run_module("connections.flange-equivalent-pressure", dict(base, F=4000))
-        self.assertFalse(any("taken as F = 0" in x for x in tens["warnings"]))
+        self.assertFalse(any("taken as zero" in x for x in tens["warnings"]))
 
     def test_credit_compression_must_be_boolean(self):
         with self.assertRaises(ValueError):
@@ -1047,7 +1054,7 @@ class CodeValues(unittest.TestCase):
         want = bf.run_module("connections.flange-equivalent-pressure", dict(self.SCREEN, F=-500))
         env.pop("code_value_provenance")
         self.assertEqual(env, want)
-        self.assertTrue(any("Compressive axial force taken as F = 0" in w for w in env["warnings"]))
+        self.assertTrue(any("taken as zero" in w for w in env["warnings"]))
 
     def test_list_mentions_the_block(self):
         r = subprocess.run([sys.executable, TOOL, "list"], capture_output=True, text=True, encoding="utf-8")

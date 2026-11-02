@@ -8,7 +8,9 @@ Six checks, one function each, all registered in REGISTRY:
   Faithful ports of the pipingtoolset.com calculation engine (same input and output
   field names, statuses, rounding and error conditions):
     connections.nozzle-load-check   per-component unity ratios against user-supplied allowables
-    connections.nema-sm23           combined form 3*Fr + Mr <= a*De (a is a REQUIRED input)
+    connections.nema-sm23           combined form 3*Fr + Mr <= a*De; `basis` is REQUIRED (api617,
+                                    api611, api612, nema-sm23); under api617 only, a defaults to
+                                    the 927 printed in API 617 Annex E eq. (E.1b); else a is REQUIRED
     connections.api610-annexf       API 610 Annex F, Eq. (F.1)-(F.11)
 
   New checks with no engine module:
@@ -22,10 +24,12 @@ Six checks, one function each, all registered in REGISTRY:
 Nothing in this file is a tabulated code value. Every allowable load, header limit, stiffness
 coefficient, figure ordinate, table row and allowable stress is an INPUT the user reads from
 a licensed copy of the standard, the paper or the vendor datasheet. That includes the method
-constants of API 610 Annex F (input `annexF`) and the coefficient of the SM-23 form
-(`coefficient`): the user reads each from the equation of the edition of record and enters
-it; none has a default. The only standard-derived numbers carried here are the 18,800 and
-17,100 psi reference stresses of the PVP2011 paper, as named constants with their source.
+constants of API 610 Annex F (input `annexF`) and, for every basis but API 617, the coefficient
+of the SM-23 form (`coefficient`): the user reads each from the equation of the edition of record
+and enters it. The standard-derived numbers carried here are equation constants, each a named
+constant with its source: the 18,800 and 17,100 psi reference stresses of the PVP2011 paper, and
+(0.9.3, owner P.E. ruling R5 of 2026-11-02) the 927 of API 617 9th Ed. Annex E eq. (E.1b), the
+printed coefficient of the compressor form, used only when the user selects `basis` "api617".
 
 CLI:
     python nozzle_load.py list
@@ -726,23 +730,60 @@ def nozzle_load_check(inp: Dict[str, Any]) -> Dict[str, Any]:
 # --------------------------------------------------------------------------- NEMA SM-23 / API 617 / 611 / 612 combined form
 
 
+# API 617 9th Ed. (2022) Annex E eq. (E.1b): 3 Fr + Mr <= 927 De in USC units (lbf, ft-lbf, in). 927 is
+# the coefficient printed in the equation itself (E.2 Equations; E.1.1 records it as the compressor
+# adaptation of the NEMA turbine constants, "1.85 times NEMA"), not a table value. It is the default
+# only under basis "api617" (owner P.E. ruling R5, 2026-11-02; engine `nema-sm23.ts`).
+API617_E1B_COEFFICIENT = 927
+
+# `basis` values -> report label. The engine carries "api617" and "nema-sm23"; the two API steam-turbine
+# annexes the skill has always named are kept as further values. Only "api617" has a default coefficient.
+NEMA_SM23_BASES = {
+    "api617": "API 617 9th Ed. Annex E eq. (E.1b) \u2014 compressors",
+    "api611": "API 611 Annex I eq. (I.1b) \u2014 steam turbines (user coefficient)",
+    "api612": "API 612 Annex D eq. (D.1b) \u2014 steam turbines (user coefficient)",
+    "nema-sm23": "NEMA SM 23 \u2014 steam turbines (user coefficient)",
+}
+_NEMA_COPY = {"api611": "API 611 Annex I", "api612": "API 612 Annex D", "nema-sm23": "NEMA SM 23"}
+_NEMA_BASIS_ERROR = ('Select the basis: "api617" (API 617 Annex E eq. (E.1b), 927*De, compressors), "api611" '
+                     '(API 611 Annex I eq. (I.1b)), "api612" (API 612 Annex D eq. (D.1b)) or "nema-sm23" (steam '
+                     'turbines); for every basis but "api617" the coefficient comes from your copy.')
+
+
 def nema_sm23(inp: Dict[str, Any]) -> Dict[str, Any]:
     """Combined nozzle-load index of the NEMA SM-23 family.
 
         Fr = sqrt(Fx^2 + Fy^2 + Fz^2) [lbf]     Mr = sqrt(Mx^2 + My^2 + Mz^2) [ft-lbf]
         index = 3*Fr + Mr    vs    allowable = a * De
-        De = NPS (NPS <= 8)  or  (16 + NPS)/3  (NPS > 8)
+        De = NPS (NPS <= 8)  or  (16 + NPS)/3  (NPS > 8)      (API 617 Annex E, USC form)
 
-    The coefficient `a` is a REQUIRED input with no default: it is the right-hand coefficient
-    of the equation the user's standard prints (see the skill for which equation gives which).
+    `basis` is REQUIRED; there is no default basis (ruling R5, 2026-11-02). Under "api617" the
+    coefficient `a` defaults to the 927 of API 617 9th Ed. Annex E eq. (E.1b) and may be entered;
+    under "api611", "api612" and "nema-sm23" it is REQUIRED, read from the user's copy, and the
+    call raises without it. The output names the basis, the coefficient and where it came from.
     """
     NPS = _num(inp, "NPS")
     applied = _loadset(inp, "applied")
-    coefficient = _num(inp, "coefficient")
+    basis = inp.get("basis")
     if NPS <= 0:
         raise ValueError("NPS must be > 0")
+    if basis not in NEMA_SM23_BASES:
+        raise ValueError(_NEMA_BASIS_ERROR)
+    user_coefficient = inp.get("coefficient") is not None
+    if basis != "api617" and not user_coefficient:
+        raise ValueError(f"{_NEMA_COPY[basis]} basis: coefficient is required - enter it from your {_NEMA_COPY[basis]} "
+                         "copy; no default is embedded.")
+    coefficient = _num(inp, "coefficient") if user_coefficient else float(API617_E1B_COEFFICIENT)
     if coefficient <= 0:
         raise ValueError("coefficient must be > 0")
+    if not user_coefficient:
+        source = "API 617 eq. (E.1b) 927 (default)"
+    elif basis == "api617" and coefficient == API617_E1B_COEFFICIENT:
+        source = "API 617 eq. (E.1b) 927"
+    elif basis == "api617":
+        source = "user-entered (differs from API 617 eq. (E.1b) 927)"
+    else:
+        source = "user-entered"
 
     De = NPS if NPS <= 8 else (16 + NPS) / 3
     Fr = _force_res(applied)
@@ -750,9 +791,17 @@ def nema_sm23(inp: Dict[str, Any]) -> Dict[str, Any]:
     index = 3 * Fr + Mr
     allowable = coefficient * De
 
+    warnings = ["Combined screen only \u2014 also run the per-component check and the exhaust/resolution rules of the standard."]
+    if not user_coefficient:
+        warnings.append("coefficient not entered: 927 taken from API 617 9th Ed. (2022) Annex E eq. (E.1b), the printed "
+                        "coefficient of the compressor form; confirm it on the edition of record and state it on the sheet.")
+
     return _result(
         "connections.nema-sm23",
         {
+            "basis": NEMA_SM23_BASES[basis],
+            "coefficient": round_half_up(coefficient, 4),
+            "coefficientSource": source,
             "De": round_half_up(De, 5),
             "Fr": round_half_up(Fr, 5),
             "Mr": round_half_up(Mr, 5),
@@ -761,7 +810,7 @@ def nema_sm23(inp: Dict[str, Any]) -> Dict[str, Any]:
             "ratio": round_half_up(index / allowable, 4),
         },
         _verdict(index <= allowable),
-        ["Combined screen only \u2014 also run the per-component check and the exhaust/resolution rules of the standard."],
+        warnings,
     )
 
 
@@ -923,7 +972,8 @@ def api610_annexf(inp: Dict[str, Any]) -> Dict[str, Any]:
         def principal(L: Dict[str, float], Do: float, Di: float) -> Tuple[float, float, float]:
             d2 = Do * Do - Di * Di
             d4 = Do ** 4 - Di ** 4
-            sigma_l = (1.27 * L["Fy"]) / d2 + (k_sigma * Do * math.hypot(L["Mx"], L["Mz"])) / d4   # (F.7)/(F.10)
+            # |Fy|: a compressive axial force must not offset the bending term (engine 2026-11-02, audit S5c).
+            sigma_l = (1.27 * abs(L["Fy"])) / d2 + (k_sigma * Do * math.hypot(L["Mx"], L["Mz"])) / d4   # (F.7)/(F.10)
             tau = (1.27 * math.hypot(L["Fx"], L["Fz"])) / d2 + (k_tau * Do * abs(L["My"])) / d4       # (F.8)/(F.11)
             sigma_p = sigma_l / 2 + math.sqrt((sigma_l * sigma_l) / 4 + tau * tau)                    # (F.6)/(F.9)
             return sigma_l, tau, sigma_p
@@ -1345,7 +1395,7 @@ REGISTRY: Dict[str, Callable[[Dict[str, Any]], Dict[str, Any]]] = {
 
 CITATIONS = {
     "connections.nozzle-load-check": "Per-component unity check of applied piping loads against allowables the user reads from the governing equipment standard or vendor datasheet (for example API 610 Table 5a/5b, API 660 Table 2, API 661 Table 4, API 560 Tables 7-10). PIP RECE002 design-stage factors are an owner practice and do not change the verdict.",
-    "connections.nema-sm23": "NEMA SM-23 combined form 3*Fr + Mr <= a*De. The coefficient a is read by the user from the equation of the governing standard (API 617 Part 2 Annex E, API 611 Annex I, API 612 Annex D, or the owner's SM-23 copy). De = NPS for NPS 8 and under, otherwise (NPS + 16)/3.",
+    "connections.nema-sm23": "NEMA SM-23 combined form 3*Fr + Mr <= a*De on the basis the user selects (no default basis). basis api617: API 617 9th Ed. Annex E eq. (E.1b), a = 927 (the printed equation coefficient) unless entered. basis api611 (Annex I eq. (I.1b)), api612 (Annex D eq. (D.1b)) and nema-sm23 (the owner's SM 23 copy): a is read by the user and required. De = NPS for NPS 8 and under, otherwise (NPS + 16)/3 (API 617 Annex E, USC).",
     "connections.api610-annexf": "API 610 Annex F: F.1.2 a)-c) with Eq. (F.1)-(F.5) for horizontal pumps; F.2 with Eq. (F.6)-(F.11) for vertical in-line pumps; F.1.3 for loads beyond F.1.2. Table 5 ranges and the Annex F method constants (annexF) are user-supplied; confirm the edition of record.",
     "equipment.nozzle-load-sum": "API 661 7.1.10.2 (sum of all nozzle loadings on a single header against the header limits for all six components) and 7.1.10.3 (total on one multi-bundle bay not above three times the single-header allowance). The same sum-and-compare form serves an owner header or bay rule; the limits and multiplier are user-supplied.",
     "equipment.api650-annexp-ordinates": "API 650 Annex P, P.2.7.1 and P.2.7.2: lambda = a/(Rt)^0.5, FP = pi*a^2*P (P.2.3); ordinates (lambda/2YF)(FR/FP), (lambda/aYL)(ML/FP), (lambda/aYC)(MC/FP). Acceptance is read from Figures P.3a/b and P.5a/b (P.2.7.2.4); YF, YL, YC from Figures P.4a/b.",
@@ -1387,7 +1437,10 @@ FIELDS: Dict[str, List[tuple]] = {
     "connections.nema-sm23": [
         ("NPS", "in", True, "Nozzle nominal pipe size; must be > 0"),
         ("applied", "lbf, ft-lbf", True, "Applied loads " + _SET_DESC + " at the resolution point of the standard"),
-        ("coefficient", "-", True, "Coefficient a of 3*Fr + Mr <= a*De, read from the governing equation; NO default"),
+        ("basis", "text", True, "'api617' (API 617 Annex E eq. (E.1b), compressors), 'api611' (Annex I eq. (I.1b)), "
+                                "'api612' (Annex D eq. (D.1b)) or 'nema-sm23' (steam turbines); NO default basis"),
+        ("coefficient", "-", False, "Coefficient a of 3*Fr + Mr <= a*De. Optional under basis api617 (defaults to the "
+                                    "927 printed in eq. (E.1b)); REQUIRED under every other basis, read from your copy"),
         ("ownerFactor", "-", False, _OWNER_DESC),
     ],
     "connections.api610-annexf": [
@@ -1775,6 +1828,12 @@ def validate(module: str, inputs: Any) -> List[str]:
         npsv = _val(inputs, "NPS")
         if npsv is not None:
             _need(npsv > 0, "NPS must be > 0")
+        basis_value = inputs.get("basis")
+        _need(basis_value in NEMA_SM23_BASES, 'basis is required: "api617", "api611", "api612" or "nema-sm23" (no default basis)')
+        if basis_value != "api617":
+            _need(inputs.get("coefficient") is not None,
+                  f'coefficient is required for basis "{basis_value}": read it from your {_NEMA_COPY[basis_value]} copy; '
+                  'no default is embedded (only basis "api617" defaults to the 927 of eq. (E.1b))')
         coef = _val(inputs, "coefficient")
         if coef is not None:
             _need(coef > 0, "coefficient must be > 0")
@@ -1980,7 +2039,7 @@ def _nl_checks(module: str, inp: Dict[str, Any], res: Dict[str, Any], basis: Opt
                                  "six components %s; allowables entered by the user" % against))
     elif module == "connections.nema-sm23":
         checks.append(make_check("3*Fr + Mr against a*De", "calculated", st,
-                                 "coefficient entered by the user from the equation of record, %s" % against))
+                                 "basis %s; coefficient %s, %s" % (out["basis"], out["coefficientSource"], against)))
         checks.append(make_check("combined resultant at the exhaust or largest connection, its component limits, the "
                                  "vertical-down exhaust allowance and datasheet multipliers", "not checked", None,
                                  "API 617 E.5, API 611 I.5, API 612 D.5: vendor-sheet items the user confirms"))
@@ -2071,10 +2130,22 @@ def run_module(module: str, inp: Dict[str, Any], project_basis_path: Optional[st
     work: Dict[str, Any] = dict(inp)
     work.pop("derivedSetStatus", None)
     notes: List[str] = []
+    defaulted_coefficient = (module == "connections.nema-sm23" and inp.get("ownerFactor") is not None
+                             and inp.get("coefficient") is None and inp.get("basis") == "api617")
+    if defaulted_coefficient:
+        # The engine fills the eq. (E.1b) 927 itself; the owner factor must scale that default too.
+        work["coefficient"] = API617_E1B_COEFFICIENT
     if module in OWNER_SCALED and inp.get("ownerFactor") is not None:
         work, note = _apply_owner_factor(module, work)
         notes.append(note)
     res = REGISTRY[module](work)
+    if defaulted_coefficient:
+        res = dict(res, output=dict(res["output"]))
+        res["output"]["coefficientSource"] = ("API 617 eq. (E.1b) 927 (default) x ownerFactor %g"
+                                              % float(inp["ownerFactor"]))
+        res["warnings"] = ["coefficient not entered: 927 taken from API 617 9th Ed. (2022) Annex E eq. (E.1b), the printed "
+                           "coefficient of the compressor form, then scaled by ownerFactor; confirm it on the edition of "
+                           "record and state it on the sheet."] + list(res["warnings"])
     if notes and module == "connections.nozzle-load-check":
         # The engine's RECE002 0.5 note tests the entered allowable, which is already factored here.
         res = dict(res)

@@ -27,7 +27,7 @@ The sign convention and the pump-type centre definitions are in Figures 23 to 27
 
 **Method constants are inputs.** `d`, `L`, `kF`, `kM` and the multiplier of F.1.2 a) are the tool's `resultantDenominator`, `interactionLimit`, `centreForceFactor`, `centreMyFactor` and `componentMultiple`. The user reads each from its equation in the edition of record and enters it in the `annexF` block; the skill and the script carry no default, so a run without them stops. Record the equation number and the edition beside each value in the calc sheet.
 
-**Annex F, vertical in-line pumps (F.2).** Pumps supported only by the attached piping (OH3, OH6) may take component loads above the multiplier of F.1.2 a) times Table 5 if the principal stress at either nozzle is within the principal-stress limit of F.6 (SI) or F.9 (USC). Section properties come from Schedule 40 pipe of the nominal nozzle size, which the user reads from the pipe dimension standard. Principal stress follows Eq. F.6 to F.8 (SI) or F.9 to F.11 (USC): a longitudinal stress from the axial force and the bending resultant, a shear stress from the transverse force and the torsion, and the principal stress from the two. Axial force positive is tension; use the absolute torsional moment in the shear term. The tool takes the limit (`sigmaPLimit`) and the two stress coefficients of F.7 / F.8 (SI) or F.10 / F.11 (USC) (`kSigma`, `kTau`) as inputs, in the `units` system given; the user reads them from the printed equations, which also settles the stress symbols (**image** risk: some were reconstructed from text, so verify on the printed page).
+**Annex F, vertical in-line pumps (F.2).** Pumps supported only by the attached piping (OH3, OH6) may take component loads above the multiplier of F.1.2 a) times Table 5 if the principal stress at either nozzle is within the principal-stress limit of F.6 (SI) or F.9 (USC). Section properties come from Schedule 40 pipe of the nominal nozzle size, which the user reads from the pipe dimension standard. Principal stress follows Eq. F.6 to F.8 (SI) or F.9 to F.11 (USC): a longitudinal stress from the axial force and the bending resultant, a shear stress from the transverse force and the torsion, and the principal stress from the two. The axial force enters as |Fy| (0.9.3, engine correction of 2026-11-02, audit S5c: a compressive axial force must not offset the bending term) and the torsional moment as |My| in the shear term. The tool takes the limit (`sigmaPLimit`) and the two stress coefficients of F.7 / F.8 (SI) or F.10 / F.11 (USC) (`kSigma`, `kTau`) as inputs, in the `units` system given; the user reads them from the printed equations, which also settles the stress symbols (**image** risk: some were reconstructed from text, so verify on the printed page).
 
 **Conditions.** Table 5 covers steel casings and nozzles within its size range; a non-steel casing or nozzles above NPS 24 need vendor allowables. Annex F use needs the purchaser's approval.
 
@@ -39,14 +39,14 @@ The sign convention and the pump-type centre definitions are in Figures 23 to 27
 
 ## 2. Compressors, steam turbines and the NEMA SM-23 form
 
-All three standards share a combined form for each connection, and the tool carries it as `connections.nema-sm23` with the coefficient a required input.
+All three standards share a combined form for each connection, and the tool carries it as `connections.nema-sm23`. The `basis` is a required input with no default (owner P.E. ruling R5, 2026-11-02); it selects the report label and whether the coefficient defaults (API 617 only) or is read from the user's copy.
 
 | Standard | Per-connection equation (USC) | Coefficient |
 |---|---|---|
-| API 617 Part 2, Annex E (E.1b) | `3·Fr + Mr ≤ a·De` | read `a` from E.1b |
-| API 611 Annex I (I.1b) steam turbines | `3·FR + MR ≤ a·De` | read `a` from I.1b |
-| API 612 Annex D (D.1b) steam turbines | `3·FR + MR ≤ a·De` | read `a` from D.1b |
-| NEMA SM-23, legacy form | same shape; coefficient from the owner's copy | read it |
+| API 617 Part 2, Annex E (E.1b) | `3·Fr + Mr ≤ a·De` | `basis` `api617`: `a` defaults to the 927 printed in eq. (E.1b) of the 9th edition (E.1.1: the compressor adaptation, "1.85 times NEMA"); confirm it on the edition of record, or enter it |
+| API 611 Annex I (I.1b) steam turbines | `3·FR + MR ≤ a·De` | `basis` `api611`: read `a` from I.1b (required) |
+| API 612 Annex D (D.1b) steam turbines | `3·FR + MR ≤ a·De` | `basis` `api612`: read `a` from D.1b (required) |
+| NEMA SM-23, legacy form | same shape; coefficient from the owner's copy | `basis` `nema-sm23`: read it (required) |
 
 Forces in lbf, moments in ft-lbf, `De` in inches. `Fr = sqrt(Fx² + Fy² + Fz²)` and `Mr = sqrt(Mx² + My² + Mz²)` (E.2, E.3; I.3, I.4; D.3, D.4). `De` equals the nominal size for connections up to NPS 8 and, above that, `(NPS + 16)/3`; the printed layout of this equation is partly **image** in some editions, and the tool's value for a 12 in nozzle (9.333) is the check. The SI forms carry different coefficients and a different arrangement of the terms; the tool does not convert, so run SM-23 in USC only.
 

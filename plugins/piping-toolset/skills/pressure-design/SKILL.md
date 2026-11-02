@@ -118,7 +118,7 @@ Each module's equations, inputs, validity limits and reviewer notes are in [refe
 | `piping.branch-reinforcement` | Area replacement on minimum walls, margin in in.^2 | B31.3 304.3.3 | [section 4](references/modules.md#4-branch-connection-reinforcement--area-replacement) |
 | `piping.bend-thickness` | Required thickness after bending at intrados, extrados and sidewall | B31.3 304.2.1; B31.1 102.4.5 | [section 5](references/modules.md#5-pipe-bends--thickness-after-bending) |
 | `piping.miter-allowable-pressure` | Allowable pressure of a single or multiple miter bend | B31.3 304.2.3, Eq. (4a)/(4b)/(4c) | [section 6](references/modules.md#6-mitered-bends--allowable-pressure) |
-| `piping.leak-test-pressure` | Hydrostatic and pneumatic leak test pressure (piping minimum) | B31.3 345.4.2 Eq. (24), 345.5.4; B31.1 137 | [section 7](references/modules.md#7-leak-test-pressure) |
+| `piping.leak-test-pressure` | Hydrostatic and pneumatic leak test pressure (piping minimum) | B31.3 345.4.2(a)/(b) Eq. (24), 345.5.4; B31.1 137.4.5 | [section 7](references/modules.md#7-leak-test-pressure) |
 
 Quote `P_over_SE` from `validity`; `th` and `tb` come from the two wall-thickness runs. What a module does not evaluate is listed in its `not checked` rows.
 

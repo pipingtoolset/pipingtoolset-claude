@@ -50,12 +50,12 @@ Ask these together, accept a partial answer, and mark every unanswered item **AS
 | Equipment | Method | Module |
 |---|---|---|
 | Pump, API 610 | Table 5a/5b per-component at 1x; Annex F for loads above it (horizontal F.1.2, vertical in-line F.2) | `connections.nozzle-load-check`, `connections.api610-annexf` |
-| Compressor API 617, steam turbine API 611 / 612, NEMA SM-23 legacy form | Combined `3·Fr + Mr ≤ a·De` at the connection, plus the vendor's per-component limits | `connections.nema-sm23` with the coefficient `a` read from the equation |
+| Compressor API 617, steam turbine API 611 / 612, NEMA SM-23 legacy form | Combined `3·Fr + Mr ≤ a·De` at the connection, plus the vendor's per-component limits | `connections.nema-sm23`; `basis` selects `a` entered or eq. (E.1b) 927 (`api617`) |
 | Shell-and-tube API 660, air-cooled API 661, fired heater API 560 | Per-nozzle table check, then the header sum and bay total for API 661 | `connections.nozzle-load-check`, `equipment.nozzle-load-sum` |
 | Atmospheric storage tank, API 650 Annex P | Nomogram ordinates from FR, ML, MC; acceptance read from the figures | `equipment.api650-annexp-ordinates` |
 | Pressure vessel, no API or vendor allowable (the default) | Method of the paper "Establishing Allowable Nozzle Loads", ASME PVP2011-57100, then the per-nozzle check against the derived set | `equipment.pvp2011-allowables`, `connections.nozzle-load-check` |
 
-**NEMA SM-23 coefficient: no default.** The `coefficient` input is required. The user reads the coefficient `a` of `3·Fr + Mr ≤ a·De` from the equation of the governing standard in the edition of record (API 617 Part 2 Annex E, E.1b; API 611 Annex I, I.1b; API 612 Annex D, D.1b; or the owner's SM-23 copy) and enters it. The skill states no value for any of them; ask for the equation and the edition. `De` is NPS up to NPS 8 and `(NPS + 16)/3` above, in USC. The tool is USC only for this form; the SI forms carry different coefficients, so do not convert. This tool does not compute the combined resultant at the exhaust (API 611 I.5, API 612 D.5) or largest connection (API 617 E.5) with its component limits, the vertical-down exhaust allowance, or the 1.85x and 3x datasheet multipliers: list them as **vendor-sheet items the user confirms**.
+**SM-23 form: `basis` first (ruling R5).** `basis` is required, no default: `api617` (API 617 Annex E), `api611` (API 611 Annex I), `api612` (API 612 Annex D) or `nema-sm23`. Under `api617`, `a` of `3·Fr + Mr ≤ a·De` defaults to the 927 printed in eq. (E.1b), warned; confirm it on the edition of record, or enter `a`. Otherwise `a` is read from the equation of record (I.1b, D.1b, the SM 23 copy) and entered; the skill states no value for those. `De` is NPS up to NPS 8 and `(NPS + 16)/3` above, in USC. The tool is USC only for this form; the SI forms carry different coefficients, so do not convert. This tool does not compute the combined resultant at the exhaust (API 611 I.5, API 612 D.5) or largest connection (API 617 E.5) with its component limits, the vertical-down exhaust allowance, or the 1.85x and 3x datasheet multipliers: list them as **vendor-sheet items the user confirms**.
 
 **Annex F method constants: no defaults.** The `annexF` input is required for `connections.api610-annexf`. The user reads each constant from its equation in the edition of record and enters it: `componentMultiple`, `resultantDenominator`, `interactionLimit`, `centreForceFactor`, `centreMyFactor`, `sigmaPLimit`, `kSigma` and `kTau`, the last three in the `units` system given. The equation for each key is in [references/tool-reference.md](references/tool-reference.md#the-annexf-block). Horizontal pumps need the first five; vertical in-line pumps need the last three. Ask for the equation and the edition; never fill a constant from memory.
 
@@ -84,7 +84,7 @@ Prefer `--input-file`: inline JSON quoting is shell-dependent. A record goes in 
 | Module id | What it does |
 |---|---|
 | `connections.nozzle-load-check` | per-component ratios `|applied| / allowable`, FR, MR, governing component |
-| `connections.nema-sm23` | `3·Fr + Mr` against `a·De` with `a` a required input |
+| `connections.nema-sm23` | `3·Fr + Mr` against `a·De` on the required `basis` |
 | `connections.api610-annexf` | F.1.2 a), Eq. F.1 to F.5 resolved to the pump centre; F.2, Eq. F.6 to F.11 principal stress |
 | `equipment.nozzle-load-sum` | sums N nozzle sets (one header or bay) against header limits, optional bay multiplier |
 | `equipment.api650-annexp-ordinates` | the P.2.7 ordinates and normalised opening positions; status `na` |
@@ -117,8 +117,8 @@ Table, edition, NPS and row read by the user (or the vendor letter), every facto
 Values table: one row per value entered, with the equation or table and edition it came from
 and a source column (user | connector). It includes the Annex F method constants (`annexF`: the
 multiplier, the interaction denominator and limit, the pump-centre factors, the principal-stress
-limit and the two stress coefficients) and the SM-23-form `coefficient`, each with its equation
-number, alongside the Table 5 ranges, header limits and figure ordinates.
+limit and the two stress coefficients) and the SM-23-form `basis` and `coefficient`, each with
+its equation number, alongside the Table 5 ranges, header limits and figure ordinates.
 
 ## 4. Checks per load case
 Per case: script command, ratios, governing component, the envelope's `banner` (PASS or FAIL) against
@@ -146,7 +146,7 @@ Run the checklist in [references/rejection-checklist.md](references/rejection-ch
 
 > I need the Table 5 range for your suction nozzle size and casing material. Read all six components for that row from your copy of API 610 and tell me the edition and whether it is Table 5a or 5b. If the vendor datasheet gives different values, use those and attach the datasheet.
 
-Do not ask the user to upload a standard's PDF; if the user offers an excerpt, use it only to read the specific value they need. Equations, clause numbers, symbol definitions and the reference stresses of the PVP2011 paper (18,800 and 17,100 psi) are usable as named, cited constants. The Annex F method constants and the SM-23-form coefficient are read by the user from the edition of record and entered as inputs (`annexF`, `coefficient`); the skill states none of them. A value returned by the connector carries its citation and is recorded as connector-supplied; it is still verified against your copy before issue.
+Do not ask the user to upload a standard's PDF; if the user offers an excerpt, use it only to read the specific value they need. Equations, clause numbers, symbol definitions and the reference stresses of the PVP2011 paper (18,800 and 17,100 psi) are usable as named, cited constants. The Annex F method constants and the SM-23-form coefficient are read by the user from the edition of record and entered as inputs (`annexF`, `coefficient`); the skill states none but the eq. (E.1b) 927 default under `api617`. A value returned by the connector carries its citation and is recorded as connector-supplied; it is still verified against your copy before issue.
 
 ---
 

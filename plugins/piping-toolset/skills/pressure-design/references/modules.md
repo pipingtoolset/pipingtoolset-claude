@@ -138,10 +138,10 @@ The clause's minimum `R1` for a multiple miter depends on the tabulated A: witho
 
 ## 7. Leak test pressure
 
-Module `piping.leak-test-pressure`. Citation: B31.3 para. 345.4.2 Eq. (24) and 345.5.4; B31.1 para. 137.
+Module `piping.leak-test-pressure`. Citation: B31.3 para. 345.4.2(a) and (b) Eq. (24), 345.5.4; B31.1 para. 137.4.5.
 
 ```
-P_hydro = hydroFactor · P · (ST / S)                 optional ceiling on ST/S: stressRatioCap
+P_hydro = hydroFactor · P · max(1, ST / S)           optional ceiling on ST/S: stressRatioCap
 P_pneu  = pneumaticFactor · P
 ```
 
@@ -149,6 +149,7 @@ P_pneu  = pneumaticFactor · P
 
 Points to state on the sheet:
 
+- **The 1.5 · P floor always holds (0.9.3).** B31.3 para. 345.4.2(a) requires "not less than 1.5 times the design pressure" unconditionally; (b) applies Eq. (24) only when the design temperature is above the test temperature. B31.1 para. 137.4.5 sets the same floor. So when `ST / S` is below 1 (design temperature not above the test temperature, or the two stresses read from the same line) the script takes the ratio as 1.0, reports `stressRatio` 1 and the floor `hydroFactor · P`, and warns with the raw ratio. Up to 0.9.2 the bare ratio was applied: the engine's fixture case P 300 psi, ST 15,000 / S 20,000 psi read 337.5 psi where the Code requires **450 psi**. Re-run any 0.9.2-or-earlier result whose `stressRatio` printed below 1.
 - **No ceiling on ST/S is applied by default.** The engine's reference notes record that Eq. (24) carries no limit on the ratio in the 2016–2024 B31.3 texts (confirm on the edition of record); the code's own limit is the yield / component-rating ceiling of 345.2.1(a), which this script does **not** evaluate — the user must check the resulting stress. `stressRatioCap` is optional and represents an **owner specification** limit only. If the cap engages, the script says so and reports the uncapped code minimum in the warning.
 - `pneumaticMaxFactor` is optional; if supplied and exceeded, a warning cites 345.5.4. The second 345.5.4 limit (90 % of the 345.2.1(a) pressure) is not evaluated.
 - The result is the **piping minimum**. Flange, valve and equipment test limits must be checked separately; the script always prints that warning.

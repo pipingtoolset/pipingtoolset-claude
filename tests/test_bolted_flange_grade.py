@@ -245,8 +245,8 @@ class EngineNumbersUnchanged(unittest.TestCase):
         self.assertEqual(list(out)[-1], "report_word")
         self.assertEqual(list(out)[-len(bf.GRADE_KEYS) - 1], "governing")
         screen = run(SCREEN, SCREEN_CASE)["output"]
-        self.assertEqual(list(screen)[:4], ["momentTerm", "forceTerm", "Pe", "utilization"])
-        self.assertEqual(list(screen)[4:], ["result_grade", "grade_label", "banner", "report_word"])
+        self.assertEqual(list(screen)[:5], ["momentTerm", "Fapplied", "forceTerm", "Pe", "utilization"])
+        self.assertEqual(list(screen)[5:], ["result_grade", "grade_label", "banner", "report_word"])
 
 
 class CommandLineSheet(unittest.TestCase):

@@ -4,6 +4,7 @@
     {
       "input": {
         "NPS": 12,
+        "basis": "api617",
         "applied": {
           "Fx": 600,
           "Fy": 600,
@@ -15,12 +16,67 @@
         "coefficient": 927
       },
       "expect": {
+        "coefficient": 927,
+        "coefficientSource": "API 617 eq. (E.1b) 927",
         "De": 9.33333,
         "Fr": 1039.23048,
         "Mr": 1445.68323,
         "index": 4563.37468,
         "allowable": 8652,
         "ratio": 0.5274
+      },
+      "status": "pass",
+      "tol": 0.0001
+    },
+    {
+      "input": {
+        "NPS": 6,
+        "basis": "api617",
+        "applied": {
+          "Fx": 1000,
+          "Fy": 1000,
+          "Fz": 1000,
+          "Mx": 1500,
+          "My": 1500,
+          "Mz": 0
+        }
+      },
+      "expect": {
+        "coefficient": 927,
+        "coefficientSource": "API 617 eq. (E.1b) 927 (default)",
+        "De": 6,
+        "Fr": 1732.05081,
+        "Mr": 2121.32034,
+        "index": 7317.47277,
+        "allowable": 5562,
+        "ratio": 1.3156
+      },
+      "status": "fail",
+      "tol": 0.0001
+    },
+    {
+      "input": {
+        "NPS": 8,
+        "basis": "nema-sm23",
+        "coefficient": 400,
+        "applied": {
+          "Fx": 200,
+          "Fy": 300,
+          "Fz": 600,
+          "Mx": 300,
+          "My": 400,
+          "Mz": 0
+        }
+      },
+      "expect": {
+        "coefficient": 400,
+        "coefficientSource": "user-entered",
+        "De": 8,
+        "Fr": 700,
+        "Mr": 500,
+        "index": 2600,
+        "allowable": 3200,
+        "ratio": 0.8125
       },
       "status": "pass",
       "tol": 0.0001

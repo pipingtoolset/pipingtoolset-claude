@@ -272,10 +272,10 @@
         }
       },
       "expect": {
-        "suctionSigmaL": 2.7618,
+        "suctionSigmaL": 3.4673,
         "suctionTau": 3.5825,
-        "suctionSigmaP": 5.2203,
-        "suctionStressRatio": 0.12732,
+        "suctionSigmaP": 5.7136,
+        "suctionStressRatio": 0.13936,
         "dischargeSigmaL": 6.6404,
         "dischargeTau": 3.7246,
         "dischargeSigmaP": 8.3099,

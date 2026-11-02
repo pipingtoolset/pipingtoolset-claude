@@ -14,7 +14,7 @@ WHAT THIS IS
         piping.branch-reinforcement       B31.3 para. 304.3.3 area replacement
         piping.bend-thickness             B31.3 para. 304.2.1 (I-factor)
         piping.miter-allowable-pressure   B31.3 para. 304.2.3 Eq. (4a)/(4b)/(4c)
-        piping.leak-test-pressure         B31.3 para. 345.4.2 / B31.1 para. 137
+        piping.leak-test-pressure         B31.3 para. 345.4.2(a) floor, (b) Eq. (24) / B31.1 para. 137.4.5
 
     They are faithful ports of the pipingtoolset.com calculation engine: same inputs,
     same output fields, same rounding, same thrown-error conditions. Each module
@@ -1269,7 +1269,17 @@ def miter_allowable_pressure(input: dict) -> dict:
 
 
 def leak_test_pressure(input: dict) -> dict:
-    """Hydrostatic / pneumatic test pressure: P_hydro = hydroFactor*P*min(ST/S, cap); P_pneu = pneumaticFactor*P."""
+    """Hydrostatic / pneumatic test pressure.
+
+        P_hydro = hydroFactor * P * max(1, min(ST/S, cap))     cap optional (owner specification)
+        P_pneu  = pneumaticFactor * P
+
+    The ratio never reduces the test below hydroFactor * P: B31.3 para. 345.4.2(a) sets "not less
+    than 1.5 times the design pressure" unconditionally and (b) applies Eq. (24) only when the design
+    temperature exceeds the test temperature; B31.1 para. 137.4.5 is the same 1.5 x P floor. Mirrors
+    the engine after its 2026-11-02 audit correction (0.9.3): up to 0.9.2 the bare ratio below 1.0 was
+    applied and only warned, so a report could carry a test pressure under 1.5 x P.
+    """
     module = "piping.leak-test-pressure"
     v = _prepare(module, input)
     P, ST, S, hydroFactor, pneumaticFactor = (v[k] for k in ("P", "ST", "S", "hydroFactor", "pneumaticFactor"))
@@ -1288,11 +1298,21 @@ def leak_test_pressure(input: dict) -> dict:
 
     rawRatio = ST / S
     capEngaged = stressRatioCap is not None and stressRatioCap < rawRatio
-    stressRatio = min(rawRatio, stressRatioCap) if stressRatioCap is not None else rawRatio
+    cappedRatio = min(rawRatio, stressRatioCap) if stressRatioCap is not None else rawRatio
+    # para. 345.4.2(a) floor: the ratio only ever raises the test above hydroFactor * P.
+    stressRatio = max(1.0, cappedRatio)
     hydroTest = hydroFactor * P * stressRatio
     pneumaticTest = pneumaticFactor * P
 
     warnings: List[str] = ["Verify component (flange/valve) test limits separately — the piping minimum is not the system maximum."]
+    if rawRatio < 1:
+        # B31.3 para. 345.4.2(a) / B31.1 para. 137.4.5: never less than 1.5 x P; Eq. (24) applies only
+        # when the design temperature exceeds the test temperature.
+        warnings.append(
+            f"ST/S = {_js_num(round_half_up(rawRatio, 5))} < 1 — the ratio is taken as 1.0 and the hydrostatic test reported is "
+            f"the {_js_num(round_half_up(hydroFactor * P, 3))} psi floor (factor × P, B31.3 ¶345.4.2(a) / B31.1 ¶137.4.5); "
+            f"Eq. (24) only raises the test when design temperature exceeds test temperature."
+        )
     if capEngaged:
         warnings.append(
             f"Cap engaged — the code minimum is the uncapped value (ratio {_js_num(round_half_up(rawRatio, 5))}, "
@@ -1332,7 +1352,7 @@ CITATIONS: Dict[str, str] = {
     "piping.b313-wall-thickness": "ASME B31.3 ¶304.1.2 Eq. (3a)",
     "piping.b311-wall-thickness": "ASME B31.1 ¶104.1.2 Eq. (7) through 2024, Eq. (3) in 2026 (also the B31.5 form; used for B31.9 as ¶904.1.1 permits)",
     "piping.b31-allowable-pressure": "ASME B31.3 ¶304.1.2 Eq. (3a) / B31.1 ¶104.1.2 Eq. (9) through 2024, Eq. (5) in 2026, solved for P with W (B31.12 Mf supported)",
-    "piping.leak-test-pressure": "ASME B31.3 ¶345.4.2 Eq. (24) / ¶345.5.4; B31.1 ¶137.4.5 via factors",
+    "piping.leak-test-pressure": "ASME B31.3 ¶345.4.2(a) floor and (b) Eq. (24) / ¶345.5.4; B31.1 ¶137.4.5 via factors",
     "piping.bend-thickness": "ASME B31.3 ¶304.2.1 / B31.1 ¶102.4.5 Eq. (3) through 2024, ¶104.2.1(c) Eq. (7) in 2026 (I-factor)",
     "piping.miter-allowable-pressure": "ASME B31.3 ¶304.2.3 Eq. (4a)/(4b)/(4c), Eq. (5) with user-entered A",
     "piping.branch-reinforcement": "ASME B31.3 ¶304.3.3 area replacement (d2 ≤ Dh per (a); Sb/Sh on A3 per (c)(2); walls per (a) minimum or measured)",

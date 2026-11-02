@@ -1,11 +1,11 @@
 {
   "source": "pipecalcpro packages/calc-core/fixtures",
-  "calc_core_commit": "fb5167e98e2ecce54b875bda24f214357769c800",
+  "calc_core_commit": "0c20972130395732597d55e73562c718dadc6988",
   "modules": {
     "aux.app2-flange-integral": {
       "skill": "bolted-flange",
       "source_file": "app2-flange-integral.json",
-      "source_sha256": "08d2182a5ee58255a5fb0243af7e22d538bea41811a5073a8f6664f29c9c5fac",
+      "source_sha256": "ae2268bda8fe32fc733a33ff4a1332ad5389ab58511fa3c59cd9052c1d715b13",
       "cases": 4,
       "excluded_cases": 2,
       "excluded_reason": "Table 4.16.5 curve fits are tabulated code data; not shipped"
@@ -13,31 +13,31 @@
     "connections.api610-annexf": {
       "skill": "nozzle-load",
       "source_file": "api610-annexf.json",
-      "source_sha256": "692b69c44c475fd43f6bf4c714602d740157cbaa104961cef3ad7a6afd2d04dd",
+      "source_sha256": "45938ca3cd62228dff6523e509780067ce632de7e34d2740d7d11f6f9d07bd7a",
       "cases": 4
     },
     "connections.flange-equivalent-pressure": {
       "skill": "bolted-flange",
       "source_file": "flange-equivalent-pressure.json",
-      "source_sha256": "32c830c03bdc872816ee3ff18daa2a356f976e1672f5ea6c64118ecee147533d",
-      "cases": 2
+      "source_sha256": "01bca32fe90209fd65892ee957886a05ddc764ed50d8bfc6f76f2b4954af5903",
+      "cases": 4
     },
     "connections.nema-sm23": {
       "skill": "nozzle-load",
       "source_file": "nema-sm23.json",
-      "source_sha256": "c87dbc4d3ad4981abeced25e8f55c25514c429e93c5f33af7716661b1e058147",
-      "cases": 1
+      "source_sha256": "5106a1f39a9b63ddf9617904d6241896d8c1ba6181f8c000f095db0ae95674ca",
+      "cases": 3
     },
     "connections.nozzle-load-check": {
       "skill": "nozzle-load",
       "source_file": "nozzle-load-check.json",
-      "source_sha256": "00d0e97f0081f8b51301b67efe829ac6fc4ed1843533146c0b94cf3b4f457d58",
+      "source_sha256": "fcc6c8bff73010ffd8f1e6700f953edd754f018d2b2a6c63997eb87ea0a2b5f8",
       "cases": 2
     },
     "noncode.pipe-section": {
       "skill": "stress-screening",
       "source_file": "pipe-section.json",
-      "source_sha256": "33a6f80cd13f634717f956ffcd6e1ab4612196079b6da2f483e3f6754a0946c3",
+      "source_sha256": "eeb50bbd436e3e210d4d1271c1c5c7578b9b5871533b7cf24b4e97cec709af09",
       "cases": 1
     },
     "piping.b31-allowable-pressure": {
@@ -55,7 +55,7 @@
     "piping.b313-wall-thickness": {
       "skill": "pressure-design",
       "source_file": "b313-wall-thickness.json",
-      "source_sha256": "bfd6747b3f55f359e98cde9491f3bbe646fa3efa2db66c70de98ed9e26cf9442",
+      "source_sha256": "60a238e083c60eea8629c96a2e91e89344e1e9b4965f130d2f1957ca2f42c843",
       "cases": 3
     },
     "piping.bend-thickness": {
@@ -85,8 +85,8 @@
     "piping.leak-test-pressure": {
       "skill": "pressure-design",
       "source_file": "leak-test-pressure.json",
-      "source_sha256": "00b0f9aa682ef1333f2d583d9505f031f3194753d9002b957c9b828d64e0d72a",
-      "cases": 3
+      "source_sha256": "5264f073919122e1b18e41cd63a993e967deb9e03d6dfc6da0e8c7b782f91273",
+      "cases": 4
     },
     "piping.miter-allowable-pressure": {
       "skill": "pressure-design",
@@ -121,19 +121,19 @@
     "structural.pier-soil": {
       "skill": "pipe-support",
       "source_file": "piperstr-pier.json",
-      "source_sha256": "3e3f888b6ee3c0d43e6775b14078e07ff63e2839ec2520a171e89e22613cc79f",
+      "source_sha256": "8e73084e49791dcc26399a72c257423db1d6c1c220fb002ba294c8fc4bb5946f",
       "cases": 3
     },
     "supports.max-spring-rate": {
       "skill": "stress-screening",
       "source_file": "max-spring-rate.json",
-      "source_sha256": "a049fbe7a8932b83fb32c7c4c2dc32595ea34bacc9e18d338dc46ad9795cc056",
+      "source_sha256": "2fba6f14f72ae1cdb1f2f6e1d2d2bd36281bca559c643a4dcc6de40fe6651932",
       "cases": 1
     },
     "supports.spring-variability": {
       "skill": "stress-screening",
       "source_file": "spring-variability.json",
-      "source_sha256": "cec1b618baf86a99b0fe3f5de5a31bea0fe0264f9bad54e5f9ce7a31260970ce",
+      "source_sha256": "5644f732c1f5f88b9698945332962831e53c9909db050b4e1a47bcb05b861d42",
       "cases": 2
     }
   }

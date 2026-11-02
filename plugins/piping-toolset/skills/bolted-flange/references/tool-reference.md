@@ -7,7 +7,7 @@ Always run `python scripts/bolted_flange.py list` for the live field names. Name
 | Module id | What it does | Status |
 |---|---|---|
 | `connections.flange-derive` | Gasket N, b0, b, G (flat and ring-joint rules); UN bolt root area and total area; hub g0, g1, h | always `na` |
-| `connections.flange-equivalent-pressure` | The screen: momentTerm, forceTerm, Pe, utilization | `pass` if Pe <= rated, else `fail` |
+| `connections.flange-equivalent-pressure` | The screen: momentTerm, Fapplied, forceTerm, Pe, utilization | `pass` if Pe <= rated, else `fail` |
 | `aux.app2-flange-integral` | The detailed analysis: Peq, bolt loads, moments, stresses and averages for both cases, J, governing case | `pass` only if Ab >= Am, worst utilization <= 1, and both J <= 1 |
 
 `connections.flange-equivalent-pressure` and `aux.app2-flange-integral` reproduce the pipingtoolset.com calculation engine's fixture cases exactly: same input names, output names, statuses, rounding and thrown-error conditions. `connections.flange-derive` is new and has no engine module.
@@ -35,7 +35,7 @@ Rules: N = (OD - ID)/2; b0 = N/2 (ring joint N/8); b = b0 if b0 <= 0.25 in, else
 | `ratedPressure` | psi | User-read B16.5 rating at design temperature (or the owner's percentage of it) |
 | `creditCompression` | bool | Optional, default false. When false a negative `F` is taken as 0 and the tool warns. Set true only if the owner agrees to credit compression; then run the tensile case separately and report both |
 
-Outputs: `momentTerm` (3 decimals), `forceTerm`, `Pe`, `utilization` (4 decimals). Every run carries a warning that this is a leakage screen and not a stress check, and that torsion and shear are not used.
+Outputs: `momentTerm` (3 decimals), `Fapplied` (the axial force the force term used: `F`, or 0 when a compressive `F` is not credited), `forceTerm`, `Pe`, `utilization` (4 decimals). Every run carries a warning that this is a leakage screen and not a stress check, and that torsion and shear are not used.
 
 ## aux.app2-flange-integral
 
