@@ -1,6 +1,6 @@
 # Detailed flange analysis - every equation in engine order
 
-Module `aux.app2-flange-integral`, a port of the pipingtoolset.com calculation engine's flange module. Clause path: ASME BPVC VIII-2 Part 4.16 (4.16.6 bolt loads, 4.16.7 moments, stresses, acceptance and rigidity, Tables 4.16.4 to 4.16.11). The retired VIII-1 Mandatory Appendix 2 carried the same method; the 2025 edition of VIII-1 sends the reader to 4.16. B31.3 304.5.1(b) permits either route with B31.3 allowables.
+Module `aux.app2-flange-integral`, a port of the pipingtoolset.com calculation engine's flange module. Method: BPVC VIII-2 Part 4.16 (formerly VIII-1 Mandatory Appendix 2; pre-2025 paragraph map shown) — 4.16.6 bolt loads, 4.16.7 moments, stresses, acceptance and rigidity, Tables 4.16.4 to 4.16.11; the paragraph map is in `method-ladder.md`. The 2025 edition of VIII-1 sends the reader to 4.16. B31.3 304.5.1(b) permits either route with B31.3 allowables.
 
 **Verify on the printed page.** The bodies of Eq. 4.16.4 to 4.16.18 and of Tables 4.16.4, 4.16.5 and 4.16.8 to 4.16.12 could not be verified here; confirm them on the printed page. The equations below are what the tool runs, and they reproduce a commercial pipe-stress program's flange report to the digits it prints. They are not offered as a transcription of the Code. The user checks the sequence against the printed 4.16.6 and 4.16.7 before a sealed issue.
 
@@ -159,7 +159,7 @@ F, V and f come from one of two sources, chosen per run and stated on the sheet.
 1. **`series` (default).** A closed-form constant-chain elastic solution evaluated in the script. It is a **reconstruction**, assembled from published open-source implementations and cross-checked term by term against a published reproduction. It matches a commercial pipe-stress program's flange report to four digits. It is **not transcribed from licensed Code text**, and a term-by-term check against Table 4.16.5 could not be made here.
 2. **Overrides.** `F_override`, `V_override`, `f_override` bypass the computed factor with a value the user reads from the Table 4.16.5 equations (or the retired figures). With all three given nothing is evaluated. This is the route for a sealed calc: it removes the reconstruction from the chain. A warning names the overridden factors; carry it into the findings. f has a floor of 1.
 
-The Table 4.16.5 curve-fit option is not shipped, because its coefficients are tabulated code data. `hubFactorMethod` accepts only `series`; any other value exits 2 with a message to use the overrides. The Table 4.16.4 constants in the K terms (8.55246, 1.0472, 1.9448, 0.66845, 5.7169, 1.36136) are equation constants; confirm them on the printed page. The overrides do not change any engine result when absent.
+The Table 4.16.5 curve fits, which the web calculator offers as a selectable hub-factor method, are not in this skill, because their coefficients are tabulated code data. `hubFactorMethod` accepts only `series`; any other value exits 2 with a message to use the overrides. The Table 4.16.4 constants in the K terms (8.55246, 1.0472, 1.9448, 0.66845, 5.7169, 1.36136) are equation constants; confirm them on the printed page. The overrides do not change any engine result when absent.
 
 ### Result grade (what the provenance does to the report)
 

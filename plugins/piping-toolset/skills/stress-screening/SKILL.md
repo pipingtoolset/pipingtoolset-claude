@@ -100,9 +100,9 @@ Resolve the governing document with `basis` (Step 1). Then:
 
 - **`i` is always an input.** Ask the user to read it from B31J or Appendix D for the specific component, name the table/sketch they used, and record it in the calc. Do not estimate or "recall" a SIF, and do not reproduce a closed-form SIF equation or table row.
 - **In-plane and out-of-plane are routinely transposed at tees.** For elbows `i_i > i_o`; for tees `i_o > i_i`. A swap moves the branch result materially with no warning from the software. Every leg of a tee gets its own SIF; reducing tees differ between run and branch.
-- A SIF is never below 1.0 (the tool rejects `ii` or `io` below 1).
+- A SIF is never below 1.0 (the tool rejects `ii`, `io` or `it` below 1). `it` (default 1.0, warned when `Mt` ≠ 0) scales `S_t = it·Mt/(2Z)`; 0.9.1 had no `it`.
 - A reducing branch combines a reduced sustained index with an effective section modulus; if the design hangs on that node, check it locally.
-- Software that still offers a "legacy Appendix D" toggle under B31.3-2020 or later, or B31.1-2024, is not code-compliant for that edition.
+- Software that still offers a "legacy Appendix D" toggle under B31.3-2020 or later, or B31.1-2024 or later, is not code-compliant for that edition; B31.1-2020 and 2022 ¶104.8 already take ii, io, it from B31J.
 
 ---
 

@@ -31,8 +31,9 @@ The B31.3 1.33 is a different clause from the ¶302.2.4(f) pressure/temperature 
 **Expansion (EXP)** — computed from the **range** between the two governing thermal states, never from either state alone, and checked against `S_A`. Use the expansion SIFs. Confirm the range brackets the true extremes: a line that goes both above and below ambient has a range larger than either excursion.
 
 ```
-S_b = sqrt[(i_i·M_i)² + (i_o·M_o)²] / Z          S_t = M_t / (2Z)
+S_b = sqrt[(i_i·M_i)² + (i_o·M_o)²] / Z          S_t = i_t·M_t / (2Z)
 S_E = sqrt[(|S_a| + S_b)² + (2·S_t)²]            B31.3 ¶319.4.4 Eq. (17)
+i_t = torsional SIF of the ¶319.4.4 nomenclature (B31J Table 1-1), an input like i_i and i_o
 ```
 
 `S_a` (axial stress range) is the extra term in the B31.3 form; for B31.1 leave it at 0 and confirm the printed equation of the edition. Seismic anchor movement and settlement are displacement loads: they belong in this check, not in the occasional check.
@@ -80,9 +81,10 @@ The equation forms changed between editions. `python scripts/stress_screening.py
 | B31.3-2018 and earlier | Appendix D | `f = 6.0·N^-0.2`, `N_E = Σ Ni·ri⁵` | |
 | B31.3-2020 | B31J (Appendix D deleted) | same legacy form | software offering a legacy Appendix D toggle produces a non-compliant result |
 | B31.3-2022 and later | B31J | `f = 20·N^-0.333`, `N_E = Σ Ni·ri³` (¶302.3.5(d) eqs. (1c)/(1d)) | sustained Eq. (23a) unchanged; 2024 adds ¶320.1(b): absent more applicable data, the B31J Table 1-1 General Note (d) sustained index shall be used |
-| B31.1-2020 and earlier | Appendix D | `f = 6.0·N^-0.2`, cap 1.0 | the exemption uses `K1 = 30·S_A/E_a` from the 2016 edition on |
-| B31.1-2022 | Appendix D; B31J permitted (General Note (b)) | same | |
-| B31.1-2024 | B31J (Appendix D deleted) | same | B31.1 (since 2020) writes its own sustained indices in ¶104.8.1 / Fig. 104.8-1 — I = greater of 0.75·i and 1.00, i from B31J Table 1-1 — so do not import B31.3's General Note (d) rule; 2024 replaces the pressure term with S_lp |
+| B31.1-2018 and earlier | Mandatory Appendix D (single i on the resultant moment, 0.75·i sustained) | `f = 6.0·N^-0.2`, cap 1.0 | the exemption uses `K1 = 30·S_A/E_a` from the 2016 edition on |
+| B31.1-2020 and 2022 | B31J Table 1-1: the 2020 edition rewrote ¶104.8 around Fig. 104.8-1 with direction-split in-plane, out-of-plane and torsional indices ii, io, it taken from B31J; Mandatory Appendix D still printed, superseded for the ¶104.8 equations | same | sustained I = greater of 0.75·i and 1.00 (¶104.8.1); Appendix D i-factors in the ¶104.8 equations are a finding (0.9.1 named Appendix D as the source here; corrected in 0.9.2, audit S11b) |
+| B31.1-2024 | B31J (Mandatory Appendix D deleted) | same | ¶104.8 itself unchanged but for S_lp replacing the pressure term and Po deleted; do not import B31.3's General Note (d) rule |
+| B31.1-2026 | B31J (unchanged) | same | ¶104.8 equations and indices unchanged; ¶102.3.3 is now (a) below the creep range / (b) creep range / (c) test ((a)/(b) in 2024); the pressure-design equations are renumbered (tm eq. (3)/(4), P eq. (5)/(6), bends ¶104.2.1(c) eqs. (7)/(8): the pressure-design skill carries them); Appendix A Grade 91 Type 1 lines deleted — confirm the material line before reading S; connector dataset `b311-allowable-stresses-2026` |
 
 ## Owner practice examples
 

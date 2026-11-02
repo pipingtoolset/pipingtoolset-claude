@@ -212,13 +212,19 @@ class SifSourceResolver(unittest.TestCase):
             self.assertIn("deleted", ss.resolve_sif_source("B31.3", yr))
 
     def test_b311_editions(self):
-        self.assertEqual(ss.resolve_sif_source("B31.1", 2020), "ASME B31.1 Mandatory Appendix D")
-        r22 = ss.resolve_basis("B31.1", 2022)
-        self.assertIn("Appendix D", r22["sif_source"])
-        self.assertEqual(r22["sif_documents_permitted"], ["ASME B31.1 Mandatory Appendix D", "ASME B31J"])
-        r24 = ss.resolve_basis("B31.1", 2024)
-        self.assertIn("B31J", r24["sif_source"])
-        self.assertEqual(r24["sif_documents_permitted"], ["ASME B31J"])
+        # 0.9.2 (audit S11b): since 2020 the 104.8 equations take ii, io, it from B31J Table 1-1;
+        # Appendix D is still printed in 2020 and 2022, superseded, and deleted in 2024.
+        self.assertIn("Mandatory Appendix D", ss.resolve_sif_source("B31.1", 2018))
+        for yr in (2020, 2022):
+            r = ss.resolve_basis("B31.1", yr)
+            self.assertIn("B31J Table 1-1", r["sif_source"])
+            self.assertIn("still printed", r["sif_source"])
+            self.assertEqual(r["sif_documents_permitted"], ["ASME B31J"])
+        for yr in (2024, 2026):
+            r = ss.resolve_basis("B31.1", yr)
+            self.assertIn("B31J", r["sif_source"])
+            self.assertIn("deleted", r["sif_source"])
+            self.assertEqual(r["sif_documents_permitted"], ["ASME B31J"])
 
     def test_tee_transposition_warning_always_present(self):
         for code, yr in (("B31.1", 2024), ("B31.3", 2018)):

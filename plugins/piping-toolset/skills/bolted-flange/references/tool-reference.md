@@ -68,7 +68,7 @@ Rejected with exit 2:
 
 - unknown input field names (the message lists the valid ones);
 - no moment, or more than one moment unit, on the screen; both `Mext` and `Mext_in_lbf` on the detailed module;
-- `attachment` other than integral or loose; `hubFactorMethod` other than series (the curve-fit option is not shipped; use the override inputs);
+- `attachment` other than integral or loose; `hubFactorMethod` other than series (the Table 4.16.5 curve fits are not in this skill; use the override inputs);
 - `Edesign`, `Eambient` or `SfAmbient` missing on the detailed module (the engine would default them silently);
 - hub overrides on a loose flange; `F_override` or `V_override` not above 0; `f_override` below 1;
 - negative design pressure on the screen;

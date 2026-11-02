@@ -14,7 +14,7 @@ The order of the ladder is fixed. Each rung answers a different question, and no
 | Rung | Question it answers | What a within-rating result proves | What it does not prove |
 |---|---|---|---|
 | 1. Pressure-equivalent screen (`connections.flange-equivalent-pressure`) | Is the combined load, expressed as a pressure, within the flange rating (or the owner's percentage of it)? | The loads are within a conservative envelope of the rating basis | Bolt stress, gasket seating, flange stress, rigidity, creep relaxation, assembly bolt load. It is not a stress check |
-| 2. Detailed VIII-2 4.16 analysis (`aux.app2-flange-integral`) | Do the bolts, hub, ring and rigidity hold at design pressure plus the equivalent external load, in both the operating and the seating case? | Bolt area adequacy and flange stresses against allowables under a pressure-equivalent treatment of the external loads | That the pressure-equivalent treatment is the Code's own external-moment treatment (it is not); fatigue; leakage rate of a specific gasket |
+| 2. Detailed BPVC VIII-2 Part 4.16 (formerly VIII-1 Mandatory Appendix 2; pre-2025 paragraph map shown) analysis (`aux.app2-flange-integral`) | Do the bolts, hub, ring and rigidity hold at design pressure plus the equivalent external load, in both the operating and the seating case? | Bolt area adequacy and flange stresses against allowables under a pressure-equivalent treatment of the external loads | That the pressure-equivalent treatment is the Code's own external-moment treatment (it is not); fatigue; leakage rate of a specific gasket |
 | 3. Interaction methods (named, not computed) | Is the joint acceptable by a published criterion for standard flanges (UG-44(b) / 4.16.12, NC-3658.3) or by a different model (EN 1591-1)? | Per the method's own conditions | Anything outside those conditions |
 
 ## Result grade of each rung
@@ -24,7 +24,7 @@ Status taxonomy used across the pack: calculated / screening / manual check requ
 | Rung | `result_grade` |
 |---|---|
 | 1. Pressure-equivalent screen | `screening` always. It is a leakage screen by definition (see the table above), whatever the inputs |
-| 2. Detailed VIII-2 4.16 analysis | `screening` (label "screening / reconstructed factors") while any hub factor F, V or f the flange type uses came from the open-source series; `calculated` only when `F_override`, `V_override` and `f_override` were all supplied (a loose flange uses no hub factor and is `calculated`) |
+| 2. Detailed BPVC VIII-2 Part 4.16 (formerly VIII-1 Mandatory Appendix 2; pre-2025 paragraph map shown) analysis | `screening` (label "screening / reconstructed factors") while any hub factor F, V or f the flange type uses came from the open-source series; `calculated` only when `F_override`, `V_override` and `f_override` were all supplied (a loose flange uses no hub factor and is `calculated`) |
 | 3. Interaction methods | `not checked`: named on the sheet, not computed |
 
 A `screening` result carries the banner `SCREENING / RECONSTRUCTED FACTORS` and no PASS or issue-grade wording. Rung 1 within the screen and rung 2 being `screening` are different statements; report each with its own grade.

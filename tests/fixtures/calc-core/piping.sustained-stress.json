@@ -41,6 +41,27 @@
       },
       "status": "pass",
       "tol": 0.01
+    },
+    {
+      "input": {
+        "method": "sqrt",
+        "P": 400,
+        "D": 8.625,
+        "t": 0.322,
+        "Sb": 15000,
+        "St": 500,
+        "Socc": 3000,
+        "Sh": 16000,
+        "k": 1.15
+      },
+      "expect": {
+        "SL": 17706.832,
+        "sustainedRatio": 1.1067,
+        "SLocc": 20702.737,
+        "occasionalRatio": 1.1251
+      },
+      "status": "fail",
+      "tol": 0.01
     }
   ]
 }

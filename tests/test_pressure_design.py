@@ -201,7 +201,7 @@ class HandDerived(unittest.TestCase):
         self.assertAlmostEqual(o["A2"], 1.35 * r2, delta=TOL)
         self.assertAlmostEqual(o["A3"], 0.3 * r2, delta=TOL)
         self.assertAlmostEqual(o["margin"], 0.03 * r2 + 0.81, delta=TOL)
-        self.assertTrue(any("exceeds header OD" in w for w in res["warnings"]))
+        self.assertTrue(any("exceeds the header circumference" in w for w in res["warnings"]))
 
     def test_branch_shortfall_fails(self):
         # Same as the 90-degree case but a thin header: A2 collapses and the status flips.
@@ -319,7 +319,8 @@ class EngineErrors(unittest.TestCase):
                      "R must exceed D/2 (bend radius to centerline)")
         self._raises("piping.miter-allowable-pressure",
                      dict(S=1, E=1, Tc=0.2, r2=5, R1=2, thetaDeg=15, miters=3),
-                     "R1 must exceed r2/2 for the multi-miter form")
+                     "R1 = 2 in must exceed r2 = 5 in for the multiple-miter form: eq. (4b) carries (R1 − r2) and "
+                     "gives zero or a negative pressure at R1 ≤ r2 — increase R1 (and check it against eq. (5)).")
         self._raises("piping.miter-allowable-pressure",
                      dict(S=1, E=1, Tc=0.2, r2=5, R1=9, thetaDeg=90, miters=1),
                      "thetaDeg must be in (0, 90)")
@@ -626,6 +627,10 @@ class CodeValues(unittest.TestCase):
             keys.add("weld_factor_basis")
         if module in pd.GATED_MODULES:
             keys |= {"validity", "result_grade"}
+        if module == "piping.branch-reinforcement":
+            keys.add("wall_basis")                 # 0.9.2 ruling R2: the Th / Tb basis record
+        if module == "piping.b311-wall-thickness":
+            keys.add("edition_basis")              # 0.9.2 S1: B31.1 equation numbers by edition
         return keys
 
     def _cli(self, inputs: dict) -> subprocess.CompletedProcess:
@@ -641,8 +646,9 @@ class CodeValues(unittest.TestCase):
     def test_every_module_filled_run_equals_the_explicit_run(self):
         for module in pd.REGISTRY:
             base = with_basis(module, parity.load(module)["cases"][0]["input"])
-            names = [n for n in pd.user_supplied_names(module) or ["c", "Th"]     # branch-reinforcement has none
-                     if isinstance(base.get(n), (int, float)) and not isinstance(base.get(n), bool)]
+            # branch-reinforcement's user-supplied Sb / Sh are optional and absent from case 0
+            cands = pd.user_supplied_names(module) + (["c", "Th"] if module == "piping.branch-reinforcement" else [])
+            names = [n for n in cands if isinstance(base.get(n), (int, float)) and not isinstance(base.get(n), bool)]
             self.assertTrue(names, module)
             explicit, filled = self._split(module, base, names)
             want = pd.run_module(module, explicit)
