@@ -17,8 +17,10 @@ import subprocess
 
 FF = r"C:\Users\matth\AppData\Local\Microsoft\WinGet\Packages\Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe\ffmpeg-9.0.2-full_build\bin\ffmpeg.exe"
 SRC = pathlib.Path(r"C:\dev\projects\pipingtoolset-claude\docs\demo")   # the recordings (gitignored)
-OUT = SRC / "edit-work-codex"                                           # intermediates (gitignored)
+OUT = SRC / "edit-work-codex-r2"                                        # intermediates (gitignored); r2 = the 2026-11-02 cut
 OUT.mkdir(exist_ok=True)
+RELEASE = SRC / "rerender-2026-11-02"                                   # the two upload-ready MP4s + SRTs (gitignored)
+RELEASE.mkdir(exist_ok=True)
 for f in ("arial.ttf", "arialbd.ttf"):
     if not (OUT / f).exists():
         shutil.copy(pathlib.Path(r"C:/Windows/Fonts") / f, OUT / f)
@@ -55,6 +57,15 @@ def tag(text, a, b):
     return (f"drawtext=expansion=none:fontfile={FONTB}:textfile='{tf(text)}':fontsize=30:fontcolor=white:box=1:"
             f"boxcolor=0xec3013@0.9:boxborderw=12:x=w-text_w-40:y=40:enable='between(t,{a},{b})'")
 
+STALE_PS = "Recorded on plugin 0.5.x, ACI 318-19 \u2014 current release 0.9.0 defaults to ACI CODE-318-25"
+STALE = "Recorded on plugin 0.5.x. Current release: 0.9.0"
+
+def stale(text, a=None, b=None):
+    """Top-left label for footage recorded on an older plugin; never patches the pixels underneath."""
+    en = f":enable='between(t,{a},{b})'" if a is not None else ""
+    return (f"drawtext=expansion=none:fontfile={FONTB}:textfile='{tf(text)}':fontsize=26:fontcolor=white:box=1:"
+            f"boxcolor=0x8a5a00@0.92:boxborderw=12:x=40:y=40{en}")
+
 def run(args):
     if args[-1].endswith('.mp4') and 'seg' in args[-1] and pathlib.Path(args[-1]).exists() and pathlib.Path(args[-1]).stat().st_size > 100000:
         print('skip (exists)', pathlib.Path(args[-1]).name, flush=True); return
@@ -64,9 +75,11 @@ def run(args):
 segments = []      # intermediate files in order
 timeline = 0.0     # running output time, for the SRT
 subs = []          # (start, end, text) in output time
+marks = []         # (clip name, output start time) for the YouTube chapters
 
-def _collect(caps, dur):
+def _collect(caps, dur, name=''):
     global timeline
+    marks.append((name, timeline))
     for _, text, a, b in caps:
         subs.append((timeline + a, timeline + min(b, dur), text))
     timeline += dur
@@ -81,7 +94,7 @@ def clip(name, src, start, end, speed=1.0, caps=(), tags=()):
             "-filter_complex", f"[0:v]{','.join(vf)}[v]", "-map", "[v]", "-map", "1:a", "-shortest", *ENC, str(out)]
     run(args)
     segments.append(out)
-    _collect(caps, (end - start) / speed)
+    _collect(caps, (end - start) / speed, name)
 
 def card(name, dur, lines, sub=None):
     """Ink-coloured title/end card with a red rule, matching the site brand."""
@@ -102,7 +115,7 @@ def card(name, dur, lines, sub=None):
             "-map", "[v]", "-map", "1:a", "-t", str(dur), *ENC, str(out)]
     run(args)
     segments.append(out)
-    _collect((), dur)
+    _collect((), dur, name)
 
 INTRO = SRC / "PipingToolset_Codex_install_intro.mp4"
 E1 = SRC / "PipingToolset_Codex_e1.mp4"
@@ -125,17 +138,16 @@ clip("intro_home", INTRO, 0, 7, caps=[
 clip("intro_add", INTRO, 8, 13, caps=[
     cap("Plugins  ›  Add  ›  Add a marketplace", 0.3, 5),
 ])
-clip("intro_page", INTRO, 22, 30, caps=[
-    cap("pipingtoolset.com/openai: the install route, and what runs where, side by side with Claude", 0.3, 8),
-])
-clip("intro_dialog", INTRO, 36, 50, caps=[
+# 2026-11-02: INTRO 22-30 (the /openai/ page top) shows "practicing, licensed piping engineer" and 19.8+ the pre-connector
+# "What reaches PipingToolset: Nothing" row, so the page shot is cut; re-record it against the live page.
+clip("intro_dialog", INTRO, 36, 50, tags=[stale(STALE, 8, 14)], caps=[
     cap("Source: github.com/pipingtoolset/pipingtoolset-claude, ref main. Add marketplace.", 0.3, 6),
     cap("Marketplace added. PipingToolset appears under Personal; open it and press Install plugin", 6, 10.5),
     cap("Installed. The listing carries the PipingToolset mark, the publisher and three starter prompts", 10.5, 14),
 ])
-clip("intro_settings", INTRO, 50, 62, caps=[
+clip("intro_settings", INTRO, 50, 62, tags=[stale(STALE)], caps=[
     cap("Settings  ›  Plugin settings  ›  PipingToolset: seven skills, each with the description the skill declares", 0.3, 7),
-    cap("No account, no API key, no telemetry. The scripts make no network calls.", 7, 12),
+    cap("The plugin sends nothing to PipingToolset: no network calls, no telemetry, no account.\nThe optional Engineering Data connector sends lookup keys only.", 7, 12, size=32),
 ])
 
 # E1: wall thickness, every number from pressure_design.py
@@ -161,42 +173,42 @@ clip("e2", E2, 0, 22, caps=[
 clip("e9_pick", E9, 12, 16, caps=[
     cap("Type /piping to filter the picker to the seven PipingToolset skills", 0.3, 4),
 ])
-clip("e9_prompt", E9, 16, 24, caps=[
+clip("e9_prompt", E9, 16, 24, tags=[stale(STALE_PS)], caps=[
     cap("Prompt 3 ($piping-toolset:pipe-support): PS-201, CSA type 1 t-post, W6X15 column and arm, two 6 in lines,\nCAESAR II restraint loads SUS / OPE / WIN / EQ, SDS 0.5, LRFD, 4 x 3/4 in adhesive anchors, tau 800 psi. Then optimize it.", 0.3, 8, size=30),
 ])
-clip("e9_work1", E9, 24, 110, speed=X8, tags=[tag("sped up 8x", 0, 11)], caps=[
+clip("e9_work1", E9, 24, 110, speed=X8, tags=[tag("sped up 8x", 0, 11), stale(STALE_PS)], caps=[
     cap("Reads the pipe-support skill, the spec format and the code basis, then maps the loads", 0.3, 5),
     cap("D = SUS,   T = OPE − SUS,   W = WIN,   Eh = EQ,   Ev = 0.2 · SDS · D   ·   LRFD, T = 1.0, SDS = 0.5", 5, 10.7),
 ])
-clip("e9_question", E9, 110, 131, caps=[
+clip("e9_question", E9, 110, 131, tags=[stale(STALE_PS)], caps=[
     cap("The skill asks for what it is missing: steel grade, weld, plate and anchor layout, concrete, the ESR data.\nReply: proceed. Missing inputs are screened with the CSA Type 1 defaults and marked ASSUMED", 0.3, 12, size=32),
     cap("support_calc.py runs 23 ASCE 7-22 LRFD combinations: a nominal pass,\ngoverned by the arm-to-column weld base metal at UR 0.888", 13, 21, size=32),
 ])
-clip("e9_work2", E9, 131, 201, speed=X8, tags=[tag("sped up 8x", 0, 9)], caps=[
+clip("e9_work2", E9, 131, 201, speed=X8, tags=[tag("sped up 8x", 0, 9), stale(STALE_PS)], caps=[
     cap("The reviewer pass: anchor layout, bond strength, edge distances, what the ESR must confirm", 0.3, 8.6),
 ])
-clip("e9b_work", E9B, 0, 64, speed=X8, tags=[tag("sped up 8x", 0, 8)], caps=[
+clip("e9b_work", E9B, 0, 64, speed=X8, tags=[tag("sped up 8x", 0, 8), stale(STALE_PS)], caps=[
     cap("Optimizer re-run with every ratio capped at 0.85; the spec files are written with the assumptions in them", 0.3, 7.9),
 ])
-clip("e9b_assumed", E9B, 64, 72, caps=[
+clip("e9b_assumed", E9B, 64, 72, tags=[stale(STALE_PS)], caps=[
     cap("Every assumed input is written into the spec as ASSUMED: steel, welds, plate, anchors, cracked concrete, offsets", 0.3, 8, size=32),
 ])
-clip("e9b_report", E9B, 84, 97, caps=[
-    cap("The calc report: PS-201, T-post, AISC 360-22 / ACI 318-19 / ASCE 7-22, LRFD\nENGINE PASS (screening only), governing Arm 1 to column weld UR 0.888; reviewer HOLD until the findings are resolved", 0.3, 13, size=30),
+clip("e9b_report", E9B, 84, 97, tags=[stale(STALE_PS)], caps=[
+    cap("The calc report: PS-201, T-post, AISC 360-22 / ASCE 7-22, LRFD. Recorded on plugin 0.5.x;\nthe current release checks anchors to ACI CODE-318-25.\nENGINE PASS (screening only), governing arm-to-column weld UR 0.888; reviewer HOLD until resolved", 0.3, 13, size=30),
 ])
-clip("e9b_limits", E9B, 97, 109, caps=[
+clip("e9b_limits", E9B, 97, 109, tags=[stale(STALE_PS)], caps=[
     cap("The ASCE 7-22 combinations with their factors, then the reactions at the base plate", 0.3, 3.5, size=32),
     cap("Limit-state results enveloped over every combination, with demand, capacity, ratio and clause:\nArm 1 W6X15 max UR 0.153, arm-to-column weld 0.888, base plate 0.583, anchorage 0.586", 3.5, 7.2, size=32),
     cap("Compliance matrix by code area: AISC members, welds, base plate, ACI anchorage and pier all pass;\nAWS D1.1 prequalified joints left for the engineer to confirm", 7.2, 12, size=32),
 ])
-clip("e9b_findings", E9B, 109, 118, caps=[
+clip("e9b_findings", E9B, 109, 118, tags=[stale(STALE_PS)], caps=[
     cap("Reviewer findings: two critical (arm-to-column load path incomplete, column torsion not checked)\nand the majors: ESR qualification, seismic overstrength, the J10.1 weld detail, the material basis", 0.3, 3.8, size=32),
     cap("Optimized alternatives, ranked by weight, field work and standard sizes, every one passing at or under 0.85", 3.8, 9, size=32),
 ])
-clip("e9b_optim", E9B, 118, 128, caps=[
+clip("e9b_optim", E9B, 118, 128, tags=[stale(STALE_PS)], caps=[
     cap("#1: a W8X10 arm on a PIPE5 STD column, 3/16 in fillet, 1 in plate, 5/8 in anchors, 170 lb of steel, UR 0.764", 0.3, 10, size=32),
 ])
-clip("e9b_files", E9B, 132, 148, caps=[
+clip("e9b_files", E9B, 132, 148, tags=[stale(STALE_PS)], caps=[
     cap("The chat summary: the governing ratios, what was assumed, what must be confirmed before issue", 0.3, 9.5),
     cap("Four files in the working folder: the calc report, the reviewed and raw result JSON, the input spec", 9.5, 16),
 ])
@@ -210,12 +222,14 @@ card("end", 9, [
 # ── concat ────────────────────────────────────────────────────────────────────
 lst = OUT / "concat.txt"
 lst.write_text("".join(f"file '{p.as_posix()}'\n" for p in segments), encoding="utf-8")
-final = SRC / "PipingToolset_for_ChatGPT_Codex_demo.mp4"
+final = RELEASE / "PipingToolset_for_ChatGPT_Codex_demo.mp4"
 run([FF, "-y", "-v", "error", "-f", "concat", "-safe", "0", "-i", str(lst), "-c", "copy", "-movflags", "+faststart", str(final)])
 
 def _ts(t):
     ms = int(round(t * 1000)); h, ms = divmod(ms, 3600000); m, ms = divmod(ms, 60000); s, ms = divmod(ms, 1000)
     return f"{h:02d}:{m:02d}:{s:02d},{ms:03d}"
-srt = SRC / "PipingToolset_for_ChatGPT_Codex_demo.srt"
+srt = RELEASE / "PipingToolset_for_ChatGPT_Codex_demo.srt"
 srt.write_text("".join(f"{i}\n{_ts(a)} --> {_ts(b)}\n{t}\n\n" for i, (a, b, t) in enumerate(subs, 1)), encoding="utf-8", newline="\n")
+for _n, _t in marks:
+    print("MARK %-14s %6.1f  %d:%02d" % (_n, _t, int(_t // 60), int(_t % 60)))
 print("FINAL", final, "duration %.1fs" % timeline, "captions", len(subs), "srt", srt)
