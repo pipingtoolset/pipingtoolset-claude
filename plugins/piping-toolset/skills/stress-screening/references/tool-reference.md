@@ -10,7 +10,7 @@ Relocated verbatim from the "Running the tool" section of `SKILL.md`. The body k
 
 | Module id | What it does |
 |---|---|
-| `piping.displacement-stress` | `S_b`, `S_t`, `S_E`, `S_A`, ratio (Eq. 17) |
+| `piping.displacement-stress` | `S_b`, `S_t = it·Mt/(2Z)` (`it` optional, default 1.0, warned when `Mt` ≠ 0), `S_E`, `S_A`, ratio (Eq. 17) |
 | `piping.sustained-stress` | `S_Lp`, `S_L`, occasional stress, both ratios (sqrt or additive form) |
 | `piping.fatigue-factor` | `N_E` and f for either edition form; output names the equation used |
 | `supports.spring-variability` | cold load, load change, variability % vs a limit |
@@ -60,7 +60,7 @@ Rules:
 
 | Slot | Tool and dataset_id | Key fields | What comes back |
 |---|---|---|---|
-| `Sc` at minimum metal temperature, `Sh` at maximum | `lookup_value`: `b313-allowable-stresses-2024` (B31.3) or `b311-allowable-stresses-2024` (B31.1) | `spec`, plus `grade`, `productForm` and any other discriminator the reply names; `T` (°F); `column` `S` | `S` in ksi, interpolated between the two tabulated temperatures |
+| `Sc` at minimum metal temperature, `Sh` at maximum | `lookup_value`: `b313-allowable-stresses-2024` (B31.3), `b311-allowable-stresses-2024` (B31.1 through 2024) or `b311-allowable-stresses-2026` (B31.1-2026; `basis` names it as `allowable_stress_dataset`) | `spec`, plus `grade`, `productForm` and any other discriminator the reply names; `T` (°F); `column` `S` | `S` in ksi, interpolated between the two tabulated temperatures |
 | Suggested span (cross-check only) | `lookup_value`: `b311-support-spans` | `nps` | `waterFt`, `steamFt` |
 | SIF source row (citation only) | `lookup_value`: `b31j-components` | `sketch` | `title`, `group`, `inputs`, `applicability`, `notes`: row text, never an `i` |
 
@@ -71,6 +71,7 @@ Every envelope carries `result_status` (the worst word among the checks performe
 | Module | Check and word | Raised when |
 |---|---|---|
 | `piping.displacement-stress` | S_E against S_A: calculated | always |
+| | torsional SIF it (B31J Table 1-1): not checked | `it` omitted with `Mt` ≠ 0 (taken as 1.0; S_t understated by the component's index) |
 | | f above 1.0: manual check required | `f` > 1.0; the fm = 1.2 conditions (ferrous, SMTS, metal temperature) need material data this script does not have |
 | `piping.sustained-stress` | S_L and S_L + S_occ: calculated | always |
 | | occasional factor k: manual check required | k is not 1.15, 1.20 or 1.33 |

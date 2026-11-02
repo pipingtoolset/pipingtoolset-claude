@@ -58,7 +58,7 @@ Equations, clause numbers, symbol definitions and numeric limits stated in runni
 | Allowable stress S | Appendix A (table name moves with edition — see Step 0) | Mandatory Appendix A |
 | Quality factor E | Appendix A quality-factor tables | the longitudinal weld joint factor table in para. 102.4 and the Appendix A notes |
 | Weld strength reduction W | Table 302.3.5 | Table 102.4.7-1 (para. 102.4.7) |
-| Coefficient Y (B31.3) / y (B31.1) | Table 304.1.1 | Table 104.1.2(A) |
+| Coefficient Y (B31.3) / y (B31.1) | Table 304.1.1 | Table 104.1.2-1 (104.1.2(A) in 2016) |
 
 Verify each table name and number against the printed page of the user's edition before it goes on a sealed sheet.
 
@@ -70,10 +70,10 @@ The Engineering Data connector is optional and separate from this plugin; everyt
 
 | Slot | Tool and dataset_id | Key fields | What comes back |
 |---|---|---|---|
-| `S` at design temperature, `ST` at test temperature | `lookup_value`: `b313-allowable-stresses-2024` (B31.3) or `b311-allowable-stresses-2024` (B31.1) | `spec`, plus as the reply asks: B31.3 `grade`, `classCond`, `size`, `productForm`, `lineNo`, `uns`; B31.1 `grade`, `typeClass`, `sizeOrDia`, `productForm`, `table`, `notes`; `T` (°F); `column` `S` | `S` in ksi, interpolated between the two tabulated temperatures, never extrapolated. B31.1 values include the `E` or `F` named in `eOrF` |
+| `S` at design temperature, `ST` at test temperature | `lookup_value`: `b313-allowable-stresses-2024` (B31.3), `b311-allowable-stresses-2024` (B31.1 ≤2024) or `b311-allowable-stresses-2026` (2026) | `spec`, plus as the reply asks: B31.3 `grade`, `classCond`, `size`, `productForm`, `lineNo`, `uns`; B31.1 `grade`, `typeClass`, `sizeOrDia`, `productForm`, `table`, `notes`; `T` (°F); `column` `S` | `S` in ksi, interpolated between the two tabulated temperatures, never extrapolated. B31.1 values include the `E` or `F` named in `eOrF` |
 | `E` | `lookup_value`: `b313-ej-factors` (welded, column `ej`), `b313-ec-factors` (castings, column `ec`) or `b311-e-factors` (column `e`) | `no`, plus `seamType`, `examination` as asked; `examination` alone for `b313-ec-factors` | the factor, with the joint type |
 | `W` (B31.3) | `lookup_value`: `b313-w-factors` | `steelGroup`, `T` | `W` at a tabulated temperature column |
-| `Y` (B31.3), `y` (B31.1) | `lookup_value`: `b313-y-coefficients` or `b311-y-coefficients` | `material`, `T` | `Y` or `y` at a tabulated temperature column |
+| `Y` (B31.3), `y` (B31.1) | `lookup_value`: `b313-y-coefficients`, `b311-y-coefficients` (B31.1 ≤2024) or `b311-y-coefficients-2026` | `material`, `T` | `Y` or `y` at a tabulated temperature column |
 | Nominal wall `t` (`piping.b31-allowable-pressure`) | `get_pipe_dimensions` | `nps`, `schedule` | `od` and the wall, in inches (B36.10M / B36.19M) |
 
 `W` and `Y` / `y` are read at tabulated columns only: a `T` between columns returns an error, so use the interview for that slot. B31.1 `W`, `hydroFactor` and `pneumaticFactor` have no dataset. For B31.1, confirm on the user's copy that the `E` you enter does not count the `E` or `F` already inside the returned `S` a second time.
@@ -93,16 +93,16 @@ python scripts/pressure_design.py piping.b313-wall-thickness --input '{"P": 1000
 The numbers above are placeholders to show the shape of a complete input, not code values. `job.json` holds the same object. Quoting inline JSON on a command line is shell-dependent (PowerShell in particular mangles it), so prefer the file route: write the object to `job.json` in the working directory with the file tool, then pass `--input-file job.json`.
 
 - **Run `python scripts/pressure_design.py list` first** to get the exact field names; do not guess them.
-- **Every number you state comes from a script run**, including side comparisons, what-ifs and sensitivity remarks (for example "what would the wall be at 10 % lower pressure"): run the script again rather than computing in your head.
-- A pre-flight check runs before the engine. It stops physically impossible inputs with exit code 2 (negative pressure or allowance, E or W above 1, Y or y outside 0 to 1, a wall of D/2 or more, allowances that consume the wall, a miter radius R1 that does not exceed r2) and adds warnings for implausible ones (ST/S above 2, a pneumatic factor above 1.33). Quote those warnings in the findings.
+- **Every number you state comes from a script run**, including side comparisons, what-ifs and sensitivity remarks (for example "what would the wall be at 10 % lower pressure"): run the script again, never compute in your head.
+- A pre-flight check runs before the engine. It stops physically impossible inputs with exit code 2 (negative pressure or allowance, E or W above 1, Y or y outside 0 to 1, a wall of D/2 or more, allowances that consume the wall, a miter radius R1 not above r2) and warns on implausible ones (ST/S above 2, a pneumatic factor above 1.33). Quote them in the findings.
 - **US customary only:** psi, in., in.², degrees (the equations are unit-consistent).
 - Input names are **case-sensitive** and unknown names are rejected: `Y` (B31.3) and `y` (B31.1) are different fields on different modules.
-- Output is a JSON envelope: `status` (`pass` / `fail` / `na`, or `manual check required` / `pointer only`), `output`, `warnings`, the paragraph `citation`, an echo of `inputs` (the basis texts included), `user_supplied` (the table values the user must cite), `defaults_applied` (never W), and `weld_factor_basis` (W, its basis and source) on every module that carries W.
+- Output is a JSON envelope: `status` (`pass` / `fail` / `na`, or `manual check required` / `pointer only`), `output`, `warnings`, the paragraph `citation`, an echo of `inputs` (the basis texts included), `user_supplied` (the table values the user must cite), `defaults_applied` (never W), `weld_factor_basis` (W, its basis and source) on every W module; `edition_basis` on B31.1 runs.
 - **W gate.** Where the equation carries W, W omitted or W = 1.0 without `W_basis` exits 2 naming the W table and edition. Never retry with a basis the user did not give.
 - **Validity gate** (straight pipe, MAWP, bends): `validity` reports `P_over_SE` against 0.385 and the thickness against D/6. On a trip, `status` is `manual check required`, `output` is empty and the numbers sit in `equation_value` as an **equation value, not a design basis**; quote the `banner` (it names the clause) and write no PASS, schedule or margin. Otherwise `result_grade` is `calculated`, or `manual check required` on a special-service record. Details: [modules.md](references/modules.md).
 - **Result status.** `result_status` is the worst performed word of `checks[]`: calculated, screening, manual check required, pointer only, not checked ([meanings](references/project-basis.md#result-status-words)). Write PASS, a schedule or margin only when `banner_allowed` is true, whatever `status` says.
-- Exit code 2 with a one-line message means bad input. Fix it; never retry with guessed values.
-- Results are rounded to the precision shown (5 decimals on thickness, 3 on pressure).
+- Exit code 2 with a one-line message means bad input. Fix it; never retry with guesses.
+- Results are rounded as shown (5 decimals on thickness, 3 on pressure).
 
 ---
 
@@ -115,7 +115,7 @@ Each module's equations, inputs, validity limits and reviewer notes are in [refe
 | `piping.b313-wall-thickness` | Pressure design thickness, minimum required thickness and nominal wall to order, B31.3 | B31.3 304.1.2, Eq. (3a) | [section 1](references/modules.md#1-straight-pipe--pressure-design-thickness-b313) |
 | `piping.b311-wall-thickness` | Minimum required thickness and nominal wall to order, B31.1 | B31.1 104.1.2 | [section 2](references/modules.md#2-straight-pipe--pressure-design-thickness-b311) |
 | `piping.b31-allowable-pressure` | Schedule check: allowable pressure (MAWP) of a selected nominal wall | B31.3 304.1.2 Eq. (3a), solved for P | [section 3](references/modules.md#3-schedule-check-and-allowable-pressure-mawp) |
-| `piping.branch-reinforcement` | Area-replacement check of a branch connection, with margin in in.^2 | B31.3 304.3.3 | [section 4](references/modules.md#4-branch-connection-reinforcement--area-replacement) |
+| `piping.branch-reinforcement` | Area replacement on minimum walls, margin in in.^2 | B31.3 304.3.3 | [section 4](references/modules.md#4-branch-connection-reinforcement--area-replacement) |
 | `piping.bend-thickness` | Required thickness after bending at intrados, extrados and sidewall | B31.3 304.2.1; B31.1 102.4.5 | [section 5](references/modules.md#5-pipe-bends--thickness-after-bending) |
 | `piping.miter-allowable-pressure` | Allowable pressure of a single or multiple miter bend | B31.3 304.2.3, Eq. (4a)/(4b)/(4c) | [section 6](references/modules.md#6-mitered-bends--allowable-pressure) |
 | `piping.leak-test-pressure` | Hydrostatic and pneumatic leak test pressure (piping minimum) | B31.3 345.4.2 Eq. (24), 345.5.4; B31.1 137 | [section 7](references/modules.md#7-leak-test-pressure) |
@@ -164,7 +164,7 @@ A "manual check required" or "pointer only" run shows the banner, the equation v
 
 ## 6. Findings and assumptions
 Every script warning, every ASSUMED item, every not checked row, the validity result (P_over_SE, t vs D/6) and
-the W basis, every hand check (345.2.1(a) yield check, R1 minimum on miters), anything that
+the W basis, every hand check (345.2.1(a) yield check, R1 minimum without A), anything that
 would change the conclusion.
 
 ## 7. References

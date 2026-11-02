@@ -1,6 +1,6 @@
 ---
 name: bolted-flange
-description: "Evaluate piping loads on a bolted flanged joint in a fixed order: a pressure-equivalent (Kellogg-type) leakage screen against the B16.5 flange rating first, then the detailed BPVC VIII-2 Part 4.16 flange analysis (the retired VIII-1 Appendix 2 method, permitted by B31.3 304.5.1(b)) with gasket seating, bolt area, hub, radial and tangential stress, and rigidity. Use when the user asks about flange leakage, whether a flange will leak under CAESAR II or AutoPIPE nozzle loads, loads on a flange at an API 610 nozzle (the flange only: the pump allowable itself belongs to the nozzle-load skill), for the equivalent pressure method (P + 16M/(pi G^3) + 4F/(pi G^2)), axial force and bending moment against a flange rating, gasket m and y, bolt load, flange stress, or UG-44(b), PCC-1 or NC-3658 flange moment limits. The user reads the rating, dimensions, gasket factors and allowables from licensed copies or, with the optional connector, from a cited lookup; no code table values are embedded."
+description: "Evaluate piping loads on a bolted flanged joint in a fixed order: a pressure-equivalent (Kellogg-type) leakage screen against the B16.5 flange rating first, then the BPVC VIII-2 Part 4.16 (formerly VIII-1 Mandatory Appendix 2; pre-2025 paragraph map shown) flange analysis, permitted by B31.3 304.5.1(b), with gasket seating, bolt area, hub, radial and tangential stress, and rigidity. Use when the user asks about flange leakage, whether a flange will leak under CAESAR II or AutoPIPE nozzle loads, loads on a flange at an API 610 nozzle (the flange only; the pump allowable belongs to the nozzle-load skill), for the equivalent pressure method (P + 16M/(pi G^3) + 4F/(pi G^2)), axial force and bending moment against a flange rating, gasket m and y, bolt load, flange stress, or UG-44(b), PCC-1 or NC-3658 flange moment limits. The user reads the rating, dimensions, gasket factors and allowables from licensed copies or, with the optional connector, from a cited lookup; no code table values are embedded."
 compatibility: Requires Python 3.9+ (standard library only)
 ---
 
@@ -59,14 +59,14 @@ If Pe is within the rating with margin, say it is within the screen and the deta
 
 ## Step 3 - Detailed VIII-2 4.16 analysis
 
-Run `aux.app2-flange-integral` for the operating case (design temperature allowables) and the gasket seating case (ambient allowables). It reports bolt area adequacy (Ab >= Am), the hub, radial and tangential stresses and their averages against the allowables, the 1.5 Sf / 2.5 Sn cap on the hub stress, the rigidity index J <= 1, and the bolt-spacing correction. Method notes:
+Run `aux.app2-flange-integral`, the BPVC VIII-2 Part 4.16 (formerly VIII-1 Mandatory Appendix 2; pre-2025 paragraph map shown) analysis, for the operating case (design temperature allowables) and the gasket seating case (ambient allowables). It reports bolt area adequacy (Ab >= Am), the hub, radial and tangential stresses and their averages against the allowables, the 1.5 Sf / 2.5 Sn cap on the hub stress, the rigidity index J <= 1, and the bolt-spacing correction. Method notes:
 
 - The external loads enter as the pressure-equivalent Peq, and the whole sequence runs on Peq. That is standard practice but it is **not** an Appendix 2 / 4.16 construction; say so, and read Peq, momentTerm and forceTerm from the output.
 - Compression: same rule as the screen. Run the detailed module with `Fax` set to max(F, 0) unless the owner agrees to credit compression (then run the tensile case separately and report both), and state which was done.
 - If neither `Fax` nor `Mext` is given the run is pressure-only (Peq = P); the tool warns. Give the loads.
 - Peq also reaches the gasket-seating case (Am includes Wm1/Sb), which is conservative; the seating result moves with the external loads.
 - Supply **Sn**. Without it the 2.5 Sn cap is unchecked and the tool warns.
-- Hub factors F, V, f default to a closed-form series that is a reconstruction, not Code text, so the run is graded `screening` (label "screening / reconstructed factors") and carries the banner `SCREENING / RECONSTRUCTED FACTORS`. Only when the user reads F, V, f from the VIII-2 Table 4.16.5 equations or figures and passes all three of `F_override`, `V_override`, `f_override` is it graded `calculated` (a loose flange uses no hub factor and is `calculated`); a partial override stays `screening` and names the factors still on the series. The Table 4.16.5 curve-fit option is not shipped (`hubFactorMethod` other than `series` exits 2).
+- Hub factors F, V, f default to a closed-form series that is a reconstruction, not Code text, so the run is graded `screening` (label "screening / reconstructed factors") and carries the banner `SCREENING / RECONSTRUCTED FACTORS`. Only when the user reads F, V, f from the VIII-2 Table 4.16.5 equations or figures and passes all three of `F_override`, `V_override`, `f_override` is it graded `calculated` (a loose flange uses no hub factor and is `calculated`); a partial override stays `screening`, naming the factors still on the series. `hubFactorMethod` accepts `series` only; the Table 4.16.5 curve fits (selectable in the web calculator) are tabulated code data, not shipped here.
 - The moment `Mext` is in **ft-lbf** in this module (use `Mext_in_lbf` for in-lbf). The bolt-spacing correction scales the stress moments, not the rigidity moment.
 - Relay `report_word`, never the machine `status`. Report all of a failing result. Every envelope carries `result_status` (calculated / screening / manual check required / assumed / pointer only / not checked) and `checks[]`; write no PASS or issue-grade wording at `manual check required`, `assumed`, `pointer only`, or `screening` with series factors: give ratios and "within" or "exceeds", banner first, then the `Result status:` line. The Step 2 screen is always `screening`.
 
@@ -152,7 +152,7 @@ Run the checklist in [references/rejection-checklist.md](references/rejection-ch
 
 Do not ask the user to upload a standard's PDF; if the user offers an excerpt, use it only to read the specific value needed. A value returned by the connector carries its citation and is recorded as connector-supplied; it is still verified against your copy before issue.
 
-Equations, clause numbers, symbol definitions and numeric constants in the running text of an equation are usable, as named and cited constants in the script. The Table 4.16.5 curve-fit coefficients are tabulated code data and are not shipped; the user reads F, V and f from the VIII-2 equations or figures and passes the overrides. Where a clause's equation could not be verified here, say so and ask the user to confirm it on the printed page.
+Equations, clause numbers, symbol definitions and numeric constants in an equation's running text are usable as named, cited constants in the script. The Table 4.16.5 curve-fit coefficients are tabulated code data and stay out of this skill (Step 3); the user passes the overrides. Where a clause's equation could not be verified here, say so and have the user confirm it on the printed page.
 
 ---
 
@@ -163,8 +163,8 @@ The Engineering Data connector is optional and separate from this plugin; this s
 | Slot | Tool and dataset_id | Key fields | What comes back |
 |---|---|---|---|
 | `ratedPressure` | `lookup_value`: `b165-2017-ratings` or `b165-2025-ratings` | `group`, `class`, `T` (design °F) | `rating`, interpolated in `T` only |
-| `A`, `C`, `t`, `X`, `Y`, `nBolts`, `bolt_D` | `lookup_value`: `b165-2017-dimensions` | `flangeClass`, `nps` | `odA`, `boltCircleC`, `minThk`, `hubBaseX`, `lengthThruHubY`, `nBolts`, `boltDia` |
-| `gasket_ID`, `gasket_OD` | `lookup_value`: `b1620-2017-spiral-wound` | `flangeClass`, `nps` | `gasketID`, `gasketOD` |
+| `A`, `C`, `t`, `X`, `Y`, `nBolts`, `bolt_D` | `lookup_value`: `b165-2017-dimensions` or `b165-2025-dimensions` | `flangeClass`, `nps` | `odA`, `boltCircleC`, `minThk`, `hubBaseX`, `lengthThruHubY`, `nBolts`, `boltDia` |
+| `gasket_ID`, `gasket_OD` | `lookup_value`: `b1620-2017-spiral-wound` or `b1620-2023-spiral-wound` | `flangeClass`, `nps` | `gasketID`, `gasketOD` |
 | `m`, `y` | `lookup_value`: `gasket-factors-4161` | `family`, `material` | `m`, `y`, `facingSketch` |
 | `Sa` at ambient, `Sb` at design | `lookup_value`: `b313-bolting-stresses-2024` or `b311-bolting-stresses-2024` | `spec`, `grade`, `T`, plus `size`, `lineNo`, `notes`, `sizeOrDia` as asked | `S` in ksi |
 | `Sf`, `SfAmbient`, `Sn`, `SnAmbient` | `lookup_value`: `b313-allowable-stresses-2024` or `b311-allowable-stresses-2024`; B31.3 also `b313-ej-factors` or `b313-ec-factors`, and `b313-w-factors` | `spec`, `grade`, `T`, plus the discriminators the reply names | `S` in ksi. Under B31.3 304.5.1(b) `Sf` is S x E x W, a product formed by a script run |

@@ -6,6 +6,8 @@ Per-module equations, inputs, validity limits and reviewer notes for the pressur
 
 A pointer only, moved from the Step 0 interview: in B31.3 the basic allowable stress table is Table A-1 through the 2022 edition and Table A-1C in 2024, and the quality-factor tables are A-1A / A-1B through 2022 and A-2 / A-3 in 2024. Confirm the table name in your copy (ask the user to check the printed page of their own).
 
+**B31.1 by edition.** The y table is Table 104.1.2-1 (Table 104.1.2(A) in 2016). The **2026 edition renumbers the pressure-design equations**: tm is para. 104.1.2(a) eq. (3)/(4) (eq. (7)/(8) through 2024), P is eq. (5)/(6) (eq. (9)/(10) through 2024), and the bend equation moves from para. 102.4.5 eq. (3) to para. 104.2.1(c) eqs. (7)/(8), para. 102.4.5 now pointing to 104.2.1 and Table 102.4.5-1 being deleted. Appendix A drops the Grade 91 Type 1 lines, so confirm the material line exists in the 2026 table before reading S. The connector datasets follow the edition: `b311-allowable-stresses-2026` and `b311-y-coefficients-2026` for 2026, `b311-allowable-stresses-2024` and `b311-y-coefficients` for 2018 to 2024 (none cites 2016). Give `edition`: a B31.1 run of the straight-pipe, MAWP or bend module writes these pointers into `edition_basis` (`generation`, `tm_equation`, `P_equation`, `bend_equation`, `y_table`, `W_table`, `datasets`, `notes`) for the sheet, and the W gate reads the same year.
+
 ## 1. Straight pipe — pressure design thickness, B31.3
 
 Module `piping.b313-wall-thickness`. Citation: B31.3 para. 304.1.2, Eq. (3a).
@@ -32,7 +34,7 @@ tOrder = tm / (1 − mill tolerance)         nominal wall to order
 
 ## 2. Straight pipe — pressure design thickness, B31.1
 
-Module `piping.b311-wall-thickness`. Citation: B31.1 para. 104.1.2.
+Module `piping.b311-wall-thickness`. Citation: B31.1 para. 104.1.2, eq. (7) through 2024, eq. (3) in 2026.
 
 ```
 tm     = P·D / [ 2·(S·E·W + P·y) ] + A
@@ -41,7 +43,7 @@ tOrder = tm / (1 − mill tolerance)
 
 The module's `t` is the pressure term before the allowance and `tm = t + A`. User-supplied: **S, E, W, y**.
 
-**W and its basis.** W is a live multiplicative term in Eq. (7) from the 2018 edition on (para. 102.4.7, Table 102.4.7-1). For those editions, and when `edition` is not given, W omitted with no `W_basis`, or W = 1.0 with no `W_basis`, exits 2 naming Table 102.4.7-1 and the edition; W omitted with a `W_basis` is applied as 1.0 on that basis and shown in `inputs`. In **B31.1-2016** para. 104.1.1 picks the equation: Eq. (7) of para. 104.1.2 (no W) for seamless pipe or pipe below the creep range, Eq. (11) of para. 104.1.4 (S·E·W, the engine's own form) for longitudinal- or spiral-welded pipe in the creep range, with W from Table 102.4.7. Because that route can require W, a 2016 run still needs W or a `W_basis` naming the route (exit 2 otherwise, naming para. 104.1.1 and Table 102.4.7). A W below 1.0 is recorded as the para. 104.1.4 route; W = 1.0 or a basis alone is recorded as para. 104.1.2 and a warning puts the para. 104.1.4 limit on the sheet. Any other year is treated as carrying W.
+**W and its basis.** W is a live multiplicative term in Eq. (7) from the 2018 edition on, Eq. (3) in 2026 (para. 102.4.7, Table 102.4.7-1). For those editions, and when `edition` is not given, W omitted with no `W_basis`, or W = 1.0 with no `W_basis`, exits 2 naming Table 102.4.7-1 and the edition; W omitted with a `W_basis` is applied as 1.0 on that basis and shown in `inputs`. In **B31.1-2016** para. 104.1.1 picks the equation: Eq. (7) of para. 104.1.2 (no W) for seamless pipe or pipe below the creep range, Eq. (11) of para. 104.1.4 (S·E·W, the engine's own form) for longitudinal- or spiral-welded pipe in the creep range, with W from Table 102.4.7. Because that route can require W, a 2016 run still needs W or a `W_basis` naming the route (exit 2 otherwise, naming para. 104.1.1 and Table 102.4.7). A W below 1.0 is recorded as the para. 104.1.4 route; W = 1.0 or a basis alone is recorded as para. 104.1.2 and a warning puts the para. 104.1.4 limit on the sheet. Any other year is treated as carrying W.
 
 **Validity gate.** B31.1 reads the thick-wall case as Do/tm < 6: the general note to the y table (Table 104.1.2-1; Table 104.1.2(A) in 2016) replaces y there, and this script does not apply that note. The `validity` object therefore compares **tm** (not t) with D/6. B31.1 states no P/(S·E) limit; the pack also stops the run at the B31.3 304.1.2(b) trigger, P/(S·E) > 0.385, as a pack rule confirmed by the P.E. 2026-10-30 (author, licensed P.E.) (not a B31.1 requirement), and the `clause` says so. A trip gives `manual check required` exactly as in section 1.
 
@@ -60,7 +62,7 @@ Workflow for a schedule check:
 2. Ask the user to read the nominal wall of the candidate standard wall (ASME B36.10M / B36.19M, or the mill's data) for this NPS. **Do not supply it.** With the connector it comes from `get_pipe_dimensions` and is recorded as connector-supplied.
 3. Check nominal ≥ tOrder. Then run this module with the selected nominal wall to report the actual allowable pressure and compare to design pressure. The margin is the finding.
 
-The coefficient field is named `y` in this module for both codes: enter Y (B31.3, Table 304.1.1) or y (B31.1, Table 104.1.2(A) / 104.1.2-1) there and say which on the sheet. `Mf` is the B31.12 hydrogen material performance factor; use 1.0 for every other code. If no thickness remains after tolerance and allowances the module returns `fail` with allowable pressure 0, and no validity gate is applied.
+The coefficient field is named `y` in this module for both codes: enter Y (B31.3, Table 304.1.1) or y (B31.1, Table 104.1.2-1; 104.1.2(A) in 2016) there and say which on the sheet. `Mf` is the B31.12 hydrogen material performance factor; use 1.0 for every other code. If no thickness remains after tolerance and allowances the module returns `fail` with allowable pressure 0, and no validity gate is applied.
 
 **Code, W and its basis.** Give `code` (`B31.3`, `B31.1`, `B31.9` or `B31.12`) and `edition`. W multiplies `S·E` exactly as in the thickness equation. For B31.3, for B31.1 from 2018, and when `code` is not given, W omitted or W = 1.0 needs `W_basis` (exit 2 otherwise, naming B31.3 Table 302.3.5 / 302.3.5-1 or B31.1 Table 102.4.7-1). B31.9 and B31.12 equations have no W term: the run records that and needs no basis; a W below 1.0 entered for them is applied and warned as conservative. B31.1-2016 follows the para. 104.1.1 route of section 2.
 
@@ -68,32 +70,40 @@ The coefficient field is named `y` in this module for both codes: enter Y (B31.3
 
 ## 4. Branch connection reinforcement — area replacement
 
-Module `piping.branch-reinforcement`. Citation: B31.3 para. 304.3.3.
+Module `piping.branch-reinforcement`. Citation: B31.3 para. 304.3.3 (the 2024 text; the engine's branch-reinforcement module after its PR #188, owner rulings R1 and R2 of 2026-11-02).
 
 ```
-d1 = [ Db − 2·(Tb − c) ] / sinβ                     effective opening
-d2 = max[ d1 , (Tb − c) + (Th − c) + d1/2 ]         reinforcement half-width
-L4 = min[ 2.5·(Th − c) , 2.5·(Tb − c) + Tr ]        reinforcement height
-A1 = th·d1·(2 − sinβ)                                area required
-A2 = (2·d2 − d1)·(Th − th − c)                       excess in header
-A3 = 2·L4·(Tb − tb − c) / sinβ                       excess in branch
+d1 = [ Db − 2·(Tb − c) ] / sinβ                              effective opening
+d2 = min{ max[ d1 , (Tb − c) + (Th − c) + d1/2 ] , Dh }       half width, never more than Dh  (304.3.3(a))
+L4 = min[ 2.5·(Th − c) , 2.5·(Tb − c) + Tr ]                 reinforcement height
+A1 = th·d1·(2 − sinβ)                                         area required                    (304.3.3(b))
+A2 = (2·d2 − d1)·(Th − th − c)                                excess in header                 (304.3.3(c)(1))
+A3 = 2·L4·(Tb − tb − c) / sinβ  × (Sb/Sh if Sb < Sh)          excess in branch, reduced        (304.3.3(c)(2))
 A4 = pad area inside the zone + welds (supplied)
-PASS if  A2 + A3 + A4 ≥ A1
+PASS only if  A2 + A3 + A4 ≥ A1  and  Th − c ≥ th  and  Tb − c ≥ tb
 ```
 
-Inputs: header `Dh, Th, th`, branch `Db, Tb, tb`, allowance `c`, branch angle `betaDeg` (45–90), pad `Tr, Dp` (0 if none), and `A4welds`, the added area of welds and other metal inside the zone. No input here is a code-table value. **`th` and `tb` are pressure design thicknesses from Section 1 or 2** for header and branch, each with its own E, W and Y — run the wall-thickness calc for both first and quote them.
+Inputs: header `Dh, Th, th`, branch `Db, Tb, tb`, allowance `c`, branch angle `betaDeg` (45–90), pad `Tr, Dp` (0 if none), `A4welds`, the added area of welds and other metal inside the zone, and optionally the allowables `Sb` (branch) and `Sh` (run), **user-supplied** table values that only ever reduce A3. **`th` and `tb` are pressure design thicknesses from Section 1 or 2** for header and branch, each with its own E, W and Y — run the wall-thickness calc for both first and quote them.
+
+**Wall basis (ruling R2).** `Th` and `Tb` are the **measured or minimum** walls per the purchase specification (304.3.3(a)), not nominal. Enter them as such, or give `ThNominal` / `TbNominal` with `millTolerance` and the script derives `Th = ThNominal × (1 − millTolerance)`; `millTolerance` defaults to 0.125 (warned and listed in `defaults_applied`), and 0 is the entry for a measured wall. Both forms for one wall exit 2. The envelope's `wall_basis` records each wall's value and how it was obtained, with the clause; put it on the sheet. The same nominal-less-tolerance basis is what the web calculator autofills, and it is disclosed here so the two agree: a run on nominal walls overstates A2 and A3 (the shipped fixture's 8 × 4 case reads a margin of 0.30233 in.² on nominal walls and 0.08514 in.² at 12.5 % mill tolerance).
+
+What changed in 0.9.2 (each one made an earlier release less conservative):
+
+- **An undersized wall fails outright (ruling R1).** `Th − c < th` or `Tb − c < tb` gives `fail` whatever the pad or weld area, with a `FAIL —` warning naming the wall; the `checks` row "header and branch wall net of allowance against th and tb" carries it. Up to 0.9.1 a negative A2 could be offset by a pad to a PASS.
+- **d2 is capped at Dh** (304.3.3(a) "in any case not more than Dh"), warned when the cap engages; an 8 × 8 lateral at 45° that passed uncapped now fails.
+- **Sb/Sh on A3** (304.3.3(c)(2)): with both allowables given and Sb < Sh, A3 is multiplied by Sb/Sh and `strengthRatio` is reported; one of the two alone is warned and not applied.
+- The 304.3.1(b)(2) range (Dh/Th ≥ 100 with Db ≥ Dh/2) and Figure 304.3.3-1 Note (3) (saddles on β < 90°) are warned on.
 
 Notes a reviewer will ask about:
 
 - **Check first whether the calc is needed.** A listed fitting or a connection that meets the clause's own exemptions needs no area calc; look at 304.3.2 before running this one.
-- `Th` and `Tb` are the measured or minimum thicknesses in the clause, not corroded and not necessarily catalog nominal. If you only have nominal, say which you used; using nominal × (1 − mill tolerance) is the conservative reading.
 - The script implements the B31.3 area method. B31.1 (104.3.1) and other sections carry code-specific zone rules; if the project is B31.1, say the result is a screening check against the B31.3 form and have the user confirm the zone limits.
-- Warnings are findings: header undersized for pressure alone (A2 < 0), pad outside the zone (no credit taken), or a zone wider than the header (check adjacent openings).
-- The margin is `(A2 + A3 + A4) − A1`. Report it in in.², with the status.
+- Warnings are findings: a wall below its design thickness, the d2 cap, the Sb/Sh reduction, pad outside the zone (no credit taken), or a zone wider than the header (check adjacent openings).
+- The margin is `(A2 + A3 + A4) − A1`. Report it in in.², with the status; a positive margin with `fail` is the R1 case and must be reported as a FAIL.
 
 ## 5. Pipe bends — thickness after bending
 
-Module `piping.bend-thickness`. Citation: B31.3 para. 304.2.1 (I-factor), B31.1 para. 102.4.5.
+Module `piping.bend-thickness`. Citation: B31.3 para. 304.2.1 (I-factor); B31.1 para. 102.4.5 eq. (3) through 2024, para. 104.2.1(c) eqs. (7)/(8) in 2026 (give `edition`; the gate's clause and `edition_basis` follow it).
 
 ```
 I_intrados  = [ 4·(R/D) − 1 ] / [ 4·(R/D) − 2 ]
@@ -106,12 +116,13 @@ tm(I) = P·D / ( 2·[ S·E·W / I + P·y ] ) + A
 
 ## 6. Mitered bends — allowable pressure
 
-Module `piping.miter-allowable-pressure`. Citation: B31.3 para. 304.2.3, Eq. (4a)/(4b)/(4c).
+Module `piping.miter-allowable-pressure`. Citation: B31.3 para. 304.2.3, Eq. (4a)/(4b)/(4c) and Eq. (5) (the engine's miter module after its PR #188, owner ruling R3 of 2026-11-02).
 
 ```
 Multiple miters, θ ≤ 22.5°:   P = min(Pm1, Pm2)
   Pm1 = (S·E·W·Tc / r2) · Tc / ( Tc + 0.643·tanθ·√(r2·Tc) )            Eq. (4a)
   Pm2 = (S·E·W·Tc / r2) · (R1 − r2) / (R1 − r2/2)                       Eq. (4b)
+  R1 ≥ R1min = A / tanθ + D/2   with the user-read A                    Eq. (5)
 Single miter, θ ≤ 22.5°:      P = Pm1  (the same form as Eq. (4a))
 Single miter, θ > 22.5°:
   Pm  = (S·E·W·Tc / r2) · Tc / ( Tc + 1.25·tanθ·√(r2·Tc) )             Eq. (4c)
@@ -119,9 +130,11 @@ Single miter, θ > 22.5°:
 
 The script implements exactly these branches (B31.3 ¶304.2.3); verify the equation numbering in your edition. For a single miter, `Pm2` is not evaluated and is reported as `null` in the output.
 
+**Refusals and the eq. (5) check (ruling R3).** A multiple miter with θ > 22.5° is **refused** (exit 2): eqs. (4a)/(4b) are not applicable there (¶304.2.3(a)); evaluate each miter as a single miter with eq. (4c) or redesign (0.9.1 only warned and still printed a pressure). The multiple-miter form also requires R1 > r2, because eq. (4b) carries (R1 − r2) and gives zero or a negative pressure otherwise (the 0.9.1 guard was R1 > r2/2). Eq. (5) is evaluated when the user enters `A`, the empirical value read from the ¶304.2.3 table for (T − c), together with the pipe OD `D`: the output gains `R1min`, a shortfall gives `status` `fail` with a `FAIL —` warning (the pressures are still reported), and the `checks` row "minimum R1 of a multiple miter" reads `calculated`; without `A` that row is `not checked` and a warning asks for it. **A is a code-table value and is never embedded or defaulted.** For a single miter `A` is accepted and not evaluated (eq. (5) bounds the radius between adjacent miter joints).
+
 `Tc` is the wall available for pressure (thickness less tolerance and allowances), `r2` the mean pipe radius, `R1` the effective bend radius to the centerline, `θ` the miter half-angle (the angle of cut), and `miters` the number of cuts. User-supplied: **S, E, W**; W omitted or W = 1.0 needs `W_basis` (B31.3 Table 302.3.5 / 302.3.5-1). The result names the governing equation. Eq. (4a)–(4c) are not the 304.1.2 straight-pipe equation and the clause states no D/6 or P/(S·E) limit for them, so this module carries no thin-wall `validity` gate.
 
-The script does **not** check the clause's minimum `R1` for a multiple miter, which depends on a tabulated size-dependent value — have the user check it on their copy. A multiple miter with θ > 22.5° is flagged as outside Eq. (4a)/(4b); treat those as single miters.
+The clause's minimum `R1` for a multiple miter depends on the tabulated A: without `A` and `D` the script does not check it and says so; with them it does (above).
 
 ## 7. Leak test pressure
 

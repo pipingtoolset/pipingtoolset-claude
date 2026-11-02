@@ -28,9 +28,10 @@ and 4 of the screen, the 1.5 and 2.5 multipliers of the longitudinal-hub limit, 
 0.2 rigidity factors, the 52.14 and 109.4 rigidity constants, the 1.299038 UN thread
 constant) are named constants below, each with its source.
 
-Clause path. ASME BPVC Section VIII Division 1 Mandatory Appendix 2 was revised in its
-entirety in the 2025 edition and now points to Section VIII Division 2 Part 4.16 for the
-flange design rules (paragraphs 2-3 and 2-5 to 2-14 are deleted and mapped to 4.16). The
+Method: BPVC VIII-2 Part 4.16 (formerly VIII-1 Mandatory Appendix 2; pre-2025 paragraph map shown).
+Section VIII Division 1 Mandatory Appendix 2 was revised in its entirety in the 2025 edition and
+now points to Section VIII Division 2 Part 4.16 for the flange design rules (paragraphs 2-3 and
+2-5 to 2-14 are deleted and mapped to 4.16; the map is in references/method-ladder.md). The
 equations are unchanged; cite 4.16 (4.16.6 bolt loads, 4.16.7 flange moments, stresses,
 acceptance and rigidity; Tables 4.16.4 to 4.16.11). ASME B31.3 304.5.1(b) permits either
 route with B31.3 allowable stresses.
@@ -46,8 +47,8 @@ default and the only method shipped): a closed-form constant-chain elastic solut
 C1..C37 chain). It is a RECONSTRUCTION assembled from published open-source implementations
 and cross-checked term by term against a published reproduction. It matches a commercial
 pipe-stress program's flange report to four digits. It is NOT transcribed from licensed Code
-text. The Table 4.16.5 curve-fit option is not shipped (it would be tabulated code data);
-any other value of hubFactorMethod is rejected with exit 2. For a sealed calc, the user reads
+text. The Table 4.16.5 curve fits (a selectable method in the web calculator) are not in this
+skill, being tabulated code data; any other value of hubFactorMethod is rejected with exit 2. For a sealed calc, the user reads
 F, V and f from the VIII-2 Table 4.16.5 equations or figures and passes them per factor as
 F_override, V_override, f_override. This is the only deviation from the engine source and it
 does not change any engine result when the overrides are absent. The Table 4.16.4 constants
@@ -1291,8 +1292,8 @@ CITATIONS = {
         "A conservative leakage screen, not a stress check; PIP PNC00004 3.2.10 permits the method and leaves the acceptance value to the owner"
     ),
     "aux.app2-flange-integral": (
-        "ASME BPVC VIII-2 Part 4.16 (4.16.6 bolt loads, 4.16.7 flange moments, stresses and rigidity, Tables 4.16.4 to 4.16.11); "
-        "equivalent to the retired VIII-1 Mandatory Appendix 2; B31.3 304.5.1(b) with B31.3 allowables. "
+        "ASME BPVC VIII-2 Part 4.16 (formerly VIII-1 Mandatory Appendix 2; pre-2025 paragraph map shown): "
+        "4.16.6 bolt loads, 4.16.7 flange moments, stresses and rigidity, Tables 4.16.4 to 4.16.11; B31.3 304.5.1(b) with B31.3 allowables. "
         "External loads enter as the pressure-equivalent Peq (not an Appendix 2 / 4.16 construction)"
     ),
 }
@@ -1643,7 +1644,7 @@ def validate(module: str, inputs: Any) -> List[str]:
         _need(att in ("integral", "loose"), "attachment must be 'integral' or 'loose'")
         method = inputs.get("hubFactorMethod")
         _need(method in (None, "series"),
-              "the Table 4.16.5 curve-fit option is not shipped; hubFactorMethod must be 'series' (or omitted). "
+              "the Table 4.16.5 curve fits are not shipped in this skill; hubFactorMethod must be 'series' (or omitted). "
               "Use F_override / V_override / f_override with values read from the VIII-2 figures or equations")
         _one_moment(inputs, ("Mext", "Mext_in_lbf"), optional=True)
         for k in ("Edesign", "Eambient", "SfAmbient"):

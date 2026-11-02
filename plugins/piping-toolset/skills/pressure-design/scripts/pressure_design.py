@@ -54,7 +54,8 @@ USAGE
 
 GATES (CLI layer; the engine functions and their fixture outputs are unchanged)
     W basis. Where the code and edition's equation carries W (B31.3 Eq. (3a), (3c), (4a)-(4c);
-    B31.1 Eq. (7), (9), (3) from the 2018 edition), W is part of the contract: W omitted and
+    B31.1 Eq. (7), (9) and bend Eq. (3) of para. 102.4.5 in the 2018-2024 editions, renumbered
+    Eq. (3), (5) and bend Eq. (7) of para. 104.2.1(c) in 2026), W is part of the contract: W omitted and
     no W_basis, or W = 1.0 with no W_basis (and no cited code_values entry for W), exits 2 with
     the W table and edition to read. W omitted with a W_basis is applied as 1.0 on that basis.
     B31.9 and B31.12 equations carry no W; the run records that and needs no basis. B31.1-2016
@@ -617,7 +618,7 @@ FIELDS: Dict[str, List[Field]] = {
         ("S", "psi", True, True, "Allowable stress at design temperature (Appendix A)"),
         ("E", "-", True, True, "Quality / joint factor E"),
         ("W", "-", False, True, "Weld strength reduction factor W (para. 102.4.7, Table 102.4.7-1). Omitted or 1.0 needs W_basis where the edition's Eq. (7) carries W"),
-        ("y", "-", True, True, "Temperature coefficient y (Table 104.1.2(A))"),
+        ("y", "-", True, True, "Temperature coefficient y (Table 104.1.2-1; Table 104.1.2(A) in 2016)"),
         ("A", "in", True, False, "Additional thickness (mechanical, corrosion, erosion, threading)"),
         ("millTolerance", "fraction", True, False, "Mill under-tolerance as a fraction, e.g. 0.125"),
     ],
@@ -634,16 +635,21 @@ FIELDS: Dict[str, List[Field]] = {
     ],
     "piping.branch-reinforcement": [
         ("Dh", "in", True, False, "Header outside diameter"),
-        ("Th", "in", True, False, "Header nominal (measured) wall"),
+        ("Th", "in", False, False, "Header MINIMUM or measured wall per the purchase specification (B31.3 304.3.3(a)); or give ThNominal"),
         ("th", "in", True, False, "Header pressure-design thickness (from the wall-thickness calc)"),
         ("Db", "in", True, False, "Branch outside diameter"),
-        ("Tb", "in", True, False, "Branch nominal (measured) wall"),
+        ("Tb", "in", False, False, "Branch MINIMUM or measured wall per the purchase specification (B31.3 304.3.3(a)); or give TbNominal"),
         ("tb", "in", True, False, "Branch pressure-design thickness (from the wall-thickness calc)"),
         ("c", "in", True, False, "Corrosion / mechanical allowance (both header and branch)"),
         ("betaDeg", "deg", True, False, "Branch angle from the header axis, 45 to 90"),
         ("Tr", "in", True, False, "Reinforcing pad thickness (0 = none)"),
         ("Dp", "in", True, False, "Reinforcing pad outside diameter (0 = none)"),
         ("A4welds", "in^2", True, False, "Additional area from welds and other metal inside the zone"),
+        ("Sb", "psi", False, True, "Branch pipe allowable stress; with Sh, A3 is reduced by Sb/Sh when Sb < Sh (B31.3 304.3.3(c)(2))"),
+        ("Sh", "psi", False, True, "Run (header) pipe allowable stress; used only together with Sb"),
+        ("ThNominal", "in", False, False, "Header nominal wall: Th = ThNominal x (1 - millTolerance) when Th is not given"),
+        ("TbNominal", "in", False, False, "Branch nominal wall: Tb = TbNominal x (1 - millTolerance) when Tb is not given"),
+        ("millTolerance", "fraction", False, False, "Mill under-tolerance applied to ThNominal / TbNominal; default 0.125, 0 for a measured wall"),
     ],
     "piping.bend-thickness": [
         ("P", "psi", True, False, "Internal design pressure"),
@@ -664,6 +670,8 @@ FIELDS: Dict[str, List[Field]] = {
         ("R1", "in", True, False, "Effective miter bend radius (centerline)"),
         ("thetaDeg", "deg", True, False, "Miter half-angle (angle of cut), 0 < theta < 90"),
         ("miters", "count", True, False, "Number of miter cuts (1 = single miter)"),
+        ("A", "in", False, True, "Empirical A of Eq. (5), read by the user from the B31.3 304.2.3 table for (T - c); never defaulted"),
+        ("D", "in", False, False, "Pipe outside diameter, required with A for the Eq. (5) check of R1"),
     ],
     "piping.leak-test-pressure": [
         ("P", "psi", True, False, "Internal design gage pressure"),
@@ -1026,47 +1034,100 @@ def b31_allowable_pressure(input: dict) -> dict:
 
 
 def branch_reinforcement(input: dict) -> dict:
-    """B31.3 para. 304.3.3 area replacement. PASS if A2 + A3 + A4 >= A1."""
+    """B31.3 para. 304.3.3 area replacement (port of the calculation engine's branch-reinforcement module after its PR #188).
+
+        d1 = (Db - 2(Tb - c)) / sin b                       effective opening
+        d2 = min(max(d1, (Tb - c) + (Th - c) + d1/2), Dh)   half width, capped at Dh (304.3.3(a))
+        L4 = min(2.5(Th - c), 2.5(Tb - c) + Tr)
+        A1 = th d1 (2 - sin b);  A2 = (2 d2 - d1)(Th - th - c)
+        A3 = 2 L4 (Tb - tb - c)/sin b, times Sb/Sh when Sb < Sh (304.3.3(c)(2))
+        PASS only if A2 + A3 + A4 >= A1 AND Th - c >= th AND Tb - c >= tb
+
+    Th and Tb are the MINIMUM (or measured) walls of the 304.3.3(a) nomenclature, not nominal.
+    Owner ruling R1 (2026-11-02): a header or branch wall net of allowance below its own
+    pressure-design thickness FAILS whatever the pad or weld area. Up to plugin 0.9.1 d2 was
+    uncapped, A3 took no Sb/Sh reduction and a negative A2 could be offset to a PASS."""
     module = "piping.branch-reinforcement"
     v = _prepare(module, input)
     Dh, Th, th, Db, Tb, tb, c, betaDeg, Tr, Dp, A4welds = (
         v[k] for k in ("Dh", "Th", "th", "Db", "Tb", "tb", "c", "betaDeg", "Tr", "Dp", "A4welds")
     )
+    if Th is None or Tb is None:
+        raise ValueError("Th and Tb (minimum or measured walls) are required; give them, or ThNominal / TbNominal "
+                         "with millTolerance through the CLI")
     if Dh <= 0 or Db <= 0 or Db > Dh:
         raise ValueError("require 0 < Db <= Dh")
     if Th <= c or Tb <= c:
-        raise ValueError("nominal walls must exceed allowance c")
+        raise ValueError("minimum walls Th and Tb must exceed allowance c")
     if betaDeg < 45 or betaDeg > 90:
         raise ValueError("betaDeg must be 45–90 (code area method range)")
+    hasSb, hasSh = v["Sb"] is not None, v["Sh"] is not None
+    if (hasSb and v["Sb"] <= 0) or (hasSh and v["Sh"] <= 0):
+        raise ValueError("Sb and Sh must be > 0 when entered")
 
+    warnings: List[str] = []
     beta = (betaDeg * math.pi) / 180
     sinB = math.sin(beta)
     d1 = (Db - 2 * (Tb - c)) / sinB
-    d2 = max(d1, Tb - c + (Th - c) + d1 / 2)
+    d2Uncapped = max(d1, Tb - c + (Th - c) + d1 / 2)
+    d2 = min(d2Uncapped, Dh)
+    if d2Uncapped > Dh:
+        warnings.append(f"d2 limited to Dh = {_js_num(round_half_up(Dh, 4))} in (¶304.3.3(a): not more than Dh); "
+                        f"uncapped value {_js_num(round_half_up(d2Uncapped, 4))} in.")
     L4 = min(2.5 * (Th - c), 2.5 * (Tb - c) + Tr)
 
     A1 = th * d1 * (2 - sinB)
     A2 = (2 * d2 - d1) * (Th - th - c)
-    A3 = (2 * L4 * (Tb - tb - c)) / sinB
+    A3raw = (2 * L4 * (Tb - tb - c)) / sinB
+
+    strengthRatio = 1.0
+    if hasSb and hasSh:
+        if v["Sb"] < v["Sh"]:
+            strengthRatio = v["Sb"] / v["Sh"]
+    elif hasSb or hasSh:
+        warnings.append("Enter both Sb and Sh to apply the ¶304.3.3(c)(2) branch-to-run stress ratio; no reduction applied.")
+    # The reduction applies to the branch wall's (positive) contribution; a negative A3 already
+    # fails the branch-wall check below and is reported unscaled.
+    A3 = A3raw * strengthRatio if A3raw > 0 else A3raw
+    if strengthRatio < 1:
+        warnings.append(f"Branch allowable below run allowable: A3 reduced by Sb/Sh = "
+                        f"{_js_num(round_half_up(strengthRatio, 4))} (¶304.3.3(c)(2)).")
 
     padArea = 0.0
-    warnings: List[str] = []
     if Tr > 0 and Dp > 0:
         padWidthInZone = min(Dp, 2 * d2) - Db / sinB
         if padWidthInZone > 0:
             padArea = Tr * padWidthInZone
         else:
             warnings.append("Pad lies entirely outside the reinforcement zone — no pad credit taken.")
+        if betaDeg < 90:
+            warnings.append("Figure 304.3.3-1 Note (3) limits reinforcing saddles to 90° branches — confirm the pad type is acceptable for β < 90°.")
     A4 = padArea + A4welds
 
-    if A2 < 0:
-        warnings.append("Header has no excess thickness (Th − th − c < 0) — header is undersized for pressure alone.")
-    if A3 < 0:
-        warnings.append("Branch has no excess thickness (Tb − tb − c < 0).")
+    # Ruling R1 (2026-11-02): either wall thinner than its own pressure-design thickness fails
+    # outright; reinforcement does not cure an undersized pipe.
+    headerShort = Th - c < th
+    branchShort = Tb - c < tb
+    if headerShort:
+        warnings.append(f"FAIL — header wall net of allowance (Th − c = {_js_num(round_half_up(Th - c, 5))} in) is below "
+                        f"its pressure-design thickness th = {_js_num(round_half_up(th, 5))} in: the run pipe is undersized "
+                        f"for pressure alone; pad and weld area cannot make up for it.")
+    if branchShort:
+        warnings.append(f"FAIL — branch wall net of allowance (Tb − c = {_js_num(round_half_up(Tb - c, 5))} in) is below "
+                        f"its pressure-design thickness tb = {_js_num(round_half_up(tb, 5))} in: the branch pipe is undersized "
+                        f"for pressure alone; pad and weld area cannot make up for it.")
+
     if 2 * d2 > Dh:
-        warnings.append("Reinforcement zone 2·d2 exceeds header OD — check adjacent openings / code zone limits.")
+        warnings.append("Reinforcement zone exceeds the header circumference assumption — check adjacent openings / code zone limits.")
+
+    # ¶304.3.1(b) geometry limits (B31.3 nomenclature, Figure 304.3.3-1).
+    DhOverTh = Dh / Th
+    if DhOverTh >= 100 and Db >= Dh / 2:
+        warnings.append(f"Dh/Th = {_js_num(round_half_up(DhOverTh, 1))} ≥ 100 with Db ≥ Dh/2 — outside the area-replacement "
+                        f"method's range (¶304.3.1(b)(2)); qualify the pressure design per ¶304.3.1(c) / ¶304.7.2 (e.g. analysis).")
 
     margin = A2 + A3 + A4 - A1
+    status = "pass" if (margin >= 0 and not headerShort and not branchShort) else "fail"
 
     return {
         "module": module,
@@ -1079,8 +1140,9 @@ def branch_reinforcement(input: dict) -> dict:
             "A3": round_half_up(A3, 5),
             "A4": round_half_up(A4, 5),
             "margin": round_half_up(margin, 5),
+            "strengthRatio": round_half_up(strengthRatio, 5),
         },
-        "status": _verdict(margin >= 0),
+        "status": status,
         "warnings": warnings,
     }
 
@@ -1137,37 +1199,71 @@ def miter_allowable_pressure(input: dict) -> dict:
         raise ValueError("thetaDeg must be in (0, 90)")
     if miters < 1:
         raise ValueError("miters must be >= 1")
-    if miters > 1 and R1 <= r2 / 2:
-        raise ValueError("R1 must exceed r2/2 for the multi-miter form")
+    # Owner ruling R3 (2026-11-02; engine miter-allowable-pressure.ts after PR #188): multiple
+    # miters with θ > 22.5° are refused (eqs. (4a)/(4b) not applicable, ¶304.2.3(a)); the
+    # multi-miter form needs R1 > r2 (eq. (4b) is zero or negative otherwise); eq. (5) is
+    # checked when the user enters A from the ¶304.2.3 table together with the pipe OD D.
+    # Up to plugin 0.9.1 the θ > 22.5° case only warned, the guard was R1 > r2/2 and eq. (5)
+    # was never evaluated.
+    if miters > 1 and thetaDeg > 22.5:
+        raise ValueError("θ > 22.5° with multiple miters is outside eqs. (4a)/(4b) (¶304.2.3(a)); evaluate each "
+                         "miter as a single miter with eq. (4c) or redesign.")
+    if miters > 1 and R1 <= r2:
+        raise ValueError(f"R1 = {_js_num(R1)} in must exceed r2 = {_js_num(r2)} in for the multiple-miter form: eq. (4b) "
+                         f"carries (R1 − r2) and gives zero or a negative pressure at R1 ≤ r2 — increase R1 (and check "
+                         f"it against eq. (5)).")
+    A, D = v["A"], v["D"]
+    hasA = A is not None
+    if hasA and A <= 0:
+        raise ValueError("A must be > 0 when entered")
+    if hasA and not (D is not None and D > 0):
+        raise ValueError("Pipe OD D (> 0) is required with A for the eq. (5) check")
 
     theta = (thetaDeg * math.pi) / 180
+    tanT = math.tan(theta)
     base = (S * E * W * Tc) / r2
-    Pm1 = base * (Tc / (Tc + 0.643 * math.tan(theta) * math.sqrt(r2 * Tc)))
+    eq4a = base * (Tc / (Tc + 0.643 * tanT * math.sqrt(r2 * Tc)))
 
     warnings: List[str] = []
+    status = "na"
+    Pm1 = eq4a
     Pm2 = 0.0
+    R1min: Optional[float] = None
     if miters > 1:
-        if thetaDeg > 22.5:
-            warnings.append("θ > 22.5° with multiple miters is outside the Eq. 4a/4b applicability — treat as single miters.")
         Pm2 = base * ((R1 - r2) / (R1 - r2 / 2))
         allowablePressure = min(Pm1, Pm2)
         governing = "Eq. 4a" if Pm1 <= Pm2 else "Eq. 4b"
+        if hasA:
+            R1min = A / tanT + D / 2
+            if R1 < R1min:
+                status = "fail"
+                warnings.append(f"FAIL — R1 = {_js_num(R1)} in is below the eq. (5) minimum A/tanθ + D/2 = "
+                                f"{_js_num(round_half_up(R1min, 3))} in (¶304.2.3): the bend does not comply; increase R1.")
+        else:
+            warnings.append("Eq. (5) minimum R1 not checked — enter A from the ¶304.2.3 table for (T − c), and the pipe OD D.")
     elif thetaDeg > 22.5:
-        allowablePressure = base * (Tc / (Tc + 1.25 * math.tan(theta) * math.sqrt(r2 * Tc)))
+        Pm1 = 0.0
+        allowablePressure = base * (Tc / (Tc + 1.25 * tanT * math.sqrt(r2 * Tc)))
         governing = "Eq. 4c (single miter)"
     else:
         allowablePressure = Pm1
         governing = "Eq. 4a (single miter)"
+    if miters == 1 and hasA:
+        warnings.append("Eq. (5) bounds the effective radius R1 between adjacent miter joints; it is not evaluated for a single miter.")
+
+    output: Dict[str, Any] = {
+        "Pm1": round_half_up(Pm1, 3),
+        "Pm2": round_half_up(Pm2, 3),
+        "allowablePressure": round_half_up(allowablePressure, 3),
+        "governing": governing,
+    }
+    if R1min is not None:
+        output["R1min"] = round_half_up(R1min, 4)
 
     return {
         "module": module,
-        "output": {
-            "Pm1": round_half_up(Pm1, 3),
-            "Pm2": round_half_up(Pm2, 3),
-            "allowablePressure": round_half_up(allowablePressure, 3),
-            "governing": governing,
-        },
-        "status": "na",
+        "output": output,
+        "status": status,
         "warnings": warnings,
     }
 
@@ -1234,12 +1330,12 @@ REGISTRY: Dict[str, Callable[[dict], dict]] = {
 # Citation strings per module (paragraph references only - never table values).
 CITATIONS: Dict[str, str] = {
     "piping.b313-wall-thickness": "ASME B31.3 ¶304.1.2 Eq. (3a)",
-    "piping.b311-wall-thickness": "ASME B31.1 ¶104.1.2 (also the B31.5 form; used for B31.9 as ¶904.1.1 permits)",
-    "piping.b31-allowable-pressure": "ASME B31.3 ¶304.1.2 Eq. (3a) / B31.1 ¶104.1.2 Eq. (9), solved for P with W (B31.12 Mf supported)",
+    "piping.b311-wall-thickness": "ASME B31.1 ¶104.1.2 Eq. (7) through 2024, Eq. (3) in 2026 (also the B31.5 form; used for B31.9 as ¶904.1.1 permits)",
+    "piping.b31-allowable-pressure": "ASME B31.3 ¶304.1.2 Eq. (3a) / B31.1 ¶104.1.2 Eq. (9) through 2024, Eq. (5) in 2026, solved for P with W (B31.12 Mf supported)",
     "piping.leak-test-pressure": "ASME B31.3 ¶345.4.2 Eq. (24) / ¶345.5.4; B31.1 ¶137.4.5 via factors",
-    "piping.bend-thickness": "ASME B31.3 ¶304.2.1 / B31.1 ¶102.4.5 (I-factor)",
-    "piping.miter-allowable-pressure": "ASME B31.3 ¶304.2.3 Eq. (4a)/(4b)/(4c)",
-    "piping.branch-reinforcement": "ASME B31.3 ¶304.3.3 area replacement",
+    "piping.bend-thickness": "ASME B31.3 ¶304.2.1 / B31.1 ¶102.4.5 Eq. (3) through 2024, ¶104.2.1(c) Eq. (7) in 2026 (I-factor)",
+    "piping.miter-allowable-pressure": "ASME B31.3 ¶304.2.3 Eq. (4a)/(4b)/(4c), Eq. (5) with user-entered A",
+    "piping.branch-reinforcement": "ASME B31.3 ¶304.3.3 area replacement (d2 ≤ Dh per (a); Sb/Sh on A3 per (c)(2); walls per (a) minimum or measured)",
 }
 
 
@@ -1291,9 +1387,15 @@ def validate(module: str, inputs: Any) -> List[str]:
         need(t < D / 2, "t must be less than D/2 (wall cannot reach the pipe centre)")
         need(A < t, "additional thickness A must be less than the nominal wall t")
     elif module == "piping.branch-reinforcement":
-        need(v["Th"] < v["Dh"] / 2, "Th must be less than Dh/2")
-        need(v["Tb"] < v["Db"] / 2, "Tb must be less than Db/2")
-        need(v["c"] < v["Th"] and v["c"] < v["Tb"], "allowance c must be less than both Th and Tb")
+        if v["Th"] is not None:
+            need(v["Th"] < v["Dh"] / 2, "Th must be less than Dh/2")
+            need(v["c"] < v["Th"], "allowance c must be less than both Th and Tb")
+        if v["Tb"] is not None:
+            need(v["Tb"] < v["Db"] / 2, "Tb must be less than Db/2")
+            need(v["c"] < v["Tb"], "allowance c must be less than both Th and Tb")
+        mt = v["millTolerance"]
+        if mt is not None:
+            need(0 <= mt < 1, "millTolerance must be in [0, 1)")
     elif module == "piping.miter-allowable-pressure":
         need(v["R1"] > v["r2"], "R1 must exceed r2 (the miter bend radius must clear the pipe radius)")
         need(v["Tc"] < 2 * v["r2"], "Tc must be less than 2*r2 (wall cannot exceed the pipe diameter)")
@@ -1482,6 +1584,54 @@ def w_gate(module: str, inputs: dict, basis: dict, provenance: Optional[dict]) -
     return inputs, record, warnings
 
 
+BRANCH_MILL_DEFAULT = 0.125
+_BRANCH_WALL_CLAUSE = ("B31.3 para. 304.3.3(a): Th and Tb are the measured or minimum walls per the purchase "
+                       "specification, not nominal")
+
+
+def branch_wall_basis(inputs: dict) -> tuple:
+    """Ruling R2 (2026-11-02): resolve Th / Tb for the branch module and record their basis.
+
+    Th and Tb given are taken as the minimum or measured walls of para. 304.3.3(a). ThNominal /
+    TbNominal are reduced by millTolerance (default 0.125, 0 allowed for a measured wall) when
+    the minimum wall is not given; both for one wall is a conflict (exit 2). Returns (engine
+    inputs without the nominal keys, wall_basis record, warnings)."""
+    inputs = dict(inputs)
+    record: Dict[str, Any] = {"clause": _BRANCH_WALL_CLAUSE}
+    warnings: List[str] = []
+    mt_given = inputs.get("millTolerance")
+    if mt_given is not None and (isinstance(mt_given, bool) or not isinstance(mt_given, (int, float))):
+        raise ValueError("input 'millTolerance' must be a number")
+    mill = float(mt_given) if mt_given is not None else BRANCH_MILL_DEFAULT
+    used_default = False
+    for wall, nominal, what in (("Th", "ThNominal", "header"), ("Tb", "TbNominal", "branch")):
+        have, nom = inputs.get(wall), inputs.get(nominal)
+        if nom is not None and (isinstance(nom, bool) or not isinstance(nom, (int, float))):
+            raise ValueError(f"input '{nominal}' must be a number")
+        if have is not None and nom is not None:
+            raise ValueError(f"give {wall} (the {what} minimum or measured wall) or {nominal}, not both")
+        if have is None and nom is None:
+            raise ValueError(f"{wall} is required: the {what} minimum or measured wall per the purchase specification "
+                             f"(B31.3 para. 304.3.3(a)), or {nominal} with millTolerance (default "
+                             f"{_js_num(BRANCH_MILL_DEFAULT)}) to derive it")
+        if nom is not None:
+            if not (0 <= mill < 1):
+                raise ValueError("millTolerance must be in [0, 1)")
+            val = float(nom) * (1 - mill)
+            inputs[wall] = val
+            used_default = used_default or mt_given is None
+            record[wall] = {"value": round_half_up(val, 6), "basis": f"{nominal} {_js_num(float(nom))} x (1 - "
+                            f"{_js_num(mill)} mill tolerance){' (default mill tolerance)' if mt_given is None else ''}"}
+        else:
+            record[wall] = {"value": have, "basis": f"entered as the {what} minimum or measured wall"}
+    if used_default:
+        warnings.append(f"millTolerance not given: {_js_num(BRANCH_MILL_DEFAULT)} applied to the nominal wall(s); enter the "
+                        f"specification's tolerance, or 0 for a measured wall.")
+    for k in ("ThNominal", "TbNominal", "millTolerance"):
+        inputs.pop(k, None)
+    return inputs, record, warnings
+
+
 _CLAUSE_B313 = ("B31.3 para. 304.1.2(b): for t >= D/6 or P/(S*E) > 0.385 the pressure design thickness requires "
                 "special consideration of theory of failure, effects of fatigue and thermal stress")
 _CLAUSE_B311 = ("B31.1 para. 104.1.2: for Do/tm < 6 the general note to the y table (Table 104.1.2-1; Table "
@@ -1490,11 +1640,66 @@ _CLAUSE_B311 = ("B31.1 para. 104.1.2: for Do/tm < 6 the general note to the y ta
                 "rule confirmed by the P.E. 2026-10-30, not a B31.1 requirement)")
 
 
-def _clause(module: str, code: Optional[str]) -> str:
+# B31.1 equation numbers and table names by edition (pointers only, never values). The 2026
+# edition renumbered the pressure-design equations: tm eq. (7)/(8) became (3)/(4), P eq. (9)/(10)
+# became (5)/(6), and the bend equation moved from para. 102.4.5 eq. (3) to para. 104.2.1(c)
+# eqs. (7)/(8), para. 102.4.5 now pointing to 104.2.1 (Table 102.4.5-1 deleted). Table 104.1.2-1
+# keeps its name (Table 104.1.2(A) in 2016). Appendix A dropped the Grade 91 Type 1 lines. The
+# connector datasets follow the edition: b311-allowable-stresses-2026 / b311-y-coefficients-2026
+# for 2026, b311-allowable-stresses-2024 / b311-y-coefficients for 2018-2024.
+B311_EDITION_MODULES = ("piping.b311-wall-thickness", "piping.b31-allowable-pressure", "piping.bend-thickness")
+
+
+def b311_edition_basis(year: Optional[int]) -> Dict[str, Any]:
+    """Equation numbers, table names and connector dataset ids for a B31.1 edition year."""
+    if year is not None and year >= 2026:
+        return {
+            "edition": year, "generation": "2026",
+            "tm_equation": "para. 104.1.2(a) eq. (3)/(4) (eq. (7)/(8) through 2024)",
+            "P_equation": "para. 104.1.2(a) eq. (5)/(6) (eq. (9)/(10) through 2024)",
+            "bend_equation": "para. 104.2.1(c) eq. (7)/(8) (para. 102.4.5 eq. (3) through 2024; 102.4.5 now points to 104.2.1 and Table 102.4.5-1 is deleted)",
+            "y_table": "Table 104.1.2-1", "W_table": "Table 102.4.7-1 (para. 102.4.7)",
+            "datasets": {"S": "b311-allowable-stresses-2026", "y": "b311-y-coefficients-2026"},
+            "notes": ["Appendix A Grade 91 Type 1 lines are deleted in 2026: confirm the material line exists in the "
+                      "2026 table before reading S",
+                      "para. 102.3.3 is (a) below the creep range / (b) creep range / (c) test ((a)/(b) in 2024)"],
+        }
+    if year == 2016:
+        return {
+            "edition": year, "generation": "2016",
+            "tm_equation": "para. 104.1.2 eq. (7)/(8) (no W; para. 104.1.4 eq. (11)/(12) with W for welded pipe in the creep range)",
+            "P_equation": "para. 104.1.2 eq. (9)/(10)",
+            "bend_equation": "para. 102.4.5 eq. (3) (no W)",
+            "y_table": "Table 104.1.2(A)", "W_table": "Table 102.4.7 (para. 102.4.7)",
+            "datasets": {}, "notes": ["no connector dataset cites the 2016 edition: read the printed tables"],
+        }
+    if year is not None:
+        return {
+            "edition": year, "generation": "2018-2024",
+            "tm_equation": "para. 104.1.2(a) eq. (7)/(8)", "P_equation": "para. 104.1.2(a) eq. (9)/(10)",
+            "bend_equation": "para. 102.4.5 eq. (3)",
+            "y_table": "Table 104.1.2-1", "W_table": "Table 102.4.7-1 (para. 102.4.7)",
+            "datasets": {"S": "b311-allowable-stresses-2024", "y": "b311-y-coefficients"},
+            "notes": [],
+        }
+    return {
+        "edition": None, "generation": "edition not given",
+        "tm_equation": "para. 104.1.2(a) eq. (7)/(8) through 2024, eq. (3)/(4) in 2026",
+        "P_equation": "para. 104.1.2(a) eq. (9)/(10) through 2024, eq. (5)/(6) in 2026",
+        "bend_equation": "para. 102.4.5 eq. (3) through 2024, para. 104.2.1(c) eq. (7)/(8) in 2026",
+        "y_table": "Table 104.1.2-1 (Table 104.1.2(A) in 2016)", "W_table": "Table 102.4.7-1 (para. 102.4.7)",
+        "datasets": {"S": "b311-allowable-stresses-2024 or b311-allowable-stresses-2026 by edition",
+                     "y": "b311-y-coefficients or b311-y-coefficients-2026 by edition"},
+        "notes": ["give edition: the equation numbers and the connector datasets depend on it"],
+    }
+
+
+def _clause(module: str, code: Optional[str], year: Optional[int] = None) -> str:
     """The clause a tripped thick-wall gate sends the user to (paragraph pointers only)."""
     if module == "piping.bend-thickness":
         if code == "B31.1":
-            return "B31.1 para. 102.4.5 on the para. 104.1.2 basis. " + _CLAUSE_B311
+            para = "para. 104.2.1(c)" if (year is not None and year >= 2026) else "para. 102.4.5"
+            return f"B31.1 {para} on the para. 104.1.2 basis. " + _CLAUSE_B311
         if code == "B31.3":
             return "B31.3 para. 304.2.1 on the para. 304.1.2 basis. " + _CLAUSE_B313
         return ("B31.3 para. 304.2.1 / B31.1 para. 102.4.5 on the straight-pipe basis. "
@@ -1511,7 +1716,8 @@ def _clause(module: str, code: Optional[str]) -> str:
     return _CLAUSE_B313 + ". " + _CLAUSE_B311
 
 
-def validity_gate(module: str, inputs: dict, result: dict, code: Optional[str]) -> Optional[dict]:
+def validity_gate(module: str, inputs: dict, result: dict, code: Optional[str],
+                  year: Optional[int] = None) -> Optional[dict]:
     """The thin-wall validity object for a gated module, or None.
 
     P_over_SE = P/(S*E) (times Mf for B31.12); for the MAWP module P is the computed allowable
@@ -1550,7 +1756,7 @@ def validity_gate(module: str, inputs: dict, result: dict, code: Optional[str]) 
         "D_over_6": round_half_up(D / 6, 5),
         "t_over_D6": t_trip,
         "thin_wall_valid": not (t_trip or r_trip),
-        "clause": _clause(module, code),
+        "clause": _clause(module, code, year),
     }
 
 
@@ -1603,6 +1809,8 @@ MAIN_CHECK: Dict[str, str] = {
 CHECK_VALIDITY = "thin-wall validity (P/(S*E) against 0.385, thickness against D/6)"
 CHECK_DESIGN_P = "allowable pressure against the design pressure"
 CHECK_SERVICE = "B31.3 Category M / Chapter IX requirements"
+CHECK_MITER_R1 = "minimum R1 of a multiple miter, B31.3 para. 304.2.3 eq. (5)"
+CHECK_BRANCH_WALLS = "header and branch wall net of allowance against th and tb (B31.3 para. 304.3.3; ruling R1)"
 _NC_SCHEDULE = ("selected nominal wall against tOrder",
                 "compare the B36.10M / B36.19M or mill nominal wall with tOrder on the sheet, or run "
                 "piping.b31-allowable-pressure on it")
@@ -1621,10 +1829,7 @@ NOT_CHECKED: Dict[str, List[tuple]] = {
         ("wall thinning during bending",
          "choose the pre-bend wall from the bender's predicted thinning and state its source"),
     ],
-    "piping.miter-allowable-pressure": [
-        ("minimum R1 of a multiple miter, B31.3 para. 304.2.3",
-         "depends on a tabulated size-dependent value; check it on your copy"),
-    ],
+    "piping.miter-allowable-pressure": [],
     "piping.leak-test-pressure": [
         ("test stress against yield and component ratings, B31.3 para. 345.2.1(a)", "check the resulting stress"),
         ("pneumatic limit of 90 % of the para. 345.2.1(a) pressure, B31.3 para. 345.5.4", "not evaluated"),
@@ -1778,6 +1983,22 @@ def result_checks(module: str, envelope: dict, ctx: dict, pointers: dict) -> Lis
                                      f"{ctx.get('design_state')}), same pressure unit"))
     if ctx.get("special_service"):
         checks.append(make_check(CHECK_SERVICE, GRADE_MANUAL, "na", ctx["special_service"]))
+    if module == "piping.branch-reinforcement" and not pointers:
+        inp = envelope["inputs"]
+        short = [f"{w} - c = {_js_num(round_half_up(inp[w] - inp['c'], 5))} < {t} = {_js_num(inp[t])}"
+                 for w, t in (("Th", "th"), ("Tb", "tb")) if inp[w] - inp["c"] < inp[t]]
+        checks.append(make_check(CHECK_BRANCH_WALLS, GRADE_CALCULATED, _verdict(not short),
+                                 ("; ".join(short) + ": undersized for pressure alone, FAIL whatever the pad or weld area")
+                                 if short else "both walls net of allowance are at least their pressure-design thickness"))
+    if module == "piping.miter-allowable-pressure" and not pointers:
+        r1min = envelope["output"].get("R1min") if envelope.get("output") else None
+        if r1min is not None:
+            R1 = envelope["inputs"]["R1"]
+            checks.append(make_check(CHECK_MITER_R1, GRADE_CALCULATED, _verdict(R1 >= r1min),
+                                     f"R1 = {_js_num(R1)} against A/tan(theta) + D/2 = {_js_num(r1min)} with the user-entered A"))
+        elif envelope["inputs"].get("miters", 0) > 1:
+            checks.append(make_check(CHECK_MITER_R1, "not checked", "na",
+                                     "enter A from the para. 304.2.3 table for (T - c), and the pipe OD D, to evaluate it"))
     assumed = assumed_inputs_check((envelope.get("project_basis_applied") or {}).get("assumptions"))
     if assumed is not None:
         checks.append(assumed)
@@ -1852,6 +2073,12 @@ def run_module(module: str, inputs: dict, project_basis_file: Optional[str] = No
     w_record, w_warnings = None, []
     if module in W_MODULES and "W" not in pointers:
         inputs, w_record, w_warnings = w_gate(module, inputs, basis, provenance)
+    wall_record, wall_defaults = None, {}
+    if module == "piping.branch-reinforcement":
+        inputs, wall_record, wall_warnings = branch_wall_basis(inputs)
+        w_warnings = w_warnings + wall_warnings
+        if any("(default mill tolerance)" in v.get("basis", "") for v in wall_record.values() if isinstance(v, dict)):
+            wall_defaults = {"millTolerance": BRANCH_MILL_DEFAULT}
     present_supplied = [n for n in user_supplied_names(module) if inputs.get(n) is not None]
     if pointers:
         # names, types and every other required input are checked as for a full run
@@ -1887,14 +2114,21 @@ def run_module(module: str, inputs: dict, project_basis_file: Optional[str] = No
             "inputs": dict(inputs, **basis),
             "user_supplied": present_supplied,
             # W is never defaulted silently: the W gate either has a value, a stated basis, or an
-            # equation without W, and records which in weld_factor_basis.
-            "defaults_applied": {},
+            # equation without W, and records which in weld_factor_basis. The branch module's
+            # default mill tolerance (ruling R2) is the one default this script applies, and it is
+            # shown here and warned.
+            "defaults_applied": dict(wall_defaults),
         }
     if w_record is not None:
         envelope["weld_factor_basis"] = w_record
+    if wall_record is not None:
+        envelope["wall_basis"] = wall_record
+    year = _edition_year(basis.get("edition"))
+    if w_record is not None and w_record["code"] == "B31.1" and module in B311_EDITION_MODULES:
+        envelope["edition_basis"] = b311_edition_basis(year)
     if not pointers:
         code = w_record["code"] if w_record is not None else None
-        validity = validity_gate(module, inputs, result, code) if result["status"] == "na" else None
+        validity = validity_gate(module, inputs, result, code, year) if result["status"] == "na" else None
         if validity is not None:
             envelope["validity"] = validity
             if validity["thin_wall_valid"]:

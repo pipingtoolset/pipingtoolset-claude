@@ -7,7 +7,7 @@ Eight checks, one function each, all registered in REGISTRY:
 
   Faithful ports of the pipingtoolset.com calculation engine (same input and output
   field names, statuses, rounding and error conditions):
-    piping.displacement-stress   B31.3 319.4.4 Eq. (17) + allowable range S_A
+    piping.displacement-stress   B31.3 319.4.4 Eq. (17) (St = it*Mt/2Z) + allowable range S_A
     piping.sustained-stress      sqrt (B31.3 form) or additive (B31.1 form) + occasional
     piping.fatigue-factor        f and equivalent cycles N_E, two edition forms
     supports.spring-variability  variable-spring load variability vs a limit
@@ -566,28 +566,39 @@ def _result(module: str, output: Dict[str, Any], status: str, warnings: Optional
 def displacement_stress(inp: Dict[str, Any]) -> Dict[str, Any]:
     """Displacement stress range S_E against the allowable range S_A (B31.3 319.4.4 Eq. (17)).
 
-        Sb = sqrt((ii*Mi)^2 + (io*Mo)^2) / Z       St = |Mt| / (2 Z)
+        Sb = sqrt((ii*Mi)^2 + (io*Mo)^2) / Z       St = it*|Mt| / (2 Z)
         SE = sqrt((|Sa| + Sb)^2 + (2 St)^2)         SA = f (1.25 Sc + 0.25 Sh)
 
-    ii, io, Sc, Sh and f are user-supplied. Sa (axial stress range) defaults to 0.
+    ii, io, it, Sc, Sh and f are user-supplied. Sa (axial stress range) defaults to 0.
+    it (the torsional stress intensification factor of the 319.4.4 nomenclature, B31J
+    Table 1-1 for the component) defaults to 1.0, so a run that never gave it computes as
+    before; the run then warns when Mt is nonzero. Up to plugin 0.9.1 the torsion term was
+    Mt/2Z with no it at all, which understated SE by the factor it wherever the B31J
+    torsional index exceeds 1.0 (2026-11-02 audit N1; the calculation engine's PR #187).
     SA here is the base form only; the liberal allowance (Eq. (1b)) is not computed.
     """
     ii, io = _num(inp, "ii"), _num(inp, "io")
     Mi, Mo, Mt = _num(inp, "Mi"), _num(inp, "Mo"), _num(inp, "Mt")
     Z, Sc, Sh, f = _num(inp, "Z"), _num(inp, "Sc"), _num(inp, "Sh"), _num(inp, "f")
     Sa = _num(inp, "Sa", 0.0)
+    it_given = inp.get("it") is not None
+    it = _num(inp, "it", 1.0)
     if Z <= 0:
         raise ValueError("Z must be > 0")
-    if ii < 1 or io < 1:
+    if ii < 1 or io < 1 or it < 1:
         raise ValueError("SIFs must be >= 1")
     if Sc <= 0 or Sh <= 0 or f <= 0:
         raise ValueError("Sc, Sh, f must be > 0")
 
     Sb = math.hypot(ii * Mi, io * Mo) / Z
-    St = abs(Mt) / (2 * Z)
+    St = (it * abs(Mt)) / (2 * Z)
     SE = math.hypot(abs(Sa) + Sb, 2 * St)
     SA = f * (1.25 * Sc + 0.25 * Sh)
     ratio = SE / SA
+    warnings: List[str] = []
+    if Mt != 0 and not it_given:
+        warnings.append("Torsional SIF it not supplied — taken as 1.0. Enter the B31J Table 1-1 it for the "
+                        "component when Mt is nonzero.")
     return _result(
         "piping.displacement-stress",
         {
@@ -598,6 +609,7 @@ def displacement_stress(inp: Dict[str, Any]) -> Dict[str, Any]:
             "ratio": round_half_up(ratio, 4),
         },
         _verdict(SE <= SA),
+        warnings,
     )
 
 
@@ -614,7 +626,9 @@ def sustained_stress(inp: Dict[str, Any]) -> Dict[str, Any]:
 
     Sb must already include the edition's sustained factor (0.75 i in earlier
     editions, the B31J sustained index in the 2024 editions) and the corroded
-    section. Sh and k are user-supplied.
+    section. St is the torsional stress with the component's torsional index
+    already applied upstream: St = it*Mt/(2 Z) (the expansion it, or the B31.1
+    sustained It = max(0.75 it, 1.0) of 104.8.1). Sh and k are user-supplied.
     """
     method = inp.get("method")
     if not isinstance(method, str):
@@ -1126,32 +1140,53 @@ def resolve_basis(code: str, edition: Any) -> Dict[str, Any]:
         if year >= 2024:
             notes.append("Sustained Eq. (23a) is unchanged in 2024; new 320.1(b) requires the B31J Table 1-1 General Note (d) sustained index absent more directly applicable data.")
     else:
+        # Since the 2020 edition the 104.8 equations (Figure 104.8-1, eqs. (15)-(17)) take their
+        # in-plane, out-of-plane and torsional factors ii, io, it from B31J Table 1-1; Mandatory
+        # Appendix D stayed in print through 2022 (superseded for 104.8) and was deleted in 2024.
+        # (0.9.2, audit S11b: 0.9.1 named Appendix D as the 2020 and 2022 SIF source.)
         if year >= 2024:
-            sif = "ASME B31J (Appendix D deleted)"
+            sif = "ASME B31J Table 1-1 (104.8 indices ii, io, it since 2020; Mandatory Appendix D deleted in 2024)"
             permitted = ["ASME B31J"]
-        elif year == 2022:
-            sif = "ASME B31.1 Mandatory Appendix D (B31J permitted by General Note (b))"
-            permitted = ["ASME B31.1 Mandatory Appendix D", "ASME B31J"]
+        elif year >= 2020:
+            sif = ("ASME B31J Table 1-1 (104.8 indices ii, io, it since 2020; Mandatory Appendix D still printed in "
+                   "2020 and 2022 but superseded for the 104.8 equations)")
+            permitted = ["ASME B31J"]
         else:
-            sif = "ASME B31.1 Mandatory Appendix D"
+            sif = "ASME B31.1 Mandatory Appendix D (single i on the resultant moment, 0.75i sustained)"
             permitted = ["ASME B31.1 Mandatory Appendix D"]
         fat = "legacy"
         occ = "S_o <= k Sh with k = 1.15 (<= 8 h at any one time and <= 800 h/yr) or 1.20 (<= 1 h and <= 80 h/yr), 104.8.2"
         fcap = "f <= 1.0 in every edition (102.3.2(b))"
         k1 = "30*S_A/E_a (US units), 119.7.1, 2016 and later" if year >= 2016 else "earlier than 2016: read the printed paragraph"
-        asd = "B31.1-2024 (101.5.2, 101.5.3): ASCE 7 loads without the ASD reduction factor; earlier editions are silent, state the position" if year >= 2024 else "state the ASD position explicitly; the 2024 edition forbids the reduction"
+        asd = "B31.1-2024 and later (101.5.2, 101.5.3): ASCE 7 loads without the ASD reduction factor; earlier editions are silent, state the position" if year >= 2024 else "state the ASD position explicitly; the 2024 and later editions forbid the reduction"
         if year >= 2020:
             notes.append("Since 2020 B31.1 104.8.1 / Fig. 104.8-1 uses an SRSS sustained form with its own indices "
                          "(greater of 0.75*i and 1.00, i from B31J Table 1-1); do not import B31.3's General Note (d) rule."
                          + (" 2024 replaces the pressure term with S_lp." if year >= 2024 else ""))
+            notes.append("Appendix D i-factors in the 104.8 equations are a finding from 2020 on: the equations name "
+                         "B31J Table 1-1.")
         else:
             notes.append("B31.1 before 2020 uses the additive sustained form P*Do/(4*tn) + 0.75*i*MA/Z, with 0.75*i >= 1.0.")
+        if year >= 2026:
+            notes.append("B31.1-2026: the 104.8 equations and indices are unchanged; 102.3.3 is (a) below the creep "
+                         "range / (b) creep range / (c) test ((a)/(b) in 2024); the pressure-design equations are "
+                         "renumbered (tm eq. (3)/(4), P eq. (5)/(6), bends 104.2.1(c) eq. (7)/(8)); Appendix A "
+                         "Grade 91 Type 1 lines are deleted, so confirm the material line exists before reading S.")
     notes.append("In-plane and out-of-plane SIFs are transposed at tees more than anywhere else: for elbows i_i > i_o, for tees i_o > i_i; check each leg.")
+    if c == "B31.3":
+        dataset = "b313-allowable-stresses-2024"
+    elif year >= 2026:
+        dataset = "b311-allowable-stresses-2026"
+    elif year >= 2018:
+        dataset = "b311-allowable-stresses-2024"
+    else:
+        dataset = None
     return {
         "code": c,
         "edition": year,
         "sif_source": sif,
         "sif_documents_permitted": permitted,
+        "allowable_stress_dataset": dataset,
         "fatigue_equation": fat,
         "fatigue_equation_label": FATIGUE_EQUATION_LABEL[fat],
         "f_cap_rule": fcap,
@@ -1198,7 +1233,7 @@ CITATIONS = {
 
 # Inputs that are code or project values the user must read from their own licensed copy.
 USER_SUPPLIED = {
-    "piping.displacement-stress": ["ii", "io", "Sc", "Sh", "f"],
+    "piping.displacement-stress": ["ii", "io", "it", "Sc", "Sh", "f"],
     "piping.sustained-stress": ["Sh", "k"],
     "piping.fatigue-factor": ["fmax"],
     "supports.spring-variability": ["limit"],
@@ -1224,6 +1259,7 @@ FIELDS: Dict[str, List[tuple]] = {
         ("Sh", "psi", True, "Allowable stress at maximum (hot) metal temperature"),
         ("f", "-", True, "Stress range reduction factor"),
         ("Sa", "psi", False, "Axial stress range, default 0"),
+        ("it", "-", False, "Torsional SIF (B31J Table 1-1 it for the component; user-supplied), default 1.0 - enter it whenever Mt is nonzero"),
     ],
     "piping.sustained-stress": [
         ("method", "text", True, "'sqrt' (B31.3 form) or 'additive' (B31.1 form)"),
@@ -1231,7 +1267,7 @@ FIELDS: Dict[str, List[tuple]] = {
         ("D", "in", True, "Pipe outside diameter"),
         ("t", "in", True, "Wall thickness (corroded if that is the basis)"),
         ("Sb", "psi", True, "Sustained bending stress, edition factor already applied"),
-        ("St", "psi", True, "Torsional stress"),
+        ("St", "psi", True, "Torsional stress St = it*Mt/(2 Z), the component's torsional index applied upstream"),
         ("Socc", "psi", True, "Occasional stress"),
         ("Sh", "psi", True, "Hot allowable stress"),
         ("k", "-", True, "Occasional factor"),
@@ -1673,7 +1709,11 @@ def _module_checks(module: str, inp: Dict[str, Any], res: Dict[str, Any], equati
 
     if module == "piping.displacement-stress":
         add("displacement stress range S_E against S_A", "calculated", status,
-            "base form f(1.25 Sc + 0.25 Sh); ii, io, Sc, Sh and f are the caller's inputs")
+            "base form f(1.25 Sc + 0.25 Sh); ii, io, it, Sc, Sh and f are the caller's inputs")
+        if _val(inp, "Mt") not in (None, 0) and _val(inp, "it") is None:
+            add("torsional SIF it (B31J Table 1-1)", "not checked", None,
+                "it omitted and taken as 1.0 with Mt nonzero; St = it*Mt/(2 Z) is understated by the "
+                "component's torsional index until it is entered")
         if _val(inp, "f") is not None and inp["f"] > 1.0:
             add("f above 1.0 (fm = 1.2 conditions)", "manual check required", None,
                 "B31.3 only, ferrous with SMTS <= 75 ksi at metal temperature <= 700 F; no material data here to evaluate it")
