@@ -151,14 +151,14 @@ The W row also carries W_basis and weld_factor_basis.basis_source from the envel
 
 ## 4. Calculation
 Per check: the equation as written in references/modules.md (sections 1-7), the script command
-and its output (status, output, warnings), then the arithmetic restated in words
+and its output (status, output, warnings), then the arithmetic restated
 for the reviewer.
 
 ## 5. Result against nominal / schedule
 Thin-wall validity first: P_over_SE against 0.385 and the thickness against D/6, from `validity`.
-tOrder vs the selected nominal wall (read by the user from B36.10M / B36.19M or mill data);
+tOrder vs the selected nominal wall (user-read from B36.10M / B36.19M or mill data);
 allowable pressure vs design pressure; reinforcement margin; test pressure.
-PASS or FAIL for each, with the margin, only where banner_allowed is true.
+PASS or FAIL for each, with the margin, only where banner_allowed is true. "assumed" runs print neither.
 A "manual check required" or "pointer only" run shows the banner, the equation value labelled
 "equation value, not a design basis", the clause, and no PASS, schedule or margin.
 

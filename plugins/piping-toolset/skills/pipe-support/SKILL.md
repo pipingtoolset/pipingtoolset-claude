@@ -71,10 +71,10 @@ capacity, ratio or alternative itself.** Every number in a response comes from a
    `python scripts/support_calc.py spec.json --report calc.md --json result.json`.
    Script paths below are relative to this skill's directory. Call them by their full path from wherever the session is working; do not change into the skill folder (in Cowork it is a read-only mount and the working directory is the outputs folder). Write `job.json` and every output file to the working directory, never into the skill folder, so the user can open and download them.
    - **Exit 0:** every combination passes, there is no critical review finding and the
-     result status is not manual check required or pointer only.
+     result status is not manual check required, assumed or pointer only.
    - **Exit 3:** not issuable although no limit state fails: a critical finding (pipe
      moments the model cannot carry), the ASD wind-anchorage guard (`references/code-basis.md`
-     item 10), or a result status of manual check required or pointer only
+     item 10), or a result status of manual check required, assumed or pointer only
      ([outputs](references/spec-format.md#outputs)). The verdict line reads NOT ISSUABLE or
      the status word, never PASS. Never present exit 3 as a clean pass.
    - **Exit 2:** a limit state fails.
@@ -109,8 +109,8 @@ capacity, ratio or alternative itself.** Every number in a response comes from a
   restraint report has moments, the review raises a critical finding. Say so plainly and
   recommend a frame model, or confirm the restraint is a simple support.
 - **Status words.** Stages read *pass*, *fail* or *manual check required*; the envelope adds
-  `result_status` and `checks[]` (calculated, screening, manual check required, pointer only,
-  not checked). Report a held stage or check with its reason, never as a pass. For the ASD
+  `result_status` and `checks[]` (calculated, screening, manual check required, assumed, pointer
+  only, not checked). Report a held stage or check with its reason, never as a pass. For the ASD
   wind guard, recommend the LRFD re-run.
 - **Service versus strength.** Soil bearing, overturning and sliding are service-level
   checks. With LRFD and a gravity pier, the envelope runs those checks on the ASD
@@ -119,8 +119,8 @@ capacity, ratio or alternative itself.** Every number in a response comes from a
   the design is close to a limit in the element it affects.
 - **Preset values are never silent.** Anchor and concrete values taken from a CSA preset
   are listed in the report's assumptions as not user-supplied and graded manual check
-  required in one `preset inputs` row, as every ASSUMED item is in one `ASSUMED inputs` row;
-  either holds the PASS banner. Replace the bond stress with the anchor ESR value before issue.
+  required in one `preset inputs` row; every ASSUMED item is in one `ASSUMED inputs` row graded
+  `assumed`. Either holds the PASS banner. Replace the bond stress with the anchor ESR value before issue.
 - **Anchor Category is never invented.** It is an ESR value. If the user has none, run with it
   unset (Category 3, conservative), report the finding and say what Category 1 or 2 would need
   to be confirmed; never enter a Category to make a design pass.

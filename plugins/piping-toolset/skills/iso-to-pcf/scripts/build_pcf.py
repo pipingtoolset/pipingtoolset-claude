@@ -36,8 +36,8 @@ report's ASSUMED list. The report gains "project_basis_applied" and a Basis sect
 The report also carries "result_status" (calculated, screening, manual check required, pointer only
 or not checked: the worst word among the "checks" performed) and the line "Result status: <word> -
 <why>" under the title. A failed closure or BOM check is "manual check required"; ASSUMED items give
-one "ASSUMED inputs" row graded "manual check required" and the RESULT line reads MANUAL CHECK
-REQUIRED; the checks no script of this skill performs are listed as "not checked". No OK or
+one "ASSUMED inputs" row graded "assumed" (0.9.1; manual check required before) and the RESULT line
+reads ASSUMED; the checks no script of this skill performs are listed as "not checked". No OK or
 PASS wording is printed while the banner rule forbids it. "ok", the exit codes and the PCF are
 unchanged.
 
@@ -396,14 +396,18 @@ def render_basis_section(applied, basis, heading=None):
 # status (pass/fail/na), note[, unresolved_factor]}]. "not checked" rows never drive the envelope;
 # they are listed, and the envelope reads "not checked" only when every row is. A positive banner
 # word (PASS, OK, ISSUE, DELIVERABLE) is printed only when banner_allowed() is true: never under
-# "manual check required" or "pointer only", nor under "screening" when a reconstructed factor in
-# the chain is unresolved. Any ASSUMED input gives one "ASSUMED inputs" row (assumed_inputs_check)
-# graded manual check required, so an unconfirmed input always holds the banner.
+# "manual check required", "assumed" or "pointer only", nor under "screening" when a reconstructed
+# factor in the chain is unresolved. Any ASSUMED input gives one "ASSUMED inputs" row
+# (assumed_inputs_check) graded "assumed" (P.E. ruling 2026-11-02, item 3.5(ii); it was manual check
+# required up to 0.9.0), so an unconfirmed input always holds the banner.
 
-RESULT_STATUS = ("calculated", "screening", "manual check required", "pointer only", "not checked")
-# severity for worst_of (ordering only): manual check required > pointer only > screening > not checked > calculated
-RESULT_STATUS_SEVERITY = {"manual check required": 4, "pointer only": 3, "screening": 2, "not checked": 1,
-                          "calculated": 0}
+RESULT_STATUS = ("calculated", "screening", "manual check required", "assumed", "pointer only", "not checked")
+# severity for worst_of (ordering only):
+#   manual check required > assumed > pointer only > screening > not checked > calculated
+# "assumed" sits just below "manual check required": when a gate has tripped and an input is also
+# unconfirmed, the envelope names the gate; confirming the input alone would not clear it.
+RESULT_STATUS_SEVERITY = {"manual check required": 5, "assumed": 4, "pointer only": 3, "screening": 2,
+                          "not checked": 1, "calculated": 0}
 CHECK_STATUS = ("pass", "fail", "na")
 ASSUMED_CHECK_NAME = "ASSUMED inputs"
 
@@ -448,8 +452,8 @@ def make_check(name, result_status, status=None, note=None, unresolved_factor=Fa
 def assumed_inputs_check(items):
     """The one 'ASSUMED inputs' row for every ASSUMED item (strings or {item[, note]} dicts), or None.
 
-    Graded manual check required, so the envelope follows it and no positive banner prints; the
-    note reads 'confirm before issue: <item>; <item>' (duplicates dropped, order kept).
+    Graded "assumed" (ruling 2026-11-02 3.5(ii)), which holds the banner like manual check
+    required; the note reads 'confirm before issue: <item>; <item>' (duplicates dropped, order kept).
     """
     texts = []
     for it in items or ():
@@ -459,7 +463,7 @@ def assumed_inputs_check(items):
             texts.append(text)
     if not texts:
         return None
-    return make_check(ASSUMED_CHECK_NAME, "manual check required", "na",
+    return make_check(ASSUMED_CHECK_NAME, "assumed", "na",
                       "confirm before issue: " + "; ".join(texts))
 
 
@@ -470,9 +474,9 @@ def not_performed(checks):
 
 
 def banner_allowed(result_status, unresolved_factor=False):
-    """False for manual check required, pointer only, and screening with an unresolved factor."""
+    """False for manual check required, assumed, pointer only, and screening with an unresolved factor."""
     word = _rs_word(result_status)
-    if word in ("manual check required", "pointer only"):
+    if word in ("manual check required", "assumed", "pointer only"):
         return False
     return not (word == "screening" and unresolved_factor)
 
@@ -869,7 +873,7 @@ def result_checks(closure: List[dict], bom: List[dict], assumed: List[str]) -> L
         out.append(make_check("BOM pipe length (+/-10% magnitude)", "manual check required" if bad else "screening",
                               "fail" if bad else "pass",
                               ", ".join(bad) + " outside +/-10%" if bad else "cut length vs centreline is a magnitude screen"))
-    row = assumed_inputs_check(assumed)          # the one shared row: manual check required
+    row = assumed_inputs_check(assumed)          # the one shared row: assumed
     if row is not None:
         out.append(row)
     out.append(make_check("PCF connectivity validation", "not checked", "na",
@@ -953,8 +957,8 @@ def render(r: dict, basis: Optional[dict] = None) -> str:
             L += ["", f"{title}:"] + [f"  - {x}" for x in r[key]]
     if not r["ok"]:
         verdict = "NOT DELIVERABLE - fix the spec at the source and rebuild"
-    elif r["result_status"] == "manual check required" and any(c["name"] == ASSUMED_CHECK_NAME for c in r["checks"]):
-        verdict = banner_word("OK", "manual check required") + " - confirm the ASSUMED items, then run validate_pcf.py"
+    elif r["result_status"] == "assumed":      # only the one ASSUMED-inputs row carries this word
+        verdict = banner_word("OK", "assumed") + " - confirm the ASSUMED items, then run validate_pcf.py"
     elif banner_allowed(r["result_status"], unresolved):
         verdict = "OK - run validate_pcf.py next"
     else:

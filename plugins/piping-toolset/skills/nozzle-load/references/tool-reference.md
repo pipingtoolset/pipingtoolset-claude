@@ -88,7 +88,7 @@ The run returns the derived set (the table row times 0.5625 for thickness times 
 python scripts/nozzle_load.py connections.nozzle-load-check --input-file check.json
 ```
 
-with `check.json` holding `"standard": "PVP2011-57100 Table 1A, derived"`, the `applied` set from the piping run, and `allowable` set to the derived values. Pass `"derivedSetStatus"` (accepted only on `connections.nozzle-load-check` and `equipment.nozzle-load-sum`; one of the five status words, otherwise exit 2) with the derivation run's `result_status` so the check inherits it. A `standard` label containing "derived" or "PVP2011" without it is manual check required, because the derivation's scope limits are then unknown: a derived set is at least screening, and a derivation that tripped a scope limit makes the check manual check required. Quote the log, the warnings and the citation in the calc sheet.
+with `check.json` holding `"standard": "PVP2011-57100 Table 1A, derived"`, the `applied` set from the piping run, and `allowable` set to the derived values. Pass `"derivedSetStatus"` (accepted only on `connections.nozzle-load-check` and `equipment.nozzle-load-sum`; one of the six status words, otherwise exit 2) with the derivation run's `result_status` so the check inherits it. A `standard` label containing "derived" or "PVP2011" without it is manual check required, because the derivation's scope limits are then unknown: a derived set is at least screening, and a derivation that tripped a scope limit makes the check manual check required. Quote the log, the warnings and the citation in the calc sheet.
 
 ## Project basis record
 
@@ -104,17 +104,18 @@ Read for the sheet only (`noted` in `project_basis_applied.fields_used`): `units
 
 ## Result status and checks
 
-The envelope gains `result_status` (the worst word among the checks performed; a `not checked` row is listed but never sets it; an ASSUMED item in the record adds one `ASSUMED inputs` row graded manual check required), `checks` (`name`, `result_status`, `status`, `note`), `result_status_line` (the line under the sheet title) and `banner`. Existing `status` words and values do not change. Severity: manual check required, then pointer only, then screening, then not checked, then calculated. No `unresolved_factor` arises here: every constant is a user input or a named constant of the paper.
+The envelope gains `result_status` (the worst word among the checks performed; a `not checked` row is listed but never sets it; an ASSUMED item in the record adds one `ASSUMED inputs` row graded assumed), `checks` (`name`, `result_status`, `status`, `note`), `result_status_line` (the line under the sheet title) and `banner`. Existing `status` words and values do not change. Severity: manual check required, then assumed, then pointer only, then screening, then not checked, then calculated. No `unresolved_factor` arises here: every constant is a user input or a named constant of the paper.
 
 | Word | When it appears in this skill |
 |---|---|
 | calculated | the ratio, sum or equation checks on allowables the user entered, with no scope limit tripped |
 | screening | the PVP2011 derivation inside the paper's basis; a check or sum against a set marked with `derivedSetStatus` |
 | manual check required | a PVP2011 scope limit outside the paper's basis or not stated (NPS range, design temperature, material, D/T, character of the loads, eq. (4) on Table 1B or 2, interpolation above the proportional bound); Annex P lambda outside the plotted range; a derived set that reported this word; a derived-set label with no `derivedSetStatus` |
+| assumed | the record has an ASSUMED item: the one `ASSUMED inputs` row, note `confirm before issue: <items>` (0.9.1; manual check required before) |
 | pointer only | an owner practice limit recorded in the project basis as a pointer (an item named as a factor, fraction, percent, margin or limit with no numeric value, or a plain-text item with one of those words and no decimal or percent value) while no `ownerFactor` is entered: that check does not run |
 | not checked | SM-23 vendor-sheet combined resultant items; Annex F shaft displacement limits and approval, and the skipped per-component screen of a vertical in-line run without `componentMultiple`; API 560 terminal movements when the standard label names 560; the Annex P acceptance boundary |
 
-`banner` is PASS or FAIL for the pass and fail modules and NA for the `na` modules. PASS is replaced by the status word in capitals under manual check required or pointer only (and under screening with an unresolved factor); FAIL always prints. The sheet repeats the banner and the status line.
+`banner` is PASS or FAIL for the pass and fail modules and NA for the `na` modules. PASS is replaced by the status word in capitals under manual check required, assumed or pointer only (and under screening with an unresolved factor); FAIL always prints. The sheet repeats the banner and the status line.
 
 ## What the tool does not do
 

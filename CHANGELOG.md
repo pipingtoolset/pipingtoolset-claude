@@ -8,6 +8,31 @@ keep a defect until the plugin is updated, so each such entry names the skill, t
 affected inputs and the release that fixed it. GitHub Releases carry the same
 label and are the recall channel.
 
+## [0.9.1] — 2026-11-02
+
+All seven skills: the result word of the `ASSUMED inputs` row is now `assumed`. **P.E. ruling 2026-11-02 (the owner, item 3.5 of the editions-2026 rulings, recorded in pipecalcpro `pipingtoolset.com-plan/PE-RULINGS-EDITIONS-2026-11-02.md`):** (i) `not checked` keeps ranking worse than `calculated` in the result word (already so since 0.8.0; no change); (ii) the word for the `ASSUMED inputs` row is `assumed`. No computed number changes, no other status word changes, and the ranking of the five existing words is unchanged; fixture parity and the goldens are green.
+
+### Result status (B9): the `assumed` word
+- **Where it sits.** The worst-first order is now manual check required > **assumed** > pointer only > screening > not checked > calculated. `assumed` is placed just below `manual check required`: when a validity gate has tripped (or a critical finding, a guard, a preset row holds the run) and an input is also unconfirmed, the envelope names the gate, because confirming the input alone would not clear it. The status line still names the ASSUMED row in that case. Above `pointer only` because an unconfirmed input affects every number on the sheet, while a pointer stops one check from running and is listed as such.
+- **It holds the banner exactly as `manual check required` does.** `banner_allowed` is false for `assumed`; `banner_word` prints `ASSUMED` where PASS, OK, ISSUE or DELIVERABLE would have been. Nothing that could be issued under the old word can be issued under the new one.
+- **The one row.** `assumed_inputs_check` (shared block, `tools/shared/result_status.py`, synced into the seven scripts) grades the `ASSUMED inputs` row `assumed`; its name and note (`confirm before issue: <item>; <item>`) are unchanged. `RESULT_STATUS` has six words; `RESULT_STATUS_SEVERITY` renumbers manual check required to 5 and gives assumed 4 (ordering only).
+- What each skill now prints on a run whose only hold is an ASSUMED item (the numbers are the same as before):
+  - **load-case-builder:** `Result status: assumed - confirm ASSUMED inputs (...)`; the shipped two-state example and its golden `tests/golden/two-state-b313.md` read `assumed` (line 2 regenerated, nothing else moved). Under `manual check required` (unstated edition, QC 10 on B31.1, an ASD `scale`) the line names those rows first and then the ASSUMED row.
+  - **pressure-design:** `result_status` `assumed`, `banner_allowed` false, the numbers stay in `output`.
+  - **stress-screening** and **nozzle-load:** `banner` reads `ASSUMED` instead of `MANUAL CHECK REQUIRED`; `basis` (stress-screening) reports `assumed`.
+  - **bolted-flange:** the withheld ISSUE-GRADE banner now reads `ASSUMED: ASSUMED inputs (confirm before issue: ...); no acceptance wording until each is resolved`; `assumed` is in the blocker list beside manual check required and pointer only.
+  - **pipe-support:** verdict line `ASSUMED - <governing> ...; result status: not issuable until the ASSUMED inputs are confirmed: ASSUMED inputs (...)`, exit 3, report banner `> **ASSUMED (strength ratios within limits) - ...**`. The shipped `ps-201-caesar.json` still reads `MANUAL CHECK REQUIRED` and exits 3, because its `preset inputs` row (unchanged, manual check required) outranks the ASSUMED row; its reason now lists the preset row first and the ASSUMED row after it. With the user's own anchor values it reads `ASSUMED` until the ASSUMED item is confirmed, then `calculated`, exit 0.
+  - **iso-to-pcf:** `RESULT: ASSUMED - confirm the ASSUMED items, then run validate_pcf.py`; the passing closure and BOM lines carry `[ASSUMED]` where PASS would be; a failed closure or BOM line is still `manual check required` and `NOT DELIVERABLE`.
+- `tools/sync_shared_blocks.py --check --strict` is clean: the result_status block and `references/project-basis.md` are byte-identical in all seven skills.
+
+### Docs
+- README (result-word table gains the `assumed` row; order and banner rule restated), `tools/shared/project-basis.md` (synced to the seven `references/project-basis.md`), ROADMAP (the 0.8.0 open ruling is closed), and the status-word passages of `SKILL.md` in bolted-flange, iso-to-pcf, nozzle-load, pipe-support, pressure-design and stress-screening (load-case-builder's SKILL.md lists no words and is unchanged).
+- References: bolted-flange `tool-reference.md`, `method-ladder.md`, `app2-engine.md`, `rejection-checklist.md` (taxonomy string); iso-to-pcf `spec-format.md`; load-case-builder `spec-format.md`; nozzle-load `tool-reference.md`; pipe-support `spec-format.md`; pressure-design `modules.md`; stress-screening `tool-reference.md`.
+- Manifests: version 0.9.1 (descriptions unchanged); `tests/e2e/HOSTS-CHECKLIST.md` release pins.
+
+### Tests
+- Every assertion on the row's word, the envelope word and the banners of an ASSUMED-only run moved to `assumed`; the vocabulary tests pin six words and the two-word order checks cover all fifteen pairs; `test_project_basis_handoff.assert_words` accepts the envelope at `manual check required` only when another row carries it (pipe-support's preset row). New checks: `worst_of` of assumed against its two neighbours, `banner_word` for assumed, the pipe-support `ASSUMED - ` verdict and banner with user anchor values, nozzle-load's sixth word reachable, iso-to-pcf's `[ASSUMED]` lines. 1425 tests, all passing on Python 3.9 and 3.12 (CI matrix).
+
 ## [0.9.0] — 2026-11-01
 
 **UNCONSERVATIVE-FIX (pipe-support).** The skill is re-ported to the PiperSTR engine at pipecalcpro main `4656183` (pipingtoolset/pipecalcpro#181, merged 2026-11-01; engine content identical to the PR head `04be653`; CHANGELOG-CALC 2026-11-01), under the one-engine rule. The anchorage now runs to ACI CODE-318-25 by default, with ACI 318-19 selectable. The AISC 360-22 member and weld checks are corrected clause by clause. Up to 0.8.2 every fillet weld took the Eq. J2-5 directional factor of up to 1.5 unconditionally, which overstated weld capacity by up to 50 %. Several member limit states were also missing or too high. **Re-run any pipe-support result from 0.8.2 or earlier.** No other skill changes.

@@ -88,7 +88,7 @@ A full two-state example is in `scripts/examples/two-state-b313.json`. It delibe
 
 | Check | Word | Status |
 |---|---|---|
-| ASSUMED inputs: one row, present only when there is an ASSUMED item (generator defaults for `primary_state` or `hanger_friction`, or an ASSUMED item in the record); note `confirm before issue: <items>` | manual check required | na |
+| ASSUMED inputs: one row, present only when there is an ASSUMED item (generator defaults for `primary_state` or `hanger_friction`, or an ASSUMED item in the record); note `confirm before issue: <items>` | assumed (0.9.1; manual check required before) | na |
 | code edition | manual check required when not stated, else calculated | na / pass |
 | QC 4 vertical seismic and U2 | calculated | fail on the GAP or CONFLICT finding; na without seismic |
 | QC 5 expansion completeness, QC 7 forward references, QC 17 resolved case set | calculated | pass / fail |
@@ -96,7 +96,7 @@ A full two-state example is in `scripts/examples/two-state-b313.json`. It delibe
 | QC 11 ASD position | calculated without a `scale` (pass) and for B31.1-2024 with one (fail); manual check required for any other `scale` (the owner or EOR written direction cannot be verified) | pass / fail / na |
 | QC 1, 2, 3, 6, 8, 9, 12, 13, 14, 15, 16; the HYD friction multiplier in the software (hydrotest with more than one friction variant); the AutoPIPE occasional construction (record software AutoPIPE) | not checked | na |
 
-The envelope is therefore `calculated` when everything is declared (the eleven model items stay listed as `not checked` and are summarised after the word) or `manual check required`; `screening` and `pointer only` do not occur, since the generator runs no screening method and takes no code-table value. QC findings keep their `OK:`, `GAP:` and `ERROR:` prefixes under every word: they are check results, not a banner.
+The envelope is therefore `calculated` when everything is declared (the eleven model items stay listed as `not checked` and are summarised after the word), `assumed` when only the ASSUMED row holds it, or `manual check required` (which outranks `assumed`; the status line then still names the ASSUMED row); `screening` and `pointer only` do not occur, since the generator runs no screening method and takes no code-table value. QC findings keep their `OK:`, `GAP:` and `ERROR:` prefixes under every word: they are check results, not a banner.
 
 `qc` is the resolved-case-set check ([qc-gate.md](qc-gate.md) item 17): `{"pass": bool, "counts": {states, frictions, occasionals, scaled_occasionals, state_pairs_ranged, expected_cases, generated_cases, checks, misses}, "misses": [text]}`. The same result is the last QC finding: `QC: resolved case set complete …` or `ERROR: resolved case set has N miss(es) … Do not issue this set.`
 

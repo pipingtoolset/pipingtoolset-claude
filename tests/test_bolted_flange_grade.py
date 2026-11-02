@@ -37,7 +37,7 @@ LOOSE_CASE = FIXTURE_CASES[1]["input"]
 SCREEN_CASE = parity.load(SCREEN)["cases"][0]["input"]
 BANNER = ("SCREENING / RECONSTRUCTED FACTORS: F, V, f from the open-source series reconstruction; "
           "supply F_override, V_override, f_override read from VIII-2 Table 4.16.5 for an issue-grade result")
-TAXONOMY = "calculated / screening / manual check required / pointer only / not checked"
+TAXONOMY = "calculated / screening / manual check required / assumed / pointer only / not checked"
 # Acceptance wording that must not appear on a screening run. The required banner line itself
 # contains "issue-grade" (it tells the user what to supply), so it is cut out before the scan.
 ACCEPT = re.compile(r"\b(pass|passes|passed|passing|issued?|issue-grade|accepted|acceptable)\b", re.I)

@@ -12,10 +12,10 @@ What is pinned, per script:
   item copied verbatim, and at least one input `filled` where the skill's fill map has a slot;
 - no relabelling: each filled input carries the record's value, and the result is the same as
   the same value typed into the input without a record;
-- `result_status` and every `checks[].result_status` are among the five words, and the calc
+- `result_status` and every `checks[].result_status` are among the six words, and the calc
   sheet carries section 1 (ASSUMED items first) and a `Result status:` line under its title;
-- the banner rule on the sheets this record holds (manual check required, or screening with an
-  unresolved reconstructed factor): no PASS / OK wording.
+- the banner rule on the sheets this record holds (assumed, manual check required, or screening
+  with an unresolved reconstructed factor): no PASS / OK wording.
 
 The record is project data only: no code-table value is in it. Every number in the inputs is a
 shipped example placeholder.
@@ -41,10 +41,10 @@ sys.path.insert(0, os.path.join(ROOT, "tools", "shared"))
 import project_basis as shared_pb  # noqa: E402
 
 SCHEMA = "pipingtoolset.project-basis/1"
-WORDS = ("calculated", "screening", "manual check required", "pointer only", "not checked")
+WORDS = ("calculated", "screening", "manual check required", "assumed", "pointer only", "not checked")
 ASSUMED = {"item": "Corrosion allowance per the line list", "status": "ASSUMED",
            "note": "line list not yet issued", "owner": "lead"}
-STATUS_LINE = re.compile(r"^Result status: (calculated|screening|manual check required|pointer only|not checked)"
+STATUS_LINE = re.compile(r"^Result status: (calculated|screening|manual check required|assumed|pointer only|not checked)"
                          r"( - .+)?$", re.M)
 
 
@@ -108,14 +108,18 @@ class HandOffCase(unittest.TestCase):
         self.assertTrue(checks, "no checks[] in the envelope")
         for c in checks:
             self.assertIn(c["result_status"], WORDS, c)
-        # the record's ASSUMED item: exactly one "ASSUMED inputs" row, manual check required, and the
-        # envelope follows it (uniform in all seven skills)
+        # the record's ASSUMED item: exactly one "ASSUMED inputs" row graded "assumed" (0.9.1), and the
+        # envelope follows it (uniform in all seven skills) unless another row is held at manual check
+        # required, the one word that outranks it (pipe-support's ps-201 preset row)
         rows = [c for c in checks if c["name"] == "ASSUMED inputs"]
         self.assertEqual(len(rows), 1, [c["name"] for c in checks])
-        self.assertEqual(rows[0]["result_status"], "manual check required")
+        self.assertEqual(rows[0]["result_status"], "assumed")
         self.assertTrue(rows[0]["note"].startswith("confirm before issue: "), rows[0]["note"])
         self.assertIn(ASSUMED["item"], rows[0]["note"])
-        self.assertEqual(env["result_status"], "manual check required")
+        self.assertIn(env["result_status"], ("assumed", "manual check required"))
+        if env["result_status"] == "manual check required":
+            self.assertTrue([c for c in checks if c["result_status"] == "manual check required"
+                             and c["name"] != "ASSUMED inputs"], "nothing outranks the ASSUMED row")
 
     def assert_sheet(self, text: str, title_pattern: str, section_heading: str) -> None:
         """Title, then the Result status line within two lines, then section 1 with ASSUMED first."""
@@ -207,12 +211,12 @@ class LoadCaseBuilder(HandOffCase):
         self.assertEqual(self.md.returncode, 0, self.md.stderr)
         self.assert_sheet(self.md.stdout, r"^## Load case set", "### 1 Basis")
 
-    def test_banner_rule_while_manual_check_required(self):
+    def test_banner_rule_while_assumed(self):
         env = json.loads(self.json.stdout)
-        self.assertEqual(env["result_status"], "manual check required")
+        self.assertEqual(env["result_status"], "assumed")
         rows = [c for c in env["checks"] if c["name"] == "ASSUMED inputs"]
         self.assertEqual(len(rows), 1)
-        self.assertEqual(rows[0]["result_status"], "manual check required")
+        self.assertEqual(rows[0]["result_status"], "assumed")
         self.assertIn(ASSUMED["item"], rows[0]["note"])
         # QC finding prefixes are check results, not banners: OK: lines keep their word.
         self.assertIsNotNone(re.search(r"^- OK:", self.md.stdout, re.M))
@@ -263,7 +267,7 @@ class PressureDesign(HandOffCase):
         self.assert_sheet("# Pressure design\n" + env["result_status_line"] + "\n\n" + env["basis_section"],
                           r"^# Pressure design", "**ASSUMED - confirm before issue:**")
         # the record's ASSUMED item is the one "ASSUMED inputs" row, and the status line names it
-        self.assertTrue(env["result_status_line"].startswith("Result status: manual check required - "))
+        self.assertTrue(env["result_status_line"].startswith("Result status: assumed - "))
         self.assertIn("confirm before issue: " + ASSUMED["item"], env["result_status_line"])
 
     def test_the_unstripped_example_conflicts_which_proves_the_record_is_read(self):
@@ -403,7 +407,7 @@ class BoltedFlange(HandOffCase):
 
     def test_banner_rule_with_an_unresolved_reconstructed_factor(self):
         env = json.loads(self.res.stdout)
-        self.assertEqual(env["result_status"], "manual check required")      # the ASSUMED item outranks it
+        self.assertEqual(env["result_status"], "assumed")      # the ASSUMED item outranks the screening row
         self.assertTrue(any(c.get("unresolved_factor") for c in env["checks"]))
         self.assertIsNone(re.search(r"\bPASS\b|\bOK\b|\bDELIVERABLE\b", self.sheet.stdout))
 

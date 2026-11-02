@@ -66,7 +66,7 @@ Rules:
 
 ## Result status
 
-Every envelope carries `result_status` (the worst word among the checks performed; a `not checked` row is listed but never sets it), `checks` (`[{name, result_status, status, note}]`, `status` being the pass, fail or na the module already reported), `result_status_line` (the line for under the sheet title) and `banner` (PASS or FAIL for a module with a verdict, null for `na`; the status word in capitals instead of PASS while the banner rule blocks it). The words, worst first: **manual check required**, **pointer only**, **screening**, **not checked**, **calculated**. The existing `status` and `output` values are unchanged.
+Every envelope carries `result_status` (the worst word among the checks performed; a `not checked` row is listed but never sets it), `checks` (`[{name, result_status, status, note}]`, `status` being the pass, fail or na the module already reported), `result_status_line` (the line for under the sheet title) and `banner` (PASS or FAIL for a module with a verdict, null for `na`; the status word in capitals instead of PASS while the banner rule blocks it). The words, worst first: **manual check required**, **assumed**, **pointer only**, **screening**, **not checked**, **calculated**. The existing `status` and `output` values are unchanged.
 
 | Module | Check and word | Raised when |
 |---|---|---|
@@ -102,7 +102,7 @@ Each module also lists its permanent limits as `not checked` on every run (the `
 
 A clean run of a module that performs its checks reads `calculated`; its listed limits stay in `checks` as `not checked` and the status line reads "<first check> calculated; not performed by this module: ...". `not checked` never sets the word and never blocks the banner.
 
-An ASSUMED item in a project basis record is an unconfirmed input: it adds one `ASSUMED inputs` check, graded `manual check required`, with the note "confirm before issue: <items>". The envelope follows it and the banner prints MANUAL CHECK REQUIRED instead of PASS until the item is confirmed. The `basis` command prints the edition as the record or `--edition` gave it (the string "2022").
+An ASSUMED item in a project basis record is an unconfirmed input: it adds one `ASSUMED inputs` check, graded `assumed` (0.9.1; `manual check required` before), with the note "confirm before issue: <items>". The envelope follows it and the banner prints ASSUMED instead of PASS until the item is confirmed; a `manual check required` row outranks it. The `basis` command prints the edition as the record or `--edition` gave it (the string "2022").
 
 Pointer only does not occur in this skill. A pointer reply from the connector carries no value and is never passed to the script; the value stays a user-read input (see the connector section of `SKILL.md`). Screening never carries an unresolved reconstructed factor here: the span coefficients are derived in the tool source and every other factor is an input.
 

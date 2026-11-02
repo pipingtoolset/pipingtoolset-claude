@@ -1,4 +1,4 @@
-"""Shared result_status block (plugin 0.8.0, B9): the five words, worst_of order, banner rule, copies.
+"""Shared result_status block (plugin 0.8.0, B9; 0.9.1 `assumed`): the six words, worst_of order, banner rule, copies.
 
 The canonical text is tools/shared/result_status.py; each of the seven skill scripts carries a
 byte-identical copy between its BEGIN/END markers (written by tools/sync_shared_blocks.py).
@@ -32,7 +32,7 @@ SCRIPTS = {
 }
 BEGIN = "# BEGIN shared result_status (do not edit here; source tools/shared/result_status.py)"
 END = "# END shared result_status"
-WORST_FIRST = ("manual check required", "pointer only", "screening", "not checked", "calculated")
+WORST_FIRST = ("manual check required", "assumed", "pointer only", "screening", "not checked", "calculated")
 
 
 def read(path):
@@ -48,14 +48,14 @@ def block_of(text):
 
 class Words(unittest.TestCase):
 
-    def test_exactly_five_words(self):
-        self.assertEqual(rs.RESULT_STATUS, ("calculated", "screening", "manual check required", "pointer only",
-                                            "not checked"))
+    def test_exactly_six_words(self):
+        self.assertEqual(rs.RESULT_STATUS, ("calculated", "screening", "manual check required", "assumed",
+                                            "pointer only", "not checked"))
         self.assertEqual(set(rs.RESULT_STATUS_SEVERITY), set(rs.RESULT_STATUS))
         self.assertEqual(rs.CHECK_STATUS, ("pass", "fail", "na"))
 
     def test_worst_of_follows_the_severity_order(self):
-        for i, j in itertools.combinations(range(5), 2):
+        for i, j in itertools.combinations(range(6), 2):
             hi, lo = WORST_FIRST[i], WORST_FIRST[j]
             self.assertEqual(rs.worst_of([lo, hi]), hi)
             self.assertEqual(rs.worst_of([hi, lo]), hi)
@@ -80,24 +80,28 @@ class Words(unittest.TestCase):
         self.assertEqual(rs.envelope_status([gap, gap]), "not checked")
         self.assertEqual(rs.envelope_status([]), "not checked")
         self.assertEqual(rs.envelope_status(iter(["not checked", "calculated"])), "calculated")
-        for i, j in itertools.combinations(range(5), 2):
+        for i, j in itertools.combinations(range(6), 2):
             hi, lo = WORST_FIRST[i], WORST_FIRST[j]
             self.assertEqual(rs.envelope_status([lo, hi, "not checked"]), lo if hi == "not checked" else hi)
         with self.assertRaises(ValueError):
             rs.envelope_status(["calculated", "PASS"])
 
-    def test_assumed_inputs_check_is_one_manual_check_row(self):
+    def test_assumed_inputs_check_is_one_assumed_row(self):
+        # P.E. ruling 2026-11-02, 3.5(ii): the ASSUMED-inputs row reads "assumed", just below
+        # manual check required and above pointer only; it holds the banner like manual check required.
         row = rs.assumed_inputs_check(["Corrosion allowance per the line list",
                                        {"item": "Seismic design category", "note": "structural basis"},
                                        "Corrosion allowance per the line list", "  "])
-        self.assertEqual(row, {"name": "ASSUMED inputs", "result_status": "manual check required", "status": "na",
+        self.assertEqual(row, {"name": "ASSUMED inputs", "result_status": "assumed", "status": "na",
                                "note": "confirm before issue: Corrosion allowance per the line list; "
                                        "Seismic design category"})
         self.assertEqual(rs.ASSUMED_CHECK_NAME, "ASSUMED inputs")
         self.assertIsNone(rs.assumed_inputs_check([]))
         self.assertIsNone(rs.assumed_inputs_check(None))
         calc = rs.make_check("a", "calculated", "pass")
-        self.assertEqual(rs.envelope_status([calc, row]), "manual check required")
+        self.assertEqual(rs.envelope_status([calc, row]), "assumed")
+        self.assertEqual(rs.worst_of(["assumed", "pointer only"]), "assumed")
+        self.assertEqual(rs.worst_of(["assumed", "manual check required"]), "manual check required")
         self.assertFalse(rs.checks_banner_allowed([calc, row]))
 
     def test_not_performed_summary(self):
@@ -130,6 +134,8 @@ class BannerRule(unittest.TestCase):
         ("screening", True, False),
         ("pointer only", False, False),
         ("pointer only", True, False),
+        ("assumed", False, False),
+        ("assumed", True, False),
         ("manual check required", False, False),
         ("manual check required", True, False),
     )
@@ -146,6 +152,7 @@ class BannerRule(unittest.TestCase):
         self.assertEqual(rs.banner_word("PASS", "screening", True), "SCREENING")
         self.assertEqual(rs.banner_word("DELIVERABLE", "pointer only"), "POINTER ONLY")
         self.assertEqual(rs.banner_word("ISSUE", "manual check required"), "MANUAL CHECK REQUIRED")
+        self.assertEqual(rs.banner_word("PASS", "assumed"), "ASSUMED")
 
     def test_checks_banner_allowed_and_status_fields(self):
         calc = rs.make_check("a", "calculated", "pass")

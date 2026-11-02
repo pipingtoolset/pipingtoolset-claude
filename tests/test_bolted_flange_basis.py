@@ -305,7 +305,7 @@ class SheetSectionOne(unittest.TestCase):
 class OwnerAcceptance(unittest.TestCase):
     def _rec(self, item, document="PIP PNC00004"):
         return record(owner_practice=[{"document": document, "edition": "user to confirm", "items": [item]}],
-                      assumptions=[])     # an ASSUMED item would grade every run manual check required
+                      assumptions=[])     # an ASSUMED item would grade every run "assumed"
 
     def test_a_percent_becomes_a_calculated_check_that_can_fail(self):
         item = {"name": "flange acceptance", "value": 80, "unit": "%"}

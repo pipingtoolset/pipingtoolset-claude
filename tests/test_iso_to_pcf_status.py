@@ -26,7 +26,7 @@ import build_pcf  # noqa: E402
 import pcf_lib  # noqa: E402
 import validate_pcf as V  # noqa: E402
 
-WORDS = ("calculated", "screening", "manual check required", "pointer only", "not checked")
+WORDS = ("calculated", "screening", "manual check required", "assumed", "pointer only", "not checked")
 
 
 def example(name: str) -> dict:
@@ -74,7 +74,7 @@ def banner_words(text: str):
 
 class Envelope(unittest.TestCase):
 
-    def test_every_example_carries_one_of_the_five_words_and_well_formed_checks(self):
+    def test_every_example_carries_one_of_the_six_words_and_well_formed_checks(self):
         for name in ("demo-line.json", "minimal-proven.json"):
             _, r = run(example(name))
             self.assertIn(r["result_status"], WORDS, name)
@@ -94,16 +94,16 @@ class Envelope(unittest.TestCase):
         self.assertEqual((c["BOM component counts"]["result_status"], c["BOM component counts"]["status"]),
                          ("calculated", "pass"))
 
-    def test_assumed_inputs_are_one_manual_check_row_and_the_pipe_length_screen_is_screening(self):
+    def test_assumed_inputs_are_one_assumed_row_and_the_pipe_length_screen_is_screening(self):
         spec = demo()
         spec["bom"]["PIPE-LENGTH:6"] = "145'9"            # 1749 in against 1749.06 in of centreline
         _, r = run(spec)
         c = by_name(r)
-        self.assertEqual(c["ASSUMED inputs"], {"name": "ASSUMED inputs", "result_status": "manual check required",
+        self.assertEqual(c["ASSUMED inputs"], {"name": "ASSUMED inputs", "result_status": "assumed",
                                                "status": "na", "note": DEMO_ASSUMED})
         self.assertEqual(len([x for x in r["checks"] if x["name"] == "ASSUMED inputs"]), 1)
         self.assertEqual(c["BOM pipe length (+/-10% magnitude)"]["result_status"], "screening")
-        self.assertEqual(r["result_status"], "manual check required")
+        self.assertEqual(r["result_status"], "assumed")
         self.assertFalse(any(x.get("unresolved_factor") for x in r["checks"]))
         self.assertIn("ASSUMED inputs: " + DEMO_ASSUMED, r["result_status_why"])
         spec = clean()
@@ -191,7 +191,7 @@ class Envelope(unittest.TestCase):
         code, out, _ = cli([os.path.join(EXAMPLES, "demo-line.json"), "-o", os.devnull, "--json"])
         self.assertEqual(code, 0)
         r = json.loads(out)
-        self.assertEqual(r["result_status"], "manual check required")      # the demo carries two ASSUMED items
+        self.assertEqual(r["result_status"], "assumed")      # the demo carries two ASSUMED items
         self.assertEqual(len(r["checks"]), len(by_name(r)))
 
 
@@ -201,7 +201,7 @@ class BannerRule(unittest.TestCase):
         b, r = run(demo())
         lines = build_pcf.render(r).splitlines()
         self.assertEqual(lines[0], "PCF build report - DEMO-6-P-1001")
-        self.assertEqual(lines[1], "Result status: manual check required - ASSUMED inputs: " + DEMO_ASSUMED)
+        self.assertEqual(lines[1], "Result status: assumed - ASSUMED inputs: " + DEMO_ASSUMED)
         self.assertTrue(all(ord(ch) < 128 for ch in lines[1]))
 
     def test_an_allowed_run_prints_pass_and_ok(self):
@@ -214,7 +214,8 @@ class BannerRule(unittest.TestCase):
     def test_an_assumed_item_holds_the_result_line(self):
         _, r = run(demo())
         text = build_pcf.render(r)
-        self.assertIn("RESULT: MANUAL CHECK REQUIRED - confirm the ASSUMED items, then run validate_pcf.py", text)
+        self.assertIn("RESULT: ASSUMED - confirm the ASSUMED items, then run validate_pcf.py", text)
+        self.assertIn("[ASSUMED] ", text)                  # the passing lines, where PASS would be
         self.assertEqual(banner_words(text), [])
         self.assertNotIn("[PASS]", text)
 

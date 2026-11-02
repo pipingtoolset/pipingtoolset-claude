@@ -1,5 +1,5 @@
 ## Load case set - B31.3 2022
-Result status: manual check required - confirm ASSUMED inputs (confirm before issue: primary state = op (first declared) for the hanger design pair and the primary-labelled matrix rows; hanger design pair (W Rigid, W+T1 Ignore) runs at friction multiplier 1.0 (first declared friction variant)); fails: QC 4 vertical seismic and U2; not performed by this module: 12 items that need the model
+Result status: assumed - confirm ASSUMED inputs (confirm before issue: primary state = op (first declared) for the hanger design pair and the primary-labelled matrix rows; hanger design pair (W Rigid, W+T1 Ignore) runs at friction multiplier 1.0 (first declared friction variant)); fails: QC 4 vertical seismic and U2; not performed by this module: 12 items that need the model
 
 ### 1 Basis
 

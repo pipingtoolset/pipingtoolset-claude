@@ -155,7 +155,7 @@ Modules (one-line purposes in [references/tool-reference.md](references/tool-ref
 
 Each call prints a JSON envelope `{module, status, output, warnings, citation, inputs, user_supplied}` plus the status fields below; exit code 2 means bad input, including a record that conflicts with an input. Quote warnings and the `equation` string in the calc sheet. Every allowable, modulus and `i` comes from the user's licensed copy (an allowable may come from the connector, below). Per-module outputs, the status words and an illustrative call are in [references/tool-reference.md](references/tool-reference.md#result-status).
 
-**Result status.** `result_status` is calculated, screening, manual check required, pointer only or not checked. Put `result_status_line` under the sheet title and `basis_section` (with a record) in section 1. While the status is manual check required or pointer only, write no PASS or OK: `banner` then holds the status word.
+**Result status.** `result_status` is calculated, screening, manual check required, assumed, pointer only or not checked. Put `result_status_line` under the sheet title and `basis_section` (with a record) in section 1. While the status is manual check required, assumed or pointer only, write no PASS or OK: `banner` then holds the status word.
 
 ---
 

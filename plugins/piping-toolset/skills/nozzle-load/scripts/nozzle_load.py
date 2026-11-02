@@ -418,14 +418,18 @@ def render_basis_section(applied, basis, heading=None):
 # status (pass/fail/na), note[, unresolved_factor]}]. "not checked" rows never drive the envelope;
 # they are listed, and the envelope reads "not checked" only when every row is. A positive banner
 # word (PASS, OK, ISSUE, DELIVERABLE) is printed only when banner_allowed() is true: never under
-# "manual check required" or "pointer only", nor under "screening" when a reconstructed factor in
-# the chain is unresolved. Any ASSUMED input gives one "ASSUMED inputs" row (assumed_inputs_check)
-# graded manual check required, so an unconfirmed input always holds the banner.
+# "manual check required", "assumed" or "pointer only", nor under "screening" when a reconstructed
+# factor in the chain is unresolved. Any ASSUMED input gives one "ASSUMED inputs" row
+# (assumed_inputs_check) graded "assumed" (P.E. ruling 2026-11-02, item 3.5(ii); it was manual check
+# required up to 0.9.0), so an unconfirmed input always holds the banner.
 
-RESULT_STATUS = ("calculated", "screening", "manual check required", "pointer only", "not checked")
-# severity for worst_of (ordering only): manual check required > pointer only > screening > not checked > calculated
-RESULT_STATUS_SEVERITY = {"manual check required": 4, "pointer only": 3, "screening": 2, "not checked": 1,
-                          "calculated": 0}
+RESULT_STATUS = ("calculated", "screening", "manual check required", "assumed", "pointer only", "not checked")
+# severity for worst_of (ordering only):
+#   manual check required > assumed > pointer only > screening > not checked > calculated
+# "assumed" sits just below "manual check required": when a gate has tripped and an input is also
+# unconfirmed, the envelope names the gate; confirming the input alone would not clear it.
+RESULT_STATUS_SEVERITY = {"manual check required": 5, "assumed": 4, "pointer only": 3, "screening": 2,
+                          "not checked": 1, "calculated": 0}
 CHECK_STATUS = ("pass", "fail", "na")
 ASSUMED_CHECK_NAME = "ASSUMED inputs"
 
@@ -470,8 +474,8 @@ def make_check(name, result_status, status=None, note=None, unresolved_factor=Fa
 def assumed_inputs_check(items):
     """The one 'ASSUMED inputs' row for every ASSUMED item (strings or {item[, note]} dicts), or None.
 
-    Graded manual check required, so the envelope follows it and no positive banner prints; the
-    note reads 'confirm before issue: <item>; <item>' (duplicates dropped, order kept).
+    Graded "assumed" (ruling 2026-11-02 3.5(ii)), which holds the banner like manual check
+    required; the note reads 'confirm before issue: <item>; <item>' (duplicates dropped, order kept).
     """
     texts = []
     for it in items or ():
@@ -481,7 +485,7 @@ def assumed_inputs_check(items):
             texts.append(text)
     if not texts:
         return None
-    return make_check(ASSUMED_CHECK_NAME, "manual check required", "na",
+    return make_check(ASSUMED_CHECK_NAME, "assumed", "na",
                       "confirm before issue: " + "; ".join(texts))
 
 
@@ -492,9 +496,9 @@ def not_performed(checks):
 
 
 def banner_allowed(result_status, unresolved_factor=False):
-    """False for manual check required, pointer only, and screening with an unresolved factor."""
+    """False for manual check required, assumed, pointer only, and screening with an unresolved factor."""
     word = _rs_word(result_status)
-    if word in ("manual check required", "pointer only"):
+    if word in ("manual check required", "assumed", "pointer only"):
         return False
     return not (word == "screening" and unresolved_factor)
 
@@ -1378,7 +1382,7 @@ FIELDS: Dict[str, List[tuple]] = {
         ("allowable", "lbf, ft-lbf", True, "Allowables " + _SET_DESC + " read by the user; each must be > 0"),
         ("ownerFactor", "-", False, _OWNER_DESC),
         ("derivedSetStatus", "text", False, "result_status of the equipment.pvp2011-allowables run the allowable set was derived by "
-                                            "(one of the five words); omit for a set read from a table or datasheet"),
+                                            "(one of the six words); omit for a set read from a table or datasheet"),
     ],
     "connections.nema-sm23": [
         ("NPS", "in", True, "Nozzle nominal pipe size; must be > 0"),
@@ -1411,7 +1415,7 @@ FIELDS: Dict[str, List[tuple]] = {
         ("multiplier", "-", False, "Factor on every limit for a bay rule (API 661 7.1.10.3: 3); default none (1)"),
         ("ownerFactor", "-", False, _OWNER_DESC),
         ("derivedSetStatus", "text", False, "result_status of the equipment.pvp2011-allowables run the allowable set was derived by "
-                                            "(one of the five words); omit for a set read from a table or datasheet"),
+                                            "(one of the six words); omit for a set read from a table or datasheet"),
     ],
     "equipment.api650-annexp-ordinates": [
         ("FR", "force", True, "Radial thrust at the shell mid-surface, signed (Figure P.1)"),

@@ -45,20 +45,20 @@ PROJECT BASIS (optional top-level `project_basis`, or --project-basis <file>; ne
   result gains "project_basis_applied" and the report a "Basis - project basis record" section.
 
 RESULT STATUS: the envelope gains "result_status" (calculated | screening | manual check required |
-  pointer only | not checked, the worst word among the checks performed; ASSUMED items and CSA preset
-  anchor values each give one row graded manual check required) and "checks" [{name, result_status, status,
-  note}]; the result document repeats "result_status". A guard-held stage, a critical review
-  finding the model cannot carry, or a seismic case without SDS is manual check required; SDS given
-  only as a pointer (a string) is pointer only (Ev does not run); anchorage on CSA preset values is
-  screening; the Known-limits items are listed as not checked. No PASS is printed under manual
-  check required or pointer only.
+  assumed | pointer only | not checked, the worst word among the checks performed; ASSUMED items give
+  one row graded assumed and CSA preset anchor values one row graded manual check required) and
+  "checks" [{name, result_status, status, note}]; the result document repeats "result_status". A
+  guard-held stage, a critical review finding the model cannot carry, or a seismic case without SDS
+  is manual check required; SDS given only as a pointer (a string) is pointer only (Ev does not
+  run); anchorage on CSA preset values is screening; the Known-limits items are listed as not
+  checked. No PASS is printed under manual check required, assumed or pointer only.
 
 Exit codes: 0 every combination passes, no critical review finding and the result status allows
 a PASS; 3 not issuable although no limit state fails: a critical review finding stands (e.g.
 pipe moments the model cannot carry), a validity guard holds a stage at "manual check required"
 (ASD anchorage governed by a wind combination, code-basis item 10: the verdict line reads "NOT
 ISSUABLE - ASD anchorage governed by wind combination <id>: ..." and never PASS), or the result
-status is manual check required or pointer only; 2 a limit state fails, or the code_values block
+status is manual check required, assumed or pointer only; 2 a limit state fails, or the code_values block
 or the project basis record cannot be applied (message "input error: ..." on stderr, no
 verdict); 1 the spec is defective.
 Standard library only (Python 3.9+).
@@ -420,14 +420,18 @@ def render_basis_section(applied, basis, heading=None):
 # status (pass/fail/na), note[, unresolved_factor]}]. "not checked" rows never drive the envelope;
 # they are listed, and the envelope reads "not checked" only when every row is. A positive banner
 # word (PASS, OK, ISSUE, DELIVERABLE) is printed only when banner_allowed() is true: never under
-# "manual check required" or "pointer only", nor under "screening" when a reconstructed factor in
-# the chain is unresolved. Any ASSUMED input gives one "ASSUMED inputs" row (assumed_inputs_check)
-# graded manual check required, so an unconfirmed input always holds the banner.
+# "manual check required", "assumed" or "pointer only", nor under "screening" when a reconstructed
+# factor in the chain is unresolved. Any ASSUMED input gives one "ASSUMED inputs" row
+# (assumed_inputs_check) graded "assumed" (P.E. ruling 2026-11-02, item 3.5(ii); it was manual check
+# required up to 0.9.0), so an unconfirmed input always holds the banner.
 
-RESULT_STATUS = ("calculated", "screening", "manual check required", "pointer only", "not checked")
-# severity for worst_of (ordering only): manual check required > pointer only > screening > not checked > calculated
-RESULT_STATUS_SEVERITY = {"manual check required": 4, "pointer only": 3, "screening": 2, "not checked": 1,
-                          "calculated": 0}
+RESULT_STATUS = ("calculated", "screening", "manual check required", "assumed", "pointer only", "not checked")
+# severity for worst_of (ordering only):
+#   manual check required > assumed > pointer only > screening > not checked > calculated
+# "assumed" sits just below "manual check required": when a gate has tripped and an input is also
+# unconfirmed, the envelope names the gate; confirming the input alone would not clear it.
+RESULT_STATUS_SEVERITY = {"manual check required": 5, "assumed": 4, "pointer only": 3, "screening": 2,
+                          "not checked": 1, "calculated": 0}
 CHECK_STATUS = ("pass", "fail", "na")
 ASSUMED_CHECK_NAME = "ASSUMED inputs"
 
@@ -472,8 +476,8 @@ def make_check(name, result_status, status=None, note=None, unresolved_factor=Fa
 def assumed_inputs_check(items):
     """The one 'ASSUMED inputs' row for every ASSUMED item (strings or {item[, note]} dicts), or None.
 
-    Graded manual check required, so the envelope follows it and no positive banner prints; the
-    note reads 'confirm before issue: <item>; <item>' (duplicates dropped, order kept).
+    Graded "assumed" (ruling 2026-11-02 3.5(ii)), which holds the banner like manual check
+    required; the note reads 'confirm before issue: <item>; <item>' (duplicates dropped, order kept).
     """
     texts = []
     for it in items or ():
@@ -483,7 +487,7 @@ def assumed_inputs_check(items):
             texts.append(text)
     if not texts:
         return None
-    return make_check(ASSUMED_CHECK_NAME, "manual check required", "na",
+    return make_check(ASSUMED_CHECK_NAME, "assumed", "na",
                       "confirm before issue: " + "; ".join(texts))
 
 
@@ -494,9 +498,9 @@ def not_performed(checks):
 
 
 def banner_allowed(result_status, unresolved_factor=False):
-    """False for manual check required, pointer only, and screening with an unresolved factor."""
+    """False for manual check required, assumed, pointer only, and screening with an unresolved factor."""
     word = _rs_word(result_status)
-    if word in ("manual check required", "pointer only"):
+    if word in ("manual check required", "assumed", "pointer only"):
         return False
     return not (word == "screening" and unresolved_factor)
 
@@ -987,8 +991,8 @@ _PB_ASSUMED_PREFIX = "ASSUMED (project basis): "
 
 
 def assumed_check(spec: dict):
-    """The shared "ASSUMED inputs" row for the spec's assumed[] list (the record's ASSUMED items are
-    already in it), or None when the list is empty."""
+    """The shared "ASSUMED inputs" row (graded assumed) for the spec's assumed[] list (the record's
+    ASSUMED items are already in it), or None when the list is empty."""
     items = [a[len(_PB_ASSUMED_PREFIX):] if isinstance(a, str) and a.startswith(_PB_ASSUMED_PREFIX) else a
              for a in spec.get("assumed") or []]
     return assumed_inputs_check(items)
@@ -1058,8 +1062,12 @@ def _status_why(checks: list, word: str) -> str:
         return "screening inputs: " + "; ".join(f"{c['name']} ({c['note'].split('; ')[-1]})" for c in hits)
     if word == "pointer only":
         return f"not issuable, a required value is a pointer only (that check did not run): {names}"
+    if word == "assumed":
+        return "not issuable until the ASSUMED inputs are confirmed: " + ", ".join(
+            f"{c['name']} ({c['note']})" for c in hits)
+    # manual check required: the held checks, then the ASSUMED-inputs row (if any) they outrank
     held = [f"{c['name']} ({c['note']})" if c["name"] in (ASSUMED_CHECK_NAME, PRESET_CHECK_NAME) else c["name"]
-            for c in hits]
+            for c in hits + [c for c in checks if c["result_status"] == "assumed"]]
     return "not issuable, held for a manual check: " + ", ".join(held)
 
 

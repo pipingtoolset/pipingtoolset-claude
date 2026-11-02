@@ -68,7 +68,7 @@ def cli_verdict(doc: dict) -> str:
     """The one-line verdict support_calc prints with --quiet (ASCII only).
 
     fail -> FAIL; guard (manual check required) -> NOT ISSUABLE naming the guarded stage and
-    check, never PASS; a result status that blocks a PASS (manual check required, pointer only;
+    check, never PASS; a result status that blocks a PASS (manual check required, assumed, pointer only;
     doc["_status"] from support_calc) -> that status word in capitals, with the reason, and a
     critical finding -> "<word> WITH n CRITICAL FINDING(S)"; otherwise PASS."""
     env = doc["envelope"]
