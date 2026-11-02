@@ -1,10 +1,12 @@
 # YouTube listing: PipingToolset for Claude demo (silent, captioned)
 
-Built by `edit-tools/build_claude_demo_silent.py` from the step recordings (2026-10-28). It
-replaces the narrated 2026-10-27 cut (40lcLzIzHEg) in the same format as the ChatGPT / Codex demo
-(VHD-XIeQu2s): no voice, captions burned in, the same captions in the `.srt`. Published 2026-10-28 as
-h7A6Fq1cbHs and embedded on `/claude/` (`VIDEO.id` in `scripts/seo/claude-content.mjs`, pipecalcpro
-PR 149). The narrated video is no longer embedded anywhere on the site.
+Built by `edit-tools/build_claude_demo_silent.py` from the step recordings (2026-10-28), re-rendered
+2026-11-02 with the ACI CODE-318-25 captions (PR #31) in the same format as the ChatGPT / Codex demo:
+no voice, captions burned in, the same captions in the `.srt`. Published 2026-11-02 as a new video,
+**FVhnm3sXS-o** (4:24), and embedded on `/claude/` (`VIDEO.id` in `scripts/seo/claude-content.mjs`,
+pipecalcpro). It replaces h7A6Fq1cbHs (10-28, 5:05) and the narrated 2026-10-27 cut (40lcLzIzHEg);
+neither is embedded anywhere on the site. YouTube title as uploaded: "Piping Toolset & Claude: B31.3
+wall thickness and a pipe support check".
 
 ## Title
 
@@ -61,4 +63,4 @@ Claude asks. A script computes. You read the table.
 
 ## Playlist / cross-links
 
-Same playlist as the ChatGPT / Codex demo (VHD-XIeQu2s); link each video's end screen to the other.
+Same playlist as the ChatGPT / Codex demo (LfTiA0Wv2EA); link each video's end screen to the other.
