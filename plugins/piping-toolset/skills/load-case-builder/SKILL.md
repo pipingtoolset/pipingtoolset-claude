@@ -16,7 +16,7 @@ So this skill builds load case sets **symbolically** and resolves numbering last
 
 | This skill | Not this skill |
 |---|---|
-| Which cases exist, their content, stress type, combination method and numbering | The stress check itself — allowables, SIFs, spans. Hand off to the `stress-screening` skill in this pack if it is installed; otherwise say the check is outside this skill. |
+| Which cases exist, their content, stress type, combination method and numbering | The stress check itself — allowables, SIFs, spans. Hand off to the `pipe-stress-check` skill in this pack if it is installed; otherwise say the check is outside this skill. |
 | The occasional load-case architecture | The wind and seismic magnitudes — those come from the project's structural basis or the ASCE Hazard Tool (ascehazardtool.org) |
 | The report extraction matrix and QC of a case set | Sway-brace hardware selection |
 

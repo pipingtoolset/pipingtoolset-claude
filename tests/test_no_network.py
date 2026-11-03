@@ -51,9 +51,9 @@ class NoNetwork(unittest.TestCase):
     def test_the_scan_sees_every_script(self):
         files = [os.path.basename(p) for p in shipped_python_files()]
         # a scan of nothing would pass: pin the scripts that must be inside it
-        for expected in ("pressure_design.py", "stress_screening.py", "nozzle_load.py", "bolted_flange.py",
+        for expected in ("pipe_stress_check.py", "nozzle_load.py", "bolted_flange.py",
                          "support_calc.py", "loadcase_gen.py", "build_pcf.py", "pcf_lib.py", "validate_pcf.py",
-                         "baseplate.py", "report.py"):
+                         "pcf_check.py", "verify_cii.py", "baseplate.py", "report.py"):
             self.assertIn(expected, files)
         self.assertGreaterEqual(len(files), 20)
 
@@ -88,7 +88,7 @@ class NoNetwork(unittest.TestCase):
 
     def test_the_code_values_helper_only_reads_its_input(self):
         # the helper block that carries cited values into the calculators is plain data handling
-        with open(os.path.join(SKILLS, "pressure-design", "scripts", "pressure_design.py"), encoding="utf-8") as fh:
+        with open(os.path.join(SKILLS, "bolted-flange", "scripts", "bolted_flange.py"), encoding="utf-8") as fh:
             text = fh.read()
         block = text[text.index("# ===== BEGIN code_values helper"):text.index("# ===== END code_values helper =====")]
         self.assertNotIn("open(", block)

@@ -1,0 +1,126 @@
+{
+ "_comment": "pcf_prep.py job for Revit/Fabrication PCF -> AutoPIPE (Bentley PCF Translator). Every value here is a PLACEHOLDER to replace from the project specification and drawings; paths are relative to this file. Keys starting with _ are ignored by the script (nested lists and dicts that the script iterates carry no _comment keys, except where noted).",
+ "_comment_name": "Free text, echoed to the report.",
+ "name": "example model, supply and return (placeholder)",
+
+ "_comment_pcf_globs": "REQUIRED. Globs of the Revit/Fabrication PCF files merged into one model; inch or mm coordinates are detected per file.",
+ "pcf_globs": ["exports/SUPPLY.pcf", "exports/RETURN.pcf"],
+ "_comment_output_dir": "REQUIRED. Output folder (created). Files: STEM.pcf, STEM_report.json and the CSVs listed in the pcf_prep.py docstring.",
+ "output_dir": "out",
+ "_comment_output_stem": "Output file stem. Default: model.",
+ "output_stem": "model_A",
+ "_comment_pipeline_reference": "PIPELINE-REFERENCE written to the PCF. Default: the stem.",
+ "pipeline_reference": "MODEL-A",
+ "_comment_assumed": "Free-text assumptions, echoed into the report as ASSUMED. Write every basis you took that the drawings do not state.",
+ "assumed": [
+  "PLACEHOLDER: design code, edition and pressure are set in the analysis program; the translator may write a different code than the one you select.",
+  "PLACEHOLDER: supports are the BIM layout mined from the NWC, not a support design."
+ ],
+
+ "_comment_box_ft": "Model box in feet, plant coordinates (the frame of the PCF). Any of xmin, xmax, ymin, ymax, zmin, zmax; a missing limit is open.",
+ "box_ft": {"xmin": -1000.0, "xmax": 1000.0, "ymin": -1000.0, "ymax": 1000.0},
+ "_comment_clip_mode": "any = keep a record when any point is inside the box; all = only when every point is.",
+ "clip_mode": "any",
+ "_comment_heal_tol_in": "Joints closer than this (in) are fused into one coordinate; fittings win over pipe ends. Revit gasket faces are typically 0.05 in open.",
+ "heal_tol_in": 0.25,
+ "_comment_min_segment_in": "Shortest pipe a support split may leave (in).",
+ "min_segment_in": 1.0,
+ "_comment_weld_match": "Regex on ITEM-DESCRIPTION of records that are weld or gasket stand-ins; with fuse_rtypes they are removed and their two nodes fused.",
+ "weld_match": "FIELD.?WELD|GASKET|Shop Weld",
+ "_comment_fuse_rtypes": "Record types that weld_match may remove. Default: COUPLING only.",
+ "fuse_rtypes": ["COUPLING", "WELD"],
+ "_comment_retype": "Retype records by description regex. Each rule: from (record type), match (regex), to, optional skey. Example: a valve exported as MISC-COMPONENT.",
+ "retype": [
+  {"from": "MISC-COMPONENT", "match": "EXAMPLE-VALVE-MODEL", "to": "VALVE", "skey": "VBFL"},
+  {"from": "COUPLING", "match": "NIPPLE", "to": "PIPE"}
+ ],
+ "_comment_flange_map": "Revit writes flanges as COUPLING. Each rule: match (regex on description), record (FLANGE or FLANGE-BLIND), skey.",
+ "flange_map": [
+  {"match": "Blind Flange", "record": "FLANGE-BLIND", "skey": "FLBL"},
+  {"match": "Weld Neck Flange", "record": "FLANGE", "skey": "FLWN"},
+  {"match": "Slip-On Flange", "record": "FLANGE", "skey": "FLSO"}
+ ],
+ "_comment_normalize_elbows": "Trim elbows that butt another fitting so the translator's bend radius fits. Default true; elbow_margin_in is the leg margin (in).",
+ "normalize_elbows": true,
+ "_comment_elbow_margin_in": "Leg margin (in) the elbow trim leaves so the translator radius fits.",
+ "elbow_margin_in": 0.0625,
+ "_comment_straighten_max_dev_in": "Largest off-axis joint (in) moved back onto the line through its neighbours.",
+ "straighten_max_dev_in": 0.25,
+
+ "_comment_valve_weights": "Revit valve WEIGHT is often 0. Each row: match (regex on description), nps, weight_lb, optional source note. PLACEHOLDER weights: replace from submittals.",
+ "valve_weights": [
+  {"match": "EXAMPLE-VALVE-MODEL", "nps": 4, "weight_lb": 1.0, "source": "PLACEHOLDER weight, replace from the vendor sheet"}
+ ],
+ "_comment_systems": "One entry per system, chosen by a regex on the source PCF file name. Written as COMPONENT-ATTRIBUTE1..9 in the order the translator's Attribute Mapping tab expects: pressure, temperature, material, wall, insulation thickness, insulation density, corrosion allowance, (8 = rigid weight, set by the script), fluid density. PLACEHOLDER strings: replace with real values from the project basis.",
+ "systems": [
+  {"name": "SUP", "file_match": "SUPPLY", "pressure_psig": "SET-ME", "temperature_F": "SET-ME", "material": "SET-ME",
+   "insulation_thk_in": "SET-ME", "insulation_density_pcf": "SET-ME", "corrosion_in": "SET-ME", "fluid_density_pcf": "SET-ME"},
+  {"name": "RET", "file_match": "RETURN", "pressure_psig": "SET-ME", "temperature_F": "SET-ME", "material": "SET-ME",
+   "insulation_thk_in": "SET-ME", "insulation_density_pcf": "SET-ME", "corrosion_in": "SET-ME", "fluid_density_pcf": "SET-ME"}
+ ],
+ "_comment_desc_schedule_tag": "Schedule token appended to every ITEM-DESCRIPTION that has none, so the translator does not default fittings to STD. Set to the line schedule.",
+ "desc_schedule_tag": "SET-SCHEDULE",
+
+ "_comment_nwc_items_csv": "Output of nwc_supports.py --items-out. Used to name in-line items the PCF export left out.",
+ "nwc_items_csv": "out/nwc_items.csv",
+ "_comment_bridge": "Close collinear gaps between free ends with a stand-in for an omitted in-line item (strainer, control valve, meter). max_gap_in: longest gap bridged. reducer_max_gap_in: 0 turns off bridging between two sizes (a dropped reducer). label_radius_in: how far an NWC item may sit from the gap centre to name it. unidentified_label / fallback_labels {nps: text}: names when nothing matches. item_weights: [{match, nps, weight_lb, skey}] by label. by_length: [{nps, len_in, tol_in, label, weight_lb}] name a bridged item by its gap length. as: valve (AutoPIPE VALV, full weight) or rigid. valve_skey: SKEY of a bridged valve.",
+ "bridge": {
+  "max_gap_in": 36.0,
+  "reducer_max_gap_in": 0.0,
+  "label_radius_in": 36.0,
+  "unidentified_label": "UNIDENTIFIED IN-LINE ITEM",
+  "fallback_labels": {"4": "EXAMPLE 4in in-line item"},
+  "item_weights": [{"match": "EXAMPLE-ITEM", "nps": 4, "weight_lb": 1.0, "skey": "VVFL"}],
+  "by_length": [{"nps": 4, "len_in": 12.0, "tol_in": 0.15, "label": "EXAMPLE 4in item by length", "weight_lb": 1.0}],
+  "as": "valve",
+  "valve_skey": "VVFL"
+ },
+ "_comment_not_inline_extra_regex": "Extra regex of NWC element names that are never in-line items (project equipment and support family names).",
+ "not_inline_extra_regex": "EXAMPLE EQUIPMENT NAME",
+ "_comment_three_way": "Complete a bridged 3-way valve with a real tee so AutoPIPE accepts it. match: regex on the bridged label. port_radius_in: how far off the run the third port may be. tee_leg_in: tee leg length. schedule: schedule token (default desc_schedule_tag).",
+ "three_way": {"match": "3-WAY", "port_radius_in": 14.0, "tee_leg_in": 1.0, "schedule": "SET-SCHEDULE"},
+
+ "_comment_supports_csv": "Output of nwc_supports.py. Each support is snapped to the pipe it carries and the pipe is split there.",
+ "supports_csv": "out/nwc_supports.csv",
+ "_comment_support_system_match": "Regex on the CSV system column. Rows tagged to another system are skipped. Default matches all.",
+ "support_system_match": "SUPPLY|RETURN|^$",
+ "_comment_support_rules": "One entry per CLASS in the CSV (CLEVIS, TRAPEZE, STAND, ROLLER, RISER, GUIDE, ANCHOR). max_horiz_in / min_dz_in / max_dz_in: snap window from the BIM point to the pipe centreline (dz positive = pipe above). multi_pipe + max_pipes + same_level_in: one trapeze or stand carrying several parallel pipes. tag_prefix: NAME prefix. node_fallback: allow a fitting node. system_tag_must_match: {system name: regex on the CSV system}. _family_overrides: {family substring: overrides}. _min_support_spacing_in: supports closer than this on one line are merged. All distances are EXAMPLES.",
+ "support_rules": {
+  "CLEVIS": {"max_horiz_in": 2.0, "min_dz_in": -2.0, "max_dz_in": 2.0, "multi_pipe": false, "tag_prefix": "CLV", "node_fallback": true},
+  "TRAPEZE": {"max_horiz_in": 36.0, "min_dz_in": 0.0, "max_dz_in": 8.0, "multi_pipe": true, "max_pipes": 4,
+              "same_level_in": 3.0, "tag_prefix": "TRP", "system_tag_must_match": {"SUP": "SUPPLY", "RET": "RETURN"}},
+  "_family_overrides": {"EXAMPLE FAMILY NAME": {"tag_prefix": "EXF"}},
+  "_min_support_spacing_in": 12.0
+ },
+ "_comment_support_desc_max": "Longest SUPPORT ITEM-DESCRIPTION written (translator log width).",
+ "support_desc_max": 32,
+ "_comment_support_skey_override": "Map a SKEY the script writes to another one your PCFin.map expects, e.g. {\"HANG\": \"HANG\"}.",
+ "support_skey_override": {},
+
+ "_comment_infill": "Optional rest supports on long unsupported runs. max_span_ft_by_nps {nps: ft} is a cap that MUST come from the project specification: the values here are PLACEHOLDERS. hang_above_ft: runs whose centreline is higher are hung. trigger_factor: a gap must exceed span x factor. join_across_fittings_in, count_run_ends, skey: as in the pcf_prep.py docstring.",
+ "infill": {
+  "max_span_ft_by_nps": {"2": 10, "6": 10, "12": 10},
+  "hang_above_ft": 1000.0,
+  "trigger_factor": 1.25,
+  "join_across_fittings_in": 0.05,
+  "count_run_ends": true,
+  "skey": "SKID"
+ },
+
+ "_comment_boundary_rules": "Classify every remaining free end; the first rule that matches wins. match keys: rtype (regex on the end component), bore, min_bore (in), dir (+X -X +Y -Y +Z -Z, outward), near_box_edge_in, z_min_ft, z_max_ft, horizontal (true/false). action: ANCH writes an ANCH support named tag-system-nn; FREE leaves the end free. Use with the translator's 'Add anchors at free ends' off.",
+ "boundary_rules": [
+  {"name": "EXAMPLE model cut at the box edge", "match": {"min_bore": 6, "near_box_edge_in": 6}, "action": "ANCH", "tag": "CUT",
+   "note": "PLACEHOLDER: anchor at the model boundary; replace with imposed displacements if the outside piping is modelled"},
+  {"name": "EXAMPLE equipment nozzle, vertical down", "match": {"bore": 4, "dir": "-Z", "z_max_ft": 100.0}, "action": "FREE",
+   "note": "PLACEHOLDER: flexible connector, end left free"},
+  {"name": "Open valve or flange end", "match": {"rtype": "VALVE|FLANGE"}, "action": "FREE", "note": "VFY: open end not matched to equipment"}
+ ],
+ "_comment_drop_fragments_max_components": "Drop disconnected pieces of at most this many components (box-edge fragments). 0 or absent: keep all.",
+ "drop_fragments_max_components": 0,
+ "_comment_expected_collapse_match": "Regex of component descriptions allowed to collapse to zero length without a warning. $^ matches nothing.",
+ "expected_collapse_match": "$^",
+ "_comment_pcf_pipe_match": "Regex that the PCF's pipe names match. With nwc_pipe_name_prefix, NWC pipe whose name does not match is listed in the report as missing from the PCF. Omit to skip that report.",
+ "pcf_pipe_match": "EXAMPLE-PIPE-SPEC",
+ "_comment_nwc_pipe_name_prefix": "Name prefix of pipe elements in the NWC items file (Revit family naming). Default Pipe-.",
+ "nwc_pipe_name_prefix": "Pipe-"
+}

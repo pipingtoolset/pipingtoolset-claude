@@ -13,8 +13,8 @@ sys.path.insert(0, os.path.join(ROOT, "tests"))
 from test_connector_manifest import BANNED_COPY_RE  # noqa: E402
 
 CONTRACT_TITLE = "Code-table values (user-supplied or connector-supplied, cited)"
-CALC_SHEET_SKILLS = ("pressure-design", "bolted-flange", "nozzle-load", "stress-screening")
-CONNECTOR_SKILLS = ("pressure-design", "bolted-flange", "nozzle-load")
+CALC_SHEET_SKILLS = ("bolted-flange", "nozzle-load", "pipe-stress-check")
+CONNECTOR_SKILLS = ("bolted-flange", "nozzle-load")
 
 
 def _shipped_text_files():
@@ -64,14 +64,9 @@ class SkillText(unittest.TestCase):
             self.assertRegex(text, r"`get_pointer` takes `standard` .*and `quantity`; the table's id is the `id` its result returns", skill)
 
     def test_get_skey_map_arguments_are_named(self):
-        text = _read(os.path.join(SKILLS, "iso-to-pcf", "SKILL.md"))
+        text = _read(os.path.join(SKILLS, "stress-import", "SKILL.md"))
         self.assertIn("sends only `scope` and `component`", text)
         self.assertNotIn("group name, never", text)
-
-    def test_allowable_stress_key_fields_are_split_by_code(self):
-        text = _read(os.path.join(SKILLS, "pressure-design", "SKILL.md"))
-        self.assertIn("B31.3 `grade`, `classCond`, `size`, `productForm`, `lineNo`, `uns`", text)
-        self.assertIn("B31.1 `grade`, `typeClass`, `sizeOrDia`, `productForm`, `table`, `notes`", text)
 
 
 if __name__ == "__main__":

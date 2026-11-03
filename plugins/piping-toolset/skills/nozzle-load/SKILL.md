@@ -14,9 +14,9 @@ So this skill does two jobs. It interviews for the basis, then runs the arithmet
 
 | This skill | Not this skill |
 |---|---|
-| Six-component load sets per nozzle per load case, judged against the allowables that apply to the equipment type | Computing the loads. The piping stress run produces them; use `stress-screening` for hand checks and `load-case-builder` for the case set |
+| Six-component load sets per nozzle per load case, judged against the allowables that apply to the equipment type | Computing the loads. The piping stress run produces them; use `pipe-stress-check` for hand checks and `load-case-builder` for the case set |
 | Pumps (API 610 Table 5 and Annex F), compressors and turbines (API 617, 611, 612, NEMA SM-23 form), exchangers and heaters (API 660, 661, 560), tanks (API 650 Annex P ordinates), vessels with no vendor allowable (PVP2011-57100 method) | Local shell stress at a vessel or tank nozzle by WRC 297 / 537, VIII-2 4.5.15 or FEA. The skill says when that is needed; it does not run it |
-| PIP RECE002 design-stage factors as an optional owner practice | Pressure design of the nozzle neck and reinforcement: hand off to `pressure-design` |
+| PIP RECE002 design-stage factors as an optional owner practice | Pressure design of the nozzle neck and reinforcement: outside this pack |
 | The calc sheet and the rejection checklist | The flanged joint carrying the same loads: hand off to `bolted-flange` if installed. Support design near equipment: `pipe-support` |
 
 The user's licensed copies are the authority for every clause cited here. Name the clause and edition and ask the user to check the printed page rather than guessing; an item a reference file marks as read from an image is verified there too.
@@ -168,8 +168,8 @@ The `annexF` constants have no pointer: read them as before. This skill's basis 
 
 ## Hand-offs
 
-- Loads come from a piping stress run: `stress-screening` (hand checks), `load-case-builder` (case set), if installed.
-- Neck thickness and reinforcement: `pressure-design`. Flanged joint at the nozzle: `bolted-flange`. Supports near equipment: `pipe-support`.
+- Loads come from a piping stress run: `pipe-stress-check` (hand checks), `load-case-builder` (case set), if installed.
+- Neck thickness and reinforcement: outside this pack. Flanged joint at the nozzle: `bolted-flange`. Supports near equipment: `pipe-support`.
 - Local shell stress beyond the derived values (WRC 537 / 297, VIII-2 4.5.15, FEA): outside this skill; say so in the findings.
 
 ## Related tools

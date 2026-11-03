@@ -64,7 +64,7 @@ The existing note in `connections.nozzle-load-check` (the warning when the maxim
 
 PNC00004 is the owner's piping stress practice. This skill does not restate it. Route as follows when the project invokes it:
 
-1. **Cold spring and sag.** Its cold spring and sag provisions (for example a 16 mm sag limit and no cold spring credit in the expansion stress) are carried by the `stress-screening` skill; cite the paragraph from the project's copy.
+1. **Cold spring and sag.** Its cold spring and sag provisions (for example a 16 mm sag limit and no cold spring credit in the expansion stress) are carried by the `pipe-stress-check` skill; cite the paragraph from the project's copy.
 2. **Equipment nozzle loads.** Open the practice and read what it says about rotating machinery and equipment nozzle loads. If it refers the engineer to PIP RECE002 or to the equipment standards, apply section 1 of this file; if it states its own factors or load cases, those are the owner's rule and take their place as the owner factor, cited by paragraph and edition. The clauses to look for (confirm each in the project's copy and edition):
    - 3.3.1: the lesser of the manufacturer's values or the listed references governs.
    - 3.3.2: rotating machinery is evaluated per PIP RECE002.

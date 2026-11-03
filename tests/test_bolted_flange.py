@@ -774,7 +774,7 @@ class SkillContent(unittest.TestCase):
         self.assertIn("max(F, 0)", self.refs["rejection-checklist.md"])
         self.assertIn("max(F, 0)", self.refs["app2-engine.md"])
 
-    def test_pressure_design_hand_off_excludes_flange_rating_selection(self):
+    def test_wall_thickness_hand_off_excludes_flange_rating_selection(self):
         self.assertNotIn("Flange rating selection", self.text)
 
     def test_related_tools_link_carries_utm(self):
@@ -811,8 +811,9 @@ class SkillContent(unittest.TestCase):
         self.assertIn("ENGINE_DEFAULT_E_DESIGN", self.refs["tool-reference.md"])
 
     def test_hand_offs_name_only_pack_skills(self):
-        self.assertIn("`pressure-design`", self.text)
-        self.assertIn("`stress-screening`", self.text)
+        self.assertNotIn("`pressure-design`", self.text)
+        self.assertIn("Wall thickness, MAWP, hydrotest and leak-test pressure: outside this pack.", self.text)
+        self.assertIn("`pipe-stress-check`", self.text)
         self.assertIn("`nozzle-load`", self.text)
         self.assertIn("if it is installed", self.text)
 

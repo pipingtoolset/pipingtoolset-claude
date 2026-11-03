@@ -144,5 +144,5 @@ Soil values and the slip-critical pretension have no dataset; they stay with the
 ## Related skills in this pack
 
 `load-case-builder` sets up the CAESAR II load cases that produce these restraint loads.
-`stress-screening` hand-checks the piping. `iso-to-pcf` builds the model from the isos.
+`pipe-stress-check` hand-checks the piping. `stress-import` builds the model from the isos.
 This skill starts where the stress analysis ends: at the support.

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Copy the shared helper blocks and the project-basis files into the seven skills.
+"""Copy the shared helper blocks and the project-basis files into the six skills.
 
 Skills stay standalone (an Agent Skills host loads one skill folder, so no skill imports another),
 so shared code is shared by byte-identical copy. The canonical text lives in tools/shared/:
@@ -34,10 +34,9 @@ SKILLS = os.path.join(ROOT, "plugins", "piping-toolset", "skills")
 BLOCKS = ("project_basis", "result_status")  # insertion order
 SCRIPTS = {
     "load-case-builder": "loadcase_gen.py",
-    "pressure-design": "pressure_design.py",
-    "stress-screening": "stress_screening.py",
+    "pipe-stress-check": "pipe_stress_check.py",
     "pipe-support": "support_calc.py",
-    "iso-to-pcf": "build_pcf.py",
+    "stress-import": "build_pcf.py",
     "nozzle-load": "nozzle_load.py",
     "bolted-flange": "bolted_flange.py",
 }

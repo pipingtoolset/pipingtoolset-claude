@@ -1,6 +1,6 @@
 """Shared result_status block (plugin 0.8.0, B9; 0.9.1 `assumed`): the six words, worst_of order, banner rule, copies.
 
-The canonical text is tools/shared/result_status.py; each of the seven skill scripts carries a
+The canonical text is tools/shared/result_status.py; each of the six skill scripts carries a
 byte-identical copy between its BEGIN/END markers (written by tools/sync_shared_blocks.py).
 
     python -m unittest tests.test_result_status_shared -v
@@ -23,10 +23,9 @@ import result_status as rs  # noqa: E402
 
 SCRIPTS = {
     "load-case-builder": "loadcase_gen.py",
-    "pressure-design": "pressure_design.py",
-    "stress-screening": "stress_screening.py",
+    "pipe-stress-check": "pipe_stress_check.py",
     "pipe-support": "support_calc.py",
-    "iso-to-pcf": "build_pcf.py",
+    "stress-import": "build_pcf.py",
     "nozzle-load": "nozzle_load.py",
     "bolted-flange": "bolted_flange.py",
 }
@@ -186,7 +185,7 @@ class Copies(unittest.TestCase):
             self.assertNotIn(word, block)
         exec(compile(block, "result_status block", "exec"), {})
 
-    def test_seven_scripts_carry_the_canonical_block(self):
+    def test_six_scripts_carry_the_canonical_block(self):
         canonical = block_of(read(os.path.join(SHARED, "result_status.py")))
         for skill, script in SCRIPTS.items():
             self.assertEqual(block_of(read(os.path.join(SKILLS, skill, "scripts", script))), canonical, skill)
