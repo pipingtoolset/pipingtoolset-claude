@@ -765,11 +765,16 @@ def _one_moment(inp: Dict[str, Any], names: Tuple[str, ...], optional: bool) -> 
 
 
 def flange_equivalent_pressure(inp: Dict[str, Any]) -> Dict[str, Any]:
-    """Pressure-equivalent screen: Pe = P + 16|M|/(pi G^3) + 4F/(pi G^2) against the rating.
+    """Pressure-equivalent screen: Pe = P + 16|M|/(pi G^3) + 4F+/(pi G^2) against the rating.
 
     The moment is a magnitude (its sign is an artefact of the analysis frame). Axial force is
-    signed, tension positive; compression lowers Pe and raises a warning. The moment is in
-    in-lbf as `M` (engine name) or `M_in_lbf`; `M_ft_lbf` is converted (x 12). Give exactly one.
+    signed, tension positive. F+ = max(F, 0) by default: a compressive force is NOT credited
+    against Pe (VIII-2 4.16.13 neglects a compressive net-section force, FA = 0); the engine
+    warns and reports `Fapplied` = 0. `creditCompression` true lets a compressive F reduce Pe
+    where the owner specification allows it, with a warning that the credit was taken. Mirrors
+    the engine after its 2026-11-02 audit correction (0.9.3; up to 0.9.2 the ported function kept
+    F signed and only the CLI layer clamped it). The moment is in in-lbf as `M` (engine name) or
+    `M_in_lbf`; `M_ft_lbf` is converted (x 12). Give exactly one.
     """
     P, F, G = _num(inp, "P"), _num(inp, "F"), _num(inp, "G")
     rated = _num(inp, "ratedPressure")
@@ -783,18 +788,25 @@ def flange_equivalent_pressure(inp: Dict[str, Any]) -> Dict[str, Any]:
     if rated <= 0:
         raise ValueError("ratedPressure must be > 0 (supply from B16.5 P-T table)")
 
+    credit = inp.get("creditCompression") is True
+    F_applied = 0.0 if (F < 0 and not credit) else F
     moment_term = (PEQ_MOMENT_COEFF * abs(M)) / (math.pi * G ** 3)
-    force_term = (PEQ_FORCE_COEFF * F) / (math.pi * G ** 2)
+    force_term = (PEQ_FORCE_COEFF * F_applied) / (math.pi * G ** 2)
     Pe = P + moment_term + force_term
     utilization = Pe / rated
 
-    if force_term < 0:
-        warnings.append("Compressive axial force reduces Pe - confirm the joint cannot see the tensile case separately.")
+    if F < 0 and not credit:
+        warnings.append(f"Compressive axial force F = {_js(round_half_up(F, 3))} taken as zero \u2014 compression is not credited "
+                        "against Pe unless creditCompression is set per the owner specification.")
+    elif F < 0:
+        warnings.append("Compressive axial force CREDITED against Pe (creditCompression) \u2014 confirm the specification allows it "
+                        "and that the joint cannot see the tensile case separately.")
 
     return _result(
         "connections.flange-equivalent-pressure",
         {
             "momentTerm": round_half_up(moment_term, 3),
+            "Fapplied": round_half_up(F_applied, 3),
             "forceTerm": round_half_up(force_term, 3),
             "Pe": round_half_up(Pe, 3),
             "utilization": round_half_up(utilization, 4),
@@ -1927,16 +1939,9 @@ def run_with_basis(module: str, inp: Dict[str, Any], project_basis_file: Optiona
     inp, provenance, cv_notes = apply_code_values(inp, module, _cv_fields(module), _cv_aliases(module))
     inp, applied, ctx = apply_project_basis(module, inp, basis)
     pre_warnings = cv_notes + validate(module, inp)
+    # 0.9.3: the ported screen clamps a compressive F itself (engine parity) and takes
+    # `creditCompression` as an engine input; the CLI layer no longer pre-clamps it.
     engine_inp = dict(inp)
-    if module == "connections.flange-equivalent-pressure":
-        credit = bool(engine_inp.pop("creditCompression", False))
-        F = engine_inp.get("F")
-        if not credit and isinstance(F, (int, float)) and not isinstance(F, bool) and F < 0:
-            engine_inp["F"] = 0.0
-            pre_warnings.append(
-                "Compressive axial force taken as F = 0 for the screen (VIII-2 4.16.13 neglects compression). "
-                "Set creditCompression true only if the owner agrees to credit it; then run the tensile case separately and report both."
-            )
     res = REGISTRY[module](engine_inp)
     findings = pre_warnings + res["warnings"]
     banner = res["output"].get("banner")

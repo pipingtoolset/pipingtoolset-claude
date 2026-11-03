@@ -122,7 +122,7 @@ class Fill(unittest.TestCase):
 
     def test_modules_with_no_slot_still_carry_the_record_to_the_sheet(self):
         for module, inp in (("connections.nozzle-load-check", CHECK),
-                            ("connections.nema-sm23", dict(NPS=6, applied=six(10), coefficient=500)),
+                            ("connections.nema-sm23", dict(NPS=6, applied=six(10), basis="nema-sm23", coefficient=500)),
                             ("equipment.nozzle-load-sum", dict(standard="s", nozzles=[six(1), six(2)], limits=six(100))),
                             ("equipment.api650-annexp-ordinates",
                              dict(FR=1e5, ML=1e8, MC=-2e8, a=500, R=10000, t=25, L=1000, P=0.1, YF=2, YL=4, YC=5))):
@@ -169,7 +169,7 @@ class SiRecord(unittest.TestCase):
     def test_si_record_stops_the_usc_only_modules(self):
         rec = record()
         rec["units"] = {"system": "SI"}
-        for module, inp in (("connections.nema-sm23", dict(NPS=6, applied=six(10), coefficient=500)),
+        for module, inp in (("connections.nema-sm23", dict(NPS=6, applied=six(10), basis="nema-sm23", coefficient=500)),
                             ("equipment.pvp2011-allowables", PVP)):
             with self.assertRaisesRegex(ValueError, r"project_basis\.units\.system is SI but %s takes USC inputs only"
                                         % module.replace(".", r"\.")):

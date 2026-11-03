@@ -7,7 +7,7 @@ Detail for the "Running the tool" section of `SKILL.md`. The script is `scripts/
 | Module id | Origin | Inputs the user reads (never defaulted) | Status |
 |---|---|---|---|
 | `connections.nozzle-load-check` | pipingtoolset.com calculation engine | `allowable` (six components) | pass or fail |
-| `connections.nema-sm23` | pipingtoolset.com calculation engine | `coefficient` | pass or fail |
+| `connections.nema-sm23` | pipingtoolset.com calculation engine | `coefficient` (when entered) | pass or fail |
 | `connections.api610-annexf` | pipingtoolset.com calculation engine | `annexF` (the method constants), `suctionAllowable`, `dischargeAllowable`, and for vertical in-line pumps `suctionBore`, `dischargeBore` | pass or fail |
 | `equipment.nozzle-load-sum` | new in this pack | `limits` (six components), `multiplier` for a bay | pass or fail |
 | `equipment.api650-annexp-ordinates` | new in this pack | `YF`, `YL`, `YC` from the figures | always `na` |
@@ -39,7 +39,7 @@ A vertical in-line run may also carry `componentMultiple`; without it the inform
 ## Per-module outputs
 
 - `connections.nozzle-load-check`: `FR`, `MR` (resultants), `ratios` per component (`|applied| / allowable`), `maxRatio`, `governing`. Pass needs every ratio at or below 1. A warning appears when `maxRatio` exceeds 0.5 as a reminder of PIP RECE002 design-stage limits; it never changes the status.
-- `connections.nema-sm23`: `De`, `Fr`, `Mr`, `index` (`3·Fr + Mr`), `allowable` (`coefficient · De`), `ratio`. `De` is the NPS up to 8, otherwise `(NPS + 16)/3`.
+- `connections.nema-sm23`: `basis` (the report label of the selected basis), `coefficient` (applied), `coefficientSource` (`API 617 eq. (E.1b) 927 (default)`, `API 617 eq. (E.1b) 927`, `user-entered (differs from API 617 eq. (E.1b) 927)` or `user-entered`), `De`, `Fr`, `Mr`, `index` (`3·Fr + Mr`), `allowable` (`coefficient · De`), `ratio`. `De` is the NPS up to 8, otherwise `(NPS + 16)/3`. A defaulted coefficient adds a warning to confirm it on the edition of record; with `ownerFactor` the source line says the default was scaled.
 - `connections.api610-annexf`: per-component ratios against the `componentMultiple` times the Table 5 range; for `horizontal`, the resultants, Eq. F.1 and F.2 values and ratios, the resolved loads `FXCA` to `MRCA`, and the ratios of Eq. F.3, F.4 and F.5; for `vertical-inline`, the stresses `SigmaL`, `Tau`, `SigmaP` and ratios against the principal stress limit. `checks` lists every equation evaluated; `governingRatio` and `governingEquation` name the controlling one. For a vertical in-line pump the per-component screen is advisory.
 - `equipment.nozzle-load-sum`: `sum` (signed), `absoluteSum` (informational, signs aligned), `effectiveLimit` (limit times multiplier), `ratios`, `maxRatio`, `governing`, `FR`, `MR`, `perNozzle`.
 - `equipment.api650-annexp-ordinates`: `lambda`, `FP`, `XA_over_sqrtRt`, `XB_over_sqrtRt`, `XC_over_sqrtRt`, `abscissa`, `ordinateP5a`, `ordinateP5b`, and the per-unit-load scale factors `abscissaPerFR`, `ordinateP5aPerML`, `ordinateP5bPerMC`. The status is `na`: plot the points on the printed nomograms.
@@ -55,7 +55,7 @@ A pre-flight check runs before the engine and stops with exit code 2 on:
 
 - an unknown module id, an unknown top-level field, or an unknown key inside a load set, a position `{x, y, z}` or a bore `{Do, Di}` (for example `FX` for `Fx`);
 - a missing `standard` label on the check and the sum;
-- `NPS` or `coefficient` at or below zero for SM-23, a non-positive allowable or limit, a `multiplier` at or below zero, an `ownerFactor` outside (0, 1], or any `ownerFactor` other than 1 with `pumpType` vertical-inline; a non-string `table`;
+- a missing or unknown `basis` for SM-23, a missing `coefficient` under any basis but `api617`, `NPS` or `coefficient` at or below zero for SM-23, a non-positive allowable or limit, a `multiplier` at or below zero, an `ownerFactor` outside (0, 1], or any `ownerFactor` other than 1 with `pumpType` vertical-inline; a non-string `table`;
 - an Annex F `pumpType` or `units` outside the allowed values, and missing positions (horizontal) or bores (vertical in-line), or a bore with `Do` not greater than `Di`;
 - a missing or non-positive `annexF` constant for the pump type (the message names the key), or an unknown key inside `annexF`; the run stops (exit 2) rather than defaulting it;
 - Annex P geometry that is not positive, `L` not greater than `a`, `t` not less than `R`;

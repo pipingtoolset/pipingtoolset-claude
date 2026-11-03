@@ -51,7 +51,7 @@ ANNEXF_V = dict(pumpType="vertical-inline", units="USC", suctionApplied=six(10),
                 annexF=dict(sigmaPLimit=5000.0, kSigma=100.0, kTau=50.0),
                 suctionBore=dict(Do=6.625, Di=6.065), dischargeBore=dict(Do=4.5, Di=4.026))
 CHECK = dict(standard="datasheet", applied=six(100), allowable=six(1000))
-SM23 = dict(NPS=6, applied=six(10), coefficient=500)
+SM23 = dict(NPS=6, applied=six(10), basis="nema-sm23", coefficient=500)
 SUM = dict(standard="header", nozzles=[six(1), six(2)], limits=six(100))
 ORD = dict(FR=1e5, ML=1e8, MC=-2e8, a=500, R=10000, t=25, L=1000, P=0.1, YF=2, YL=4, YC=5)
 PVP = dict(table="1A", NPS=6, row=six(1000), T=0.25, S_vessel=18800, S_nozzle=17100, designTempF=400,

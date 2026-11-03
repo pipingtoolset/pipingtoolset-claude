@@ -187,7 +187,7 @@ class HandDerivedPorted(unittest.TestCase):
     # --- NEMA SM-23 combined form -------------------------------------------------------
     # NPS 6 -> De = 6.  Fr = sqrt(300^2 + 400^2) = 500, Mr = sqrt(600^2 + 800^2) = 1000.
     # index = 3*500 + 1000 = 2500;  a = 500 -> allowable 3000, ratio 5/6.
-    SM23 = dict(NPS=6, applied=six(300, 400, 0, 0, 800, 600), coefficient=500)
+    SM23 = dict(NPS=6, applied=six(300, 400, 0, 0, 800, 600), basis="nema-sm23", coefficient=500)
 
     def test_sm23_hand_case(self):
         res = run("connections.nema-sm23", self.SM23)
@@ -622,14 +622,14 @@ class EngineErrors(unittest.TestCase):
                      "allowable.My must be > 0 (supply it from the governing standard/vendor)")
 
     def test_nema_sm23(self):
-        base = dict(NPS=6, applied=flat(1), coefficient=700)
+        base = dict(NPS=6, applied=flat(1), basis="nema-sm23", coefficient=700)
         self._raises("connections.nema-sm23", dict(base, NPS=0), "NPS must be > 0")
         self._raises("connections.nema-sm23", dict(base, NPS=-12), "NPS must be > 0")
         self._raises("connections.nema-sm23", dict(base, coefficient=0), "coefficient must be > 0")
 
     def test_sm23_coefficient_has_no_default(self):
         with self.assertRaisesRegex(ValueError, "coefficient is required"):
-            run("connections.nema-sm23", dict(NPS=6, applied=flat(1)))
+            run("connections.nema-sm23", dict(NPS=6, basis="nema-sm23", applied=flat(1)))
 
     def test_annexf(self):
         base = dict(pumpType="horizontal", units="USC", suctionApplied=six(), dischargeApplied=six(),
@@ -921,7 +921,7 @@ class CommandLine(unittest.TestCase):
             self.assertEqual(len(r.stderr.strip().splitlines()), 1)
 
     def test_missing_coefficient_exits_2(self):
-        r = self._run("connections.nema-sm23", "--input", json.dumps(dict(NPS=6, applied=flat(1))))
+        r = self._run("connections.nema-sm23", "--input", json.dumps(dict(NPS=6, basis="nema-sm23", applied=flat(1))))
         self.assertEqual(r.returncode, 2)
         self.assertIn("coefficient is required", r.stderr)
 
@@ -1005,11 +1005,17 @@ class SkillContent(unittest.TestCase):
         self.assertIn("## 3. Code-table values (user-supplied or connector-supplied, cited)", self.text)
 
     def test_no_api_method_constant_ships_in_the_skill(self):
-        # API 610 Annex F constants and the API 617 / 611 / 612 coefficients are user-supplied inputs.
-        banned = re.compile(r"\b927\b|\b5950\b|\b10,?200\b|\b5,?100\b|API610_(?!UNIT_CONV)")
+        # API 610 Annex F constants and the API 611 / 612 / SM 23 coefficients are user-supplied inputs.
+        # 0.9.3 (owner P.E. ruling R5, 2026-11-02): the 927 of API 617 9th Ed. Annex E eq. (E.1b) is the
+        # coefficient printed in the equation, carried as a named, cited constant and used only under
+        # basis "api617"; every line that states it must name the equation or the constant.
+        banned = re.compile(r"\b5950\b|\b10,?200\b|\b5,?100\b|API610_(?!UNIT_CONV)")
+        cited = re.compile(r"E\.1b|API617_E1B_COEFFICIENT")
         for label, text in [("SKILL.md", self.text), ("nozzle_load.py", self.script)] + sorted(self.refs.items()):
             for ln in text.splitlines():
                 self.assertIsNone(banned.search(ln), f"{label}: {ln.strip()[:120]}")
+                if re.search(r"\b927\b", ln):
+                    self.assertIsNotNone(cited.search(ln), f"{label}: 927 stated without its equation: {ln.strip()[:120]}")
 
     def test_calc_sheet_template_and_run_rules(self):
         self.assertIn("# Nozzle Load Evaluation", self.text)

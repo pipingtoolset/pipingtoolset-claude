@@ -32,6 +32,41 @@
       },
       "status": "fail",
       "tol": 0.001
+    },
+    {
+      "input": {
+        "P": 500,
+        "F": -2000,
+        "M": 50000,
+        "G": 6,
+        "ratedPressure": 1975
+      },
+      "expect": {
+        "Fapplied": 0,
+        "forceTerm": 0,
+        "Pe": 1678.926,
+        "utilization": 0.8501
+      },
+      "status": "pass",
+      "tol": 0.001
+    },
+    {
+      "input": {
+        "P": 500,
+        "F": -2000,
+        "M": 50000,
+        "G": 6,
+        "ratedPressure": 1975,
+        "creditCompression": true
+      },
+      "expect": {
+        "Fapplied": -2000,
+        "forceTerm": -70.736,
+        "Pe": 1608.19,
+        "utilization": 0.8143
+      },
+      "status": "pass",
+      "tol": 0.001
     }
   ]
 }
