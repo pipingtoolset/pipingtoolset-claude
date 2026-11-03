@@ -978,7 +978,7 @@ class SkillContent(unittest.TestCase):
             self.assertIn(heading.lower(), self.text.lower(), heading)
         for module in nl.REGISTRY:
             self.assertIn(module, self.text, module)
-        for sibling in ("pressure-design", "stress-screening", "load-case-builder", "bolted-flange"):
+        for sibling in ("pipe-stress-check", "load-case-builder", "bolted-flange"):
             self.assertIn(sibling, self.text, sibling)
 
     def test_every_reference_is_linked_and_the_required_ones_exist(self):

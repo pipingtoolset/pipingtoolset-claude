@@ -15,8 +15,8 @@ So this skill runs the loads from the piping analysis through a fixed ladder - a
 | This skill | Not this skill |
 |---|---|
 | Axial force and bending moment resultant on a circular bolted flanged joint (weld-neck or loose ring) against the B16.5 rating, then the VIII-2 4.16 analysis | Nozzle loads on the equipment end (pumps, turbines, vessels, exchangers) against the equipment allowable, such as API 610: hand off to the `nozzle-load` skill in this pack if it is installed |
-| Geometry derivation from user-read values (gasket b and G, bolt root area, hub g0, g1, h) | Pipe stress itself (SUS / OCC / EXP, SIFs): the `stress-screening` skill, if it is installed. Load case sets: the `load-case-builder` skill |
-| The calc sheet, what each rung proves, and what is not computed | Wall thickness, MAWP, hydrotest pressure: the `pressure-design` skill (the flange rating is a user-read B16.5 table value, not computed anywhere in this pack). Full-face gaskets, slip-on, lap-joint, reverse, split, nut-stop and non-circular flanges, self-energizing gaskets, EN 1591-1, ASME III service levels |
+| Geometry derivation from user-read values (gasket b and G, bolt root area, hub g0, g1, h) | Pipe stress itself (SUS / OCC / EXP, SIFs): the `pipe-stress-check` skill, if it is installed. Load case sets: the `load-case-builder` skill |
+| The calc sheet, what each rung proves, and what is not computed | Wall thickness, MAWP, hydrotest pressure: outside this pack (the flange rating is a user-read B16.5 table value, not computed anywhere in this pack). Full-face gaskets, slip-on, lap-joint, reverse, split, nut-stop and non-circular flanges, self-energizing gaskets, EN 1591-1, ASME III service levels |
 
 Torsion and shear are not used by either method; the sheet must say so. The user's licensed copies of the codes are the authority for every clause cited. Where a point needs confirming, name the clause and edition and ask the user to check the printed page.
 
@@ -176,8 +176,8 @@ Take the rating from the dataset edition that matches the user's B16.5 edition. 
 ## Hand-offs
 
 - Equipment nozzle loads against the equipment's own allowable (API 610 and similar): `nozzle-load`, if it is installed.
-- Wall thickness, MAWP, hydrotest and leak-test pressure: `pressure-design`, if it is installed.
-- Piping stress and the loads fed to this skill: `stress-screening` and `load-case-builder`, if they are installed.
+- Wall thickness, MAWP, hydrotest and leak-test pressure: outside this pack.
+- Piping stress and the loads fed to this skill: `pipe-stress-check` and `load-case-builder`, if they are installed.
 
 ## Related tools
 

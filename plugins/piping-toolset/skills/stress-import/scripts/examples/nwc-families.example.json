@@ -1,0 +1,9 @@
+{
+ "_comment": "nwc_supports.py --families file: {substring of the Revit family or type name (case-insensitive): support CLASS}. Merged over the built-in map; keys starting with _ are ignored. Classes the built-in category rule accepts are CLEVIS, TRAPEZE, RISER, ROLLER; any other class (STAND, EQUIPMENT_FRAME ...) is written to the CSV and used by pcf_prep.py only when its job lists that class under support_rules. The names below are PLACEHOLDERS: replace them with the family names in your model.",
+ "EXAMPLE CLEVIS HANGER FAMILY": "CLEVIS",
+ "EXAMPLE TRAPEZE FAMILY": "TRAPEZE",
+ "EXAMPLE FLOOR STAND FAMILY": "STAND",
+ "EXAMPLE ROLLER FAMILY": "ROLLER",
+ "EXAMPLE RISER CLAMP FAMILY": "RISER",
+ "EXAMPLE EQUIPMENT FRAME FAMILY": "EQUIPMENT_FRAME"
+}

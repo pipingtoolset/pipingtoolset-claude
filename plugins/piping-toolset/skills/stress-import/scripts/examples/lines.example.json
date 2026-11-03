@@ -1,0 +1,12 @@
+{
+  "_comment": "fix_cii.py config. PCF paths are the per-line PCFs the APCF import was run from. Bands stay below 9999 (AutoPIPE renames >= 10000). fluid_den_lb_in3: water 62.4/1728 = 0.0361111 (ASSUMED 62.4 lb/ft3); glycol per spec.",
+  "inc": 5,
+  "p1": 150.0,
+  "insul_in": 1.0,
+  "fluid_den_lb_in3": 0.0361111,
+  "tol_in": 0.05,
+  "lines": {
+    "CHS": {"pcf": "CHS.pcf", "start": 10,   "band_end": 4995, "t1": 40.0},
+    "CHR": {"pcf": "CHR.pcf", "start": 5000, "band_end": 9995, "t1": 58.0}
+  }
+}

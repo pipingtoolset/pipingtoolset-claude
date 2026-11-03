@@ -1,7 +1,10 @@
-"""Plugin 0.9.3: the second 2026-11-02 adversarial-audit mirror (owner rulings R5; audit items N5, N9, S5c).
+"""Plugin 0.9.3: the second 2026-11-02 adversarial-audit mirror (owner rulings R5; audit items N9, S5c).
 
-Engine references (the one-engine rule): the calculation engine's leak-test, flange-equivalent-pressure
-and api610-annexf modules after its PR #187 (the 1.5 x P hydrotest floor of B31.3 345.4.2(a), no
+The hydrotest-floor half of that audit (N5, the 1.5 x P floor of B31.3 345.4.2(a)) left the plugin in
+0.10.0 with the pressure-design skill.
+
+Engine references (the one-engine rule): the calculation engine's flange-equivalent-pressure
+and api610-annexf modules after its PR #187 (no
 compression credit in the Kellogg screen, |Fy| in the Annex F vertical in-line stress) and its nema-sm23
 module after PR #186 (the coefficient basis is a required input; 927 defaults only under API 617 Annex E
 eq. (E.1b)). The hand numbers below are the engine fixtures' own derivations; every input is a fictitious
@@ -18,23 +21,19 @@ import unittest
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SKILLS = os.path.join(ROOT, "plugins", "piping-toolset", "skills")
-PD_SCRIPTS = os.path.join(SKILLS, "pressure-design", "scripts")
 NL_SCRIPTS = os.path.join(SKILLS, "nozzle-load", "scripts")
 BF_SCRIPTS = os.path.join(SKILLS, "bolted-flange", "scripts")
-for p in (PD_SCRIPTS, NL_SCRIPTS, BF_SCRIPTS, os.path.join(ROOT, "tests")):
+for p in (NL_SCRIPTS, BF_SCRIPTS, os.path.join(ROOT, "tests")):
     sys.path.insert(0, p)
 
 import parity  # noqa: E402
-import pressure_design as pd  # noqa: E402
 import nozzle_load as nl  # noqa: E402
 import bolted_flange as bf  # noqa: E402
 
-LEAK = "piping.leak-test-pressure"
 NEMA = "connections.nema-sm23"
 SCREEN = "connections.flange-equivalent-pressure"
 ANNEXF = "connections.api610-annexf"
 NL_CLI = os.path.join(NL_SCRIPTS, "nozzle_load.py")
-PD_CLI = os.path.join(PD_SCRIPTS, "pressure_design.py")
 
 
 def six(fx=0, fy=0, fz=0, mx=0, my=0, mz=0) -> dict:
@@ -43,61 +42,6 @@ def six(fx=0, fy=0, fz=0, mx=0, my=0, mz=0) -> dict:
 
 def cli(tool: str, *args: str) -> subprocess.CompletedProcess:
     return subprocess.run([sys.executable, tool, *args], capture_output=True, text=True, encoding="utf-8")
-
-
-# --------------------------------------------------------------------------- N5: the 1.5 x P hydrotest floor
-
-
-class HydrotestFloor(unittest.TestCase):
-    """B31.3 345.4.2(a): never below 1.5 x P; (b) Eq. (24) only raises it. B31.1 137.4.5 is the same floor."""
-
-    def test_fixture_parity_including_the_floor_case(self):
-        self.assertEqual(parity.run_fixture(pd.REGISTRY, LEAK), [])
-        self.assertEqual(len(parity.load(LEAK)["cases"]), 4)
-
-    def test_engine_case_3_reads_450_not_337_5(self):
-        out = pd.leak_test_pressure(dict(P=300, ST=15000, S=20000, hydroFactor=1.5, pneumaticFactor=1.1))
-        self.assertEqual(out["output"]["stressRatio"], 1.0)
-        self.assertEqual(out["output"]["hydroTest"], 450.0)          # 0.9.2 printed 337.5
-        self.assertEqual(out["output"]["pneumaticTest"], 330.0)
-        floor = [w for w in out["warnings"] if "< 1" in w]
-        self.assertEqual(len(floor), 1)
-        self.assertIn("ST/S = 0.75 < 1", floor[0])
-        self.assertIn("450 psi floor", floor[0])
-        self.assertIn("345.4.2(a)", floor[0])
-        self.assertIn("137.4.5", floor[0])
-
-    def test_hand_case_floor_is_factor_times_p(self):
-        # P 450, ST 12,000 / S 16,000 -> raw 0.75 -> applied 1.0 -> hydro 1.5 x 450 = 675
-        out = pd.leak_test_pressure(dict(P=450, ST=12000, S=16000, hydroFactor=1.5, pneumaticFactor=1.1))
-        self.assertEqual(out["output"]["hydroTest"], 675.0)
-        self.assertEqual(out["output"]["stressRatio"], 1.0)
-
-    def test_ratio_above_one_is_unchanged_and_not_warned(self):
-        out = pd.leak_test_pressure(dict(P=450, ST=24000, S=16000, hydroFactor=1.5, pneumaticFactor=1.1))
-        self.assertEqual(out["output"]["hydroTest"], 1012.5)          # the 0.9.2 hand case, unchanged
-        self.assertFalse(any("< 1" in w for w in out["warnings"]))
-
-    def test_owner_cap_never_lowers_the_floor(self):
-        out = pd.leak_test_pressure(dict(P=300, ST=15000, S=20000, hydroFactor=1.5, pneumaticFactor=1.1,
-                                         stressRatioCap=6.5))
-        self.assertEqual(out["output"]["hydroTest"], 450.0)
-        self.assertFalse(any("Cap engaged" in w for w in out["warnings"]))
-
-    def test_no_ceiling_on_the_ratio(self):
-        # The refuted "6.5 cap": Eq. (24) carries no ceiling, so ST/S 8 stays 8 without a cap.
-        out = pd.leak_test_pressure(dict(P=300, ST=20000, S=2500, hydroFactor=1.5, pneumaticFactor=1.1))
-        self.assertEqual((out["output"]["stressRatio"], out["output"]["hydroTest"]), (8.0, 3600.0))
-
-    def test_cli_carries_the_floor(self):
-        r = cli(PD_CLI, LEAK, "--input", json.dumps(dict(P=300, ST=15000, S=20000, hydroFactor=1.5, pneumaticFactor=1.1)))
-        self.assertEqual(r.returncode, 0, r.stderr)
-        env = json.loads(r.stdout)
-        self.assertEqual(env["output"]["hydroTest"], 450.0)
-        self.assertTrue(any("450 psi floor" in w for w in env["warnings"]))
-
-    def test_citation_names_the_floor(self):
-        self.assertIn("345.4.2(a)", pd.CITATIONS[LEAK])
 
 
 # --------------------------------------------------------------------------- R5: the coefficient basis
@@ -287,13 +231,13 @@ class ReleaseMechanics(unittest.TestCase):
     def test_fixture_snapshot_is_whole(self):
         with open(os.path.join(ROOT, "tests", "fixtures", "calc-core", "MANIFEST.json"), encoding="utf-8") as fh:
             man = json.load(fh)
-        self.assertEqual(man["modules"][LEAK]["cases"], 4)
+        self.assertEqual(len(man["modules"]), 15)            # the pressure-design modules left in 0.10.0
         self.assertEqual(man["modules"][NEMA]["cases"], 3)
         self.assertEqual(man["modules"][SCREEN]["cases"], 4)
         self.assertEqual(man["modules"][ANNEXF]["cases"], 4)
 
     def test_result_words_unchanged(self):
-        for mod in (pd, nl, bf):
+        for mod in (nl, bf):
             self.assertEqual(tuple(mod.RESULT_STATUS),
                              ("calculated", "screening", "manual check required", "assumed", "pointer only", "not checked"))
 

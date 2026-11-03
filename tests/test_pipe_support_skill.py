@@ -351,7 +351,7 @@ class SkillContent(unittest.TestCase):
             self.assertIn(rel.split("/")[-1], self.text)
 
     def test_hand_offs_name_only_pack_skills(self):
-        for s in ("`load-case-builder`", "`stress-screening`", "`iso-to-pcf`"):
+        for s in ("`load-case-builder`", "`pipe-stress-check`", "`stress-import`"):
             self.assertIn(s, self.text)
 
     def test_shapes_attribution(self):

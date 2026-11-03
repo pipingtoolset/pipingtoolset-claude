@@ -3,7 +3,7 @@
 **B31 calcs you can reproduce and defend in review, with the assistant you already use.**
 The assistant does the interview. A script does the math. You read the table.
 
-Seven piping engineering skills, one plugin, installable in Claude Code and Claude Cowork, in
+Six piping engineering skills, one plugin, installable in Claude Code and Claude Cowork, in
 ChatGPT and OpenAI Codex, and in any assistant that reads the Agent Skills format (Cursor, GitHub
 Copilot, Gemini CLI and others), from the people who build the free calculators at
 [pipingtoolset.com](https://pipingtoolset.com). Written and maintained by a practicing piping
@@ -19,17 +19,16 @@ works without it.
 |---|---|---|
 | Landing page | [pipingtoolset.com/claude/](https://pipingtoolset.com/claude/) | [pipingtoolset.com/openai/](https://pipingtoolset.com/openai/) |
 | Install file | `piping-toolset.plugin` (drag into Cowork) | `codex plugin marketplace add pipingtoolset/pipingtoolset-claude` |
-| Invoke | `/piping-toolset:pressure-design` or name it in Cowork | `$pressure-design` in Codex, name it in ChatGPT |
+| Invoke | `/piping-toolset:pipe-stress-check` or name it in Cowork | `$pipe-stress-check` in Codex, name it in ChatGPT |
 | Manifest read | `.claude-plugin/plugin.json` | `plugin.json` (Agent Plugins 1.0, `extensions.com.openai`) |
 | Engineering Data connector | Declared by the plugin in `.mcp.json` | Not declared; you add it by hand (see [Add the connector](#add-the-connector)) |
 
 | Skill | What it does |
 |---|---|
-| `pressure-design` | Code-basis interview, then wall thickness, allowable pressure, branch reinforcement, bends, miters and leak-test pressure to B31.3 / B31.1, with a calc sheet that shows the edition, the equation and every input |
-| `stress-screening` | Sustained, occasional and expansion hand checks, the f factor by edition, which document supplies the SIFs, the formal-analysis exemption, support spans and spring variability |
+| `pipe-stress-check` | Sustained, occasional and expansion hand checks, the f factor by edition, which document supplies the SIFs, the formal-analysis exemption, support spans and spring variability, the ASCE 7 occasional-load build and the ASD position, owner practices (PIP PNC00004 / PNC00001 / RECE002), and a cold-eye review protocol for a CAESAR II or AutoPIPE run or a received calc package: traceability chain, modelling and documentation findings with severity, verdict recommendation. Replaces `stress-screening` (0.10.0); its eight engine modules are unchanged |
 | `load-case-builder` | Complete B31.1 / B31.3 static load case sets for CAESAR II and AutoPIPE, generated symbolically so references never go stale, with a QC gate and a report extraction matrix |
 | `pipe-support` | Pipe support assemblies (arm, column, welds, bolts, base plate, anchors, pier) checked for CAESAR II restraint loads: ASCE 7-22 combinations, AISC 360-22, ACI CODE-318-25 Chapter 17 (ACI 318-19 selectable) and AWS D1.1 detailing, with a PE-style review, ranked code-passing alternatives (lighter, less field work, stocked sizes) and an engineer-ready calc report. The pipingtoolset.com PiperSTR engine, verified against a published PiperSTR report value for value |
-| `iso-to-pcf` | PDF stress isometrics to a clean CAESAR II PCF: Claude transcribes the drawing, a script builds the geometry in exact fractions (bend tangents, branches, sloped profiles) and a validator catches orphan nodes, zero-length elements and off-line supports before import |
+| `stress-import` | Any piping source into an analysis-ready CAESAR II or AutoPIPE model with every support on a node: PDF stress isometrics transcribed and built in exact fractions, Revit / Fabrication PCF exports de-duplicated, re-vocabularied and healed, Navisworks NWC hangers and trapezes mined and snapped to the centreline, rule-placed supports, a pre-import checker (pieces and anchors, free ends, slivers, supports off node, spans over the project table), an SVG plot, the AutoPIPE translator's bend and loop-closure checks (E726-15, W726-8, E751-1), and the CAESAR II neutral-file repair after APCF import (node bands per line, T/P, fluid density, anchor codes) with an independent proof. Replaces `iso-to-pcf` (0.10.0); its builder and validator are unchanged |
 | `nozzle-load` | Piping forces and moments on equipment nozzles, checked the way the vendor will: API 610 Table 5 and Annex F for pumps, the API 617 / 611 / 612 and NEMA SM-23 combined form for compressors and turbines, API 660 / 661 / 560 per-component and header-sum checks for exchangers and heaters, API 650 Annex P ordinates for tank shells, and the PVP2011-57100 method as the default for a pressure vessel with no API allowable. The user reads every table row; the script applies the scaling rules and the ratios. PIP RECE002 design-stage margins as an owner practice |
 | `bolted-flange` | Piping loads on a bolted flanged joint in a fixed order: the pressure-equivalent screen first, always, against the B16.5 rating the user reads, then the BPVC VIII-2 Part 4.16 (formerly VIII-1 Mandatory Appendix 2; pre-2025 paragraph map shown) analysis for integral and loose flanges, with bolt area, hub, radial and tangential stresses and rigidity. Flange dimensions, gasket factors, ratings and allowables all come from the user's copies |
 
@@ -95,7 +94,7 @@ The plugin folder carries an [Agent Plugins 1.0](https://agent-plugins.org) mani
 2. Install **PipingToolset** from the plugin picker: `/plugins` in the Codex CLI or IDE
    extension, or **Customize › Plugins** in the ChatGPT desktop app, where it shows with the
    PipingToolset mark and "By Flexible Piping Solutions LLC".
-3. Invoke a skill as `$pressure-design` (or `/skills`) in Codex, or name it in plain words in
+3. Invoke a skill as `$pipe-stress-check` (or `/skills`) in Codex, or name it in plain words in
    ChatGPT, as in Cowork. Codex runs the scripts with your machine's Python 3.9+; the ChatGPT desktop
    app and Codex cloud run them in their own sandbox.
 
@@ -122,8 +121,8 @@ Where the skills land after a CLI install:
 | Project (default) | `.agents/skills/<skill-name>/` in the current repository |
 | User (`--global` / `-g`) | `~/.agents/skills/<skill-name>/` |
 
-Hosts without a `/piping-toolset:` prefix see the seven skills by name (`pressure-design`,
-`stress-screening`, `load-case-builder`, `pipe-support`, `iso-to-pcf`, `nozzle-load`, `bolted-flange`); name the one you want in
+Hosts without a `/piping-toolset:` prefix see the six skills by name (`pipe-stress-check`,
+`stress-import`, `load-case-builder`, `pipe-support`, `nozzle-load`, `bolted-flange`); name the one you want in
 plain words, as in Cowork. Each skill's frontmatter states its only requirement, Python 3.9+ with
 the standard library, so a host can check it before running a script.
 
@@ -139,11 +138,11 @@ and has its own section below.
 ### Invoking a skill
 
 In Cowork, pick the skill from the skills menu or name it in plain words, for example "use the pipe
-support skill to check PS-201" or "use the pressure design skill: B31.3-2022, NPS 6 ...". Naming it
+support skill to check PS-201" or "use the pipe stress check skill: B31.3-2024, which document ...". Naming it
 matters, because other installed skills on the same topics would otherwise compete.
 
-In Claude Code, use the slash form: `/piping-toolset:pressure-design`, `/piping-toolset:stress-screening`,
-`/piping-toolset:load-case-builder`, `/piping-toolset:iso-to-pcf`, `/piping-toolset:pipe-support`,
+In Claude Code, use the slash form: `/piping-toolset:pipe-stress-check`, `/piping-toolset:stress-import`,
+`/piping-toolset:load-case-builder`, `/piping-toolset:pipe-support`,
 `/piping-toolset:nozzle-load`, `/piping-toolset:bolted-flange`. The
 plugin shows as **PipingToolset** in the plugin list; its id (and the command prefix) stays
 `piping-toolset` so existing installs keep working.
@@ -248,22 +247,22 @@ The skills then ask you to read each table value from your own copy, exactly as 
 
 ## Try it in twenty seconds
 
-In Cowork, drop the leading slash and say "use the pressure design skill:" instead.
+In Cowork, drop the leading slash and say "use the pipe stress check skill:" instead.
 
 ```
-/piping-toolset:pressure-design B31.3-2022, normal fluid service. NPS 6 seamless pipe, OD 6.625 in,
-design 750 psig at 600 F, corrosion allowance 0.0625 in, 12.5% mill tolerance. My allowable S at
-600 F is 17900 psi from my copy, E = 1.0, W = 1.0, Y = 0.4. What minimum thickness do I need and
-does 0.280 in nominal wall work?
+/piping-toolset:pipe-stress-check B31.3-2022 line, about 20,000 equivalent full cycles over life.
+Ferrous material, SMTS below 75 ksi (from my spec), max metal temp 500 F, Sc = 12000 psi and
+Sh = 11000 psi from my copy. What is S_A and which f equation applies?
 ```
 
-Expected: the script runs, t = 0.13650 in and t_m = 0.19900 in (¶304.1.2 Eq. (3a)), 0.280 × 0.875 =
-0.245 in ≥ 0.19900 in, so the nominal wall is adequate; S, E, W and Y are echoed as user-supplied.
+Expected: the script runs the 2022+ form f = 20·N^-0.333 (not the legacy 6.0·N^-0.2), f ≈ 0.7392 at
+N = 20,000, the ferrous cap logic is applied, S_A = f·(1.25·Sc + 0.25·Sh) ≈ 13,122 psi, and the
+liberal allowance is flagged as optional only where the specification permits it.
 
 Then ask for what it will not give you:
 
 ```
-/piping-toolset:pressure-design What's the allowable stress for A106 Grade B at 650 F under B31.3?
+/piping-toolset:pipe-stress-check What's the allowable stress for A106 Grade B at 650 F under B31.3?
 Just give me the number.
 ```
 
@@ -277,7 +276,7 @@ More prompts, with pass criteria, are in [`tests/e2e/PROMPTS.md`](tests/e2e/PROM
 
 ## Project basis record
 
-Since 0.8.0 the seven skills share one record of the project facts, so you state them once. It is a
+Since 0.8.0 the skills (six since 0.10.0) share one record of the project facts, so you state them once. It is a
 JSON file, schema `pipingtoolset.project-basis/1`, passed to any script as `--project-basis
 project-basis.json` or as a top-level `project_basis` object in the job file. It holds project data
 and pointers only. S, E, W, Y, ratings, allowables and gasket factors never go in it; they stay
@@ -303,8 +302,8 @@ collects most of it) writes the agreed record to `project-basis.json` in your wo
 later skill runs with `--project-basis project-basis.json` and asks only for its own inputs.
 
 1. An input the job file leaves out is filled from the record where the skill has a slot (for
-   example the design state's pressure for `pressure-design` and `bolted-flange`, the vertical axis
-   for `pipe-support` and `iso-to-pcf`, the design temperature for `nozzle-load`).
+   example the design state's pressure for `bolted-flange`, the vertical axis for `pipe-support`
+   and `stress-import`, the design temperature for `nozzle-load`).
 2. An input given in both places that differs stops the run, exit 2, `project_basis.<path>
    conflicts with input <name>`. The record never overrides what you typed, and no field is
    relabelled.
@@ -313,7 +312,7 @@ later skill runs with `--project-basis project-basis.json` and asks only for its
    with every ASSUMED item at the top.
 4. When a fact changes, edit the record and rerun the skills whose `fields_used` name it.
 
-`tests/test_project_basis_handoff.py` runs all seven scripts on one record and checks that each
+`tests/test_project_basis_handoff.py` runs all six scripts on one record and checks that each
 result equals the run with the same values typed in.
 
 **Result status.** Every result carries `result_status` and `checks[]` beside the existing pass,
@@ -343,8 +342,9 @@ They never reproduce tabulated ASME, API or PIP values from memory or from a fil
 comes from your own copy of the standard or, if you enable the optional connector, from a cited lookup.
 `pipe-support` is the disclosed exception for AISC 360-22, the AISC Shapes Database, and the ASCE 7-22
 and ACI CODE-318-25 / 318-19 factors (see its `references/code-basis.md`).
-They do not replace a flexibility analysis in CAESAR II or AutoPIPE; `stress-screening` is a hand
-check of what the program applied. Results are engineering aids. The engineer of record verifies
+They do not replace a flexibility analysis in CAESAR II or AutoPIPE; `pipe-stress-check` is a hand
+check and a cold-eye review of what the program applied, and `stress-import` delivers geometry,
+components and restraints, never a load case or an allowable. Results are engineering aids. The engineer of record verifies
 them before issue, and you remain responsible for the result.
 
 ## Development
@@ -377,7 +377,7 @@ the agentskills.io reference validator, `skills-ref validate`, on each skill fol
 
 ```
 python -m pip install skills-ref==0.1.1
-python -m skills_ref.cli validate plugins/piping-toolset/skills/pressure-design
+python -m skills_ref.cli validate plugins/piping-toolset/skills/pipe-stress-check
 ```
 
 See [`ROADMAP.md`](ROADMAP.md) for the plan and [`CHANGELOG.md`](CHANGELOG.md) for releases.

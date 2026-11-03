@@ -1,6 +1,6 @@
 """Shared project_basis block (plugin 0.8.0, B8): schema, load and conflict rule, fill semantics, copies.
 
-The canonical text is tools/shared/project_basis.py; each of the seven skill scripts carries a
+The canonical text is tools/shared/project_basis.py; each of the six skill scripts carries a
 byte-identical copy between its BEGIN/END markers (written by tools/sync_shared_blocks.py), the way
 the 0.7.0 code_values block is pinned. Standard library only:
 
@@ -27,10 +27,9 @@ import project_basis as pb  # noqa: E402
 
 SCRIPTS = {
     "load-case-builder": "loadcase_gen.py",
-    "pressure-design": "pressure_design.py",
-    "stress-screening": "stress_screening.py",
+    "pipe-stress-check": "pipe_stress_check.py",
     "pipe-support": "support_calc.py",
-    "iso-to-pcf": "build_pcf.py",
+    "stress-import": "build_pcf.py",
     "nozzle-load": "nozzle_load.py",
     "bolted-flange": "bolted_flange.py",
 }
@@ -307,7 +306,7 @@ class Render(unittest.TestCase):
 
 
 class Copies(unittest.TestCase):
-    """The seven scripts carry the canonical block byte for byte; the shipped example and reference too."""
+    """The six scripts carry the canonical block byte for byte; the shipped example and reference too."""
 
     def test_canonical_block_hygiene(self):
         block = block_of(read_bytes(os.path.join(SHARED, "project_basis.py")).decode("utf-8"), "project_basis")
@@ -320,7 +319,7 @@ class Copies(unittest.TestCase):
         self.assertEqual(block.count("open("), 1)  # the --project-basis file read only
         exec(compile(block, "project_basis block", "exec"), {})  # runs standalone, nothing else needed
 
-    def test_seven_scripts_carry_the_canonical_block(self):
+    def test_six_scripts_carry_the_canonical_block(self):
         canonical = block_of(read_bytes(os.path.join(SHARED, "project_basis.py")).decode("utf-8"), "project_basis")
         for skill, script in SCRIPTS.items():
             text = read_bytes(os.path.join(SKILLS, skill, "scripts", script)).decode("utf-8")
@@ -351,7 +350,7 @@ class Copies(unittest.TestCase):
     def test_sync_check_reports_drift(self):
         sys.path.insert(0, os.path.join(ROOT, "tools"))
         import sync_shared_blocks as sync  # noqa: E402
-        text = read_bytes(os.path.join(SKILLS, "pressure-design", "scripts", "pressure_design.py")).decode("utf-8")
+        text = read_bytes(os.path.join(SKILLS, "bolted-flange", "scripts", "bolted_flange.py")).decode("utf-8")
         block = block_of(text, "project_basis")
         drifted = text.replace(block, block.replace("PROJECT_BASIS_SKIP = object()", "PROJECT_BASIS_SKIP = None"))
         self.assertNotEqual(drifted, text)

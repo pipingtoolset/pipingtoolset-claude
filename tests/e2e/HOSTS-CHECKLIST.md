@@ -1,30 +1,31 @@
-# Phase 2: host verification runbook (plugin 0.9.3)
+# Phase 2: host verification runbook (plugin 0.10.0)
 
 Copy-paste runbook for proving the same plugin installs, shows its mark, and runs its scripts in
 every host it claims. Sibling of `COWORK-CHECKLIST.md`. Fill the results table at the bottom as
 you go; a host passes only when every box in its row is ticked.
 
 Prompts are the Cowork form from `PROMPTS.md` (skill named in plain words), which works in every
-chat host. In Codex, prefix with the skill tag instead (`$pressure-design ...`). Each prompt below
+chat host. In Codex, prefix with the skill tag instead (`$pipe-stress-check ...`). Each prompt below
 is a complete line to paste.
 
 ```
-E1  Use the pressure design skill. B31.3-2022, normal fluid service. NPS 6 seamless pipe, OD 6.625 in, design 750 psig at 600 F, corrosion allowance 0.0625 in, 12.5% mill tolerance. My allowable S at 600 F is 17900 psi from my copy, E = 1.0, W = 1.0, Y = 0.4. What minimum thickness do I need and does 0.280 in nominal wall work?
-E2  Use the pressure design skill. What's the allowable stress for A106 Grade B at 650 F under B31.3? Just give me the number.
+E3  Use the pipe stress check skill. B31.3-2022 line, 7,000 equivalent full cycles over life? Actually it's about 20,000 cycles. Ferrous material, SMTS below 75 ksi (from my spec), max metal temp 500 F, Sc = 12000 psi and Sh = 11000 psi from my copy. What is S_A and which f equation applies?
+E4  Use the pipe stress check skill. B31.3-2024 project. Which document gives the SIF for a welding tee and can I use Appendix D?
 E9  Use the pipe support skill. Check support PS-201: CSA type 1 t-post, W6X15 column 8 ft, W6X15 arm 24 in at EL 96. Two 6 in lines at 8 and 18 in. CAESAR II restraint loads (lb, Y up, pipes run along X): 6-P-1201 SUS 0,-850,0 OPE 180,-920,-140 WIN 0,0,210 EQ 0,0,260; 6-P-1202 SUS 0,-1100,0 OPE 240,-1180,-190 WIN 0,0,260 EQ 0,0,320. SDS 0.5, LRFD, 4 x 3/4 adhesive anchors, tau 800 psi from the ESR. Then optimize it.
 ```
 
 Pass criteria, unchanged from `PROMPTS.md`:
 
-- **E1**: a python command ran `pressure_design.py` (visible in the tool log); t = 0.13650 in,
-  t_m = 0.19900 in; 0.280 × 0.875 = 0.245 ≥ 0.19900 → adequate; S/E/W/Y echoed as user-supplied;
-  ¶304.1.2 Eq. (3a) cited; no table value volunteered.
-- **E2**: no number. Names B31.3 Table A-1 (A-1C in 2024), the material row and the two
-  temperature columns, offers to interpolate once you read both. This is the refusal test for the
-  plugin without the connector: run it with the Engineering Data connector disconnected, or not
-  signed in to a paid plan. With the connector on and a paid pipingtoolset.com account the skill
-  may serve the cited value instead; record that under the connector rows (§2, §4, §5), not as an
-  E2 failure.
+- **E3**: a python command ran `pipe_stress_check.py` (visible in the tool log); the 2022+ form
+  f = 20·N^-0.333 is used (not 6.0·N^-0.2); f ≈ 0.7392 for N = 20,000; the ferrous cap logic is
+  applied; S_A = f·(1.25·Sc + 0.25·Sh) = f·17750 ≈ 13,122 psi; the liberal allowance is flagged as
+  optional only where permitted; no table value volunteered.
+- **E4**: B31J governs (Appendix D deleted from B31.3-2020 on); no SIF formula or value appears;
+  the in-plane / out-of-plane transposition at tees is warned about. The refusal test for a table
+  value is the connector row below: ask for an allowable stress with the Engineering Data
+  connector disconnected, or not signed in to a paid plan, and no number may appear. With the
+  connector on and a paid pipingtoolset.com account the skill may serve the cited value instead;
+  record that under the connector rows (§2, §4, §5), not as a refusal failure.
 - **E9**: `support_calc.py` ran with `--report` / `--json`; governing stage, check, combination
   and clause come from the run; optimizer table presented; `calc.md` and `result.json` written.
 
@@ -35,10 +36,10 @@ Pass criteria, unchanged from `PROMPTS.md`:
 Run in PowerShell from any folder.
 
 ```powershell
-gh release view v0.9.3 --repo pipingtoolset/pipingtoolset-claude --json tagName,assets --jq '.tagName, (.assets[].name)'
+gh release view v0.10.0 --repo pipingtoolset/pipingtoolset-claude --json tagName,assets --jq '.tagName, (.assets[].name)'
 ```
 
-Expect `v0.9.3` and three assets: `piping-toolset.plugin`, `piping-toolset.zip`,
+Expect `v0.10.0` and three assets: `piping-toolset.plugin`, `piping-toolset.zip`,
 `piping-toolset-skills.zip`. If the tag or assets are missing, stop: push the tag and let CI
 attach them.
 
@@ -84,7 +85,7 @@ python -m pip install skills-ref==0.1.1
 Get-ChildItem .\plugins\piping-toolset\skills -Directory | ForEach-Object { python -m skills_ref.cli validate $_.FullName }
 ```
 
-Expect seven lines starting `Valid skill:`.
+Expect six lines starting `Valid skill:`.
 
 Confirm the archive you will upload carries the manifests, the Claude connector declaration and the
 mark:
@@ -111,18 +112,18 @@ claude plugin install piping-toolset@pipingtoolset
 claude plugin details piping-toolset
 ```
 
-Expect `Skills (7)` listing the seven names and version `0.9.3`. Then, headless, from any empty
+Expect `Skills (6)` listing the six names and version `0.9.3`. Then, headless, from any empty
 folder:
 
 ```powershell
-claude -p "/piping-toolset:pressure-design B31.3-2022, normal fluid service. NPS 6 seamless pipe, OD 6.625 in, design 750 psig at 600 F, corrosion allowance 0.0625 in, 12.5% mill tolerance. My allowable S at 600 F is 17900 psi from my copy, E = 1.0, W = 1.0, Y = 0.4. What minimum thickness do I need and does 0.280 in nominal wall work?" --model sonnet --allowedTools "Bash(python:*)" Read Glob Grep
+claude -p "/piping-toolset:pipe-stress-check B31.3-2022 line, 7,000 equivalent full cycles over life? Actually it's about 20,000 cycles. Ferrous material, SMTS below 75 ksi (from my spec), max metal temp 500 F, Sc = 12000 psi and Sh = 11000 psi from my copy. What is S_A and which f equation applies?" --model sonnet --allowedTools "Bash(python:*)" Read Glob Grep
 ```
 
 ```powershell
-claude -p "/piping-toolset:pressure-design What's the allowable stress for A106 Grade B at 650 F under B31.3? Just give me the number." --model sonnet --allowedTools "Bash(python:*)" Read Glob Grep
+claude -p "/piping-toolset:pipe-stress-check B31.3-2024 project. Which document gives the SIF for a welding tee and can I use Appendix D?" --model sonnet --allowedTools "Bash(python:*)" Read Glob Grep
 ```
 
-Record E1 and E2 against the pass criteria. If the marketplace was added at an earlier version,
+Record E3 and E4 against the pass criteria. If the marketplace was added at an earlier version,
 run `claude plugin marketplace update pipingtoolset` first.
 
 Connector row (Claude Code). In an interactive `claude` session open `/mcp` and find the
@@ -131,22 +132,22 @@ for a worked example of a data-free module (the assistant calls `get_fixture_exa
 `W6X15` shape (`get_aisc_shape`): both are open and need no sign-in. Then ask for an allowable
 stress; with no paid account signed in, the host must start the sign-in through pipingtoolset.com
 or the tool must return a one-line message naming the plan and the pricing page, and no value
-may appear. Disconnect the server in `/mcp` and repeat E2: the refusal must hold.
+may appear. Disconnect the server in `/mcp` and repeat the allowable-stress request: the refusal must hold.
 
 ## 3. Claude Cowork (Claude desktop app, Windows)
 
-1. Download `piping-toolset.plugin` from the v0.9.3 release
-   (`https://github.com/pipingtoolset/pipingtoolset-claude/releases/download/v0.9.3/piping-toolset.plugin`).
+1. Download `piping-toolset.plugin` from the v0.10.0 release
+   (`https://github.com/pipingtoolset/pipingtoolset-claude/releases/download/v0.10.0/piping-toolset.plugin`).
 2. If an earlier version is installed, remove it first in Settings › Plugins.
 3. Drag the file into a new Cowork chat, press **Accept**.
 4. Check in the plugin list: the grid-elbow mark (not a generic icon), display name
-   **PipingToolset**, seven skills in the skills menu.
+   **PipingToolset**, six skills in the skills menu.
 5. Also try Settings › Plugins › **Upload a plugin** with the same file: it must not reject the
    description (the 500-character cap is tested, but this is the live check).
-6. Run E1 and E2 in a fresh chat. Record.
+6. Run E3 and E4 in a fresh chat. Record.
 7. Connector row: in the plugin's connector or MCP list find `pipingtoolset-data`. Ask for a
    worked example of a data-free module; it needs no sign-in. Ask for an allowable stress with no
-   paid account signed in: no value may appear. Switch the connector off and repeat E2: the
+   paid account signed in: no value may appear. Switch the connector off and repeat the request: the
    refusal must hold. Record whether the host showed a **Sign in** prompt.
 
 ## 4. Codex CLI (terminal)
@@ -172,18 +173,18 @@ the mark, and "Flexible Piping Solutions LLC".
 In the same session run, one at a time:
 
 ```
-$pressure-design B31.3-2022, normal fluid service. NPS 6 seamless pipe, OD 6.625 in, design 750 psig at 600 F, corrosion allowance 0.0625 in, 12.5% mill tolerance. My allowable S at 600 F is 17900 psi from my copy, E = 1.0, W = 1.0, Y = 0.4. What minimum thickness do I need and does 0.280 in nominal wall work?
+$pipe-stress-check B31.3-2022 line, 7,000 equivalent full cycles over life? Actually it's about 20,000 cycles. Ferrous material, SMTS below 75 ksi (from my spec), max metal temp 500 F, Sc = 12000 psi and Sh = 11000 psi from my copy. What is S_A and which f equation applies?
 ```
 
 ```
-$pressure-design What's the allowable stress for A106 Grade B at 650 F under B31.3? Just give me the number.
+$pipe-stress-check B31.3-2024 project. Which document gives the SIF for a welding tee and can I use Appendix D?
 ```
 
 ```
 $pipe-support Check support PS-201: CSA type 1 t-post, W6X15 column 8 ft, W6X15 arm 24 in at EL 96. Two 6 in lines at 8 and 18 in. CAESAR II restraint loads (lb, Y up, pipes run along X): 6-P-1201 SUS 0,-850,0 OPE 180,-920,-140 WIN 0,0,210 EQ 0,0,260; 6-P-1202 SUS 0,-1100,0 OPE 240,-1180,-190 WIN 0,0,260 EQ 0,0,320. SDS 0.5, LRFD, 4 x 3/4 adhesive anchors, tau 800 psi from the ESR. Then optimize it.
 ```
 
-Record E1, E2, E9. Note which Python Codex used (`python --version` in the same shell).
+Record E3, E4, E9. Note which Python Codex used (`python --version` in the same shell).
 
 Connector row (Codex). From 0.9.0 the plugin declares no server for Codex: the Agent Plugins
 connector file was removed after the 0.7.0 install test showed a sign-in prompt at install.
@@ -221,12 +222,12 @@ whether the listing block fixed the icon and name.
 2. Screenshot the plugin page. Check, against the 2026-10-28 screenshot in the task record:
    - name reads **PipingToolset**, not `piping-toolset`;
    - the icon is the grid-elbow mark, not the generic cube;
-   - "By Flexible Piping Solutions LLC" and the seven skills are listed;
+   - "By Flexible Piping Solutions LLC" and the six skills are listed;
    - the subtitle reads "ASME B31 piping engineering" if the app shows one.
-3. Press **Try now**, paste E1. Expand the steps: a python command running `pressure_design.py`
+3. Press **Try now**, paste E3. Expand the steps: a python command running `pipe_stress_check.py`
    must be visible. If the numbers appear with no command, the app did arithmetic in its head and
    the row fails (record it; that is a finding, not a defect in the plugin).
-4. New conversation, paste E2. Expect the refusal.
+4. New conversation, paste E4. Expect B31J, no SIF value.
 5. Connector row: from 0.9.0 the plugin declares no server for this app, so expect the plugin page
    to list no `pipingtoolset-data` and no sign-in prompt at install (record either if seen). Add the
    server as a developer-mode connector with the URL `https://pipingtoolset.com/mcp` and OAuth,
@@ -267,8 +268,8 @@ npx skills add pipingtoolset/pipingtoolset-claude
 gh skill install pipingtoolset/pipingtoolset-claude
 ```
 
-Expect seven skills installed under `.agents/skills/` (project) or `~/.agents/skills/` with
-`--global`. In Cursor or Copilot CLI, run E1 and E2 and record.
+Expect six skills installed under `.agents/skills/` (project) or `~/.agents/skills/` with
+`--global`. In Cursor or Copilot CLI, run E3 and E4 and record.
 
 ## 8. The mark everywhere else
 
@@ -288,12 +289,12 @@ Not automated; account settings, so done by hand.
 
 ## Results
 
-| Host | Version shown | Name shown | Mark shown | E1 script ran | E1 numbers | E2 refuses | E9 | Connector: open tools, no paid value signed out, E2 holds when off | Date | Notes / screenshot |
+| Host | Version shown | Name shown | Mark shown | E3 script ran | E3 numbers | E4 names B31J, no SIF | E9 | Connector: open tools, no paid value signed out, refusal holds when off | Date | Notes / screenshot |
 |---|---|---|---|---|---|---|---|---|---|---|
 | Local validation (§1) | | n/a | n/a | n/a | n/a | n/a | n/a | n/a | | |
 | Claude Code (§2) | | | | | | | | | | |
 | Claude Cowork (§3) | | | | | | | | | | |
-| Codex CLI (§4) | 0.7.2 (cache path `plugins\cache\pipingtoolset\piping-toolset .7.2`), Codex CLI 0.166.0 | PipingToolset | not recorded | yes (`pressure_design.py` run, Python 3.14.7) | t 0.13650, tm 0.19900, 0.280 adequate; P/(S·E) 0.0419, result_grade calculated | yes (named Appendix A Table A-1, no value) | pass: LRFD, governing UR 0.888 arm-to-column weld, optimizer ran; preset values flagged "NOT from the user - confirm" | connector route done 2026-10-30 in PowerShell: `codex mcp add` then `codex mcp login` ("Successfully logged in"), `codex mcp list` shows `pipingtoolset-data https://pipingtoolset.com/mcp enabled OAuth`; the before-add listing was not captured; the in-Codex open / signed-out / signed-in prompts wait for the usage reset | 2026-10-30 | Install line: "Installed PipingToolset plugin. No additional app authentication is required" - NO sign-in prompt, B3 verified. Models gpt-5.6-terra / luna. Transcript: founder Downloads `#CODEX RUNBOOK PIPINGTOOLSET 10-29-26.txt` |
+| Codex CLI (§4) | 0.7.2 (cache path `plugins\cache\pipingtoolset\piping-toolset .7.2`), Codex CLI 0.166.0 | PipingToolset | not recorded | yes (`pipe_stress_check.py` run, Python 3.14.7) | t 0.13650, tm 0.19900, 0.280 adequate; P/(S·E) 0.0419, result_grade calculated | yes (named Appendix A Table A-1, no value) | pass: LRFD, governing UR 0.888 arm-to-column weld, optimizer ran; preset values flagged "NOT from the user - confirm" | connector route done 2026-10-30 in PowerShell: `codex mcp add` then `codex mcp login` ("Successfully logged in"), `codex mcp list` shows `pipingtoolset-data https://pipingtoolset.com/mcp enabled OAuth`; the before-add listing was not captured; the in-Codex open / signed-out / signed-in prompts wait for the usage reset | 2026-10-30 | Install line: "Installed PipingToolset plugin. No additional app authentication is required" - NO sign-in prompt, B3 verified. Models gpt-5.6-terra / luna. Transcript: founder Downloads `#CODEX RUNBOOK PIPINGTOOLSET 10-29-26.txt` |
 | ChatGPT desktop app (§5) | | | | | | | | | | |
 | OpenAI portal dry run (§6) | | | | | | | | n/a | | category offered: |
 | Cursor / Copilot CLI (§7) | | | | | | | | n/a | | |

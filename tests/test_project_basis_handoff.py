@@ -3,7 +3,7 @@
 One record, tests/fixtures/handoff/project-basis.json, is the load-case-builder Step 0 interview
 of the shipped two-state example written down: B31.3-2022, two states (op operating, des design,
 slots T1/P1/D1 and T2/P2/D2), USC, CAESAR II, a pipe and a support material, and one ASSUMED
-item. Every one of the seven scripts runs on its own shipped example input with
+item. Every one of the six scripts runs on its own shipped example input with
 `--project-basis <that file>`, the hand-off pattern of references/project-basis.md: the later
 skill's input keeps only its own fields and leaves out what the record supplies.
 
@@ -109,7 +109,7 @@ class HandOffCase(unittest.TestCase):
         for c in checks:
             self.assertIn(c["result_status"], WORDS, c)
         # the record's ASSUMED item: exactly one "ASSUMED inputs" row graded "assumed" (0.9.1), and the
-        # envelope follows it (uniform in all seven skills) unless another row is held at manual check
+        # envelope follows it (uniform in all six skills) unless another row is held at manual check
         # required, the one word that outranks it (pipe-support's ps-201 preset row)
         rows = [c for c in checks if c["name"] == "ASSUMED inputs"]
         self.assertEqual(len(rows), 1, [c["name"] for c in checks])
@@ -223,72 +223,20 @@ class LoadCaseBuilder(HandOffCase):
         self.assertIsNone(re.search(r"^- MANUAL CHECK REQUIRED:", self.md.stdout, re.M))
 
 
-class PressureDesign(HandOffCase):
-    """P and edition come from the record; W_basis stays the job file's (the pipe is welded)."""
-
-    MODULE = "piping.b313-wall-thickness"
-
-    @classmethod
-    def setUpClass(cls):
-        cls.wd = Workdir()
-        job = example("pressure-design", "b313-wall-thickness.json")
-        cls.raw = run(script("pressure-design", "pressure_design.py"), cls.MODULE,
-                      "--input-file", cls.wd.write("pd-raw.json", job), "--project-basis", RECORD)
-        typed = dict(copy.deepcopy(job), P=300)
-        for k in ("P", "edition"):
-            job.pop(k)
-        cls.res = run(script("pressure-design", "pressure_design.py"), cls.MODULE,
-                      "--input-file", cls.wd.write("pd.json", job), "--project-basis", RECORD)
-        cls.typed = run(script("pressure-design", "pressure_design.py"), cls.MODULE,
-                        "--input-file", cls.wd.write("pd-typed.json", typed))
-
-    @classmethod
-    def tearDownClass(cls):
-        cls.wd.close()
-
-    def test_consumed_without_conflict(self):
-        self.assertEqual(self.res.returncode, 0, self.res.stderr)
-        env = json.loads(self.res.stdout)
-        self.assert_consumed(env["project_basis_applied"],
-                             {"P": "states[role=design|first].P_psig", "edition": "code.edition"})
-        self.assert_words(env, env["checks"])
-
-    def test_no_relabelling_the_output_equals_the_typed_job(self):
-        env, typed = json.loads(self.res.stdout), json.loads(self.typed.stdout)
-        self.assertEqual(env["inputs"]["P"], 300)
-        self.assertEqual(env["inputs"]["edition"], "2022")
-        self.assertEqual(env["inputs"]["W_basis"], "longitudinal weld, confirmed")
-        self.assertEqual(env["output"], typed["output"])
-        self.assertEqual(env["status"], typed["status"])
-
-    def test_sheet_section_1_and_status_line(self):
-        env = json.loads(self.res.stdout)
-        self.assertRegex(env["result_status_line"], STATUS_LINE)
-        self.assert_sheet("# Pressure design\n" + env["result_status_line"] + "\n\n" + env["basis_section"],
-                          r"^# Pressure design", "**ASSUMED - confirm before issue:**")
-        # the record's ASSUMED item is the one "ASSUMED inputs" row, and the status line names it
-        self.assertTrue(env["result_status_line"].startswith("Result status: assumed - "))
-        self.assertIn("confirm before issue: " + ASSUMED["item"], env["result_status_line"])
-
-    def test_the_unstripped_example_conflicts_which_proves_the_record_is_read(self):
-        self.assertEqual(self.raw.returncode, 2)
-        self.assertIn("project_basis.states[role=design|first].P_psig conflicts with input P", self.raw.stderr)
-
-
-class StressScreening(HandOffCase):
+class PipeStressCheck(HandOffCase):
     """equation and N (fatigue), code and edition (flexibility exemption) come from the record."""
 
     @classmethod
     def setUpClass(cls):
         cls.wd = Workdir()
-        job = example("stress-screening", "sa-and-exemption.json")
+        job = example("pipe-stress-check", "sa-and-exemption.json")
         typed = cls.wd.write("ss-typed.json", job)
         job["piping.fatigue-factor"].pop("equation")
         job["piping.fatigue-factor"].pop("N")
         for k in ("code", "edition"):
             job["screen.flexibility-exemption"].pop(k)
         p = cls.wd.write("ss.json", job)
-        cli = script("stress-screening", "stress_screening.py")
+        cli = script("pipe-stress-check", "pipe_stress_check.py")
         cls.res, cls.typed = {}, {}
         for m in ("piping.fatigue-factor", "piping.displacement-stress", "screen.flexibility-exemption"):
             cls.res[m] = run(cli, m, "--input-file", p, "--project-basis", RECORD)
@@ -459,15 +407,15 @@ class PipeSupport(HandOffCase):
         self.assert_sheet(self.report, r"^# Pipe Support Calculation", "## Basis - project basis record")
 
 
-class IsoToPcf(HandOffCase):
+class StressImport(HandOffCase):
     """axes and pipeline.reference come from the record; the PCF equals the typed spec's."""
 
     @classmethod
     def setUpClass(cls):
         cls.wd = Workdir()
-        spec = example("iso-to-pcf", "project-basis-line.json")
+        spec = example("stress-import", "project-basis-line.json")
         typed = dict(copy.deepcopy(spec), axes="Y-up", pipeline={"reference": record()["project"]["line"]})
-        cli = script("iso-to-pcf", "build_pcf.py")
+        cli = script("stress-import", "build_pcf.py")
         cls.res = run(cli, cls.wd.write("iso.json", spec), "-o", os.path.join(cls.wd.path, "iso.pcf"),
                       "--report", os.path.join(cls.wd.path, "iso.txt"), "--json", "--project-basis", RECORD)
         cls.typed = run(cli, cls.wd.write("iso-typed.json", typed), "-o", os.path.join(cls.wd.path, "typed.pcf"),
@@ -495,7 +443,7 @@ class IsoToPcf(HandOffCase):
 
 
 class EveryScriptOnTheSameRecord(unittest.TestCase):
-    """The seven scripts read one file and none of them rejects or rewrites it."""
+    """The six scripts read one file and none of them rejects or rewrites it."""
 
     def test_the_record_file_is_unchanged_by_the_runs(self):
         before = record()
@@ -513,7 +461,7 @@ class EveryScriptOnTheSameRecord(unittest.TestCase):
     def test_each_skill_ships_the_shared_reference_and_example(self):
         with open(os.path.join(ROOT, "tools", "shared", "project-basis.md"), encoding="utf-8") as fh:
             doc = fh.read()
-        skills = ("load-case-builder", "pressure-design", "stress-screening", "pipe-support", "iso-to-pcf",
+        skills = ("load-case-builder", "pipe-stress-check", "pipe-support", "stress-import",
                   "nozzle-load", "bolted-flange")
         for s in skills:
             with open(os.path.join(SKILLS, s, "references", "project-basis.md"), encoding="utf-8") as fh:
