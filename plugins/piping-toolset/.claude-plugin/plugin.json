@@ -1,0 +1,40 @@
+{
+  "name": "piping-toolset",
+  "displayName": "PipingToolset",
+  "version": "0.10.2",
+  "description": "Directory edition: method, review and checklist guidance for six ASME B31.1 / B31.3 piping skills by pipingtoolset.com (pipe stress check, stress import, load cases, pipe supports, nozzle loads, bolted flanges). It includes no calculation scripts: Claude works each check by hand from the cited method and marks it not engine-verified. The full plugin with the fixture-verified engine is on GitHub. No ASME/API/PIP tables embedded; an optional connector serves cited table values to paid accounts.",
+  "author": {
+    "name": "Flexible Piping Solutions LLC",
+    "url": "https://pipingtoolset.com"
+  },
+  "homepage": "https://pipingtoolset.com",
+  "repository": "https://github.com/pipingtoolset/pipingtoolset-claude",
+  "license": "Apache-2.0",
+  "keywords": [
+    "piping",
+    "asme",
+    "b31.3",
+    "b31.1",
+    "pipe-stress",
+    "caesar-ii",
+    "autopipe",
+    "load-cases",
+    "pcf",
+    "stress-review",
+    "revit",
+    "navisworks",
+    "pipe-support",
+    "aisc-360",
+    "anchor-bolts",
+    "nozzle-loads",
+    "api-610",
+    "bolted-flange",
+    "equivalent-pressure",
+    "bpvc-viii-2"
+  ],
+  "icon": "./assets/icon.png",
+  "documentationUrl": "https://pipingtoolset.com/claude/",
+  "supportUrl": "https://github.com/pipingtoolset/pipingtoolset-claude/issues",
+  "privacyPolicyUrl": "https://pipingtoolset.com/legal/privacy.html",
+  "termsOfServiceUrl": "https://pipingtoolset.com/legal/terms.html"
+}

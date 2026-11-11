@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "pipingtoolset-data": {
+      "type": "http",
+      "url": "https://pipingtoolset.com/mcp"
+    }
+  }
+}
