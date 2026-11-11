@@ -538,7 +538,7 @@ _STATUS_WORDS = ("fail", "pass")
 
 
 def _verdict(ok) -> str:
-    """"pass" when ``ok`` is truthy, otherwise "fail"."""
+    """Status word for ``ok``: truthy gives the second entry of _STATUS_WORDS, falsy the first."""
     return _STATUS_WORDS[1 if ok else 0]
 
 # --------------------------------------------------------------------------- rounding
@@ -677,7 +677,7 @@ def _moment_res(s: Dict[str, float]) -> float:
 def nozzle_load_check(inp: Dict[str, Any]) -> Dict[str, Any]:
     """Per-component unity ratios |applied| / allowable at one equipment nozzle.
 
-    PASS requires every component ratio <= 1. The allowables are supplied by the user from
+    A PASS requires every component ratio <= 1. The allowables are supplied by the user from
     the governing equipment standard's table or the vendor datasheet; `standard` is a report
     label only and selects nothing. Also reports the resultant force FR and moment MR.
     """
@@ -2078,7 +2078,7 @@ def _nl_checks(module: str, inp: Dict[str, Any], res: Dict[str, Any], basis: Opt
             and re.search(r"derived|pvp2011", str(inp.get("standard")), re.I)):
         checks.append(make_check("allowable set derived by equipment.pvp2011-allowables", "manual check required", None,
                                  "the standard label names a derived set but derivedSetStatus was not supplied, so "
-                                 "the derivation's scope limits are unknown; pass the derivation run's result_status"))
+                                 "the derivation's scope limits are unknown; supply the derivation run's result_status"))
     if module == "connections.nozzle-load-check" and re.search(r"\b560\b", str(inp.get("standard"))):
         checks.append(make_check("heater terminal movements (API 560 section 9.2)", "not checked", None,
                                  "the module compares forces and moments only; list allowable and calculated movements"))

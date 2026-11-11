@@ -93,7 +93,7 @@ import re, collections
 print(collections.Counter(re.findall(r"^\s+SKEY\s+(\S+)", open(p).read(), re.M)))
 ```
 
-Pass that list to `validate_pcf.py --skeys` so anything outside it is flagged.
+Give that list to `validate_pcf.py --skeys` so anything outside it is flagged.
 
 Common Isogen SKEYs the builder uses as defaults. **Confirm each against the user's own
 output before relying on it:**

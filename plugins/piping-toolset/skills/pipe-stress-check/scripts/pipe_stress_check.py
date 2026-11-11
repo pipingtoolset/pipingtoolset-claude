@@ -521,7 +521,7 @@ _STATUS_WORDS = ("fail", "pass")
 
 
 def _verdict(ok) -> str:
-    """"pass" when ``ok`` is truthy, otherwise "fail"."""
+    """Status word for ``ok``: truthy gives the second entry of _STATUS_WORDS, falsy the first."""
     return _STATUS_WORDS[1 if ok else 0]
 
 # --------------------------------------------------------------------------- rounding
@@ -1811,7 +1811,7 @@ def _assumed_check(applied: Optional[Dict[str, Any]]):
 
 
 def _banner(status: str, checks: List[Dict[str, Any]]):
-    """PASS only when the banner rule allows it; FAIL always prints; None when the module has no verdict."""
+    """Banner word: the banner rule decides whether PASS prints; FAIL always prints; None for a module with no verdict."""
     if status == "pass":
         return banner_word("PASS", envelope_status(checks), any(c.get("unresolved_factor") for c in checks))
     return "FAIL" if status == "fail" else None

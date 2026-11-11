@@ -417,21 +417,6 @@ class ReadmeAndChangelog(unittest.TestCase):
         self.assertIn("Currently", sec)
         self.assertRegex(sec, r"(?s)source can\s+move between served and pointer-only")
 
-    def test_site_drafts_match_the_readme_on_the_declaration_and_the_api_tables(self):
-        # The site pages are generated from the same copy; a stale file name or a pointer-only
-        # row for the API tables there is the same drift the README test guards against.
-        for name in ("claude-page.html", "openai-page.html"):
-            text = read(os.path.join(ROOT, "docs", "site", name))
-            self.assertNotRegex(text, r"(?<![.\w])mcp\.json", name)
-            self.assertNotIn("for hosts that read it", text, name)
-            self.assertNotIn("for hosts that read the declaration", text, name)
-            rows = [ln for ln in text.splitlines() if ln.startswith("<tr><td>Pointer only")]
-            self.assertEqual(len(rows), 1, name)
-            self.assertNotRegex(rows[0], r"API (?:610|560|660|661)", name)
-            self.assertRegex(text, r"<b>Ultimate</b> currently adds API 610 Tables 5a and 5b, API 560 Tables 7 to 10, "
-                                   r"API 660 Table 2 and API 661 Table 4", name)
-            self.assertNotIn("(API nozzle allowables, PVP2011-57100", text, name)
-
     def test_how_it_works_no_longer_says_nothing_is_ever_sent(self):
         text = read(README)
         self.assertNotIn("Nothing you enter is sent to PipingToolset or Flexible Piping Solutions.", text)

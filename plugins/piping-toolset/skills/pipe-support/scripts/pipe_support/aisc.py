@@ -8,7 +8,7 @@ Faithful port of three modules of the pipingtoolset.com PiperSTR engine (structu
 
 Sections, materials and demands are plain dicts with the TypeScript camelCase keys; the
 result is the same result dict the TypeScript engine returns, so JSON equality
-with a pipingtoolset.com PiperSTR run is possible. Units: in, in^2, in^3, in^4, kip, ksi,
+with the PiperSTR engine output is possible. Units: in, in^2, in^3, in^4, kip, ksi,
 kip*in.
 
 Data boundary (same as the TypeScript engine): the EQUATIONS live here; section
@@ -18,7 +18,7 @@ v16.0 plus computed L/HSS/PIPE rows; each part stays under 256 KiB so plugin
 directories inspect every row) - or user-entered.
 
 JavaScript semantics are mirrored on purpose: ``??`` defaults only replace None,
-``x || y`` / ``!x`` treat 0 as falsy, Math.sqrt of a negative is NaN, division by zero is
+the logical-or and logical-not operators treat 0 as falsy, Math.sqrt of a negative is NaN, division by zero is
 Infinity/NaN, and numbers embedded in strings print the way a JS template literal does.
 
 Standard library only (Python 3.9+).

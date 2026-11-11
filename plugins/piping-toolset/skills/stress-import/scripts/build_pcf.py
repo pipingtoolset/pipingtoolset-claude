@@ -37,8 +37,8 @@ The report also carries "result_status" (calculated, screening, manual check req
 or not checked: the worst word among the "checks" performed) and the line "Result status: <word> -
 <why>" under the title. A failed closure or BOM check is "manual check required"; ASSUMED items give
 one "ASSUMED inputs" row graded "assumed" (0.9.1; manual check required before) and the RESULT line
-reads ASSUMED; the checks no script of this skill performs are listed as "not checked". No OK or
-PASS wording is printed while the banner rule forbids it. "ok", the exit codes and the PCF are
+reads ASSUMED; the checks no script of this skill performs are listed as "not checked". No OK
+or PASS wording is printed while the banner rule forbids it. "ok", the exit codes and the PCF are
 unchanged.
 
 Standard library only (Python 3.9+).

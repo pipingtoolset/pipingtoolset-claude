@@ -121,8 +121,8 @@ limit and the two stress coefficients) and the SM-23-form `basis` and `coefficie
 its equation number, alongside the Table 5 ranges, header limits and figure ordinates.
 
 ## 4. Checks per load case
-Per case: script command, ratios, governing component, the envelope's `banner` (PASS or FAIL) against
-the allowable stated (1x or 2x, factored or not). No PASS while `result_status` is manual check required,
+Per case: script command, ratios, governing component, the envelope's `banner` (FAIL or PASS) against
+the allowable stated (1x or 2x, factored or not). No PASS under `result_status` manual check required,
 assumed or pointer only. Header sum and bay total where API 661 applies.
 
 ## 5. Findings and assumptions

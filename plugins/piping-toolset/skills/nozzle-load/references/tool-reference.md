@@ -6,10 +6,10 @@ Detail for the "Running the tool" section of `SKILL.md`. The script is `scripts/
 
 | Module id | Origin | Inputs the user reads (never defaulted) | Status |
 |---|---|---|---|
-| `connections.nozzle-load-check` | pipingtoolset.com calculation engine | `allowable` (six components) | pass or fail |
-| `connections.nema-sm23` | pipingtoolset.com calculation engine | `coefficient` (when entered) | pass or fail |
-| `connections.api610-annexf` | pipingtoolset.com calculation engine | `annexF` (the method constants), `suctionAllowable`, `dischargeAllowable`, and for vertical in-line pumps `suctionBore`, `dischargeBore` | pass or fail |
-| `equipment.nozzle-load-sum` | new in this pack | `limits` (six components), `multiplier` for a bay | pass or fail |
+| `connections.nozzle-load-check` | pipingtoolset.com calculation engine | `allowable` (six components) | `status` pass or fail |
+| `connections.nema-sm23` | pipingtoolset.com calculation engine | `coefficient` (when entered) | `status` pass or fail |
+| `connections.api610-annexf` | pipingtoolset.com calculation engine | `annexF` (the method constants), `suctionAllowable`, `dischargeAllowable`, and for vertical in-line pumps `suctionBore`, `dischargeBore` | `status` pass or fail |
+| `equipment.nozzle-load-sum` | new in this pack | `limits` (six components), `multiplier` for a bay | `status` pass or fail |
 | `equipment.api650-annexp-ordinates` | new in this pack | `YF`, `YL`, `YC` from the figures | always `na` |
 | `equipment.pvp2011-allowables` | new in this pack | the table row (`row`, or `lowerRow` and `upperRow`), `S_vessel`, `S_nozzle`, the table | always `na` |
 

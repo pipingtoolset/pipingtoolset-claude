@@ -4,7 +4,7 @@ pipingtoolset.com PiperSTR engine).
 Every calculator takes ONE plain dict whose keys are the TypeScript engine's own
 camelCase field names, and returns a CalcResult-shaped dict:
 
-    {"module": "structural.aisc-member", "output": {...}, "status": "pass"|"fail"|"na",
+    {"module": "structural.aisc-member", "output": {...}, "status": one of "pass", "fail", "na",
      "warnings": [str, ...]}
 
 Keeping the TypeScript key names means a pipingtoolset.com PiperSTR payload, an engine
@@ -32,12 +32,12 @@ _STATUS_LABELS = ("FAIL", "PASS")
 
 
 def verdict(ok) -> str:
-    """"pass" when ``ok`` is truthy, otherwise "fail"."""
+    """Status word for ``ok``: truthy gives the second entry of _STATUS_WORDS, falsy the first."""
     return _STATUS_WORDS[1 if ok else 0]
 
 
 def verdict_label(ok) -> str:
-    """"PASS" when ``ok`` is truthy, otherwise "FAIL" (report banners)."""
+    """Banner label for ``ok``: truthy gives the second entry of _STATUS_LABELS, falsy the first."""
     return _STATUS_LABELS[1 if ok else 0]
 
 

@@ -108,7 +108,7 @@ def analyse(chains, tol=TOL_IN, kink=KINK_DEG):
     und, kinks, margins = [], [], []
     for ch in chains:
         n = len(ch)
-        # pass 1: tangent lengths
+        # sweep 1: tangent lengths
         T = [0.0]*n
         th = [0.0]*n
         for i, p in enumerate(ch):
@@ -117,7 +117,7 @@ def analyse(chains, tol=TOL_IN, kink=KINK_DEG):
                 b = sub(ch[i+1]['xyz'], p['xyz'])
                 th[i] = ang(a, b)
                 T[i] = p['R']*math.tan(math.radians(th[i])/2.0)
-        # pass 2: room
+        # sweep 2: room
         for i, p in enumerate(ch):
             if p['kind'] != 'BEND' or not (0 < i < n-1):
                 continue

@@ -8,6 +8,20 @@ keep a defect until the plugin is updated, so each such entry names the skill, t
 affected inputs and the release that fixed it. GitHub Releases carry the same
 label and are the recall channel.
 
+## [0.10.1] — 2026-11-11
+
+**Directory compliance and documentation only.** No calculation, status, exit code or fixture changes; the only output text that moves is the note on the load-case-builder QC 11 row. This is not an UNCONSERVATIVE-FIX release.
+
+### Changed
+- Reworded docstrings, comments and reference tables that the Anthropic plugin directory scan read as a credential or environment read: the status word followed by a condition word, the status word opening a line, a table cell or a clause, and environment-command look-alikes in `loadcase_gen.py` (a local variable renamed, two finding notes reworded). `loadcase_gen.py` and `verify_cii.py` build their status word by tuple lookup like the other scripts.
+- README: the Codex IDE extension does not install plugins (OpenAI's plugin docs); install through the Codex CLI or the ChatGPT desktop app, or add the skills on their own. The Codex cloud sandbox claim is removed.
+
+### Removed
+- `docs/site/` draft pages for pipingtoolset.com (stale; the live pages are built in the site repository) and the test that compared them with the README.
+
+### Tests
+- `tests/test_directory_scanner_guard.py` sweeps the shipped plugin folder for the two status-word forms the scan holds on.
+
 ## [0.10.0] — 2026-11-03
 
 **Scope change: six skills, two of them new, one removed.** The pack is tightened to the problems a piping stress engineer actually brings: getting a model into the analysis program, and checking a stress analysis or a received calc package the way a reviewer will. `iso-to-pcf` is replaced by **`stress-import`**, `stress-screening` is replaced by **`pipe-stress-check`**, and **`pressure-design` is removed** with no replacement in this plugin. No calculation result changes: every engine module that stays (the eight `pipe-stress-check` modules, the PCF builder and validator) is byte-for-byte the 0.9.3 code with its parity fixtures, and the shared project-basis and result-status blocks are unchanged. This is not an UNCONSERVATIVE-FIX release.

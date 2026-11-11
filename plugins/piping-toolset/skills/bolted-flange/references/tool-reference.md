@@ -7,8 +7,8 @@ Always run `python scripts/bolted_flange.py list` for the live field names. Name
 | Module id | What it does | Status |
 |---|---|---|
 | `connections.flange-derive` | Gasket N, b0, b, G (flat and ring-joint rules); UN bolt root area and total area; hub g0, g1, h | always `na` |
-| `connections.flange-equivalent-pressure` | The screen: momentTerm, Fapplied, forceTerm, Pe, utilization | `pass` if Pe <= rated, else `fail` |
-| `aux.app2-flange-integral` | The detailed analysis: Peq, bolt loads, moments, stresses and averages for both cases, J, governing case | `pass` only if Ab >= Am, worst utilization <= 1, and both J <= 1 |
+| `connections.flange-equivalent-pressure` | The screen: momentTerm, Fapplied, forceTerm, Pe, utilization | Pe <= rated gives `pass`, otherwise `fail` |
+| `aux.app2-flange-integral` | The detailed analysis: Peq, bolt loads, moments, stresses and averages for both cases, J, governing case | Ab >= Am, worst utilization <= 1 and both J <= 1 together give `pass` |
 
 `connections.flange-equivalent-pressure` and `aux.app2-flange-integral` reproduce the pipingtoolset.com calculation engine's fixture cases exactly: same input names, output names, statuses, rounding and thrown-error conditions. `connections.flange-derive` is new and has no engine module.
 
@@ -60,7 +60,7 @@ Compression: pass `Fax` = max(F, 0) to follow VIII-2 4.16.13 (FA is the tensile 
 
 Plus `code_value_provenance` when the call carried `code_values`, and `project_basis_applied` when it carried a project basis record (below).
 
-`status` is the engine's machine word (`pass` / `fail` / `na`) and stays as the fixtures assert it. It is not the report wording: on a `screening` run state the result as "within" or "exceeds" with the ratios, never PASS. The output key `report_word` carries that wording ("within" / "exceeds" for the screen, "tool rule met" / "tool rule not met" for the detailed analysis): relay it, not `status`. `--format sheet` prints a markdown calc-sheet block (banner, grade, factor basis, results, findings) that does this; the default `--format json` prints the envelope. `user_supplied` lists the inputs present in the call that are code, table or project values the user must be able to cite. When the call carried `code_values`, the envelope also has `code_value_provenance` (below). `status` `na` means a value with no pass/fail. Exit code 2 with a one-line `input error: ...` message means bad input; fix it, never retry with guessed values.
+`status` is the engine's machine word, one of `pass`, `fail` or `na`, and stays as the fixtures assert it. It is not the report wording: on a `screening` run state the result as "within" or "exceeds" with the ratios, never PASS. The output key `report_word` carries that wording ("within" / "exceeds" for the screen, "tool rule met" / "tool rule not met" for the detailed analysis): relay it, not `status`. `--format sheet` prints a markdown calc-sheet block (banner, grade, factor basis, results, findings) that does this; the default `--format json` prints the envelope. `user_supplied` lists the inputs present in the call that are code, table or project values the user must be able to cite. When the call carried `code_values`, the envelope also has `code_value_provenance` (below). `status` `na` means a value with no pass/fail. Exit code 2 with a one-line `input error: ...` message means bad input; fix it, never retry with guessed values.
 
 ## Pre-flight (before the engine)
 
