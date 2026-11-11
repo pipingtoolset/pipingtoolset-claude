@@ -1191,7 +1191,7 @@ class LoadCaseSet:
                                   "a 0.6W / 0.7E reduction needs the owner or EOR written direction, "
                                   "which the generator cannot verify"))
         chk.append(make_check("QC 17 resolved case set", "calculated",
-                              "pass" if self.qc.get("pass") else "fail",
+                              ("fail", "pass")[bool(self.qc.get("pass"))],
                               f"{self.qc['counts']['misses']} miss(es) in "
                               f"{self.qc['counts']['checks']} checks"))
         for item, what in NOT_CHECKED_QC_ITEMS:

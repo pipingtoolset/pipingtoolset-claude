@@ -95,7 +95,7 @@ verdict.
     - *Ruling superseded.* Item 6 of the 2026-10-26 P.E. rulings kept this "documented only":
       the engine was not changed and, from 0.3.2, the reviewer raised a *major* finding, but a
       PASS could still be printed on a wind-governed ASD combination. The 2026-10-30 owner
-      ruling supersedes it: an automatic guard now **blocks** an ASD anchorage pass when a wind
+      ruling supersedes it: an automatic guard now **blocks** a passing ASD anchorage verdict whenever a wind
       combination governs.
     - *What the guard does.* When the design method is ASD, an anchorage stage is held when
       any of these holds (the `trigger` key of the guard):

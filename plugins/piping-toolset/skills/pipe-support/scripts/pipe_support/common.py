@@ -32,12 +32,12 @@ _STATUS_LABELS = ("FAIL", "PASS")
 
 
 def verdict(ok) -> str:
-    """"pass" when ``ok`` is truthy, otherwise "fail"."""
+    """Status word for ``ok``: truthy gives the second entry of _STATUS_WORDS, falsy the first."""
     return _STATUS_WORDS[1 if ok else 0]
 
 
 def verdict_label(ok) -> str:
-    """"PASS" when ``ok`` is truthy, otherwise "FAIL" (report banners)."""
+    """Banner label for ``ok``: truthy gives the second entry of _STATUS_LABELS, falsy the first."""
     return _STATUS_LABELS[1 if ok else 0]
 
 

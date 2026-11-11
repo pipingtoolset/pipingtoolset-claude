@@ -91,12 +91,14 @@ The plugin folder carries an [Agent Plugins 1.0](https://agent-plugins.org) mani
    codex plugin marketplace add pipingtoolset/pipingtoolset-claude
    ```
 
-2. Install **PipingToolset** from the plugin picker: `/plugins` in the Codex CLI or IDE
-   extension, or **Customize › Plugins** in the ChatGPT desktop app, where it shows with the
-   PipingToolset mark and "By Flexible Piping Solutions LLC".
+2. Install **PipingToolset** from the plugin picker: `/plugins` in the Codex CLI, or
+   **Customize › Plugins** in the ChatGPT desktop app, where it shows with the PipingToolset mark
+   and "By Flexible Piping Solutions LLC". The Codex IDE extension does not install plugins
+   ([OpenAI's plugin docs](https://learn.chatgpt.com/docs/plugins)); there, add the skills on
+   their own as described under Other assistants.
 3. Invoke a skill as `$pipe-stress-check` (or `/skills`) in Codex, or name it in plain words in
-   ChatGPT, as in Cowork. Codex runs the scripts with your machine's Python 3.9+; the ChatGPT desktop
-   app and Codex cloud run them in their own sandbox.
+   ChatGPT, as in Cowork. The Codex CLI runs the scripts with your machine's Python 3.9+; the
+   ChatGPT desktop app runs them in its own sandbox.
 
 The OpenAI plugin directory listing is submitted from the same archive (`piping-toolset.zip`, the
 `.plugin` under a `.zip` name, from the

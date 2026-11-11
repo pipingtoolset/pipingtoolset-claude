@@ -10,10 +10,10 @@ Spec (references/spec-format.md):
   pipes    [{tag, arm, offset, loads: {units, cases{SUS,OPE,WIN,EQ,HYD}, map, SDS,
             vertical_axis, pipe_axis}}]                -> CAESAR II mode (ASCE 7-22 combos)
            or omit `pipes` and put factored loads on design.arms[].pipes -> factored mode
-  T_factor, fabrication {armToColumn}, optimize {objectives, families, maxRatio, top} | false,
+  T_factor, fabrication {armToColumn}, optimize {objectives, families, maxRatio, top} or false,
   assumed [..], tag, project, calcBy, date
   code_values optional {name: {value, unit, citation{standard, edition, table, row, column?},
-              source: "connector"|"user"}} - see CODE VALUES below (the spelling codeValues
+              source: "connector" or "user"}} - see CODE VALUES below (the spelling codeValues
               is accepted too; give one of them)
 
 CODE VALUES (optional `code_values` block in the spec)

@@ -51,5 +51,5 @@ for sec in ('VERSION', 'CONTROL', 'RIGID', 'ALLOWBLS', 'REDUCERS', 'MISCEL_1', '
 print('restraint types', dict(collections.Counter(x['type'] for r in RB for x in r)),
       '| nodes', int(min(nodesB)), '-', int(max(nodesB)), len(nodesB),
       '| T1', dict(collections.Counter(e['t1'] for e in EB)))
-print('PASS' if ok else 'FAILED')
+print(('FAILED', 'PASS')[bool(ok)])
 sys.exit(0 if ok else 1)

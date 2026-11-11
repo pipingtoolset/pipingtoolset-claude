@@ -7,8 +7,8 @@ Always run `python scripts/bolted_flange.py list` for the live field names. Name
 | Module id | What it does | Status |
 |---|---|---|
 | `connections.flange-derive` | Gasket N, b0, b, G (flat and ring-joint rules); UN bolt root area and total area; hub g0, g1, h | always `na` |
-| `connections.flange-equivalent-pressure` | The screen: momentTerm, Fapplied, forceTerm, Pe, utilization | `pass` if Pe <= rated, else `fail` |
-| `aux.app2-flange-integral` | The detailed analysis: Peq, bolt loads, moments, stresses and averages for both cases, J, governing case | `pass` only if Ab >= Am, worst utilization <= 1, and both J <= 1 |
+| `connections.flange-equivalent-pressure` | The screen: momentTerm, Fapplied, forceTerm, Pe, utilization | Pe <= rated gives `pass`, otherwise `fail` |
+| `aux.app2-flange-integral` | The detailed analysis: Peq, bolt loads, moments, stresses and averages for both cases, J, governing case | Ab >= Am, worst utilization <= 1 and both J <= 1 together give `pass` |
 
 `connections.flange-equivalent-pressure` and `aux.app2-flange-integral` reproduce the pipingtoolset.com calculation engine's fixture cases exactly: same input names, output names, statuses, rounding and thrown-error conditions. `connections.flange-derive` is new and has no engine module.
 

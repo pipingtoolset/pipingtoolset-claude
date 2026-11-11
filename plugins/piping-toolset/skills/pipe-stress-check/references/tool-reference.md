@@ -66,7 +66,7 @@ Rules:
 
 ## Result status
 
-Every envelope carries `result_status` (the worst word among the checks performed; a `not checked` row is listed but never sets it), `checks` (`[{name, result_status, status, note}]`, `status` being the pass, fail or na the module already reported), `result_status_line` (the line for under the sheet title) and `banner` (PASS or FAIL for a module with a verdict, null for `na`; the status word in capitals instead of PASS while the banner rule blocks it). The words, worst first: **manual check required**, **assumed**, **pointer only**, **screening**, **not checked**, **calculated**. The existing `status` and `output` values are unchanged.
+Every envelope carries `result_status` (the worst word among the checks performed; a `not checked` row is listed but never sets it), `checks` (`[{name, result_status, status, note}]`, `status` being the pass, fail or na the module already reported), `result_status_line` (the line for under the sheet title) and `banner` (PASS or FAIL for a module with a verdict, null for `na`; the status word in capitals replaces PASS for as long as the banner rule blocks it). The words, worst first: **manual check required**, **assumed**, **pointer only**, **screening**, **not checked**, **calculated**. The existing `status` and `output` values are unchanged.
 
 | Module | Check and word | Raised when |
 |---|---|---|

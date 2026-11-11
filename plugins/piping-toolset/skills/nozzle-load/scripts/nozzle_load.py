@@ -538,7 +538,7 @@ _STATUS_WORDS = ("fail", "pass")
 
 
 def _verdict(ok) -> str:
-    """"pass" when ``ok`` is truthy, otherwise "fail"."""
+    """Status word for ``ok``: truthy gives the second entry of _STATUS_WORDS, falsy the first."""
     return _STATUS_WORDS[1 if ok else 0]
 
 # --------------------------------------------------------------------------- rounding
