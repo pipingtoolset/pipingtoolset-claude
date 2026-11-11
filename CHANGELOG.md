@@ -17,7 +17,7 @@ label and are the recall channel.
 
 ### Added
 - **Directory edition.** The Anthropic plugin directory refused v0.10.1 because it accepts scripts only from Verified organizations. `tools/build_directory_edition.py` writes a second tree for the directory: the six `SKILL.md` files and their references, with no `scripts/` folders, no SVG and no Agent Plugins manifest. Each `SKILL.md` opens with a notice that the edition has no scripts, that every numeric result is a hand calculation headed `HAND CALCULATION, NOT ENGINE-VERIFIED` with result status `screening`, and that no PASS or issue-grade wording is written. Its README and manifest description say the same and point to the full plugin.
-- The tree is committed to the `directory` branch, which the directory listing follows. `main` is never changed by it.
+- The release job rebuilds that tree on every push to `main` and commits it to the `directory` branch when it changed. `main` is never changed by it.
 
 ### Tests
 - `tests/test_directory_edition.py` builds the edition and holds it to the directory's file rule (allowed types only, no interpreter marker, UTF-8, no NUL bytes, under 256 KiB), the notice in every skill, the 500-character description limit and the scanner guard.

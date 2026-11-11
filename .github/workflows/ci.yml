@@ -136,3 +136,30 @@ jobs:
             gh release create "$TAG" --verify-tag --title "$TAG" --notes-file dist/RELEASE-NOTES.md
           fi
           gh release upload "$TAG" dist/piping-toolset.plugin dist/piping-toolset.zip dist/piping-toolset-skills.zip --clobber
+      # Directory edition (owner, 2026-11-11): the Anthropic plugin directory accepts scripts
+      # only from Verified organizations, so it follows the `directory` branch, a generated tree
+      # with the method text and no scripts (tools/build_directory_edition.py). It is rebuilt
+      # from main on every push to main and committed only when it changed. The branch has no
+      # workflow files, and a push made with GITHUB_TOKEN starts no workflow run.
+      - name: Publish the directory edition to the directory branch
+        if: github.ref == 'refs/heads/main'
+        env:
+          TAG: ${{ steps.ver.outputs.tag }}
+        run: |
+          set -euo pipefail
+          EDITION="${RUNNER_TEMP}/directory-edition"
+          if git fetch -q origin directory; then
+            git worktree add -q -B directory "$EDITION" FETCH_HEAD
+          else
+            git worktree add -q --orphan -b directory "$EDITION"
+          fi
+          python tools/build_directory_edition.py --out "$EDITION" --check
+          cd "$EDITION"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "directory edition unchanged"
+          else
+            git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+              commit -q -m "Directory edition ${TAG} (generated from ${GITHUB_SHA})"
+            git push origin directory
+          fi
