@@ -74,6 +74,12 @@ NOTICE_LINES = [
 COMPATIBILITY = "compatibility: Method and review guidance only; this edition has no scripts"
 
 
+def _write(path: Path, text: str) -> None:
+    """Write UTF-8 text with LF line ends. Path.write_text has no newline argument before 3.10."""
+    with open(path, "w", encoding="utf-8", newline="\n") as fh:
+        fh.write(text)
+
+
 def _skill_names() -> List[str]:
     return sorted(p.name for p in (SOURCE / "skills").iterdir() if (p / "SKILL.md").is_file())
 
@@ -151,8 +157,7 @@ def build(out: Path) -> List[Path]:
     manifest = json.loads((SOURCE / ".claude-plugin" / "plugin.json").read_text(encoding="utf-8"))
     manifest["description"] = DESCRIPTION
     (dest / ".claude-plugin").mkdir(parents=True)
-    (dest / ".claude-plugin" / "plugin.json").write_text(
-        json.dumps(manifest, indent=2, ensure_ascii=False) + "\n", encoding="utf-8", newline="\n")
+    _write(dest / ".claude-plugin" / "plugin.json", json.dumps(manifest, indent=2, ensure_ascii=False) + "\n")
 
     shutil.copyfile(SOURCE / ".mcp.json", dest / ".mcp.json")
     (dest / "assets").mkdir()
@@ -162,8 +167,7 @@ def build(out: Path) -> List[Path]:
     for name in skills:
         src, dst = SOURCE / "skills" / name, dest / "skills" / name
         dst.mkdir(parents=True)
-        (dst / "SKILL.md").write_text(
-            _with_notice((src / "SKILL.md").read_text(encoding="utf-8")), encoding="utf-8", newline="\n")
+        _write(dst / "SKILL.md", _with_notice((src / "SKILL.md").read_text(encoding="utf-8")))
         refs = src / "references"
         if refs.is_dir():
             (dst / "references").mkdir()
@@ -173,7 +177,7 @@ def build(out: Path) -> List[Path]:
 
     readme = _readme(manifest["version"], skills)
     for folder in (out, dest):
-        (folder / "README.md").write_text(readme, encoding="utf-8", newline="\n")
+        _write(folder / "README.md", readme)
         shutil.copyfile(ROOT / "LICENSE", folder / "LICENSE")
     shutil.copyfile(ROOT / "NOTICE", out / "NOTICE")
     return sorted(p for p in out.rglob("*") if p.is_file() and ".git" not in p.relative_to(out).parts)
