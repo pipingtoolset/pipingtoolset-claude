@@ -10,10 +10,17 @@ label and are the recall channel.
 
 ## [0.10.2] — 2026-11-11
 
-**Icon only.** No skill, script, calculation or output changes. This is not an UNCONSERVATIVE-FIX release.
+**Icon and a directory edition.** The plugin installed from GitHub, Cowork or Codex is unchanged apart from its icon: no skill, script, calculation or output changes. This is not an UNCONSERVATIVE-FIX release.
 
 ### Changed
 - The plugin icon (`assets/icon.png`, 512 px, and `assets/icon.svg`) is now the Piping Toolset mark used on pipingtoolset.com: the dark square with the red elbow. It replaces the grey outline mark.
+
+### Added
+- **Directory edition.** The Anthropic plugin directory refused v0.10.1 because it accepts scripts only from Verified organizations. `tools/build_directory_edition.py` writes a second tree for the directory: the six `SKILL.md` files and their references, with no `scripts/` folders, no SVG and no Agent Plugins manifest. Each `SKILL.md` opens with a notice that the edition has no scripts, that every numeric result is a hand calculation headed `HAND CALCULATION, NOT ENGINE-VERIFIED` with result status `screening`, and that no PASS or issue-grade wording is written. Its README and manifest description say the same and point to the full plugin.
+- The tree is committed to the `directory` branch, which the directory listing follows. `main` is never changed by it.
+
+### Tests
+- `tests/test_directory_edition.py` builds the edition and holds it to the directory's file rule (allowed types only, no interpreter marker, UTF-8, no NUL bytes, under 256 KiB), the notice in every skill, the 500-character description limit and the scanner guard.
 
 ## [0.10.1] — 2026-11-11
 
