@@ -4,7 +4,7 @@ pipingtoolset.com PiperSTR engine).
 Every calculator takes ONE plain dict whose keys are the TypeScript engine's own
 camelCase field names, and returns a CalcResult-shaped dict:
 
-    {"module": "structural.aisc-member", "output": {...}, "status": "pass"|"fail"|"na",
+    {"module": "structural.aisc-member", "output": {...}, "status": one of "pass", "fail", "na",
      "warnings": [str, ...]}
 
 Keeping the TypeScript key names means a pipingtoolset.com PiperSTR payload, an engine

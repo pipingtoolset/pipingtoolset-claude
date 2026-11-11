@@ -2,7 +2,7 @@
 """verify_cii.py - independent check of fix_cii.py output against the original neutral file.
 Python 3.9+, standard library only. Exit 0 on PASS, 1 on FAILED.
 Usage: python verify_cii.py original.CII fixed.CII node_map.csv [lines.json]
-PASS means: same elements in the same order with the same geometry, walls and aux pointers;
+A PASS means: same elements in the same order with the same geometry, walls and aux pointers;
 every node renumbered per the map; restraint nodes/types/mu/tags kept (code 6 -> 1 allowed);
 SIF and bend nodes valid; unchanged sections byte-identical; T1/P1/fluid as configured.
 """
