@@ -1,4 +1,4 @@
-# Phase 2: host verification runbook (plugin 0.10.0)
+# Phase 2: host verification runbook (plugin 0.10.1)
 
 Copy-paste runbook for proving the same plugin installs, shows its mark, and runs its scripts in
 every host it claims. Sibling of `COWORK-CHECKLIST.md`. Fill the results table at the bottom as

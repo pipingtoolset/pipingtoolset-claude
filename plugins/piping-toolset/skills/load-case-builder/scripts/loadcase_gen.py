@@ -1053,9 +1053,9 @@ class LoadCaseSet:
                      "and seismic as separate sets.")
 
         # Envelope completeness
-        env = next((c for c in self.cases if c.key == "max:occ"), None)
-        if env:
-            covered = {r.split(":")[1] for _, r in env.refs}
+        occ_max = next((c for c in self.cases if c.key == "max:occ"), None)
+        if occ_max:
+            covered = {r.split(":")[1] for _, r in occ_max.refs}
             missing = kinds - covered
             if missing:
                 f.append(f"ERROR: Maximum Occasional envelope omits {sorted(missing)}.")
@@ -1171,8 +1171,8 @@ class LoadCaseSet:
                   or "chapter ix" in str(basis_get(self.basis, "code.route", "")).lower())
             chk.append(make_check("QC 10 occasional factor", "calculated", "na",
                                   "the record names Chapter IX / High Pressure service, so "
-                                  "K302.3.6(a) 1.20 Sh applies; set it in the model" if hp else
-                                  "302.3.6(a) 1.33 Sh (1.20 under Chapter IX); set it in the model"))
+                                  "K302.3.6(a) 1.20 Sh applies, to be entered in the model" if hp else
+                                  "302.3.6(a) 1.33 Sh (1.20 under Chapter IX), to be entered in the model"))
         else:
             chk.append(make_check("QC 10 occasional factor", "manual check required", "na",
                                   "104.8.2 k = 1.15 or 1.20 depends on the occasional duration, "
@@ -1250,11 +1250,11 @@ class LoadCaseSet:
             c = have.get(key)
             return {r for _, r in c.refs} if c else set()
 
-        def member(env: str, key: str, what: str) -> None:
+        def member(case_key: str, key: str, what: str) -> None:
             nonlocal checks
             checks += 1
-            if key not in refs_of(env):
-                misses.append(f"{what} [{key}] is not in {env}")
+            if key not in refs_of(case_key):
+                misses.append(f"{what} [{key}] is not in {case_key}")
 
         if self.hangers:
             need("hgr:rigid", "hanger design Rigid case")
