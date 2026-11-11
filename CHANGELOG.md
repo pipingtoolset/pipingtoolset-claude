@@ -8,6 +8,13 @@ keep a defect until the plugin is updated, so each such entry names the skill, t
 affected inputs and the release that fixed it. GitHub Releases carry the same
 label and are the recall channel.
 
+## [0.10.2] — 2026-11-11
+
+**Icon only.** No skill, script, calculation or output changes. This is not an UNCONSERVATIVE-FIX release.
+
+### Changed
+- The plugin icon (`assets/icon.png`, 512 px, and `assets/icon.svg`) is now the Piping Toolset mark used on pipingtoolset.com: the dark square with the red elbow. It replaces the grey outline mark.
+
 ## [0.10.1] — 2026-11-11
 
 **Directory compliance and documentation only.** No calculation, status, exit code or fixture changes; the only output text that moves is the note on the load-case-builder QC 11 row. This is not an UNCONSERVATIVE-FIX release.

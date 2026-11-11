@@ -1,4 +1,4 @@
-# Phase 2: host verification runbook (plugin 0.10.1)
+# Phase 2: host verification runbook (plugin 0.10.2)
 
 Copy-paste runbook for proving the same plugin installs, shows its mark, and runs its scripts in
 every host it claims. Sibling of `COWORK-CHECKLIST.md`. Fill the results table at the bottom as
@@ -36,10 +36,10 @@ Pass criteria, unchanged from `PROMPTS.md`:
 Run in PowerShell from any folder.
 
 ```powershell
-gh release view v0.10.1 --repo pipingtoolset/pipingtoolset-claude --json tagName,assets --jq '.tagName, (.assets[].name)'
+gh release view v0.10.2 --repo pipingtoolset/pipingtoolset-claude --json tagName,assets --jq '.tagName, (.assets[].name)'
 ```
 
-Expect `v0.10.1` and three assets: `piping-toolset.plugin`, `piping-toolset.zip`,
+Expect `v0.10.2` and three assets: `piping-toolset.plugin`, `piping-toolset.zip`,
 `piping-toolset-skills.zip`. If the tag or assets are missing, stop: push the tag and let CI
 attach them.
 
@@ -136,8 +136,8 @@ may appear. Disconnect the server in `/mcp` and repeat the allowable-stress requ
 
 ## 3. Claude Cowork (Claude desktop app, Windows)
 
-1. Download `piping-toolset.plugin` from the v0.10.1 release
-   (`https://github.com/pipingtoolset/pipingtoolset-claude/releases/download/v0.10.1/piping-toolset.plugin`).
+1. Download `piping-toolset.plugin` from the v0.10.2 release
+   (`https://github.com/pipingtoolset/pipingtoolset-claude/releases/download/v0.10.2/piping-toolset.plugin`).
 2. If an earlier version is installed, remove it first in Settings › Plugins.
 3. Drag the file into a new Cowork chat, press **Accept**.
 4. Check in the plugin list: the grid-elbow mark (not a generic icon), display name

@@ -1,7 +1,7 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "piping-toolset",
-  "version": "0.10.1",
+  "version": "0.10.2",
   "description": "Six ASME B31.1 / B31.3 piping skills by pipingtoolset.com: pipe stress check (SUS/OCC/EXP hand checks, cold-eye review), stress import (PDF isos, Revit PCF, Navisworks supports into CAESAR II or AutoPIPE), load cases, pipe supports (AISC 360-22, ACI 318-25/19, ASCE 7-22), nozzle loads (API 610/617/660/661/560/650, NEMA SM-23, PVP2011-57100), bolted flanges (BPVC VIII-2 4.16). No ASME/API/PIP tables embedded; an optional connector serves cited ASME and API table values to signed-in paid accounts.",
   "author": {
     "name": "Flexible Piping Solutions LLC",
