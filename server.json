@@ -1,0 +1,18 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "com.pipingtoolset/data",
+  "title": "Piping Toolset Engineering Data",
+  "description": "Engineering code-table data with citations: standard, edition, table, row and column.",
+  "websiteUrl": "https://pipingtoolset.com/claude/",
+  "repository": {
+    "url": "https://github.com/pipingtoolset/pipingtoolset-claude",
+    "source": "github"
+  },
+  "version": "0.1.0",
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://pipingtoolset.com/mcp"
+    }
+  ]
+}
